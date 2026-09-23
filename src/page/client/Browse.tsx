@@ -1,7 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { BookOpen, Layers, Search, Sparkles, X } from "lucide-react";
-import Cookies from "js-cookie";
-
+import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { ArrowLeft, ArrowRight, BookOpen, Layers, Search, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import BookCard from "../../components/BookCard";
 import Loading from "../../components/ui/loading";
 import Modal from "../../components/ui/modal";
@@ -9,14 +7,35 @@ import CustomerLoginForm from "../../components/Authentication/CustomerLoginForm
 import CustomerRegisterForm from "../../components/Authentication/CustomerRegisterForm";
 import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "../../components/ui/combobox";
 import bookService from "../../services/book.service";
-import type { Book, BookCategory } from "../../types/book.types";
+import customerService from "../../services/customer.service";
+import type { Book, BookAuthor, BookCatalogMeta, BookCategory, BookQueryParams } from "../../types/book.types";
 import { isAuthenticated, loadFavorites, saveFavorites, toggleFavoriteId } from "../../lib/favorites";
-import { addToCart } from "../../lib/cart";
+import { getStoredUser } from "../../lib/session";
+import { alertToast } from "../../lib/alerts";
+
+const PAGE_SIZE = 12;
+
+const defaultMeta: BookCatalogMeta = {
+  page: 1,
+  limit: PAGE_SIZE,
+  total: 0,
+  total_pages: 0,
+  has_next_page: false,
+  has_previous_page: false,
+  sort: "newest",
+  price_range: {
+    min: 0,
+    max: 0,
+  },
+};
 
 const Browse = () => {
   const [books, setBooks] = useState<Book[]>([]);
-  const [bookCategory, setBookCategory] = useState<BookCategory[]>([]);
+  const [bookCategories, setBookCategories] = useState<BookCategory[]>([]);
+  const [authors, setAuthors] = useState<BookAuthor[]>([]);
+  const [catalogMeta, setCatalogMeta] = useState<BookCatalogMeta>(defaultMeta);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLookupLoading, setIsLookupLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -24,33 +43,75 @@ const Browse = () => {
   const [searchTitle, setSearchTitle] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [sortBy, setSortBy] = useState<BookQueryParams["sort"]>("newest");
+  const [page, setPage] = useState(1);
 
   const [favoriteBookIds, setFavoriteBookIds] = useState<number[]>([]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<"login" | "register">("login");
-  const [feedbackMessage, setFeedbackMessage] = useState("");
+
+  const deferredSearchTitle = useDeferredValue(searchTitle.trim());
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchLookupData = async () => {
+      try {
+        setIsLookupLoading(true);
+        const [categoryRes, authorRes] = await Promise.all([
+          bookService.getBookCategories(),
+          bookService.getAuthors(),
+        ]);
+        setBookCategories(categoryRes.data);
+        setAuthors(authorRes.data);
+      } catch (lookupError) {
+        console.error(lookupError);
+      } finally {
+        setIsLookupLoading(false);
+      }
+    };
+
+    void fetchLookupData();
+  }, []);
+
+  const selectedCategoryId = useMemo(
+    () => bookCategories.find((category) => category.name === selectedCategory)?.id,
+    [bookCategories, selectedCategory],
+  );
+
+  const selectedAuthorId = useMemo(
+    () => authors.find((author) => author.name === selectedAuthor)?.id,
+    [authors, selectedAuthor],
+  );
+
+  useEffect(() => {
+    const fetchBooks = async () => {
       try {
         setIsLoading(true);
         setError("");
-        const [booksRes, categoryRes] = await Promise.all([
-          bookService.getBooks(),
-          bookService.getBookCategories()
-        ]);
-        setBooks([...booksRes.data].sort((a, b) => a.id - b.id));
-        setBookCategory(categoryRes.data);
+        const response = await bookService.getBooks({
+          search: deferredSearchTitle || undefined,
+          category_id: selectedCategoryId,
+          author_id: selectedAuthorId,
+          min_price: minPrice !== "" ? Number(minPrice) : undefined,
+          max_price: maxPrice !== "" ? Number(maxPrice) : undefined,
+          sort: sortBy,
+          page,
+          limit: PAGE_SIZE,
+        });
+
+        setBooks(response.data);
+        setCatalogMeta(response.meta ?? defaultMeta);
       } catch (fetchError) {
         console.error(fetchError);
         setError("Unable to load books. Please check API connection.");
+        setBooks([]);
+        setCatalogMeta(defaultMeta);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchData();
-  }, []);
+    void fetchBooks();
+  }, [deferredSearchTitle, selectedCategoryId, selectedAuthorId, minPrice, maxPrice, sortBy, page]);
 
   useEffect(() => {
     setFavoriteBookIds(loadFavorites());
@@ -64,33 +125,72 @@ const Browse = () => {
     saveFavorites(favoriteBookIds);
   }, [favoriteBookIds]);
 
-  const authorOptions = useMemo(
-    () =>
-      Array.from(new Set(books.map((book) => book.author_name)))
-        .sort((a, b) => a.localeCompare(b))
-        .map((name, index) => ({ id: index + 1, name })),
-    [books]
-  );
+  const activeFilters = useMemo(() => {
+    const filters: Array<{ key: string; label: string; onClear: () => void }> = [];
 
-  const filteredBooks = useMemo(() => {
-    return books.filter((book) => {
-      const matchesCategory = !selectedCategory || book.category_name === selectedCategory;
-      const matchesAuthor = !selectedAuthor || book.author_name === selectedAuthor;
-      const matchesTitle = !searchTitle || book.title.toLowerCase().includes(searchTitle.toLowerCase());
+    if (selectedCategory) {
+      filters.push({
+        key: "category",
+        label: `Category: ${selectedCategory}`,
+        onClear: () => {
+          setSelectedCategory("");
+          resetToFirstPage();
+        },
+      });
+    }
 
-      const parsedMin = minPrice ? Number(minPrice) : null;
-      const parsedMax = maxPrice ? Number(maxPrice) : null;
-      const numericPrice = Number(book.price);
-      const matchesMin = parsedMin === null || (!Number.isNaN(parsedMin) && numericPrice >= parsedMin);
-      const matchesMax = parsedMax === null || (!Number.isNaN(parsedMax) && numericPrice <= parsedMax);
+    if (selectedAuthor) {
+      filters.push({
+        key: "author",
+        label: `Author: ${selectedAuthor}`,
+        onClear: () => {
+          setSelectedAuthor("");
+          resetToFirstPage();
+        },
+      });
+    }
 
-      return matchesCategory && matchesAuthor && matchesTitle && matchesMin && matchesMax;
-    });
-  }, [books, selectedCategory, selectedAuthor, searchTitle, minPrice, maxPrice]);
+    if (minPrice) {
+      filters.push({
+        key: "min-price",
+        label: `Min: $${Number(minPrice).toFixed(2)}`,
+        onClear: () => {
+          setMinPrice("");
+          resetToFirstPage();
+        },
+      });
+    }
+
+    if (maxPrice) {
+      filters.push({
+        key: "max-price",
+        label: `Max: $${Number(maxPrice).toFixed(2)}`,
+        onClear: () => {
+          setMaxPrice("");
+          resetToFirstPage();
+        },
+      });
+    }
+
+    if (deferredSearchTitle) {
+      filters.push({
+        key: "search",
+        label: `Search: ${deferredSearchTitle}`,
+        onClear: () => {
+          setSearchTitle("");
+          resetToFirstPage();
+        },
+      });
+    }
+
+    return filters;
+  }, [selectedCategory, selectedAuthor, minPrice, maxPrice, deferredSearchTitle]);
 
   const requireAuth = (mode: "login" | "register" = "login", message?: string) => {
     setAuthModalMode(mode);
-    if (message) setFeedbackMessage(message);
+    if (message) {
+      alertToast.info("Authentication required", message);
+    }
     setIsAuthModalOpen(true);
   };
 
@@ -102,96 +202,132 @@ const Browse = () => {
     setFavoriteBookIds((prev) => toggleFavoriteId(prev, bookId));
   };
 
-  const handleAddToCart = (book: Book) => {
-    if (!Cookies.get("token")) {
-      requireAuth("login", "You need to login first before adding items to cart.");
+  const handleAddToCart = async (book: Book) => {
+    if (!isAuthenticated() || getStoredUser()?.role !== "customer") {
+      requireAuth("login", "You need to login as a customer before adding items to cart.");
       return;
     }
-    addToCart(book);
-    setFeedbackMessage(`Added "${book.title}" to cart.`);
+
+    try {
+      await customerService.addCartItem(book.id, 1);
+      alertToast.success("Added to cart", book.title);
+    } catch (cartError: any) {
+      alertToast.error("Unable to add to cart", cartError?.response?.data?.message || "Please try again.");
+    }
+  };
+
+  const resetToFirstPage = () => {
+    startTransition(() => {
+      setPage(1);
+    });
+  };
+
+  const clearAllFilters = () => {
+    setSelectedCategory("");
+    setSelectedAuthor("");
+    setSearchTitle("");
+    setMinPrice("");
+    setMaxPrice("");
+    setSortBy("newest");
+    resetToFirstPage();
+  };
+
+  const handlePageChange = (nextPage: number) => {
+    startTransition(() => {
+      setPage(nextPage);
+    });
   };
 
   return (
     <div className="w-full">
       <main className="section-wrap py-6 lg:py-10 space-y-6">
         <section id="browse" className="scroll-mt-32">
-          <div className="relative overflow-hidden rounded-[2.25rem] border border-white/70 bg-gradient-to-br from-white/95 via-amber-50/60 to-orange-100/50 p-6 md:p-9 shadow-[0_24px_60px_rgba(15,23,42,0.12)]">
-            <div className="absolute -right-14 -top-16 h-56 w-56 rounded-full bg-amber-300/30 blur-3xl" />
-            <div className="absolute -left-16 -bottom-16 h-56 w-56 rounded-full bg-orange-300/30 blur-3xl" />
+          <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm p-6 md:p-8">
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+            <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-accent/5 blur-3xl pointer-events-none" />
 
             <div className="relative flex flex-col gap-6">
               <div>
-                <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-orange-700/90 font-bold mb-3">
+                <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.1em] text-primary font-bold mb-2">
                   <Sparkles className="h-3.5 w-3.5" />
                   Search Products
                 </p>
-                <h2 className="text-3xl md:text-4xl font-black text-slate-900">Browse All Books</h2>
-                <p className="text-sm text-slate-600 mt-2 max-w-2xl">
-                  Find books faster with title search, filters, and clean product discovery flow.
+                <h2 className="text-3xl md:text-4xl font-bold text-foreground">Browse All Books</h2>
+                <p className="text-sm text-foreground/70 mt-3 max-w-2xl">
+                  Fast server-side search, cleaner filters, and paginated discovery for a smoother catalogue experience.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="rounded-2xl bg-white/90 border border-white/95 p-3.5 shadow-sm">
-                  <p className="text-xs uppercase text-slate-500 font-semibold tracking-wide">Books</p>
-                  <p className="mt-1 text-xl font-black text-slate-900 flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-orange-500" />
-                    {books.length}
+                <div className="rounded-lg bg-background/60 border border-border/40 p-4">
+                  <p className="text-xs uppercase text-foreground/60 font-semibold tracking-[0.1em]">Matching Books</p>
+                  <p className="mt-2 text-2xl font-bold text-foreground flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                    {catalogMeta.total}
                   </p>
                 </div>
-                <div className="rounded-2xl bg-white/90 border border-white/95 p-3.5 shadow-sm">
-                  <p className="text-xs uppercase text-slate-500 font-semibold tracking-wide">Categories</p>
-                  <p className="mt-1 text-xl font-black text-slate-900 flex items-center gap-2">
-                    <Layers className="h-5 w-5 text-orange-500" />
-                    {bookCategory.length}
+                <div className="rounded-lg bg-background/60 border border-border/40 p-4">
+                  <p className="text-xs uppercase text-foreground/60 font-semibold tracking-[0.1em]">Categories</p>
+                  <p className="mt-2 text-2xl font-bold text-foreground flex items-center gap-2">
+                    <Layers className="h-5 w-5 text-primary" />
+                    {bookCategories.length}
                   </p>
                 </div>
-                <div className="rounded-2xl bg-white/90 border border-white/95 p-3.5 shadow-sm">
-                  <p className="text-xs uppercase text-slate-500 font-semibold tracking-wide">Showing</p>
-                  <p className="mt-1 text-xl font-black text-slate-900">{filteredBooks.length}</p>
+                <div className="rounded-lg bg-background/60 border border-border/40 p-4">
+                  <p className="text-xs uppercase text-foreground/60 font-semibold tracking-[0.1em]">Page</p>
+                  <p className="mt-2 text-2xl font-bold text-foreground">{catalogMeta.page}{catalogMeta.total_pages ? ` / ${catalogMeta.total_pages}` : ""}</p>
                 </div>
               </div>
 
-              <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2">
-                <div className="relative w-full md:flex-1">
-                  <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1.5fr_repeat(4,minmax(0,1fr))]">
+                <div className="relative w-full">
+                  <Search className="h-4 w-4 text-foreground/40 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={searchTitle}
-                    onChange={(e) => setSearchTitle(e.target.value)}
-                    placeholder="Search by book title..."
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-white/95 pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-orange-300/40 focus:border-orange-300/40"
+                    onChange={(event) => {
+                      setSearchTitle(event.target.value);
+                      resetToFirstPage();
+                    }}
+                    placeholder="Search by title, author, or category..."
+                    className="h-10 w-full rounded-lg border border-border/50 bg-background px-3 pl-9 text-sm text-foreground placeholder:text-foreground/50 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all duration-200"
                   />
                 </div>
 
                 <Combobox
-                  items={bookCategory}
+                  items={bookCategories}
                   value={selectedCategory}
-                  onValueChange={(value) => setSelectedCategory(String(value ?? ""))}
+                  onValueChange={(value) => {
+                    setSelectedCategory(String(value ?? ""));
+                    resetToFirstPage();
+                  }}
                 >
-                  <ComboboxInput className="w-full md:w-56 bg-white/95" placeholder="Filter by category" />
+                  <ComboboxInput className="w-full bg-background border-border/50" placeholder={isLookupLoading ? "Loading categories..." : "Filter by category"} />
                   <ComboboxContent>
-                    <ComboboxEmpty>No items found.</ComboboxEmpty>
+                    <ComboboxEmpty>No categories found.</ComboboxEmpty>
                     <ComboboxList>
-                      {(item) => (
+                      {bookCategories.map((item) => (
                         <ComboboxItem key={item.id} value={item.name}>
                           {item.name}
                         </ComboboxItem>
-                      )}
+                      ))}
                     </ComboboxList>
                   </ComboboxContent>
                 </Combobox>
 
                 <Combobox
-                  items={authorOptions}
+                  items={authors}
                   value={selectedAuthor}
-                  onValueChange={(value) => setSelectedAuthor(String(value ?? ""))}
+                  onValueChange={(value) => {
+                    setSelectedAuthor(String(value ?? ""));
+                    resetToFirstPage();
+                  }}
                 >
-                  <ComboboxInput className="w-full md:w-56 bg-white/95" placeholder="Filter by author" />
+                  <ComboboxInput className="w-full bg-background border-border/50" placeholder={isLookupLoading ? "Loading authors..." : "Filter by author"} />
                   <ComboboxContent>
-                    <ComboboxEmpty>No items found.</ComboboxEmpty>
+                    <ComboboxEmpty>No authors found.</ComboboxEmpty>
                     <ComboboxList>
-                      {authorOptions.map((item) => (
+                      {authors.map((item) => (
                         <ComboboxItem key={item.id} value={item.name}>
                           {item.name}
                         </ComboboxItem>
@@ -205,9 +341,12 @@ const Browse = () => {
                   min="0"
                   step="0.01"
                   value={minPrice}
-                  onChange={(e) => setMinPrice(e.target.value)}
-                  placeholder="Min price"
-                  className="h-10 w-full md:w-32 rounded-xl border border-slate-200 bg-white/95 px-3 text-sm text-slate-700 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-orange-300/40 focus:border-orange-300/40"
+                  onChange={(event) => {
+                    setMinPrice(event.target.value);
+                    resetToFirstPage();
+                  }}
+                  placeholder={`Min $${catalogMeta.price_range.min.toFixed(2)}`}
+                  className="h-10 w-full rounded-lg border border-border/50 bg-background px-3 text-sm text-foreground placeholder:text-foreground/50 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all duration-200"
                 />
 
                 <input
@@ -215,43 +354,120 @@ const Browse = () => {
                   min="0"
                   step="0.01"
                   value={maxPrice}
-                  onChange={(e) => setMaxPrice(e.target.value)}
-                  placeholder="Max price"
-                  className="h-10 w-full md:w-32 rounded-xl border border-slate-200 bg-white/95 px-3 text-sm text-slate-700 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-orange-300/40 focus:border-orange-300/40"
+                  onChange={(event) => {
+                    setMaxPrice(event.target.value);
+                    resetToFirstPage();
+                  }}
+                  placeholder={`Max $${catalogMeta.price_range.max.toFixed(2)}`}
+                  className="h-10 w-full rounded-lg border border-border/50 bg-background px-3 text-sm text-foreground placeholder:text-foreground/50 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all duration-200"
                 />
+              </div>
+
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="inline-flex items-center gap-2 rounded-lg border border-border/40 bg-background/60 px-3 py-2 text-xs font-semibold text-foreground/70">
+                    <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
+                    {activeFilters.length} active filters
+                  </div>
+                  {activeFilters.map((filter) => (
+                    <button
+                      key={filter.key}
+                      type="button"
+                      onClick={filter.onClear}
+                      className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-background px-3 py-1.5 text-xs font-medium text-foreground/80 hover:bg-background/80"
+                    >
+                      {filter.label}
+                      <X className="h-3 w-3" />
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <select
+                    value={sortBy}
+                    onChange={(event) => {
+                      setSortBy(event.target.value as BookQueryParams["sort"]);
+                      resetToFirstPage();
+                    }}
+                    className="h-10 rounded-lg border border-border/50 bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all duration-200"
+                  >
+                    <option value="newest">Newest first</option>
+                    <option value="popular">Most popular</option>
+                    <option value="price_asc">Price: low to high</option>
+                    <option value="price_desc">Price: high to low</option>
+                    <option value="title_asc">Title: A to Z</option>
+                    <option value="title_desc">Title: Z to A</option>
+                  </select>
+
+                  <button
+                    type="button"
+                    onClick={clearAllFilters}
+                    className="h-10 px-4 rounded-lg border border-border/50 bg-background text-sm font-medium text-foreground hover:bg-background/80 transition-all duration-200"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {feedbackMessage && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
-            {feedbackMessage}
-          </div>
-        )}
-
         {isLoading ? (
-          <Loading />
+          <Loading message="Loading catalogue" />
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <p className="text-lg font-medium">{error}</p>
           </div>
-        ) : filteredBooks.length > 0 ? (
-          <section id="books-grid" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 scroll-mt-32">
-            {filteredBooks.map((book) => (
-              <BookCard
-                key={book.id}
-                {...book}
-                isFavorite={favoriteBookIds.includes(book.id)}
-                onToggleFavorite={() => handleToggleFavorite(book.id)}
-                onAddToCart={handleAddToCart}
-              />
-            ))}
-          </section>
+        ) : books.length > 0 ? (
+          <>
+            <section id="books-grid" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 scroll-mt-32">
+              {books.map((book) => (
+                <BookCard
+                  key={book.id}
+                  {...book}
+                  isFavorite={favoriteBookIds.includes(book.id)}
+                  onToggleFavorite={() => handleToggleFavorite(book.id)}
+                  onAddToCart={handleAddToCart}
+                />
+              ))}
+            </section>
+
+            <section className="flex flex-col gap-3 rounded-2xl border border-border/50 bg-card p-5 shadow-sm md:flex-row md:items-center md:justify-between">
+              <div className="text-sm text-foreground/70">
+                Showing {(catalogMeta.page - 1) * catalogMeta.limit + 1} to {Math.min(catalogMeta.page * catalogMeta.limit, catalogMeta.total)} of {catalogMeta.total} books
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={!catalogMeta.has_previous_page}
+                  onClick={() => handlePageChange(catalogMeta.page - 1)}
+                  className="inline-flex h-10 items-center gap-2 rounded-lg border border-border/50 bg-background px-4 text-sm font-medium text-foreground transition-all duration-200 hover:bg-background/80 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Previous
+                </button>
+
+                <div className="rounded-lg border border-border/40 bg-background/60 px-4 py-2 text-sm font-semibold text-foreground">
+                  Page {catalogMeta.page} of {Math.max(catalogMeta.total_pages, 1)}
+                </div>
+
+                <button
+                  type="button"
+                  disabled={!catalogMeta.has_next_page}
+                  onClick={() => handlePageChange(catalogMeta.page + 1)}
+                  className="inline-flex h-10 items-center gap-2 rounded-lg border border-border/50 bg-background px-4 text-sm font-medium text-foreground transition-all duration-200 hover:bg-background/80 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Next
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </section>
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <p className="text-lg font-medium">No books found</p>
-            <p className="text-sm mt-1">Try a different search or filter</p>
+            <p className="text-sm mt-1">Try a different search, filter, or sort option.</p>
           </div>
         )}
       </main>
@@ -307,7 +523,7 @@ const Browse = () => {
           {authModalMode === "login" ? (
             <CustomerLoginForm
               onLoginSuccess={() => {
-                setFeedbackMessage("Login successful.");
+                alertToast.success("Login successful", "Welcome back.");
                 setIsAuthModalOpen(false);
                 setFavoriteBookIds(loadFavorites());
               }}
@@ -315,7 +531,7 @@ const Browse = () => {
           ) : (
             <CustomerRegisterForm
               onRegisterSuccess={() => {
-                setFeedbackMessage("Register successful.");
+                alertToast.success("Account created", "Your customer account is ready.");
                 setIsAuthModalOpen(false);
                 setFavoriteBookIds(loadFavorites());
               }}

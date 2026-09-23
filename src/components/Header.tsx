@@ -1,189 +1,497 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { BookOpen, Menu, ShoppingCart, X } from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
-import authService from "../services/auth.service";
-import { Button } from "./ui/button";
-import { CART_CHANGED_EVENT, cartItemCount, loadCart } from "../lib/cart";
+import {
+  BadgeHelp,
+  BookOpen,
+  Heart,
+  Home,
+  Menu,
+  MoonStar,
+  ShoppingCart,
+  Store,
+  SunMedium,
+  UserCircle2,
+  X,
+  type LucideIcon,
+} from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import customerService from "../services/customer.service";
+import { AUTH_CHANGED_EVENT, getAccessToken, getStoredUser } from "../lib/session";
+import { CART_CHANGED_EVENT } from "../lib/cart";
+import type { User } from "../types/auth.types";
+import { useStorefrontSettings } from "../contexts/StorefrontSettingsContext";
+import { useTheme } from "../contexts/ThemeContext";
 
-const navItems = [
-  { label: "Home", to: "/" },
-  { label: "Shop", to: "/browse" },
-  { label: "Cart", to: "/cart" },
-  { label: "Favorites", to: "/favorites" },
-  { label: "Help", to: "/#help" }
+interface NavItem {
+  label: string;
+  to: string;
+  icon: LucideIcon;
+}
+
+const navItems: NavItem[] = [
+  { label: "Home", to: "/", icon: Home },
+  { label: "Shop", to: "/browse", icon: Store },
+  { label: "Favorites", to: "/favorites", icon: Heart },
+  { label: "Help", to: "/#help", icon: BadgeHelp },
 ];
 
 const Header = () => {
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(Boolean(Cookies.get("token")));
+  const location = useLocation();
+  const { settings } = useStorefrontSettings();
+  const { isDark, toggleTheme } = useTheme();
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const user = getStoredUser();
+    return user?.role === "customer" ? user : null;
+  });
+  const [isLoggedIn, setIsLoggedIn] = useState(Boolean(getAccessToken()) && getStoredUser()?.role === "customer");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname, location.hash]);
+
+  useEffect(() => {
+    let isMounted = true;
+
     const syncAuthState = () => {
-      setIsLoggedIn(Boolean(Cookies.get("token")));
-      setCartCount(cartItemCount(loadCart()));
+      const token = getAccessToken();
+      const user = getStoredUser();
+      const customerUser = user?.role === "customer" ? user : null;
+      const loggedIn = Boolean(token) && Boolean(customerUser);
+
+      if (!isMounted) {
+        return;
+      }
+
+      setCurrentUser(customerUser);
+      setIsLoggedIn(loggedIn);
+
+      if (!loggedIn) {
+        setCartCount(0);
+      }
     };
-    const syncCartState = () => setCartCount(cartItemCount(loadCart()));
+
+    const syncCartState = async () => {
+      const token = getAccessToken();
+      const user = getStoredUser();
+
+      if (!token || user?.role !== "customer") {
+        if (isMounted) {
+          setCartCount(0);
+        }
+        return;
+      }
+
+      try {
+        const cart = await customerService.getCart();
+        if (isMounted) {
+          setCartCount(cart.item_count);
+        }
+      } catch {
+        if (isMounted) {
+          setCartCount(0);
+        }
+      }
+    };
+
+    const handleAuthChanged = () => {
+      syncAuthState();
+      void syncCartState();
+    };
+
+    const handleCartChanged = () => {
+      void syncCartState();
+    };
 
     syncAuthState();
-    window.addEventListener("auth-changed", syncAuthState);
-    window.addEventListener(CART_CHANGED_EVENT, syncCartState);
+    void syncCartState();
+
+    window.addEventListener(AUTH_CHANGED_EVENT, handleAuthChanged);
+    window.addEventListener(CART_CHANGED_EVENT, handleCartChanged);
 
     return () => {
-      window.removeEventListener("auth-changed", syncAuthState);
-      window.removeEventListener(CART_CHANGED_EVENT, syncCartState);
+      isMounted = false;
+      window.removeEventListener(AUTH_CHANGED_EVENT, handleAuthChanged);
+      window.removeEventListener(CART_CHANGED_EVENT, handleCartChanged);
     };
   }, []);
 
-  const handleSignOut = () => {
-    authService.logout();
-    navigate("/login");
+  const customerName = useMemo(() => {
+    if (!currentUser) {
+      return "Guest";
+    }
+
+    const fullName = `${currentUser.first_name ?? ""} ${currentUser.last_name ?? ""}`.trim();
+    return fullName || currentUser.name || currentUser.email.split("@")[0];
+  }, [currentUser]);
+
+  const customerInitials = useMemo(() => {
+    const segments = customerName
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((segment) => segment.charAt(0).toUpperCase());
+
+    return segments.join("") || "BK";
+  }, [customerName]);
+
+  const cartLabel = useMemo(() => {
+    if (cartCount <= 0) {
+      return "Cart is empty";
+    }
+
+    return `${cartCount} item${cartCount === 1 ? "" : "s"}`;
+  }, [cartCount]);
+
+  const isNavItemActive = (item: NavItem) => {
+    if (item.to === "/") {
+      return location.pathname === "/" && location.hash === "";
+    }
+
+    if (item.to.startsWith("/#")) {
+      return location.pathname === "/" && location.hash === item.to.slice(1);
+    }
+
+    return location.pathname === item.to || location.pathname.startsWith(`${item.to}/`);
+  };
+
+  const handleNavigation = (to: string) => {
+    navigate(to);
   };
 
   return (
-    <header className="sticky top-0 z-50">
-      <nav className="section-wrap pt-5 pb-4">
+    <header className="sticky top-0 z-50 px-3 pt-3 sm:px-4">
+      <nav className="section-wrap">
         <motion.div
           initial={{ y: -18, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.35 }}
-          className="glass-surface rounded-3xl px-4 md:px-6 py-3 flex items-center justify-between border-white/70"
+          transition={{ duration: 0.45, ease: "easeOut" }}
+          className="rounded-[28px] border border-white/80 bg-background/85 px-3 py-3 shadow-[0_18px_40px_rgba(15,23,42,0.07)] backdrop-blur-xl sm:px-4 lg:px-5"
         >
-          <div className="flex items-center gap-6">
-            <button onClick={() => navigate("/")} className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-orange-300/40">
-                <BookOpen className="h-5 w-5" />
-              </div>
-              <h1 className="text-lg font-bold text-foreground">Bookly</h1>
-            </button>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3 lg:gap-4">
+              <button
+                onClick={() => handleNavigation("/")}
+                className="group flex min-w-0 items-center gap-3 text-left"
+                aria-label={`Go to ${settings.store_name} homepage`}
+              >
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-primary via-primary to-emerald-700 text-primary-foreground shadow-[0_12px_24px_rgba(16,185,129,0.22)] transition-transform duration-200 group-hover:-translate-y-0.5">
+                  <BookOpen className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-xl font-bold tracking-tight text-foreground">{settings.store_name}</p>
+                  <p className="hidden text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/40 md:block">
+                    Cambodia Store
+                  </p>
+                </div>
+              </button>
 
-            <div className="hidden md:flex items-center gap-2 rounded-2xl bg-white/65 border border-white/70 p-1">
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.label}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                      isActive ? "bg-white text-slate-900 border border-slate-200/60 shadow-sm" : "text-slate-500 hover:text-slate-900"
-                    }`
-                  }
+              <div className="hidden lg:flex items-center gap-1 rounded-full border border-border/50 bg-card/70 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = isNavItemActive(item);
+
+                  return (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => handleNavigation(item.to)}
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-[0_10px_24px_rgba(16,185,129,0.22)]"
+                          : "text-foreground/65 hover:bg-background hover:text-foreground"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              <button
+                type="button"
+                onClick={() => handleNavigation("/cart")}
+                className="group relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border/50 bg-card/80 text-foreground shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-background"
+                aria-label="Open cart"
+              >
+                <ShoppingCart className="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:scale-110" />
+                {cartCount > 0 ? (
+                  <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground ring-2 ring-background">
+                    {cartCount}
+                  </span>
+                ) : null}
+              </button>
+
+              {isLoggedIn ? (
+                <div className="hidden items-center gap-2 lg:flex">
+                  <button
+                    type="button"
+                    onClick={() => handleNavigation("/profile")}
+                    className="inline-flex h-11 items-center gap-3 rounded-2xl border border-border/50 bg-card/80 px-3.5 text-left text-foreground shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-background"
+                  >
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-slate-900 to-slate-700 text-xs font-bold text-white">
+                      {customerInitials}
+                    </div>
+                    <div className="hidden xl:block">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/45">Customer Hub</p>
+                      <p className="max-w-28 truncate text-sm font-semibold">{customerName}</p>
+                    </div>
+                    <UserCircle2 className="h-4 w-4 text-foreground/45" />
+                  </button>
+                </div>
+              ) : (
+                <div className="hidden items-center gap-2 lg:flex">
+                  <button
+                    type="button"
+                    onClick={() => handleNavigation("/register")}
+                    className="inline-flex h-11 items-center rounded-2xl border border-border/50 bg-card/70 px-4 text-sm font-semibold text-foreground/75 transition-all duration-200 hover:bg-background hover:text-foreground"
+                  >
+                    Register
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleNavigation("/login")}
+                    className="inline-flex h-11 items-center rounded-2xl bg-gradient-to-r from-primary to-emerald-700 px-5 text-sm font-semibold text-primary-foreground shadow-[0_12px_24px_rgba(16,185,129,0.2)] transition-all duration-200 hover:-translate-y-0.5"
+                  >
+                    Sign In
+                  </button>
+                </div>
+              )}
+
+              <motion.button
+                type="button"
+                onClick={toggleTheme}
+                whileTap={{ scale: 0.96 }}
+                className={`theme-icon-toggle ${isDark ? "theme-icon-toggle--dark" : ""}`}
+                aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
+                title={`Switch to ${isDark ? "light" : "dark"} mode`}
+              >
+                <span className="theme-icon-toggle__glow" />
+                <span className="theme-icon-toggle__rail" />
+                <motion.span
+                  animate={{ scale: isDark ? 0.94 : 1.05, opacity: isDark ? 0.24 : 0.4 }}
+                  transition={{ duration: 0.22, ease: "easeOut" }}
+                  className="theme-icon-toggle__halo"
+                />
+                <motion.span
+                  animate={{
+                    rotate: isDark ? 0 : 90,
+                    scale: isDark ? 1 : 1.04,
+                  }}
+                  transition={{ type: "spring", stiffness: 360, damping: 26, mass: 0.65 }}
+                  className="theme-icon-toggle__core"
                 >
-                  {item.label}
-                </NavLink>
-              ))}
+                  <span className="theme-icon-toggle__icon-stack">
+                    <motion.span
+                      animate={{
+                        opacity: isDark ? 0 : 1,
+                        scale: isDark ? 0.55 : 1,
+                        rotate: isDark ? -90 : 0,
+                      }}
+                      transition={{ duration: 0.18, ease: "easeOut" }}
+                      className="theme-icon-toggle__icon theme-icon-toggle__icon--sun"
+                    >
+                      <SunMedium className="h-[18px] w-[18px]" />
+                    </motion.span>
+                    <motion.span
+                      animate={{
+                        opacity: isDark ? 1 : 0,
+                        scale: isDark ? 1 : 0.55,
+                        rotate: isDark ? 0 : 90,
+                      }}
+                      transition={{ duration: 0.18, ease: "easeOut" }}
+                      className="theme-icon-toggle__icon theme-icon-toggle__icon--moon"
+                    >
+                      <MoonStar className="h-[18px] w-[18px]" />
+                    </motion.span>
+                  </span>
+                </motion.span>
+              </motion.button>
+
+              <button
+                type="button"
+                className="grid h-11 w-11 place-items-center rounded-2xl border border-border/50 bg-card/70 text-foreground transition-colors duration-200 hover:bg-background lg:hidden"
+                onClick={() => setIsMenuOpen((prev) => !prev)}
+                aria-label="Toggle navigation menu"
+              >
+                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate("/cart")}
-              className="relative p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 hover:bg-slate-900 transition-colors shadow-[0_8px_20px_rgba(15,23,42,0.2)]"
-              aria-label="Open cart"
-            >
-              <ShoppingCart className="h-5 w-5 text-white" />
-              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-orange-500 text-white text-[10px] flex items-center justify-center font-bold ring-2 ring-white/90">
-                {cartCount}
-              </span>
-            </button>
-
-            {isLoggedIn ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-xl px-5 font-semibold bg-white/70 border-white/70 hover:bg-white hidden sm:inline-flex"
-                onClick={handleSignOut}
+          <AnimatePresence>
+            {isMenuOpen ? (
+              <motion.div
+                initial={{ opacity: 0, y: -16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.22, ease: "easeOut" }}
+                className="mt-4 overflow-hidden rounded-[24px] border border-border/50 bg-card/95 p-4 shadow-[0_18px_36px_rgba(15,23,42,0.08)] lg:hidden"
               >
-                Sign Out
-              </Button>
-            ) : (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="font-semibold hover:bg-white/60 rounded-xl hidden sm:inline-flex"
-                  onClick={() => navigate("/register")}
-                >
-                  Register
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl px-5 font-semibold bg-white/70 border-white/70 hover:bg-white hidden sm:inline-flex"
-                  onClick={() => navigate("/login")}
-                >
-                  Sign In
-                </Button>
-              </>
-            )}
+                <div className="grid gap-3">
+                  {isLoggedIn ? (
+                    <div className="flex items-center gap-3 rounded-2xl border border-border/40 bg-background/70 p-3">
+                      <div className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-slate-900 to-slate-700 text-sm font-bold text-white">
+                        {customerInitials}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-foreground">{customerName}</p>
+                        <p className="truncate text-xs text-foreground/55">{currentUser?.email}</p>
+                      </div>
+                    </div>
+                  ) : null}
 
-            <button
-              className="md:hidden p-2.5 rounded-xl bg-white/75 border border-white/70 text-slate-700"
-              onClick={() => setIsMenuOpen((prev) => !prev)}
-            >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-          </div>
-        </motion.div>
-
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="md:hidden mt-3 glass-surface rounded-2xl p-3 border border-white/70"
-            >
-              <div className="grid grid-cols-2 gap-2">
-                {navItems.map((item) => (
-                  <button
-                    key={item.label}
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      navigate(item.to);
-                    }}
-                    className="rounded-xl py-2.5 text-sm font-semibold bg-white/70 hover:bg-white text-slate-700 transition-colors"
-                  >
-                    {item.label}
-                  </button>
-                ))}
-
-                {isLoggedIn ? (
-                  <button
-                    onClick={handleSignOut}
-                    className="col-span-2 rounded-xl py-2.5 text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-white transition-colors"
-                  >
-                    Sign Out
-                  </button>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        navigate("/register");
-                      }}
-                      className="rounded-xl py-2.5 text-sm font-semibold bg-white/75 hover:bg-white text-slate-700 transition-colors"
+                  <div className="grid gap-2">
+                    <motion.button
+                      type="button"
+                      onClick={toggleTheme}
+                      whileTap={{ scale: 0.985 }}
+                      className={`theme-icon-toggle theme-icon-toggle--mobile ${isDark ? "theme-icon-toggle--dark" : ""}`}
+                      aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
                     >
-                      Register
+                      <span className="theme-icon-toggle__glow" />
+                      <span className="theme-icon-toggle__rail" />
+                      <motion.span
+                        animate={{ scale: isDark ? 0.94 : 1.05, opacity: isDark ? 0.24 : 0.4 }}
+                        transition={{ duration: 0.22, ease: "easeOut" }}
+                        className="theme-icon-toggle__halo"
+                      />
+                      <span className="theme-icon-toggle__label">
+                        {isDark ? "Dark mode active" : "Light mode active"}
+                      </span>
+                      <motion.span
+                        animate={{
+                          rotate: isDark ? 0 : 90,
+                          scale: isDark ? 1 : 1.04,
+                        }}
+                        transition={{ type: "spring", stiffness: 360, damping: 26, mass: 0.65 }}
+                        className="theme-icon-toggle__core"
+                      >
+                        <span className="theme-icon-toggle__icon-stack">
+                          <motion.span
+                            animate={{
+                              opacity: isDark ? 0 : 1,
+                              scale: isDark ? 0.55 : 1,
+                              rotate: isDark ? -90 : 0,
+                            }}
+                            transition={{ duration: 0.18, ease: "easeOut" }}
+                            className="theme-icon-toggle__icon theme-icon-toggle__icon--sun"
+                          >
+                            <SunMedium className="h-3.5 w-3.5" />
+                          </motion.span>
+                          <motion.span
+                            animate={{
+                              opacity: isDark ? 1 : 0,
+                              scale: isDark ? 1 : 0.55,
+                              rotate: isDark ? 0 : 90,
+                            }}
+                            transition={{ duration: 0.18, ease: "easeOut" }}
+                            className="theme-icon-toggle__icon theme-icon-toggle__icon--moon"
+                          >
+                            <MoonStar className="h-3.5 w-3.5" />
+                          </motion.span>
+                        </span>
+                      </motion.span>
+                    </motion.button>
+
+                    {navItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = isNavItemActive(item);
+
+                      return (
+                        <button
+                          key={item.label}
+                          type="button"
+                          onClick={() => handleNavigation(item.to)}
+                          className={`flex items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-semibold transition-all duration-200 ${
+                            isActive
+                              ? "bg-primary text-primary-foreground shadow-[0_10px_24px_rgba(16,185,129,0.22)]"
+                              : "border border-border/40 bg-background/70 text-foreground hover:bg-background"
+                          }`}
+                        >
+                          <span className="inline-flex items-center gap-3">
+                            <Icon className="h-4 w-4" />
+                            {item.label}
+                          </span>
+                          <span className="text-xs uppercase tracking-[0.16em] opacity-60">
+                            {item.label === "Home" ? "Start" : item.label === "Shop" ? "Books" : item.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => handleNavigation("/cart")}
+                      className="flex items-center justify-between rounded-2xl border border-border/40 bg-background/70 px-4 py-3 text-sm font-semibold text-foreground"
+                    >
+                      <span className="inline-flex items-center gap-3">
+                        <ShoppingCart className="h-4 w-4" />
+                        Cart
+                      </span>
+                      <span>{cartLabel}</span>
                     </button>
+
+                    {isLoggedIn ? (
+                      <button
+                        type="button"
+                        onClick={() => handleNavigation("/profile")}
+                        className="flex items-center justify-between rounded-2xl border border-border/40 bg-background/70 px-4 py-3 text-sm font-semibold text-foreground"
+                      >
+                        <span className="inline-flex items-center gap-3">
+                          <UserCircle2 className="h-4 w-4" />
+                          Profile Hub
+                        </span>
+                        <span>Account</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleNavigation("/register")}
+                        className="flex items-center justify-between rounded-2xl border border-border/40 bg-background/70 px-4 py-3 text-sm font-semibold text-foreground"
+                      >
+                        <span className="inline-flex items-center gap-3">
+                          <UserCircle2 className="h-4 w-4" />
+                          Register
+                        </span>
+                        <span>Join</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {isLoggedIn ? (
+                    <div className="grid gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleNavigation("/profile")}
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"
+                      >
+                        <UserCircle2 className="h-4 w-4" />
+                        Open Profile
+                      </button>
+                    </div>
+                  ) : (
                     <button
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        navigate("/login");
-                      }}
-                      className="rounded-xl py-2.5 text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-white transition-colors"
+                      type="button"
+                      onClick={() => handleNavigation("/login")}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-emerald-700 px-4 py-3 text-sm font-semibold text-primary-foreground shadow-[0_14px_28px_rgba(16,185,129,0.22)]"
                     >
+                      <UserCircle2 className="h-4 w-4" />
                       Sign In
                     </button>
-                  </>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  )}
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </motion.div>
       </nav>
     </header>
   );

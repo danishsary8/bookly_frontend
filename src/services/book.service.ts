@@ -1,9 +1,17 @@
 import api from '../api/axios';
-import type { BookCategoryResponse, BookCountResponse, BookPriceResponse, BookResponse } from '../types/book.types';
+import type { Book, BookAuthorResponse, BookCategoryResponse, BookCountResponse, BookMutationData, BookPriceResponse, BookQueryParams, BookResponse, BookReview, BookReviewPayload } from '../types/book.types';
 
 const bookService = {
-    getBooks: async (): Promise<BookResponse> => {
-        const response = await api.get<BookResponse>('/books');
+    getBooks: async (params?: BookQueryParams): Promise<BookResponse> => {
+        const query = Object.fromEntries(
+            Object.entries(params ?? {}).filter(([, value]) => value !== undefined && value !== null && value !== ""),
+        );
+
+        const response = await api.get<BookResponse>('/books', { params: query });
+        return response.data;
+    },
+    getAuthors: async (): Promise<BookAuthorResponse> => {
+        const response = await api.get<BookAuthorResponse>('/authors');
         return response.data;
     },
     getBookCategories: async (): Promise<BookCategoryResponse> => {
@@ -25,6 +33,25 @@ const bookService = {
     getBestSellers: async (): Promise<BookResponse> => {
         const response = await api.get<BookResponse>('/books/best-sellers');
         return response.data;
+    },
+    getBookReviews: async (bookId: number): Promise<BookReview[]> => {
+        const response = await api.get<{ status: string; data: BookReview[] }>(`/books/${bookId}/reviews`);
+        return response.data.data;
+    },
+    submitBookReview: async (bookId: number, payload: BookReviewPayload): Promise<BookReview> => {
+        const response = await api.post<{ status: string; data: BookReview }>(`/books/${bookId}/reviews`, payload);
+        return response.data.data;
+    },
+    createBook: async (payload: BookMutationData): Promise<Book> => {
+        const response = await api.post<{ status: string; data: Book }>('/books', payload);
+        return response.data.data;
+    },
+    updateBook: async (bookId: number, payload: BookMutationData): Promise<Book> => {
+        const response = await api.put<{ status: string; data: Book }>(`/books/${bookId}`, payload);
+        return response.data.data;
+    },
+    deleteBook: async (bookId: number): Promise<void> => {
+        await api.delete(`/books/${bookId}`);
     }
 };
 

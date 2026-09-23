@@ -1,72 +1,50 @@
-//  User interface
 export interface User {
-    id: number;
-    name: string;
-    email: string;
-    address?: string;
-    phone?: string;
-    avatar?: string;
-    role?: string;
+  id: number;
+  email: string;
+  role: "admin" | "customer";
+  name?: string;
+  first_name?: string;
+  last_name?: string;
+  phone?: string | null;
+  address?: string | null;
 }
 
-
-export interface AuthUserResponse {
-    token: string;
-}
-
-export interface ForgotPasswordResponse {
-    message: string;
-    debug_otp?: string;
-}
-
-export interface BasicMessageResponse {
-    message: string;
-    debug_otp?: string;
+export interface ApiResponse<T> {
+  status: "success" | "error";
+  data: T;
+  message?: string;
 }
 
 export interface LoginCredentials {
-    email: string;
-    password: string;
+  email: string;
+  password: string;
 }
 
 export interface RegisterData {
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone: string;
-    address?: string;
-    password?: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  password: string;
 }
 
-export interface RegisterResponse extends BasicMessageResponse {
-    requires_otp_verification?: boolean;
-    email?: string;
+export interface AuthSessionData {
+  access_token: string;
+  refresh_token?: string;
+  token_type: string;
+  expires_in: number;
+  user: User;
 }
 
-//  Admin interface
-export interface AdminRegisterData {
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone: string;
-    role: string;
-    address: string;
-    password: string;
+export type AuthUserResponse = ApiResponse<AuthSessionData>;
+export type AuthAdminLoginResponse = ApiResponse<AuthSessionData>;
+
+export interface BasicMessageResponse {
+  status?: "success" | "error";
+  message: string;
 }
 
-export interface Admin {
-    id: number;
-    email: string;
-    first_name: string;
-    last_name: string;
-    role: string;
-}
+export interface ForgotPasswordResponse extends BasicMessageResponse {}
 
-export interface AuthAdminLoginResponse {
-    token: string;
-    admin?: Admin;
-}
-
-export interface AuthAdminRegisterResponse {
-    message: string;
-}
+export interface RegisterResponse extends BasicMessageResponse {}

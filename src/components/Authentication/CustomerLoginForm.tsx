@@ -1,189 +1,167 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import authService from "../../services/auth.service";
+import { alertToast } from "../../lib/alerts";
 
 interface CustomerLoginFormProps {
-    onLoginSuccess?: () => void;
+  onLoginSuccess?: () => void;
 }
 
-const Login = ({ onLoginSuccess }: CustomerLoginFormProps) => {
-    const [mode, setMode] = useState<"login" | "forgot">("login");
-    const [showPassword, setShowPassword] = useState(false);
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [forgotEmail, setForgotEmail] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+const fieldClassName =
+  "h-12 w-full rounded-2xl border border-border/60 bg-background/80 px-4 pl-11 text-sm text-foreground placeholder:text-foreground/45 outline-none transition-all duration-150 focus:border-primary/40 focus:ring-4 focus:ring-primary/10";
 
-    const navigate = useNavigate();
+const CustomerLoginForm = ({ onLoginSuccess }: CustomerLoginFormProps) => {
+  const [mode, setMode] = useState<"login" | "forgot">("login");
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError(null);
-        setSuccessMessage(null);
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsLoading(true);
 
-        try {
-            const response = await authService.adminLogin({ email, password });
-            if (response.admin && response.admin.role === "admin") {
-                onLoginSuccess?.();
-                navigate("/admin");
-            } else {
-                onLoginSuccess?.();
-                navigate("/");
-            }
-        } catch (err: any) {
-            try {
-                await authService.login({ email, password });
-                onLoginSuccess?.();
-                navigate("/");
-            } catch (clientErr: any) {
-                setError(err.response?.data?.message || clientErr.response?.data?.message || "Login failed. Please check your credentials.");
-            }
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    try {
+      await authService.login({ email, password });
+      onLoginSuccess?.();
+      navigate("/");
+    } catch (error: any) {
+      alertToast.error("Login failed", error?.response?.data?.message || "Please check your credentials.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    const handleForgotPassword = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError(null);
-        setSuccessMessage(null);
+  const handleForgotPassword = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsLoading(true);
 
-        try {
-            const enteredEmail = forgotEmail.trim();
-            const response = await authService.forgotPassword(enteredEmail);
-            setSuccessMessage(response.message || "OTP sent to email.");
-            navigate(`/verify-otp?mode=reset&email=${encodeURIComponent(enteredEmail)}`);
-        } catch (err: any) {
-            const status = err?.response?.status;
-            const backendMessage: string = err?.response?.data?.message || "";
-            if (status === 404) {
-                setError("Email is not registered yet. Please sign up first.");
-            } else if (backendMessage.toLowerCase().includes("smtp is not configured")) {
-                setError("Email service is not configured. Please set MAIL_* in backend .env.");
-            } else {
-                setError(backendMessage || "Failed to process forgot password request.");
-            }
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    try {
+      const enteredEmail = forgotEmail.trim();
+      const response = await authService.forgotPassword(enteredEmail);
+      alertToast.success("OTP sent", response.message || "Check your email for the reset code.");
+      navigate(`/verify-otp?mode=reset&email=${encodeURIComponent(enteredEmail)}`);
+    } catch (error: any) {
+      alertToast.error("Unable to send OTP", error?.response?.data?.message || "Failed to process forgot password request.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    return (
-        <form onSubmit={mode === "login" ? handleSubmit : handleForgotPassword} className="space-y-4">
-            {error && (
-                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs text-center font-body">
-                    {error}
-                </div>
-            )}
-            {successMessage && (
-                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs text-center font-body">
-                    {successMessage}
-                </div>
-            )}
+  return (
+    <form onSubmit={mode === "login" ? handleSubmit : handleForgotPassword} className="space-y-5">
+      {mode === "login" ? (
+        <>
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/52">Email</label>
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/38" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="you@example.com"
+                className={fieldClassName}
+              />
+            </div>
+          </div>
 
-            {mode === "login" ? (
-                <>
-                    <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <input
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Email"
-                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-300/40"
-                        />
-                    </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/52">Password</label>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/38" />
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Enter your password"
+                className={`${fieldClassName} pr-12`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/42 transition-colors duration-150 hover:text-foreground"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
 
-                    <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Password"
-                            className="w-full pl-10 pr-11 py-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-300/40"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        >
-                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                    </div>
-
-                    <div className="flex justify-end">
-                        <button
-                            type="button"
-                            className="text-xs font-semibold text-orange-600 hover:underline"
-                            onClick={() => {
-                                setMode("forgot");
-                                setForgotEmail(email);
-                                setError(null);
-                                setSuccessMessage(null);
-                            }}
-                        >
-                            Forgot password?
-                        </button>
-                    </div>
-                </>
-            ) : (
-                <>
-                    <div className="text-sm text-slate-600 pb-1">
-                        Enter your email to receive OTP code.
-                    </div>
-                    <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <input
-                            type="email"
-                            required
-                            value={forgotEmail}
-                            onChange={(e) => setForgotEmail(e.target.value)}
-                            placeholder="Email"
-                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-300/40"
-                        />
-                    </div>
-                    <button
-                        type="button"
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
-                        onClick={() => {
-                            setMode("login");
-                            setError(null);
-                            setSuccessMessage(null);
-                        }}
-                    >
-                        <ArrowLeft className="h-3.5 w-3.5" />
-                        Back to login
-                    </button>
-                </>
-            )}
-
-            <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-bold hover:opacity-90 flex items-center justify-center gap-2 disabled:opacity-70"
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-foreground/52">Use the same email you used at checkout and profile registration.</p>
+            <button
+              type="button"
+              className="shrink-0 text-xs font-semibold text-primary transition-colors duration-150 hover:text-primary/80"
+              onClick={() => {
+                setMode("forgot");
+                setForgotEmail(email);
+              }}
             >
-                {isLoading ? (
-                    <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        {mode === "login" ? "Logging in..." : "Sending OTP..."}
-                    </>
-                ) : (
-                    mode === "login" ? "Login" : "Send OTP"
-                )}
-            </motion.button>
-        </form>
-    );
+              Forgot password?
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-border/50 bg-background/65 p-4">
+            <p className="text-sm font-semibold text-foreground">Password reset</p>
+            <p className="mt-1 text-sm leading-6 text-foreground/62">
+              Enter your email and we will send an OTP code so you can safely reset your password.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/52">Email</label>
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/38" />
+              <input
+                type="email"
+                required
+                value={forgotEmail}
+                onChange={(event) => setForgotEmail(event.target.value)}
+                placeholder="you@example.com"
+                className={fieldClassName}
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground/62 transition-colors duration-150 hover:text-foreground"
+            onClick={() => setMode("login")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to sign in
+          </button>
+        </div>
+      )}
+
+      <motion.button
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.985 }}
+        type="submit"
+        disabled={isLoading}
+        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary via-primary to-emerald-700 text-sm font-bold text-primary-foreground shadow-[0_14px_28px_rgba(16,185,129,0.20)] transition-all duration-150 hover:brightness-[1.02] disabled:cursor-not-allowed disabled:opacity-70"
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {mode === "login" ? "Signing in..." : "Sending OTP..."}
+          </>
+        ) : mode === "login" ? (
+          "Sign In"
+        ) : (
+          "Send OTP Code"
+        )}
+      </motion.button>
+    </form>
+  );
 };
 
-export default Login;
+export default CustomerLoginForm;

@@ -20,10 +20,8 @@ const AdminLoginForm = () => {
 
         try {
             const response = await authService.adminLogin({ email, password });
-            console.log(response);
-            if (response.admin && response.admin.role === "admin") {
+            if (response.data.user.role === "admin") {
                 navigate("/superadmin");
-                console.log("Admin Response: " + response);
             } else {
                 setError("Access denied. You do not have admin privileges.");
             }

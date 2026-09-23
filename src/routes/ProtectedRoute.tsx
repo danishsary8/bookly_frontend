@@ -1,65 +1,61 @@
-import { Navigate, Outlet } from 'react-router-dom';
-import Cookies from 'js-cookie';
-import { useEffect, useState } from 'react';
-import authService from '../services/auth.service';
-import type { User } from '../types/auth.types';
+import { Navigate, Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+
+import authService from "../services/auth.service";
+import { getAccessToken, getStoredUser } from "../lib/session";
+import type { User } from "../types/auth.types";
 
 interface ProtectedRouteProps {
-    allowedRoles?: string[];
+  allowedRoles?: string[];
 }
 
 const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
-    const token = Cookies.get('token');
-    const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+  const token = getAccessToken();
+  const [user, setUser] = useState<User | null>(getStoredUser());
+  const [isLoading, setIsLoading] = useState(Boolean(token));
+  const isAdminPath = window.location.pathname.startsWith("/superadmin");
 
-    const isAdminPath = window.location.pathname.startsWith('/superadmin');
-    const storedAdmin = authService.getStoredAdmin();
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
 
-    useEffect(() => {
-        const fetchUser = async () => {
-            // Only fetch customer data if we are NOT on an admin path
-            // Admin data is already persisted in localStorage for immediate use
-            if (token && !isAdminPath) {
-                try {
-                    const userData = await authService.getCurrentUser();
-                    setUser(userData);
-                } catch (error) {
-                    console.error('Failed to fetch user:', error);
-                    Cookies.remove('token');
-                }
-            }
-            setIsLoading(false);
-        };
-        fetchUser();
-    }, [token, isAdminPath]);
+      try {
+        const userData = await authService.getCurrentUser();
+        setUser(userData);
+      } catch {
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    if (!token) {
-        return <Navigate to={isAdminPath ? "/superadmin/login" : "/login"} replace />;
-    }
+    fetchUser();
+  }, [token]);
 
-    if (isAdminPath) {
-        // Handle admin authorization using localStorage persistence
-        if (!storedAdmin || storedAdmin.role !== 'admin') {
-            return <Navigate to="/superadmin/login" replace />;
-        }
-        return <Outlet />;
-    }
+  if (!token) {
+    return <Navigate to={isAdminPath ? "/superadmin/login" : "/login"} replace />;
+  }
 
-    // Handle client/user authorization
-    if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            </div>
-        );
-    }
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
-    if (allowedRoles && user && !allowedRoles.includes(user.role || '')) {
-        return <Navigate to="/" replace />;
-    }
+  if (!user) {
+    return <Navigate to={isAdminPath ? "/superadmin/login" : "/login"} replace />;
+  }
 
-    return <Outlet />;
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to={user.role === "admin" ? "/superadmin" : "/"} replace />;
+  }
+
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

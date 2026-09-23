@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
 interface ModalProps {
@@ -17,7 +18,7 @@ const Modal = ({
     title,
     maxWidthClass = "max-w-4xl",
     showHeader = true,
-    bodyClassName = "p-6 max-h-[80vh] overflow-y-auto bg-white",
+    bodyClassName = "max-h-[82vh] overflow-y-auto bg-card/95 p-6",
     children
 }: ModalProps) => {
     // Prevent scrolling when modal is open
@@ -32,38 +33,64 @@ const Modal = ({
         };
     }, [isOpen]);
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-            {/* Backdrop */}
-            <div
-                className="fixed inset-0 bg-slate-950/55 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
-                onClick={onClose}
-            />
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+                    {/* Backdrop */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.18 }}
+                        className="fixed inset-0 bg-[rgba(15,23,42,0.24)] backdrop-blur-md"
+                        onClick={onClose}
+                    />
 
-            {/* Modal Content */}
-            <div className={`relative w-full ${maxWidthClass} bg-white/95 border border-white/70 rounded-3xl shadow-[0_30px_80px_rgba(15,23,42,0.32)] overflow-hidden animate-in zoom-in-95 fade-in duration-300`}>
-                {showHeader && (
-                    <div className="flex items-center justify-between p-5 border-b border-slate-200/70 bg-gradient-to-r from-orange-50 to-amber-50">
-                        <h3 className="text-xl font-semibold text-slate-900">
-                            {title || "Details"}
-                        </h3>
-                        <button
-                            onClick={onClose}
-                            className="p-1.5 rounded-xl hover:bg-white transition-colors text-slate-500 hover:text-slate-900"
+                    {/* Modal Content */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.985, y: 18 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.985, y: 12 }}
+                        transition={{ duration: 0.24, ease: "easeOut" }}
+                        className={`relative w-full ${maxWidthClass} overflow-hidden rounded-[28px] border border-border/60 bg-card/95 shadow-[0_28px_80px_rgba(15,23,42,0.18)] backdrop-blur-xl`}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {showHeader && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.05, duration: 0.24 }}
+                                className="flex items-center justify-between border-b border-border/40 bg-card/90 px-5 py-4 sm:px-6"
+                            >
+                                <h3 className="text-lg font-semibold tracking-tight text-foreground">
+                                    {title || "Details"}
+                                </h3>
+                                <motion.button
+                                    onClick={onClose}
+                                    whileHover={{ scale: 1.04 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="rounded-2xl border border-border/40 bg-background/70 p-2 text-foreground/60 transition-all duration-150 hover:bg-background hover:text-foreground"
+                                    aria-label="Close modal"
+                                >
+                                    <X size={20} />
+                                </motion.button>
+                            </motion.div>
+                        )}
+
+                        {/* Body */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.15, duration: 0.3 }}
+                            className={bodyClassName}
                         >
-                            <X size={20} />
-                        </button>
-                    </div>
-                )}
-
-                {/* Body */}
-                <div className={bodyClassName}>
-                    {children}
+                            {children}
+                        </motion.div>
+                    </motion.div>
                 </div>
-            </div>
-        </div>
+            )}
+        </AnimatePresence>
     );
 };
 
