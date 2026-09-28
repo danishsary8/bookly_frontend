@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { ArrowRight, Play, Sparkles } from "lucide-react";
 const heroImage = "https://i.pinimg.com/736x/e6/3d/95/e63d955fc9097f105fb75909432bc613.jpg";
 

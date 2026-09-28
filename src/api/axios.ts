@@ -77,6 +77,16 @@ api.interceptors.response.use(
     if (error.response) {
       const message = error.response.data?.message || error.response.statusText || "Something went wrong";
       console.error(`[API Error]: ${message} (Status: ${error.response.status})`);
+      // Server errors can carry internals (e.g. raw SQL errors). Pages show
+      // `response.data.message` to customers, so replace it with a plain message and keep
+      // the original on `serverMessage` for code that needs to inspect it.
+      if (error.response.status >= 500 && error.response.data && typeof error.response.data === "object") {
+        error.response.data = {
+          ...error.response.data,
+          serverMessage: error.response.data.message,
+          message: "Something went wrong on our side. Please try again in a few minutes.",
+        };
+      }
     } else if (error.request) {
       console.error("[API Error]: No response from server");
     } else {

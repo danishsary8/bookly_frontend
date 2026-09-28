@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
-import type { MotionProps } from "framer-motion";
+import { motion } from "motion/react";
+import type { MotionProps } from "motion/react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/utils";
 

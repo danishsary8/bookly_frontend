@@ -130,7 +130,7 @@ const Settings = () => {
                 <label className="block">
                   <span className="text-slate-600">Store Name</span>
                   <input
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     value={form.store_name}
                     onChange={(event) => setForm((prev) => ({ ...prev, store_name: event.target.value }))}
                   />
@@ -138,7 +138,7 @@ const Settings = () => {
                 <label className="block">
                   <span className="text-slate-600">Hero Heading</span>
                   <input
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     value={form.hero_heading}
                     onChange={(event) => setForm((prev) => ({ ...prev, hero_heading: event.target.value }))}
                   />
@@ -146,7 +146,7 @@ const Settings = () => {
                 <label className="block">
                   <span className="text-slate-600">Hero Subheading</span>
                   <textarea
-                    className="mt-1 min-h-24 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none"
+                    className="mt-1 min-h-24 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     value={form.hero_subheading}
                     onChange={(event) => setForm((prev) => ({ ...prev, hero_subheading: event.target.value }))}
                   />
@@ -166,7 +166,7 @@ const Settings = () => {
                   <span className="text-slate-600">Support Email</span>
                   <input
                     type="email"
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     value={form.support_email}
                     onChange={(event) => setForm((prev) => ({ ...prev, support_email: event.target.value }))}
                   />
@@ -174,14 +174,14 @@ const Settings = () => {
                 <label className="block">
                   <span className="text-slate-600">Support Phone</span>
                   <input
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     value={form.support_phone || ""}
                     onChange={(event) => setForm((prev) => ({ ...prev, support_phone: event.target.value }))}
                   />
                 </label>
                 <label className="block">
                   <span className="text-slate-600">Authenticated Admin</span>
-                  <input className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none" value={adminEmail} readOnly />
+                  <input className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background" value={adminEmail} readOnly />
                 </label>
               </div>
             </div>
@@ -202,7 +202,7 @@ const Settings = () => {
                     type="number"
                     min="0"
                     step="0.01"
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     value={form.free_shipping_threshold}
                     onChange={(event) => setForm((prev) => ({ ...prev, free_shipping_threshold: Number(event.target.value) }))}
                   />
@@ -213,7 +213,7 @@ const Settings = () => {
                     type="number"
                     min="0"
                     step="0.01"
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     value={form.shipping_fee}
                     onChange={(event) => setForm((prev) => ({ ...prev, shipping_fee: Number(event.target.value) }))}
                   />
@@ -229,7 +229,7 @@ const Settings = () => {
                   <input
                     type="number"
                     min="0"
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     value={form.low_stock_threshold}
                     onChange={(event) => setForm((prev) => ({ ...prev, low_stock_threshold: Number(event.target.value) }))}
                   />

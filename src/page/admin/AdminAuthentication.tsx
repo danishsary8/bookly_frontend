@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { BookOpen, ShieldCheck } from "lucide-react";
 import AdminLoginForm from "../../components/Authentication/AdminLoginForm";
 

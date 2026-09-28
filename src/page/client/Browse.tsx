@@ -1,7 +1,10 @@
-import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, BookOpen, Layers, Search, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import BookCard from "../../components/BookCard";
-import Loading from "../../components/ui/loading";
+import AnimatedContent from "../../components/AnimatedContent";
+import { BookGridSkeleton } from "../../components/BookCardSkeleton";
+import { useSkeletonVisible } from "../../hooks/useSkeletonVisible";
 import Modal from "../../components/ui/modal";
 import CustomerLoginForm from "../../components/Authentication/CustomerLoginForm";
 import CustomerRegisterForm from "../../components/Authentication/CustomerRegisterForm";
@@ -30,6 +33,13 @@ const defaultMeta: BookCatalogMeta = {
 };
 
 const Browse = () => {
+  const navigate = useNavigate();
+  // The header's search box navigates here with ?search=…, so the URL seeds and
+  // re-seeds this page's query. Typing in the field below stays local until the
+  // URL changes again, which keeps the two inputs from fighting each other.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParam = searchParams.get("search") ?? "";
+
   const [books, setBooks] = useState<Book[]>([]);
   const [bookCategories, setBookCategories] = useState<BookCategory[]>([]);
   const [authors, setAuthors] = useState<BookAuthor[]>([]);
@@ -40,7 +50,7 @@ const Browse = () => {
 
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedAuthor, setSelectedAuthor] = useState("");
-  const [searchTitle, setSearchTitle] = useState("");
+  const [searchTitle, setSearchTitle] = useState(searchParam);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [sortBy, setSortBy] = useState<BookQueryParams["sort"]>("newest");
@@ -51,6 +61,31 @@ const Browse = () => {
   const [authModalMode, setAuthModalMode] = useState<"login" | "register">("login");
 
   const deferredSearchTitle = useDeferredValue(searchTitle.trim());
+  const showSkeleton = useSkeletonVisible(isLoading);
+
+  // Re-seed from the URL when it changes (header submit, back/forward). Compared
+  // against the previous URL value during render, so typing in the field below is
+  // never clobbered by an unrelated re-render.
+  const [lastSearchParam, setLastSearchParam] = useState(searchParam);
+
+  if (searchParam !== lastSearchParam) {
+    setLastSearchParam(searchParam);
+    setSearchTitle(searchParam);
+    setPage(1);
+  }
+
+  // Drop ?search= when a filter is cleared, so returning to this page does not
+  // silently re-apply the old query.
+  const clearSearchParam = useCallback(() => {
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+        next.delete("search");
+        return next;
+      },
+      { replace: true },
+    );
+  }, [setSearchParams]);
 
   useEffect(() => {
     const fetchLookupData = async () => {
@@ -178,13 +213,14 @@ const Browse = () => {
         label: `Search: ${deferredSearchTitle}`,
         onClear: () => {
           setSearchTitle("");
+          clearSearchParam();
           resetToFirstPage();
         },
       });
     }
 
     return filters;
-  }, [selectedCategory, selectedAuthor, minPrice, maxPrice, deferredSearchTitle]);
+  }, [selectedCategory, selectedAuthor, minPrice, maxPrice, deferredSearchTitle, clearSearchParam]);
 
   const requireAuth = (mode: "login" | "register" = "login", message?: string) => {
     setAuthModalMode(mode);
@@ -194,12 +230,21 @@ const Browse = () => {
     setIsAuthModalOpen(true);
   };
 
-  const handleToggleFavorite = (bookId: number) => {
+  const handleToggleFavorite = async (bookId: number) => {
     if (!isAuthenticated()) {
       requireAuth("login", "Login is required to save favorite products.");
       return;
     }
+    const wasSaved = favoriteBookIds.includes(bookId);
+    const title = books.find((book) => book.id === bookId)?.title ?? "Book";
     setFavoriteBookIds((prev) => toggleFavoriteId(prev, bookId));
+    if (wasSaved) {
+      const undo = await alertToast.withAction("success", "Removed from wishlist", title, "Undo");
+      if (undo) setFavoriteBookIds((prev) => (prev.includes(bookId) ? prev : [...prev, bookId]));
+    } else {
+      const view = await alertToast.withAction("success", "Saved to wishlist", title, "View wishlist");
+      if (view) navigate("/favorites");
+    }
   };
 
   const handleAddToCart = async (book: Book) => {
@@ -210,7 +255,8 @@ const Browse = () => {
 
     try {
       await customerService.addCartItem(book.id, 1);
-      alertToast.success("Added to cart", book.title);
+      const viewCart = await alertToast.withAction("success", "Added to cart", book.title, "View cart");
+      if (viewCart) navigate("/cart");
     } catch (cartError: any) {
       alertToast.error("Unable to add to cart", cartError?.response?.data?.message || "Please try again.");
     }
@@ -226,6 +272,7 @@ const Browse = () => {
     setSelectedCategory("");
     setSelectedAuthor("");
     setSearchTitle("");
+    clearSearchParam();
     setMinPrice("");
     setMaxPrice("");
     setSortBy("newest");
@@ -240,7 +287,7 @@ const Browse = () => {
 
   return (
     <div className="w-full">
-      <main className="section-wrap py-6 lg:py-10 space-y-6">
+      <div className="section-wrap py-6 lg:py-10 space-y-6">
         <section id="browse" className="scroll-mt-32">
           <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm p-6 md:p-8">
             <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
@@ -252,7 +299,7 @@ const Browse = () => {
                   <Sparkles className="h-3.5 w-3.5" />
                   Search Products
                 </p>
-                <h2 className="text-3xl md:text-4xl font-bold text-foreground">Browse All Books</h2>
+                <h1 className="text-3xl md:text-4xl font-bold text-foreground">Browse All Books</h1>
                 <p className="text-sm text-foreground/70 mt-3 max-w-2xl">
                   Fast server-side search, cleaner filters, and paginated discovery for a smoother catalogue experience.
                 </p>
@@ -290,7 +337,7 @@ const Browse = () => {
                       resetToFirstPage();
                     }}
                     placeholder="Search by title, author, or category..."
-                    className="h-10 w-full rounded-lg border border-border/50 bg-background px-3 pl-9 text-sm text-foreground placeholder:text-foreground/50 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all duration-200"
+                    className="h-10 w-full rounded-lg border border-border/50 bg-background px-3 pl-9 text-sm text-foreground placeholder:text-foreground/50 outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:border-ring transition-all duration-200"
                   />
                 </div>
 
@@ -346,7 +393,7 @@ const Browse = () => {
                     resetToFirstPage();
                   }}
                   placeholder={`Min $${catalogMeta.price_range.min.toFixed(2)}`}
-                  className="h-10 w-full rounded-lg border border-border/50 bg-background px-3 text-sm text-foreground placeholder:text-foreground/50 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all duration-200"
+                  className="h-10 w-full rounded-lg border border-border/50 bg-background px-3 text-sm text-foreground placeholder:text-foreground/50 outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:border-ring transition-all duration-200"
                 />
 
                 <input
@@ -359,7 +406,7 @@ const Browse = () => {
                     resetToFirstPage();
                   }}
                   placeholder={`Max $${catalogMeta.price_range.max.toFixed(2)}`}
-                  className="h-10 w-full rounded-lg border border-border/50 bg-background px-3 text-sm text-foreground placeholder:text-foreground/50 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all duration-200"
+                  className="h-10 w-full rounded-lg border border-border/50 bg-background px-3 text-sm text-foreground placeholder:text-foreground/50 outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:border-ring transition-all duration-200"
                 />
               </div>
 
@@ -389,7 +436,7 @@ const Browse = () => {
                       setSortBy(event.target.value as BookQueryParams["sort"]);
                       resetToFirstPage();
                     }}
-                    className="h-10 rounded-lg border border-border/50 bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all duration-200"
+                    className="h-10 rounded-lg border border-border/50 bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:border-ring transition-all duration-200"
                   >
                     <option value="newest">Newest first</option>
                     <option value="popular">Most popular</option>
@@ -412,25 +459,31 @@ const Browse = () => {
           </div>
         </section>
 
-        {isLoading ? (
-          <Loading message="Loading catalogue" />
+        {showSkeleton ? (
+          <BookGridSkeleton count={PAGE_SIZE} label="Loading books…" />
+        ) : isLoading ? (
+          // The first 150ms of a fetch stay blank (§6.11), but the height is
+          // held so a fast response does not jump the page.
+          <div className="min-h-[60vh]" aria-busy="true" />
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <p className="text-lg font-medium">{error}</p>
           </div>
         ) : books.length > 0 ? (
           <>
+            <AnimatedContent distance={40} duration={0.7}>
             <section id="books-grid" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 scroll-mt-32">
               {books.map((book) => (
                 <BookCard
                   key={book.id}
                   {...book}
                   isFavorite={favoriteBookIds.includes(book.id)}
-                  onToggleFavorite={() => handleToggleFavorite(book.id)}
+                  onToggleFavorite={() => void handleToggleFavorite(book.id)}
                   onAddToCart={handleAddToCart}
                 />
               ))}
             </section>
+            </AnimatedContent>
 
             <section className="flex flex-col gap-3 rounded-2xl border border-border/50 bg-card p-5 shadow-sm md:flex-row md:items-center md:justify-between">
               <div className="text-sm text-foreground/70">
@@ -470,54 +523,34 @@ const Browse = () => {
             <p className="text-sm mt-1">Try a different search, filter, or sort option.</p>
           </div>
         )}
-      </main>
+      </div>
 
       <Modal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
+        title={authModalMode === "login" ? "Sign in" : "Create account"}
         maxWidthClass="max-w-md"
-        showHeader={false}
-        bodyClassName="p-6 sm:p-8 bg-white"
+        bodyClassName="max-h-[82vh] overflow-y-auto bg-card p-6 sm:p-8"
       >
-        <div className="space-y-5">
-          <div className="flex justify-end">
-            <button
-              onClick={() => setIsAuthModalOpen(false)}
-              className="h-8 w-8 rounded-lg grid place-items-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-              aria-label="Close login form"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+        <div className="grid gap-5">
+          <p className="text-muted-foreground">
+            {authModalMode === "login" ? "Sign in to save books and add them to your cart." : "Create an account to save books and check out faster."}
+          </p>
 
-          <div>
-            <h3 className="text-3xl font-bold text-slate-900 mb-1">{authModalMode === "login" ? "Login" : "Sign Up"}</h3>
-            <p className="text-sm text-slate-500">
-              {authModalMode === "login"
-                ? "Welcome back! Sign in to continue."
-                : "Create your account to get started."}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100">
-            <button
-              type="button"
-              onClick={() => setAuthModalMode("login")}
-              className={`h-10 rounded-lg text-sm font-semibold transition-colors ${
-                authModalMode === "login" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-800"
-              }`}
-            >
-              Login
-            </button>
-            <button
-              type="button"
-              onClick={() => setAuthModalMode("register")}
-              className={`h-10 rounded-lg text-sm font-semibold transition-colors ${
-                authModalMode === "register" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-800"
-              }`}
-            >
-              Register
-            </button>
+          <div role="group" aria-label="Sign in or create an account" className="grid grid-cols-2 gap-1 rounded-lg border border-input bg-card p-1">
+            {(["login", "register"] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                aria-pressed={authModalMode === mode}
+                onClick={() => setAuthModalMode(mode)}
+                className={`min-h-11 rounded-md text-sm font-semibold transition-[background-color,color,scale] duration-150 active:scale-95 motion-reduce:active:scale-100 ${
+                  authModalMode === mode ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                }`}
+              >
+                {mode === "login" ? "Sign in" : "Create account"}
+              </button>
+            ))}
           </div>
 
           {authModalMode === "login" ? (

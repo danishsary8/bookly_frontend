@@ -1,68 +1,64 @@
-import { BookOpen, Facebook, Instagram, Linkedin, Twitter, Youtube } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useStorefrontSettings } from "../contexts/StorefrontSettingsContext";
+import AnimatedContent from "./AnimatedContent";
+
+/*
+ * MASTER §6.13 footer: lapis tint in Daylight, card surface with a hairline in Night.
+ * 4 columns → 1 on mobile; every link is a 44px target with an underline on hover.
+ * (Social and Privacy/Terms links were `href="#"` placeholders with no real URLs, so
+ * they are omitted until real destinations exist.)
+ */
+
+const linkClass =
+  "inline-flex min-h-11 items-center text-foreground underline-offset-4 transition-colors duration-150 hover:text-primary hover:underline";
 
 const Footer = () => {
   const { settings } = useStorefrontSettings();
 
   return (
-    <footer className="mt-16 border-t border-border/50 bg-card/50 backdrop-blur-sm">
-      <div className="section-wrap py-12">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+    <footer className="mt-16 border-t border-border bg-lapis-tint dark:bg-card">
+      <AnimatedContent distance={30} duration={0.7}>
+        <div className="section-wrap grid gap-10 py-12 md:grid-cols-4">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-[0_8px_16px_rgba(80,127,83,0.2)]">
-                <BookOpen className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg font-bold text-foreground">{settings.store_name}</h3>
-            </div>
-            <p className="mt-4 max-w-xl text-sm leading-relaxed text-foreground/70">
-              {settings.store_name} is a modern online bookstore helping readers discover great titles faster with curated collections,
-              trusted recommendations, and a clean shopping experience.
+            <Link to="/" className="inline-flex items-center gap-2.5 rounded-lg transition-opacity duration-150 hover:opacity-80" aria-label={`${settings.store_name} home`}>
+              <span className="grid h-9 w-9 place-items-center rounded-md bg-primary text-primary-foreground">
+                <BookOpen className="h-[18px] w-[18px]" aria-hidden="true" />
+              </span>
+              <span className="font-display text-xl text-primary">{settings.store_name}</span>
+            </Link>
+            <p className="mt-4 max-w-md text-base leading-7 text-muted-foreground">
+              A bookstore for Cambodia: hand-picked titles, cash on delivery, and delivery across the country.
             </p>
-            <div className="mt-5 flex items-center gap-2.5">
-              {[Facebook, Instagram, Twitter, Linkedin, Youtube].map((Icon, idx) => (
-                <a
-                  key={idx}
-                  href="#"
-                  className="grid h-9 w-9 place-items-center rounded-lg border border-border/60 bg-background text-foreground/60 transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
-                  aria-label="Social link"
-                >
-                  <Icon className="h-4 w-4" />
-                </a>
-              ))}
-            </div>
           </div>
 
-          <div>
-            <h4 className="text-sm font-bold uppercase tracking-[0.1em] text-foreground">Company</h4>
-            <ul className="mt-4 space-y-2.5 text-sm text-foreground/70">
-              <li><Link to="/" className="transition-colors duration-200 hover:text-primary">About</Link></li>
-              <li><Link to="/browse" className="transition-colors duration-200 hover:text-primary">Catalog</Link></li>
-              <li><Link to="/favorites" className="transition-colors duration-200 hover:text-primary">Favorites</Link></li>
-              <li><Link to="/#help" className="transition-colors duration-200 hover:text-primary">Contact</Link></li>
+          <nav aria-labelledby="footer-shop">
+            <h2 id="footer-shop" className="font-sans text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Shop</h2>
+            <ul className="mt-3 grid">
+              <li><Link to="/browse" className={linkClass}>All books</Link></li>
+              <li><Link to="/favorites" className={linkClass}>Wishlist</Link></li>
+              <li><Link to="/cart" className={linkClass}>Cart</Link></li>
+              <li><Link to="/orders" className={linkClass}>Your orders</Link></li>
             </ul>
-          </div>
+          </nav>
 
           <div>
-            <h4 className="text-sm font-bold uppercase tracking-[0.1em] text-foreground">Customer Care</h4>
-            <ul className="mt-4 space-y-2.5 text-sm text-foreground/70">
-              <li>Mon - Fri: 8:00 AM - 6:00 PM</li>
-              <li className="font-medium text-primary/80">{settings.support_email}</li>
-              <li>{settings.support_phone || "+855 12 345 678"}</li>
-              <li>Phnom Penh, Cambodia</li>
+            <h2 className="font-sans text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Customer care</h2>
+            <ul className="mt-3 grid gap-1 text-base text-foreground">
+              <li className="py-2.5 text-muted-foreground">Mon–Fri, 8:00–18:00</li>
+              <li><a href={`mailto:${settings.support_email}`} className={linkClass}>{settings.support_email}</a></li>
+              {settings.support_phone ? <li className="py-2.5 tabular-nums">{settings.support_phone}</li> : null}
+              <li className="py-2.5 text-muted-foreground">Phnom Penh, Cambodia</li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col items-start justify-between gap-4 border-t border-border/40 pt-6 text-xs text-foreground/60 sm:flex-row sm:items-center">
-          <p>© {new Date().getFullYear()} {settings.store_name}. All rights reserved.</p>
-          <div className="flex items-center gap-6">
-            <a href="#" className="transition-colors duration-200 hover:text-primary">Privacy Policy</a>
-            <a href="#" className="transition-colors duration-200 hover:text-primary">Terms of Service</a>
-          </div>
+        <div className="border-t border-border">
+          <p className="section-wrap py-5 text-sm text-muted-foreground">
+            © {new Date().getFullYear()} {settings.store_name}. All rights reserved.
+          </p>
         </div>
-      </div>
+      </AnimatedContent>
     </footer>
   );
 };

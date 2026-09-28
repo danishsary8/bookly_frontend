@@ -1,233 +1,153 @@
 import { useEffect, useMemo, useState } from "react";
-import { Heart, Search, Sparkles, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Heart, LogIn, Search } from "lucide-react";
 import BookCard from "../../components/BookCard";
-import Loading from "../../components/ui/loading";
-import Modal from "../../components/ui/modal";
-import CustomerLoginForm from "../../components/Authentication/CustomerLoginForm";
-import CustomerRegisterForm from "../../components/Authentication/CustomerRegisterForm";
+import { BookCardSkeleton } from "../../components/BookCardSkeleton";
 import bookService from "../../services/book.service";
 import customerService from "../../services/customer.service";
 import type { Book } from "../../types/book.types";
-import { isAuthenticated, loadFavorites, saveFavorites, toggleFavoriteId } from "../../lib/favorites";
+import { isAuthenticated, loadFavorites, saveFavorites } from "../../lib/favorites";
 import { getStoredUser } from "../../lib/session";
 import { alertToast } from "../../lib/alerts";
+import { useSkeletonVisible } from "../../hooks/useSkeletonVisible";
+import { Button } from "../../components/ui/button";
+import { EmptyState } from "../../components/EmptyState";
+import { controlClassName } from "../../components/form/Field";
+import { cn } from "@/lib/utils";
+
+/*
+ * Wishlist. Each saved id is fetched with GET /books/{id} (the old page used the first
+ * page of GET /books, so favourites beyond page 1 silently disappeared). Removing is
+ * immediate with an Undo toast that restores the book to the same position.
+ */
 
 const Favorites = () => {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [searchTitle, setSearchTitle] = useState("");
-
-  const [favoriteBookIds, setFavoriteBookIds] = useState<number[]>([]);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<"login" | "register">("login");
-
-  useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        setIsLoading(true);
-        const booksRes = await bookService.getBooks();
-        setBooks([...booksRes.data].sort((a, b) => a.id - b.id));
-      } catch (fetchError) {
-        console.error(fetchError);
-        setError("Unable to load books.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void fetchBooks();
-  }, []);
+  const navigate = useNavigate();
+  const signedIn = isAuthenticated() && getStoredUser()?.role === "customer";
+  const [ids, setIds] = useState<number[]>(() => (signedIn ? loadFavorites() : []));
+  const [books, setBooks] = useState<Record<number, Book>>({});
+  const [isLoading, setIsLoading] = useState(signedIn);
+  const [query, setQuery] = useState("");
+  const showSkeleton = useSkeletonVisible(isLoading);
 
   useEffect(() => {
-    setFavoriteBookIds(loadFavorites());
-    const syncFavorites = () => setFavoriteBookIds(loadFavorites());
-    window.addEventListener("auth-changed", syncFavorites);
-    return () => window.removeEventListener("auth-changed", syncFavorites);
-  }, []);
-
-  useEffect(() => {
-    saveFavorites(favoriteBookIds);
-  }, [favoriteBookIds]);
-
-  const favoriteBooks = useMemo(() => {
-    const idsSet = new Set(favoriteBookIds);
-    return books
-      .filter((book) => idsSet.has(book.id))
-      .filter((book) => !searchTitle || book.title.toLowerCase().includes(searchTitle.toLowerCase()));
-  }, [books, favoriteBookIds, searchTitle]);
-
-  const requireAuth = (mode: "login" | "register" = "login", message?: string) => {
-    setAuthModalMode(mode);
-    if (message) {
-      alertToast.info("Authentication required", message);
-    }
-    setIsAuthModalOpen(true);
-  };
-
-  const handleToggleFavorite = (bookId: number) => {
-    if (!isAuthenticated()) {
-      requireAuth("login", "Please login to view and manage favorites.");
+    if (!signedIn) return;
+    const initial = loadFavorites();
+    if (initial.length === 0) {
+      setIsLoading(false);
       return;
     }
-    setFavoriteBookIds((prev) => toggleFavoriteId(prev, bookId));
+    let active = true;
+    Promise.allSettled(initial.map((id) => bookService.getBook(id))).then((results) => {
+      if (!active) return;
+      const found: Record<number, Book> = {};
+      results.forEach((result) => { if (result.status === "fulfilled") found[result.value.id] = result.value; });
+      setBooks(found);
+      setIsLoading(false);
+    });
+    return () => { active = false; };
+  }, [signedIn]);
+
+  // Books that no longer exist in the catalogue are skipped, not shown as broken cards.
+  const saved = useMemo(() => ids.map((id) => books[id]).filter((book): book is Book => Boolean(book)), [ids, books]);
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q ? saved.filter((book) => `${book.title} ${book.author_name}`.toLowerCase().includes(q)) : saved;
+  }, [saved, query]);
+
+  const remove = async (book: Book) => {
+    const position = ids.indexOf(book.id);
+    const next = ids.filter((id) => id !== book.id);
+    setIds(next);
+    saveFavorites(next);
+    const undo = await alertToast.withAction("success", "Removed from wishlist", book.title, "Undo");
+    if (!undo) return;
+    setIds((current) => {
+      if (current.includes(book.id)) return current;
+      const restored = [...current];
+      restored.splice(Math.min(position, restored.length), 0, book.id);
+      saveFavorites(restored);
+      return restored;
+    });
   };
 
-  const handleAddToCart = async (book: Book) => {
-    if (!isAuthenticated() || getStoredUser()?.role !== "customer") {
-      requireAuth("login", "You need to login as a customer before adding items to cart.");
-      return;
-    }
-
+  const addToCart = async (book: Book) => {
     try {
       await customerService.addCartItem(book.id, 1);
-      alertToast.success("Added to cart", book.title);
+      const viewCart = await alertToast.withAction("success", "Added to cart", book.title, "View cart");
+      if (viewCart) navigate("/cart");
     } catch (error: any) {
-      alertToast.error("Unable to add to cart", error?.response?.data?.message || "Please try again.");
+      alertToast.error("Couldn't add to cart", error?.response?.data?.message || "Try again in a moment.");
     }
   };
 
-  return (
-    <div className="w-full">
-      <main className="section-wrap py-6 lg:py-10 space-y-6">
-        <section className="rounded-2xl border border-border/50 bg-card shadow-sm p-6 md:p-8">
-          <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.1em] text-accent font-bold mb-3">
-            <Sparkles className="h-3.5 w-3.5" />
-            Your Collection
-          </p>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Favorite Products</h1>
-          <p className="text-sm text-foreground/70 mt-3 max-w-2xl">
-            Keep your saved books in one place and come back to them anytime.
-          </p>
-
-          <div className="mt-5 flex flex-col md:flex-row items-stretch md:items-center gap-3">
-            <div className="relative flex-1">
-              <Search className="h-4 w-4 text-foreground/40 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchTitle}
-                onChange={(e) => setSearchTitle(e.target.value)}
-                placeholder="Search favorites by title..."
-                className="h-10 w-full rounded-lg border border-border/50 bg-background px-3 pl-9 text-sm text-foreground placeholder:text-foreground/50 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all duration-200"
-              />
-            </div>
-            {favoriteBookIds.length > 0 && (
-              <button
-                onClick={() => setFavoriteBookIds([])}
-                className="h-10 px-4 rounded-lg border border-border/50 bg-background text-sm font-medium text-foreground hover:bg-background/80 transition-all duration-200"
-              >
-                Clear all favorites
-              </button>
-            )}
-          </div>
-        </section>
-
-        {!isAuthenticated() ? (
-          <div className="rounded-2xl border border-dashed border-border/50 bg-background/50 p-8 text-center">
-            <p className="text-base font-medium text-foreground/80">Login to see your favorite products.</p>
-            <button
-              onClick={() => requireAuth("login")}
-              className="mt-4 h-10 px-6 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all duration-200"
-            >
-              Login to Continue
-            </button>
-          </div>
-        ) : isLoading ? (
-          <Loading />
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center py-20 text-foreground/60">
-            <p className="text-lg font-medium">{error}</p>
-          </div>
-        ) : favoriteBooks.length > 0 ? (
-          <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-            {favoriteBooks.map((book) => (
-              <BookCard
-                key={book.id}
-                {...book}
-                isFavorite={favoriteBookIds.includes(book.id)}
-                onToggleFavorite={() => handleToggleFavorite(book.id)}
-                onAddToCart={handleAddToCart}
-              />
-            ))}
-          </section>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-border/50 bg-background/50 p-8 text-foreground/60 text-center">
-            <div className="flex items-center justify-center gap-2 text-foreground/80 font-medium mb-2">
-              <Heart className="h-5 w-5 text-accent/70" />
-              No favorites yet
-            </div>
-            <p>Start adding books to favorites from the Browse page.</p>
-          </div>
-        )}
-      </main>
-
-      <Modal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        maxWidthClass="max-w-md"
-        showHeader={false}
-        bodyClassName="p-6 sm:p-8 bg-white"
-      >
-        <div className="space-y-5">
-          <div className="flex justify-end">
-            <button
-              onClick={() => setIsAuthModalOpen(false)}
-              className="h-8 w-8 rounded-lg grid place-items-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-              aria-label="Close login form"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div>
-            <h3 className="text-3xl font-bold text-slate-900 mb-1">{authModalMode === "login" ? "Login" : "Sign Up"}</h3>
-            <p className="text-sm text-slate-500">
-              {authModalMode === "login"
-                ? "Welcome back! Sign in to continue."
-                : "Create your account to get started."}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100">
-            <button
-              type="button"
-              onClick={() => setAuthModalMode("login")}
-              className={`h-10 rounded-lg text-sm font-semibold transition-colors ${
-                authModalMode === "login" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-800"
-              }`}
-            >
-              Login
-            </button>
-            <button
-              type="button"
-              onClick={() => setAuthModalMode("register")}
-              className={`h-10 rounded-lg text-sm font-semibold transition-colors ${
-                authModalMode === "register" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-800"
-              }`}
-            >
-              Register
-            </button>
-          </div>
-
-          {authModalMode === "login" ? (
-            <CustomerLoginForm
-              onLoginSuccess={() => {
-                alertToast.success("Login successful", "Your favorites are ready.");
-                setIsAuthModalOpen(false);
-                setFavoriteBookIds(loadFavorites());
-              }}
-            />
-          ) : (
-            <CustomerRegisterForm
-              onRegisterSuccess={() => {
-                alertToast.success("Account created", "You can now save favorite books.");
-                setIsAuthModalOpen(false);
-                setFavoriteBookIds(loadFavorites());
-              }}
-            />
-          )}
+  const header = (
+    <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p className="eyebrow">Saved for later</p>
+        <h1 className="mt-3 text-[clamp(2.25rem,4vw,3.05rem)] leading-[1.08] text-foreground">Wishlist</h1>
+        {signedIn && !isLoading && saved.length > 0 ? (
+          <p className="mt-2 text-muted-foreground"><span className="tabular-nums">{saved.length}</span> {saved.length === 1 ? "book" : "books"} saved</p>
+        ) : null}
+      </div>
+      {signedIn && saved.length > 3 ? (
+        <div className="relative md:w-80">
+          <label htmlFor="wishlist-search" className="sr-only">Search your wishlist</label>
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <input id="wishlist-search" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Title or author" className={cn(controlClassName, "h-11 pl-10")} />
         </div>
-      </Modal>
+      ) : null}
+    </header>
+  );
+
+  if (!signedIn) {
+    return (
+      <div className="section-wrap py-8 lg:py-12">
+        {header}
+        <EmptyState
+          icon={LogIn}
+          title="Sign in to see your wishlist"
+          description="Save books with the heart on any cover and they'll wait here for you."
+          action={<Button asChild><Link to="/login" state={{ from: "/favorites" }}>Sign in</Link></Button>}
+          secondaryAction={<Button asChild variant="link"><Link to="/register">Create an account</Link></Button>}
+        />
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="section-wrap py-8 lg:py-12">
+        {header}
+        {showSkeleton ? (
+          <div aria-busy="true" className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+            <span className="sr-only">Loading your wishlist…</span>
+            {Array.from({ length: Math.min(Math.max(ids.length, 2), 8) }, (_, i) => <BookCardSkeleton key={i} />)}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className="section-wrap py-8 lg:py-12">
+      {header}
+      {saved.length === 0 ? (
+        <EmptyState icon={Heart} title="Nothing saved yet" description="Tap the heart on any book to keep it here for later." action={<Button asChild><Link to="/browse">Discover books</Link></Button>} />
+      ) : visible.length === 0 ? (
+        <EmptyState icon={Search} headingLevel="h2" title={`Nothing matches "${query.trim()}"`} description="Try a shorter title or the author's surname." action={<Button variant="outline" onClick={() => setQuery("")}>Clear search</Button>} />
+      ) : (
+        <>
+          <p className="sr-only" aria-live="polite">{visible.length} saved {visible.length === 1 ? "book" : "books"} shown</p>
+          <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+            {visible.map((book) => (
+              <li key={book.id}>
+                <BookCard {...book} isFavorite onToggleFavorite={() => void remove(book)} onAddToCart={() => void addToCart(book)} />
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 };

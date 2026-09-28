@@ -1,408 +1,305 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  ArrowRight,
-  Clock3,
-  LogOut,
-  Mail,
-  MapPin,
-  PackageCheck,
-  Phone,
-  ReceiptText,
-  Save,
-  ShieldCheck,
-  UserRound,
-} from "lucide-react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, Heart, Loader2, LogOut, ReceiptText, ShoppingBag, UserRound } from "lucide-react";
 import authService from "../../services/auth.service";
 import customerService from "../../services/customer.service";
-import { getAccessToken } from "../../lib/session";
 import type { CustomerInvoice, CustomerProfile } from "../../types/customer.types";
 import { alertToast } from "../../lib/alerts";
+import { formatOrderDate, formatPrice, toNumber } from "../../lib/format";
+import { useSkeletonVisible } from "../../hooks/useSkeletonVisible";
+import CountUp from "../../components/CountUp";
+import SpotlightCard from "../../components/SpotlightCard";
+import { Button } from "../../components/ui/button";
+import { EmptyState } from "../../components/EmptyState";
+import { FormAlert } from "../../components/form/FormAlert";
+import { TextAreaField, TextField } from "../../components/form/Field";
+import { OrderStatusBadge } from "../../components/OrderStatus";
 
-const fieldClassName =
-  "h-12 w-full rounded-2xl border border-border/60 bg-background/80 px-4 pl-11 text-sm text-foreground placeholder:text-foreground/45 outline-none transition-all duration-150 focus:border-primary/40 focus:ring-4 focus:ring-primary/10";
+/*
+ * /profile: account overview. Same data and behaviour as the old page (profile + orders
+ * load, editable details saved via PUT /customers/{id}, completion meter, order/spend
+ * summary, recent orders, sign out), rebuilt on MASTER components.
+ */
 
-const formatMoney = (value: number) => `$${value.toFixed(2)}`;
+type FieldName = "first_name" | "last_name" | "email" | "phone" | "address";
+type Form = Record<FieldName, string>;
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const OPEN: CustomerInvoice["status"][] = ["pending", "paid", "processing", "shipped"];
+
+const toForm = (p: CustomerProfile): Form => ({
+  first_name: p.first_name ?? "",
+  last_name: p.last_name ?? "",
+  email: p.email ?? "",
+  phone: p.phone ?? "",
+  address: p.address ?? "",
+});
+
+const validate = (field: FieldName, value: string): string => {
+  const v = value.trim();
+  if (field === "first_name") return v ? "" : "Enter your first name.";
+  if (field === "last_name") return v ? "" : "Enter your last name.";
+  if (field === "email") return !v ? "Enter your email address." : EMAIL_PATTERN.test(v) ? "" : "Enter an email address like name@example.com.";
+  if (field === "phone") return v.length > 25 ? "Use 25 characters or fewer." : "";
+  return "";
+};
+const ORDER: FieldName[] = ["first_name", "last_name", "email", "phone", "address"];
 
 const Profile = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<CustomerProfile | null>(null);
-  const [invoices, setInvoices] = useState<CustomerInvoice[]>([]);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [form, setForm] = useState({
-    first_name: "",
-    last_name: "",
-    email: "",
-    phone: "",
-    address: "",
-  });
+  const [orders, setOrders] = useState<CustomerInvoice[]>([]);
+  const [loadError, setLoadError] = useState(false);
+  const [form, setForm] = useState<Form>({ first_name: "", last_name: "", email: "", phone: "", address: "" });
+  const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({});
+  const [formError, setFormError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const refs = useRef<Partial<Record<FieldName, HTMLInputElement | HTMLTextAreaElement | null>>>({});
+  const showSkeleton = useSkeletonVisible(!profile && !loadError);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const loadProfile = async () => {
-      try {
-        setIsLoading(true);
-        const [profileData, invoiceData] = await Promise.all([
-          customerService.getCurrentProfile(),
-          customerService.getInvoices(),
-        ]);
-
-        if (!isMounted) {
-          return;
-        }
-
+    let active = true;
+    Promise.all([customerService.getCurrentProfile(), customerService.getInvoices()])
+      .then(([profileData, orderData]) => {
+        if (!active) return;
         setProfile(profileData);
-        setInvoices(invoiceData);
-        setForm({
-          first_name: profileData.first_name ?? "",
-          last_name: profileData.last_name ?? "",
-          email: profileData.email ?? "",
-          phone: profileData.phone ?? "",
-          address: profileData.address ?? "",
-        });
-      } catch (error: any) {
-        if (isMounted) {
-          setErrorMessage(error?.response?.data?.message || "Unable to load profile.");
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void loadProfile();
-
-    return () => {
-      isMounted = false;
-    };
+        setForm(toForm(profileData));
+        setOrders([...orderData].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)));
+      })
+      .catch(() => active && setLoadError(true));
+    return () => { active = false; };
   }, []);
 
-  const profileCompletion = useMemo(() => {
-    const fields = [form.first_name, form.last_name, form.email, form.phone, form.address];
-    const completed = fields.filter((value) => Boolean(value?.trim())).length;
-    return Math.round((completed / fields.length) * 100);
+  const completion = useMemo(() => {
+    const filled = ORDER.filter((field) => form[field].trim()).length;
+    return Math.round((filled / ORDER.length) * 100);
   }, [form]);
 
-  const metrics = useMemo(() => {
-    const delivered = invoices.filter((invoice) => invoice.status === "delivered").length;
-    const openOrders = invoices.filter((invoice) => ["pending", "paid", "processing", "shipped"].includes(invoice.status)).length;
-    const totalSpent = invoices
-      .filter((invoice) => invoice.status !== "cancelled")
-      .reduce((sum, invoice) => sum + invoice.total, 0);
+  const metrics = useMemo(() => ({
+    open: orders.filter((o) => OPEN.includes(o.status)).length,
+    delivered: orders.filter((o) => o.status === "delivered").length,
+    spent: orders.filter((o) => o.status !== "cancelled").reduce((sum, o) => sum + toNumber(o.total), 0),
+  }), [orders]);
 
-    return {
-      delivered,
-      openOrders,
-      totalSpent,
-    };
-  }, [invoices]);
+  const isDirty = profile ? ORDER.some((field) => form[field] !== toForm(profile)[field]) : false;
 
-  const recentInvoices = useMemo(() => invoices.slice(0, 3), [invoices]);
+  const fieldProps = (field: FieldName) => ({
+    ref: (el: HTMLInputElement | HTMLTextAreaElement | null) => { refs.current[field] = el; },
+    value: form[field],
+    onChange: (event: { target: { value: string } }) => {
+      const value = event.target.value;
+      setForm((prev) => ({ ...prev, [field]: value }));
+      if (errors[field]) setErrors((prev) => ({ ...prev, [field]: validate(field, value) }));
+    },
+    onBlur: () => setErrors((prev) => ({ ...prev, [field]: validate(field, form[field]) })),
+    error: errors[field],
+  });
 
-  if (!getAccessToken()) {
-    return <Navigate to="/login" replace />;
-  }
+  const handleSave = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!profile) return;
+    const next: Partial<Record<FieldName, string>> = {};
+    ORDER.forEach((field) => { next[field] = validate(field, form[field]); });
+    setErrors(next);
+    setFormError("");
+    const firstInvalid = ORDER.find((field) => next[field]);
+    if (firstInvalid) return refs.current[firstInvalid]?.focus();
 
-  if (isLoading) {
+    setIsSaving(true);
+    try {
+      await customerService.updateCurrentProfile(profile.id, {
+        first_name: form.first_name.trim(),
+        last_name: form.last_name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        address: form.address.trim(),
+      });
+      const refreshed = await customerService.getCurrentProfile();
+      setProfile(refreshed);
+      setForm(toForm(refreshed));
+      alertToast.success("Details saved", "Your account details are up to date.");
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 409) {
+        setErrors((prev) => ({ ...prev, email: "Another account already uses this email." }));
+        refs.current.email?.focus();
+      } else {
+        setFormError(error?.response?.data?.message || "We couldn't save your details. Try again.");
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    await authService.logout();
+    alertToast.info("Signed out", "See you next time.");
+    navigate("/login", { replace: true });
+  };
+
+  const header = (
+    <header className="mb-8">
+      <p className="eyebrow">Account</p>
+      <h1 className="mt-3 text-[clamp(2.25rem,4vw,3.05rem)] leading-[1.08] text-foreground">
+        {profile?.first_name ? `Hello, ${profile.first_name}` : "Your account"}
+      </h1>
+      {profile ? <p className="mt-2 text-muted-foreground">{profile.email}</p> : null}
+    </header>
+  );
+
+  if (loadError) {
     return (
-      <div className="section-wrap py-10">
-        <div className="rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 text-sm font-semibold text-primary">
-          Loading your account hub...
-        </div>
+      <div className="section-wrap py-8 lg:py-12">
+        {header}
+        <EmptyState icon={UserRound} title="Your account didn't load" description="Check your connection and try again." action={<Button onClick={() => window.location.reload()}>Try again</Button>} />
       </div>
     );
   }
 
   if (!profile) {
-    return <Navigate to="/login" replace />;
-  }
-
-  const handleSave = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    try {
-      await customerService.updateCurrentProfile(profile.id, form);
-      const refreshedProfile = await customerService.getCurrentProfile();
-      setProfile(refreshedProfile);
-      alertToast.success("Profile updated", "Your account details were saved successfully.");
-    } catch (error: any) {
-      alertToast.error("Failed to update profile", error?.response?.data?.message || "Please try again.");
-    }
-  };
-
-  const handleSignOut = async () => {
-    await authService.logout();
-    navigate("/login");
-  };
-
-  return (
-    <div className="w-full">
-      <main className="section-wrap space-y-6 py-6 lg:py-10">
-        <section className="relative overflow-hidden rounded-[30px] border border-border/50 bg-card/95 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] md:p-8">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.10),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.10),transparent_22%)]" />
-          <div className="relative grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">Customer Hub</p>
-              <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-                {profile.first_name} {profile.last_name}
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-foreground/68">
-                Manage your profile, review order history, open invoices, and keep checkout details accurate from one clean account workspace.
-              </p>
-
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Link
-                  to="/invoices"
-                  className="inline-flex h-12 items-center gap-2 rounded-2xl bg-gradient-to-r from-primary via-primary to-emerald-700 px-5 text-sm font-bold text-primary-foreground shadow-[0_14px_28px_rgba(16,185,129,0.20)] transition-all duration-150 hover:-translate-y-0.5"
-                >
-                  <ReceiptText className="h-4 w-4" />
-                  Open Invoice Center
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => document.getElementById("profile-edit-form")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                  className="inline-flex h-12 items-center gap-2 rounded-2xl border border-border/50 bg-background/70 px-5 text-sm font-semibold text-foreground/75 transition-all duration-150 hover:bg-background hover:text-foreground"
-                >
-                  <Save className="h-4 w-4" />
-                  Update Details
-                </button>
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-              <div className="rounded-3xl border border-border/50 bg-background/70 p-5">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/50">Invoices</p>
-                <p className="mt-3 text-3xl font-bold text-foreground">{invoices.length}</p>
-                <p className="mt-1 text-sm text-foreground/58">Total order records in your account.</p>
-              </div>
-              <div className="rounded-3xl border border-border/50 bg-background/70 p-5">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/50">Completion</p>
-                <div className="mt-3 flex items-end justify-between gap-4">
-                  <p className="text-3xl font-bold text-foreground">{profileCompletion}%</p>
-                  <ShieldCheck className="h-5 w-5 text-primary" />
-                </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-border/50">
-                  <div className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-500" style={{ width: `${profileCompletion}%` }} />
-                </div>
-              </div>
-              <div className="rounded-3xl border border-border/50 bg-background/70 p-5">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/50">Spent</p>
-                <p className="mt-3 text-3xl font-bold text-foreground">{formatMoney(metrics.totalSpent)}</p>
-                <p className="mt-1 text-sm text-foreground/58">Across all active customer orders.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {errorMessage ? (
-          <div className="rounded-2xl border border-destructive/25 bg-destructive/5 px-5 py-4 text-sm font-medium text-destructive">
-            {errorMessage}
+    return (
+      <div className="section-wrap py-8 lg:py-12">
+        {header}
+        {showSkeleton ? (
+          <div aria-busy="true" className="grid gap-8 lg:grid-cols-12">
+            <span className="sr-only">Loading your account…</span>
+            <div aria-hidden="true" className="skeleton h-[26rem] rounded-xl lg:col-span-8" />
+            <div aria-hidden="true" className="skeleton h-72 rounded-xl lg:col-span-4" />
           </div>
         ) : null}
+      </div>
+    );
+  }
 
-        <section className="grid gap-6 xl:grid-cols-[0.86fr_1.14fr]">
-          <aside className="space-y-6">
-            <div className="rounded-[28px] border border-border/50 bg-card p-6 shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-primary to-emerald-700 text-primary-foreground shadow-[0_16px_32px_rgba(16,185,129,0.24)]">
-                  <UserRound className="h-8 w-8" />
-                </div>
-                <div>
-                  <p className="text-lg font-bold text-foreground">{profile.first_name} {profile.last_name}</p>
-                  <p className="text-sm text-foreground/58">{profile.email}</p>
-                </div>
-              </div>
+  return (
+    <div className="section-wrap py-8 lg:py-12">
+      {header}
 
-              <div className="mt-6 grid gap-3">
-                <div className="rounded-2xl border border-border/50 bg-background/65 p-4">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/50">Contact</p>
-                  <div className="mt-3 space-y-2 text-sm text-foreground/72">
-                    <p className="inline-flex items-center gap-2"><Mail className="h-4 w-4 text-foreground/45" /> {profile.email}</p>
-                    <p className="inline-flex items-center gap-2"><Phone className="h-4 w-4 text-foreground/45" /> {profile.phone || "Phone not set"}</p>
-                    <p className="inline-flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 text-foreground/45" /> <span>{profile.address || "Address not set"}</span></p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl border border-border/50 bg-background/65 p-4">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/50">Open Orders</p>
-                    <p className="mt-3 text-2xl font-bold text-foreground">{metrics.openOrders}</p>
-                  </div>
-                  <div className="rounded-2xl border border-border/50 bg-background/65 p-4">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/50">Delivered</p>
-                    <p className="mt-3 text-2xl font-bold text-foreground">{metrics.delivered}</p>
-                  </div>
-                </div>
-
-                <div className="rounded-3xl border border-border/50 bg-background/65 p-5">
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
-                      <ShieldCheck className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-foreground">Account quality</p>
-                      <p className="mt-1 text-sm leading-6 text-foreground/62">
-                        Complete your phone and address to make shipping updates and invoice records more reliable.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-3xl border border-rose-200/70 bg-rose-50/80 p-5 dark:border-rose-500/20 dark:bg-rose-500/10">
-                  <p className="text-sm font-bold text-rose-900 dark:text-rose-100">Session actions</p>
-                  <p className="mt-1 text-sm leading-6 text-rose-800/80 dark:text-rose-100/75">
-                    Sign out here when you are done using this device.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => void handleSignOut()}
-                    className="mt-4 inline-flex h-11 items-center gap-2 rounded-2xl border border-rose-200 bg-white px-4 text-sm font-semibold text-rose-700 transition-all duration-150 hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-950/30 dark:text-rose-100 dark:hover:bg-rose-950/50"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Sign Out
-                  </button>
-                </div>
-              </div>
+      <div className="grid gap-8 lg:grid-cols-12">
+        <div className="grid content-start gap-8 lg:col-span-8">
+          <section aria-labelledby="details-title" className="rounded-xl border border-border bg-card p-6">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 id="details-title" className="text-[1.563rem] leading-tight text-foreground">Personal details</h2>
+              <p className="text-sm text-muted-foreground">Used for delivery and your receipts.</p>
             </div>
-          </aside>
-
-          <div className="space-y-6">
-            <section className="rounded-[28px] border border-border/50 bg-card p-6 shadow-sm">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Invoice Access</p>
-                  <h2 className="mt-2 text-2xl font-bold text-foreground">Recent invoice activity</h2>
-                </div>
-                <Link
-                  to="/invoices"
-                  className="inline-flex h-11 items-center gap-2 rounded-2xl border border-border/50 bg-background/70 px-4 text-sm font-semibold text-foreground/75 transition-all duration-150 hover:bg-background hover:text-foreground"
-                >
-                  Open invoice center
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+            <form onSubmit={handleSave} noValidate className="mt-6 grid gap-5">
+              {formError ? <FormAlert title={formError} /> : null}
+              <div className="grid gap-5 sm:grid-cols-2">
+                <TextField label="First name" autoComplete="given-name" {...fieldProps("first_name")} />
+                <TextField label="Last name" autoComplete="family-name" {...fieldProps("last_name")} />
               </div>
-
-              <div className="mt-5 grid gap-4 lg:grid-cols-3">
-                {recentInvoices.length ? recentInvoices.map((invoice) => (
-                  <article key={invoice.id} className="rounded-3xl border border-border/50 bg-background/65 p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary">Invoice</p>
-                        <p className="mt-2 text-lg font-bold text-foreground">{invoice.id}</p>
-                      </div>
-                      <span className="rounded-full border border-border/50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/68">
-                        {invoice.status}
-                      </span>
-                    </div>
-                    <p className="mt-4 text-sm text-foreground/60">{new Date(invoice.createdAt).toLocaleString()}</p>
-                    <div className="mt-4 flex items-center justify-between text-sm">
-                      <span className="inline-flex items-center gap-2 text-foreground/62">
-                        {invoice.status === "delivered" ? <PackageCheck className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
-                        {invoice.items.length} items
-                      </span>
-                      <span className="font-bold text-foreground">{formatMoney(invoice.total)}</span>
-                    </div>
-                  </article>
-                )) : (
-                  <div className="rounded-3xl border border-dashed border-border/50 bg-background/65 p-6 text-sm text-foreground/60 lg:col-span-3">
-                    No invoices yet. Once you place an order, your customer invoice center will appear here.
-                  </div>
-                )}
+              <div className="grid gap-5 sm:grid-cols-2">
+                <TextField label="Email" type="email" inputMode="email" autoComplete="email" {...fieldProps("email")} />
+                <TextField label="Phone" type="tel" inputMode="tel" autoComplete="tel" optional {...fieldProps("phone")} />
               </div>
-            </section>
-
-            <form id="profile-edit-form" onSubmit={handleSave} className="rounded-[28px] border border-border/50 bg-card p-6 shadow-sm">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Profile Details</p>
-                  <h2 className="mt-2 text-2xl font-bold text-foreground">Update your account information</h2>
-                </div>
-                <div className="rounded-2xl border border-border/50 bg-background/70 px-4 py-2 text-sm font-semibold text-foreground/68">
-                  {profileCompletion}% complete
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/52">First Name</label>
-                  <div className="relative">
-                    <UserRound className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/38" />
-                    <input
-                      value={form.first_name}
-                      onChange={(event) => setForm((prev) => ({ ...prev, first_name: event.target.value }))}
-                      className={fieldClassName}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/52">Last Name</label>
-                  <div className="relative">
-                    <UserRound className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/38" />
-                    <input
-                      value={form.last_name}
-                      onChange={(event) => setForm((prev) => ({ ...prev, last_name: event.target.value }))}
-                      className={fieldClassName}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/52">Email</label>
-                  <div className="relative">
-                    <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/38" />
-                    <input
-                      value={form.email}
-                      onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-                      className={fieldClassName}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/52">Phone</label>
-                  <div className="relative">
-                    <Phone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/38" />
-                    <input
-                      value={form.phone}
-                      onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
-                      className={fieldClassName}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 space-y-2">
-                <label className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/52">Address</label>
-                <div className="relative">
-                  <MapPin className="pointer-events-none absolute left-4 top-4 h-4 w-4 text-foreground/38" />
-                  <textarea
-                    value={form.address}
-                    onChange={(event) => setForm((prev) => ({ ...prev, address: event.target.value }))}
-                    className="min-h-[110px] w-full rounded-2xl border border-border/60 bg-background/80 px-4 pb-4 pl-11 pt-3 text-sm text-foreground outline-none transition-all duration-150 focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 flex flex-wrap justify-between gap-3">
-                <p className="max-w-xl text-sm leading-7 text-foreground/60">
-                  Keeping this information current makes checkout, delivery updates, and invoice history cleaner.
-                </p>
-                <button
-                  type="submit"
-                  className="inline-flex h-12 items-center gap-2 rounded-2xl bg-gradient-to-r from-primary via-primary to-emerald-700 px-5 text-sm font-bold text-primary-foreground shadow-[0_14px_28px_rgba(16,185,129,0.20)] transition-all duration-150 hover:-translate-y-0.5"
-                >
-                  <Save className="h-4 w-4" />
-                  Save Changes
-                </button>
+              <TextAreaField label="Delivery address" autoComplete="street-address" optional hint="Pre-filled at checkout." {...fieldProps("address")} />
+              <div className="flex flex-wrap items-center gap-3">
+                <Button type="submit" disabled={!isDirty || isSaving} aria-busy={isSaving}>
+                  {isSaving ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+                  {isSaving ? "Saving…" : "Save changes"}
+                </Button>
+                {isDirty && !isSaving ? (
+                  <Button type="button" variant="ghost" onClick={() => { setForm(toForm(profile)); setErrors({}); setFormError(""); }}>
+                    Discard changes
+                  </Button>
+                ) : null}
+                <p className="text-sm text-muted-foreground" aria-live="polite">{isDirty ? "You have unsaved changes." : ""}</p>
               </div>
             </form>
-          </div>
-        </section>
-      </main>
+          </section>
+
+          <section aria-labelledby="recent-title" className="rounded-xl border border-border bg-card p-6">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 id="recent-title" className="text-[1.563rem] leading-tight text-foreground">Recent orders</h2>
+              {orders.length > 0 ? (
+                <Link to="/orders" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+                  All orders <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              ) : null}
+            </div>
+            {orders.length === 0 ? (
+              <EmptyState icon={ReceiptText} headingLevel="h3" title="No orders yet" description="Your orders and their delivery progress will show up here." action={<Button asChild><Link to="/browse">Browse books</Link></Button>} className="py-8" />
+            ) : (
+              <ul className="mt-4 grid gap-3">
+                {orders.slice(0, 3).map((order) => (
+                  <li key={order.id}>
+                    <SpotlightCard className="group rounded-lg border-border bg-card p-0 transition-[box-shadow,translate] duration-200 hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.995] motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100">
+                      <Link to={`/orders/${encodeURIComponent(order.id)}`} className="relative z-10 flex flex-wrap items-center justify-between gap-3 rounded-lg p-4">
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold tabular-nums text-foreground">{order.id}</p>
+                          <p className="text-sm text-muted-foreground">{formatOrderDate(order.createdAt)} · {order.items.length} {order.items.length === 1 ? "title" : "titles"}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <OrderStatusBadge status={order.status} />
+                          <span className="font-semibold tabular-nums text-foreground">{formatPrice(order.total)}</span>
+                        </div>
+                      </Link>
+                    </SpotlightCard>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+
+        <aside className="grid content-start gap-6 lg:col-span-4">
+          <section aria-labelledby="summary-title" className="rounded-xl border border-border bg-card p-6">
+            <h2 id="summary-title" className="text-[1.563rem] leading-tight text-foreground">At a glance</h2>
+            <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">
+              {[
+                { label: "Orders", value: orders.length },
+                { label: "Open", value: metrics.open },
+                { label: "Delivered", value: metrics.delivered },
+              ].map((stat) => (
+                <div key={stat.label} className="bg-card p-4">
+                  <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{stat.label}</dt>
+                  <dd className="mt-1 font-display text-[1.75rem] leading-none tabular-nums text-primary"><CountUp to={stat.value} duration={1.2} /></dd>
+                </div>
+              ))}
+              <div className="bg-card p-4">
+                <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Spent</dt>
+                <dd className="mt-1 font-display text-[1.4rem] leading-none tabular-nums text-primary">{formatPrice(metrics.spent)}</dd>
+              </div>
+            </dl>
+
+            <div className="mt-6">
+              <div className="flex items-baseline justify-between text-sm">
+                <p id="completion-label" className="font-semibold text-foreground">Profile complete</p>
+                <p className="tabular-nums text-muted-foreground">{completion}%</p>
+              </div>
+              <div role="progressbar" aria-labelledby="completion-label" aria-valuemin={0} aria-valuemax={100} aria-valuenow={completion} className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2">
+                <div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${completion}%` }} />
+              </div>
+              {completion < 100 ? <p className="mt-2 text-sm text-muted-foreground">Add your phone and address for faster checkout.</p> : null}
+            </div>
+          </section>
+
+          <nav aria-label="Account shortcuts" className="rounded-xl border border-border bg-card p-2">
+            <ul className="grid">
+              {[
+                { to: "/orders", label: "Orders", Icon: ReceiptText },
+                { to: "/favorites", label: "Wishlist", Icon: Heart },
+                { to: "/cart", label: "Cart", Icon: ShoppingBag },
+              ].map(({ to, label, Icon }) => (
+                <li key={to}>
+                  <Link to={to} className="group flex min-h-12 items-center gap-3 rounded-lg px-4 font-semibold text-foreground transition-colors duration-150 hover:bg-secondary">
+                    <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+                    {label}
+                    <ArrowRight className="ml-auto h-4 w-4 text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <Button variant="outline" onClick={() => void handleSignOut()} disabled={isSigningOut} aria-busy={isSigningOut} className="w-full">
+            {isSigningOut ? <Loader2 className="animate-spin" aria-hidden="true" /> : <LogOut aria-hidden="true" />}
+            {isSigningOut ? "Signing out…" : "Sign out"}
+          </Button>
+        </aside>
+      </div>
     </div>
   );
 };

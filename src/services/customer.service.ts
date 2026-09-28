@@ -74,6 +74,12 @@ const customerService = {
     return response.data.data;
   },
 
+  // GET /invoices/{id}: a single order for the signed-in customer.
+  getInvoice: async (invoiceId: string): Promise<CustomerInvoice> => {
+    const response = await api.get<{ status: string; data: CustomerInvoice }>(`/invoices/${encodeURIComponent(invoiceId)}`);
+    return response.data.data;
+  },
+
   createReturnRequest: async (
     invoiceId: string,
     payload: { invoice_item_id: number; quantity: number; reason: string },

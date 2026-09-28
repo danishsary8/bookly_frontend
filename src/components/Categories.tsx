@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { BookOpen, Headphones, Sparkles, Globe, Pen, Heart } from "lucide-react";
 
 const categories = [

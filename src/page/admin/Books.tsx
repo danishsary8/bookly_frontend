@@ -237,7 +237,7 @@ const Books = () => {
             <div key={book.id} className="rounded-2xl border border-slate-200/70 bg-slate-50/60 p-4">
               <div className="flex items-start gap-4">
                 <div className="relative h-28 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                  <BookCoverImage src={book.book_img} alt={book.title} author={book.author_name} className="h-full w-full object-cover" iconClassName="h-5 w-5" />
+                  <BookCoverImage src={book.book_img} alt={book.title} className="h-full w-full object-cover" iconClassName="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-3">
@@ -354,11 +354,16 @@ const Books = () => {
           </div>
 
           <input
+            type="url"
             value={form.book_img || ""}
             onChange={(e) => setForm((prev) => ({ ...prev, book_img: e.target.value }))}
-            placeholder="Book image URL"
+            placeholder="https://res.cloudinary.com/.../book.jpg"
+            aria-label="Cloudinary book image URL"
             className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-2 focus:ring-orange-200"
           />
+          <p className="-mt-2 text-xs text-slate-500">
+            Paste the complete Cloudinary delivery URL. This value is saved directly to the books.book_img column.
+          </p>
           {form.book_img ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Cover Preview</p>

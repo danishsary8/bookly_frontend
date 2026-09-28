@@ -277,7 +277,7 @@ const Dashboard = () => {
                   {analytics.top_books.length ? analytics.top_books.map((book) => (
                     <div key={`top-${book.book_id}-${book.title}`} className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
                       <div className="relative h-20 w-16 overflow-hidden rounded-xl border border-slate-200 bg-white">
-                        <BookCoverImage src={book.book_img} alt={book.title} author={book.author_name} className="h-full w-full object-cover" iconClassName="h-5 w-5" />
+                        <BookCoverImage src={book.book_img} alt={book.title} className="h-full w-full object-cover" iconClassName="h-5 w-5" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="line-clamp-1 text-sm font-bold text-slate-900">{book.title}</p>

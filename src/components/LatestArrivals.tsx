@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import bookService from "../services/book.service";
 import BookCoverImage from "./BookCoverImage";
 import type { Book } from "../types/book.types";

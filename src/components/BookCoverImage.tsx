@@ -1,30 +1,38 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, type SyntheticEvent } from "react";
 import { BookOpen } from "lucide-react";
 
 interface BookCoverImageProps {
   src?: string | null;
   alt: string;
-  author?: string;
   className?: string;
   iconClassName?: string;
 }
 
+/**
+ * Covers below this in either dimension are treated as missing. Real covers in
+ * the catalogue are 198x255 at the smallest, while tracking pixels and "no cover
+ * available" placeholders are 1x1, so there is a wide margin between the two.
+ */
+const MIN_COVER_DIMENSION = 32;
+
+// Cloudinary delivery URLs are commonly returned with an immutable cache
+// policy. A single cache key per page load keeps the database book_img value
+// authoritative while ensuring an overwritten Cloudinary asset is fetched
+// again after a refresh.
+const IMAGE_CACHE_BUSTER = Date.now().toString();
+
+// Missing-cover placeholder (MASTER: flat lapis-tint "cover" with lapis type; no cream,
+// no gradient). SVG data URIs can't read CSS variables, so the Daylight token hexes are inlined.
 const buildFallbackCover = (title: string) =>
   `data:image/svg+xml;utf8,${encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420">
-      <defs>
-        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#f8efe4" />
-          <stop offset="100%" stop-color="#ead8bf" />
-        </linearGradient>
-      </defs>
-      <rect width="300" height="420" rx="28" fill="url(#bg)" />
-      <rect x="24" y="24" width="252" height="372" rx="22" fill="rgba(255,255,255,0.52)" />
-      <text x="40" y="180" fill="#523a28" font-size="26" font-family="Georgia, serif" font-weight="700">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450">
+      <rect width="300" height="450" fill="#E6E9F8" />
+      <rect x="18" y="0" width="2" height="450" fill="#14207A" opacity="0.18" />
+      <text x="40" y="190" fill="#14207A" font-size="26" font-family="Gloock, Georgia, serif">
         ${title.slice(0, 24).replace(/[&<>"]/g, "")}
       </text>
-      <text x="40" y="222" fill="#7a614a" font-size="14" font-family="Arial, sans-serif" letter-spacing="2">
-        BOOKLY EDITION
+      <text x="40" y="226" fill="#4C5378" font-size="12" font-family="Hanken Grotesk, Arial, sans-serif" letter-spacing="3">
+        BOOKLY
       </text>
     </svg>
   `)}`;
@@ -32,8 +40,20 @@ const buildFallbackCover = (title: string) =>
 const isAbsoluteImageSrc = (value: string) =>
   /^(?:https?:)?\/\//i.test(value) || value.startsWith("data:") || value.startsWith("blob:");
 
+const isCloudinaryUrl = (value: string) =>
+  /^https?:\/\/res\.cloudinary\.com\//i.test(value);
+
+const addCloudinaryCacheBuster = (value: string) => {
+  if (!isCloudinaryUrl(value)) {
+    return value;
+  }
+
+  const separator = value.includes("?") ? "&" : "?";
+  return `${value}${separator}bookly_cb=${IMAGE_CACHE_BUSTER}`;
+};
+
 const joinUrl = (base: string, path: string) => `${base.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
-const coverLookupCache = new Map<string, string | null>();
+
 const legacyBookCoverMap: Record<string, string> = {
   "grapes_of_wrath.jpg": "https://upload.wikimedia.org/wikipedia/commons/a/ad/The_Grapes_of_Wrath_%281939_1st_ed_cover%29.jpg",
   "love_cholera.jpg": "https://covers.openlibrary.org/b/olid/OL51478818M-L.jpg",
@@ -42,9 +62,6 @@ const legacyBookCoverMap: Record<string, string> = {
   "steve_jobs.jpg": "https://covers.openlibrary.org/b/olid/OL27193250M-L.jpg",
 };
 
-const isLegacyFilename = (value: string) =>
-  !isAbsoluteImageSrc(value) && !value.includes("/") && /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(value);
-
 const resolveBookImageSrc = (src?: string | null) => {
   const trimmedSrc = src?.trim();
   if (!trimmedSrc) {
@@ -52,7 +69,7 @@ const resolveBookImageSrc = (src?: string | null) => {
   }
 
   if (isAbsoluteImageSrc(trimmedSrc)) {
-    return trimmedSrc;
+    return addCloudinaryCacheBuster(trimmedSrc);
   }
 
   const normalizedPath = trimmedSrc.replace(/\\/g, "/").replace(/^\.\/+/, "");
@@ -66,111 +83,84 @@ const resolveBookImageSrc = (src?: string | null) => {
   return imageBaseUrl ? joinUrl(imageBaseUrl, normalizedPath) : normalizedPath;
 };
 
-const lookupOpenLibraryCover = async (title: string, author?: string) => {
-  const queryKey = `${title.trim().toLowerCase()}::${(author || "").trim().toLowerCase()}`;
-  if (coverLookupCache.has(queryKey)) {
-    return coverLookupCache.get(queryKey) ?? null;
-  }
-
-  const params = new URLSearchParams({
-    title,
-    limit: "5",
-    fields: "cover_i,title,author_name",
-  });
-
-  if (author?.trim()) {
-    params.set("author", author.trim());
-  }
-
-  try {
-    const response = await fetch(`https://openlibrary.org/search.json?${params.toString()}`);
-    if (!response.ok) {
-      coverLookupCache.set(queryKey, null);
-      return null;
-    }
-
-    const payload = await response.json() as {
-      docs?: Array<{ cover_i?: number; title?: string; author_name?: string[] }>;
-    };
-
-    const docWithCover = payload.docs?.find((doc) => typeof doc.cover_i === "number");
-    const coverUrl = docWithCover?.cover_i
-      ? `https://covers.openlibrary.org/b/id/${docWithCover.cover_i}-L.jpg`
-      : null;
-
-    coverLookupCache.set(queryKey, coverUrl);
-    return coverUrl;
-  } catch {
-    coverLookupCache.set(queryKey, null);
-    return null;
-  }
-};
-
-const BookCoverImage = ({ src, alt, author, className = "", iconClassName = "h-10 w-10" }: BookCoverImageProps) => {
+const BookCoverImage = ({ src, alt, className = "", iconClassName = "h-10 w-10" }: BookCoverImageProps) => {
   const fallbackSrc = useMemo(() => buildFallbackCover(alt), [alt]);
   const resolvedSrc = useMemo(() => resolveBookImageSrc(src), [src]);
+
   const [imageSrc, setImageSrc] = useState(resolvedSrc || fallbackSrc);
   const [failed, setFailed] = useState(!resolvedSrc);
-  const [hasTriedLookup, setHasTriedLookup] = useState(false);
-  const shouldLookupCover = useMemo(() => {
-    const trimmedSrc = src?.trim();
-    return Boolean(trimmedSrc && isLegacyFilename(trimmedSrc));
-  }, [src]);
 
-  useEffect(() => {
-    if (resolvedSrc) {
-      setImageSrc(resolvedSrc);
-      setFailed(false);
-    } else {
+  // Re-seed when the source changes, during render rather than in an effect.
+  const [lastResolvedSrc, setLastResolvedSrc] = useState(resolvedSrc);
+
+  if (resolvedSrc !== lastResolvedSrc) {
+    setLastResolvedSrc(resolvedSrc);
+    setImageSrc(resolvedSrc || fallbackSrc);
+    setFailed(!resolvedSrc);
+  }
+
+  const isShowingFallback = imageSrc === fallbackSrc;
+
+  const showFallback = () => {
+    setFailed(true);
+
+    if (!isShowingFallback) {
       setImageSrc(fallbackSrc);
-      setFailed(true);
     }
+  };
 
-    setHasTriedLookup(false);
-  }, [fallbackSrc, resolvedSrc]);
-
-  useEffect(() => {
-    if (!shouldLookupCover || !failed || hasTriedLookup) {
+  /**
+   * A broken cover is not always an error. A host can answer 200 with a 1x1
+   * placeholder, which decodes cleanly and never fires onError but renders as an
+   * empty panel. Measuring the decoded bitmap catches that as well as a genuine
+   * decode failure (naturalWidth === 0).
+   */
+  const measure = (img: HTMLImageElement) => {
+    // Never re-judge the fallback against itself.
+    if (isShowingFallback) {
       return;
     }
 
-    let active = true;
-    setHasTriedLookup(true);
+    const { naturalWidth, naturalHeight } = img;
 
-    void lookupOpenLibraryCover(alt, author).then((coverUrl) => {
-      if (!active || !coverUrl) {
-        return;
-      }
+    if (
+      naturalWidth === 0 ||
+      naturalWidth < MIN_COVER_DIMENSION ||
+      naturalHeight < MIN_COVER_DIMENSION
+    ) {
+      showFallback();
+      return;
+    }
 
-      setImageSrc(coverUrl);
-      setFailed(false);
-    });
+    setFailed(false);
+  };
 
-    return () => {
-      active = false;
-    };
-  }, [alt, author, failed, hasTriedLookup, shouldLookupCover]);
+  const handleLoad = (event: SyntheticEvent<HTMLImageElement>) => measure(event.currentTarget);
+
+  // An image restored from cache can finish decoding before React attaches
+  // onLoad, so it is measured on mount too.
+  const handleRef = (img: HTMLImageElement | null) => {
+    if (img?.complete) {
+      measure(img);
+    }
+  };
 
   return (
     <>
       <img
+        ref={handleRef}
         src={imageSrc}
         alt={alt}
+        loading="lazy"
+        decoding="async"
         className={className}
-        onError={() => {
-          if (shouldLookupCover && !hasTriedLookup) {
-            setFailed(true);
-            return;
-          }
-
-          setFailed(true);
-          setImageSrc(fallbackSrc);
-        }}
+        onLoad={handleLoad}
+        onError={showFallback}
       />
       {failed && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="rounded-full bg-white/80 p-3 shadow-sm">
-            <BookOpen className={`text-slate-500 ${iconClassName}`} />
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className="rounded-full bg-card/80 p-3">
+            <BookOpen className={`text-muted-foreground ${iconClassName}`} aria-hidden="true" />
           </div>
         </div>
       )}

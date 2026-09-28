@@ -1,4 +1,5 @@
 import api from '../api/axios';
+import { toNumber } from '../lib/format';
 import type { Book, BookAuthorResponse, BookCategoryResponse, BookCountResponse, BookMutationData, BookPriceResponse, BookQueryParams, BookResponse, BookReview, BookReviewPayload } from '../types/book.types';
 
 const bookService = {
@@ -10,6 +11,20 @@ const bookService = {
         const response = await api.get<BookResponse>('/books', { params: query });
         return response.data;
     },
+    // GET /books/{id}. The API sends price/stock/rating as strings ("19.99"); normalise here.
+    getBook: async (bookId: number | string): Promise<Book> => {
+        const response = await api.get<{ status: string; data: Book }>(`/books/${bookId}`);
+        const book = response.data.data;
+        return {
+            ...book,
+            id: toNumber(book.id),
+            price: toNumber(book.price),
+            stock: book.stock === undefined || book.stock === null ? undefined : toNumber(book.stock),
+            average_rating: toNumber(book.average_rating),
+            review_count: toNumber(book.review_count),
+        };
+    },
+
     getAuthors: async (): Promise<BookAuthorResponse> => {
         const response = await api.get<BookAuthorResponse>('/authors');
         return response.data;
