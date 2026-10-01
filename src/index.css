@@ -1,0 +1,1093 @@
+@import "tailwindcss";
+@import "shadcn/tailwind.css";
+@import url("https://fonts.googleapis.com/css2?family=Gloock&family=Hanken+Grotesk:wght@400;500;600;700&family=Kantumruy+Pro:wght@400;600&display=swap");
+
+@custom-variant dark (&:is(.dark *));
+
+/* Bookly design system v2 "Lapis & Vermilion" — see design-system/bookly/MASTER.md */
+@theme {
+    --font-sans: "Hanken Grotesk", "Kantumruy Pro", system-ui, sans-serif;
+    --font-display: "Gloock", "Kantumruy Pro", Georgia, serif;
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --shadow-lift: 0 18px 40px -24px rgb(7 11 34 / 0.35);
+    --shadow-overlay: 0 32px 64px -32px rgb(7 11 34 / 0.55);
+}
+
+@theme inline {
+    --color-surface-2: var(--surface-2);
+    --color-lapis-tint: var(--lapis-tint);
+    --color-accent-text: var(--accent-text);
+    --color-star: var(--star);
+    --color-warning: var(--warning);
+    --color-on-lapis: var(--on-lapis);
+    --color-on-lapis-muted: var(--on-lapis-muted);
+    --color-on-lapis-accent: var(--on-lapis-accent);
+    --color-gold: var(--gold);
+    --color-lapis: var(--lapis);
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --radius-2xl: calc(var(--radius) + 8px);
+    --radius-3xl: calc(var(--radius) + 12px);
+    --radius-4xl: calc(var(--radius) + 16px);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* Daylight — light, default (MASTER §2.1) */
+:root {
+    --radius: 0.375rem;
+    --background: #F6F7FB;
+    --foreground: #0E1335;
+    --card: #FFFFFF;
+    --card-foreground: #0E1335;
+    --popover: #FFFFFF;
+    --popover-foreground: #0E1335;
+    --surface-2: #ECEEF7;
+    --lapis-tint: #E6E9F8;
+    --primary: #14207A;
+    --primary-foreground: #F6F7FB;
+    --secondary: var(--surface-2);
+    --secondary-foreground: #0E1335;
+    --muted: var(--surface-2);
+    --muted-foreground: #4C5378;
+    --accent: #FF4F2E;
+    --accent-foreground: #0E1335;
+    --accent-text: #C0361A;
+    --star: #B7791F;
+    --success: #1B6E4B;
+    --success-foreground: #F6F7FB;
+    --warning: #8A5300;
+    --destructive: #A3123A;
+    --border: #D9DDEC;
+    --input: #7A82A6;
+    --ring: #14207A;
+
+    /* Lapis surfaces (hero) — same in both themes, measured against #3143A3 (MASTER §2.1a, §2.3) */
+    --lapis: #14207A;
+    --on-lapis: #F6F7FB;
+    --on-lapis-muted: #B9C0EA;
+    --on-lapis-accent: #FFB09A;
+    --gold: #F2C84B;
+    --spotlight: rgba(20, 32, 122, 0.08);
+
+    --chart-1: #14207A;
+    --chart-2: #FF4F2E;
+    --chart-3: #1B6E4B;
+    --chart-4: #B7791F;
+    --chart-5: #4C5378;
+    --sidebar: #FFFFFF;
+    --sidebar-foreground: #0E1335;
+    --sidebar-primary: #14207A;
+    --sidebar-primary-foreground: #F6F7FB;
+    --sidebar-accent: var(--lapis-tint);
+    --sidebar-accent-foreground: #14207A;
+    --sidebar-border: #D9DDEC;
+    --sidebar-ring: #14207A;
+}
+
+/* Lapis Night — dark (MASTER §2.2) */
+.dark {
+    --background: #070B22;
+    --foreground: #F1F2FA;
+    --card: #0E1433;
+    --card-foreground: #F1F2FA;
+    --popover: #0E1433;
+    --popover-foreground: #F1F2FA;
+    --surface-2: #172050;
+    --lapis-tint: #172050;
+    --primary: #9AA6FF;
+    --primary-foreground: #070B22;
+    --secondary: var(--surface-2);
+    --secondary-foreground: #F1F2FA;
+    --muted: var(--surface-2);
+    --muted-foreground: #A9B0D6;
+    --accent: #FF4F2E;
+    --accent-foreground: #0E1335;
+    --accent-text: #FF7A5C;
+    --star: #F2C84B;
+    --success: #5CC592;
+    --success-foreground: #070B22;
+    --warning: #F2C84B;
+    --destructive: #FF8FB0;
+    --border: #252D63;
+    --input: #6D78B8;
+    --ring: #F2C84B;
+
+    --on-lapis: #F1F2FA;
+    --spotlight: rgba(154, 166, 255, 0.14);
+
+    --chart-1: #9AA6FF;
+    --chart-2: #FF4F2E;
+    --chart-3: #5CC592;
+    --chart-4: #F2C84B;
+    --chart-5: #A9B0D6;
+    --sidebar: #0E1433;
+    --sidebar-foreground: #F1F2FA;
+    --sidebar-primary: #9AA6FF;
+    --sidebar-primary-foreground: #070B22;
+    --sidebar-accent: #172050;
+    --sidebar-accent-foreground: #F1F2FA;
+    --sidebar-border: #252D63;
+    --sidebar-ring: #F2C84B;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  /* MASTER §7: a visible focus ring on every focusable element. Components that
+     draw their own ring opt out with the `outline-none` utility, which wins over
+     this base-layer rule. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* Route changes move focus to the page heading or <main> (ClientLayout). These are
+     not interactive, so they take focus silently rather than drawing a ring. */
+  h1[tabindex="-1"]:focus,
+  main[tabindex="-1"]:focus {
+    outline: none;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    transition:
+      background-color 160ms ease,
+      color 160ms ease;
+  }
+
+  /* Gloock ships one weight: never let the browser fake bold or italic. */
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-synthesis: none;
+    letter-spacing: -0.01em;
+  }
+
+  h4, h5, h6 {
+    font-family: var(--font-sans);
+    font-weight: 600;
+  }
+
+  h1 {
+    font-size: clamp(2.25rem, 4vw, 3.05rem);
+    line-height: 1.08;
+  }
+
+  h2 {
+    font-size: clamp(1.75rem, 3vw, 2.45rem);
+    line-height: 1.12;
+  }
+
+  h3 {
+    font-size: 1.563rem;
+    line-height: 1.2;
+  }
+
+  h4 {
+    font-size: 1.25rem;
+    line-height: 1.3;
+  }
+
+  p {
+    @apply text-base leading-relaxed;
+  }
+
+  /* MASTER §5: reduced motion means no animation. This stops every CSS animation and
+     transition site-wide (motion/JS animations are stopped in lib/reducedMotion.ts).
+     Durations go to ~0 rather than `none` so animationend/transitionend still fire. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      transition-delay: 0ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    .swal2-timer-progress-bar-container {
+      display: none !important;
+    }
+  }
+
+  /* Button base transitions and shadows */
+  button {
+    @apply transition-all duration-150;
+  }
+
+  /* Press feedback for every button (Phase 3 interactivity pass). Low-specificity
+     :where() so any component's own active:scale-* wins; colour-only under
+     reduced motion. Uses the individual `scale` property, so it composes with
+     Tailwind's `translate` utilities and motion's transforms. */
+  :where(button:not(:disabled), [role="button"]:not([aria-disabled="true"])):active {
+    scale: 0.97;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where(button, [role="button"]):active {
+      scale: none;
+    }
+  }
+
+  /* Fields keep the base focus ring above; only colour/shadow transitions here. */
+  input, textarea, select {
+    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  }
+}
+
+/* Loading skeletons (MASTER §6.11): --surface-2 base, --card at 60% sweeping
+   left to right every 1.4s, replaced by a static fill under reduced motion. */
+@keyframes skeleton-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@layer utilities {
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--surface-2);
+  }
+
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in oklab, var(--card) 60%, transparent) 50%,
+      transparent 100%
+    );
+    animation: skeleton-sweep 1.4s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton::after {
+      display: none;
+    }
+  }
+
+  /* Premium glass effect */
+  .glass-surface {
+    @apply bg-background/60 backdrop-blur-md border border-border/40 shadow-sm;
+  }
+
+  /* Section container */
+  .section-wrap {
+    @apply max-w-7xl mx-auto px-6 lg:px-12;
+  }
+
+  /* Warm accent ring */
+  .warm-ring {
+    @apply ring-1 ring-accent/20 shadow-[0_12px_24px_rgba(198,124,78,0.12)];
+  }
+
+  /* Premium button shadow */
+  .btn-shadow {
+    @apply shadow-[0_4px_12px_rgba(0,0,0,0.08)];
+  }
+
+  .btn-shadow-hover {
+    @apply shadow-[0_8px_24px_rgba(0,0,0,0.12)];
+  }
+
+  /* Smooth transitions for interactive elements */
+  .transition-smooth {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .transition-smooth-lg {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  /* Framer Motion animation classes */
+  @keyframes slideInFromBottom {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInFromLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideInFromRight {
+    from {
+      opacity: 0;
+      transform: translateX(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-12px);
+    }
+  }
+
+  @keyframes glow {
+    0%, 100% {
+      box-shadow: 0 0 10px rgba(80, 50, 30, 0.1);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(80, 50, 30, 0.2);
+    }
+  }
+
+  .animate-slide-in-bottom {
+    animation: slideInFromBottom 0.6s ease-out;
+  }
+
+  .animate-slide-in-left {
+    animation: slideInFromLeft 0.6s ease-out;
+  }
+
+  .animate-slide-in-right {
+    animation: slideInFromRight 0.6s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.4s ease-out;
+  }
+
+
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite;
+  }
+
+  /* Additional premium animations */
+  @keyframes pulse-soft {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  @keyframes bounce-subtle {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-4px);
+    }
+  }
+
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes ripple {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+
+  @keyframes swipe-enter {
+    from {
+      opacity: 0;
+      transform: translateX(-100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes blur-in {
+    from {
+      opacity: 0;
+      filter: blur(12px);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-bounce-subtle {
+    animation: bounce-subtle 2s ease-in-out infinite;
+  }
+
+  .animate-spin-slow {
+    animation: spin-slow 3s linear infinite;
+  }
+
+  .animate-ripple {
+    animation: ripple 0.6s ease-out;
+  }
+
+  .animate-swipe-enter {
+    animation: swipe-enter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .animate-blur-in {
+    animation: blur-in 0.6s ease-out;
+  }
+
+  /* Premium hover elevations */
+  .hover-lift {
+    @apply transition-all duration-200 hover:-translate-y-1 hover:shadow-md;
+  }
+
+  .hover-lift-sm {
+    @apply transition-all duration-150 hover:-translate-y-0.5 hover:shadow-sm;
+  }
+
+  /* Stagger animations for lists */
+  @keyframes stagger-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .stagger-item {
+    animation: stagger-in 0.5s ease-out backwards;
+  }
+
+  .stagger-item:nth-child(1) { animation-delay: 0ms; }
+  .stagger-item:nth-child(2) { animation-delay: 50ms; }
+  .stagger-item:nth-child(3) { animation-delay: 100ms; }
+  .stagger-item:nth-child(4) { animation-delay: 150ms; }
+  .stagger-item:nth-child(5) { animation-delay: 200ms; }
+  .stagger-item:nth-child(6) { animation-delay: 250ms; }
+
+  /* Loading skeleton with shimmer */
+  .skeleton-shimmer {
+    @apply bg-muted relative overflow-hidden;
+  }
+
+  /* Focus visible states */
+  .focus-ring {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+
+  /* Smooth page transitions */
+  .page-enter {
+    animation: blur-in 0.6s ease-out;
+  }
+
+  .page-exit {
+    animation: fadeOut 0.4s ease-out forwards;
+  }
+
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  /* Premium text effects */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
+  }
+
+  /* Interactive state classes */
+  .interactive-hover {
+    @apply transition-all duration-200 cursor-pointer hover:scale-105;
+  }
+
+  .interactive-press {
+    @apply active:scale-95 transition-transform duration-100;
+  }
+
+  /* Glass morphism enhancement */
+  .glass-premium {
+    @apply bg-background/40 backdrop-blur-xl border border-border/30 shadow-xl;
+  }
+
+  /* Responsive container utilities */
+  .container-responsive {
+    @apply w-full px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Smooth color transitions for theme switching */
+  .theme-transition {
+    @apply transition-colors duration-300;
+  }
+}
+
+/* Dialog backdrop only; toast containers never get this class (alerts.ts). */
+.swal2-bookly-backdrop.swal2-backdrop-show {
+  background: rgb(7 11 34 / 0.5) !important;
+}
+
+/* Dialogs: card surface, 10px radius (MASTER max), overlay elevation. */
+.swal2-bookly-popup {
+  border-radius: 10px !important;
+  border: 1px solid var(--border) !important;
+  background: var(--card) !important;
+  box-shadow: 0 32px 64px -32px rgb(7 11 34 / 0.55) !important;
+  padding: 1.5rem !important;
+}
+
+.swal2-bookly-title {
+  color: var(--foreground) !important;
+  font-family: var(--font-display) !important;
+  font-size: 1.563rem !important;
+  line-height: 1.2 !important;
+  font-weight: 400 !important;
+}
+
+.swal2-bookly-content {
+  color: var(--muted-foreground) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+}
+
+.swal2-bookly-confirm,
+.swal2-bookly-cancel {
+  min-height: 44px !important;
+  border-radius: 6px !important;
+  padding: 0 1.25rem !important;
+  margin: 0 0.375rem !important;
+  font-family: var(--font-sans) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  box-shadow: none !important;
+  transition: filter 150ms ease, background-color 150ms ease, transform 150ms ease !important;
+}
+
+.swal2-bookly-confirm {
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border: 1px solid transparent !important;
+}
+
+.swal2-bookly-confirm:hover {
+  filter: brightness(1.12);
+}
+
+.swal2-bookly-cancel {
+  background: transparent !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--input) !important;
+}
+
+.swal2-bookly-cancel:hover {
+  background: var(--surface-2) !important;
+}
+
+.swal2-bookly-confirm:active,
+.swal2-bookly-cancel:active {
+  transform: scale(0.97);
+}
+
+.swal2-bookly-confirm:focus-visible,
+.swal2-bookly-cancel:focus-visible,
+.swal2-bookly-toast .swal2-close:focus-visible,
+.swal2-bookly-popup .swal2-close:focus-visible {
+  outline: 2px solid var(--ring) !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
+}
+
+/* Icons: SweetAlert's own drawn icons are replaced (alerts.ts passes iconHtml)
+   by a MASTER-style icon chip, a semantic tint circle with the glyph inside. */
+.swal2-bookly-popup .swal2-icon,
+.swal2-bookly-toast .swal2-icon {
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: color-mix(in oklab, currentColor 14%, var(--card)) !important;
+}
+
+.swal2-bookly-popup .swal2-icon {
+  width: 56px !important;
+  height: 56px !important;
+  margin: 0.5rem auto 0.25rem !important;
+}
+
+.swal2-bookly-popup .swal2-icon .swal2-icon-content svg {
+  width: 28px;
+  height: 28px;
+}
+
+/* Toasts: MASTER §6.5, bottom-right, card surface, icon chip + title + body + close. */
+.swal2-bookly-toast {
+  border-radius: 10px !important;
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 32px 64px -32px rgb(7 11 34 / 0.55) !important;
+  padding: 0.875rem 0.5rem 0.875rem 0.875rem !important;
+  width: min(400px, calc(100vw - 32px)) !important;
+  column-gap: 12px !important;
+}
+
+.swal2-bookly-toast .swal2-icon {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  margin: 2px 0 0 !important;
+  grid-row: 1 / 99 !important;
+  align-self: start !important;
+}
+
+.swal2-bookly-toast .swal2-icon .swal2-icon-content svg {
+  width: 18px;
+  height: 18px;
+}
+
+.swal2-bookly-toast .swal2-title,
+.swal2-bookly-toast-title {
+  color: var(--foreground) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 15px !important;
+  line-height: 1.4 !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.swal2-bookly-toast .swal2-html-container,
+.swal2-bookly-toast-content {
+  color: var(--muted-foreground) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+  margin: 2px 0 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+}
+
+.swal2-bookly-toast .swal2-close {
+  width: 44px !important;
+  height: 44px !important;
+  margin: -6px 0 0 !important;
+  border-radius: 999px !important;
+  color: var(--muted-foreground) !important;
+  font-size: 1.5rem !important;
+  grid-row: 1 / 99 !important;
+  align-self: start !important;
+}
+
+.swal2-bookly-toast .swal2-close:hover {
+  background: var(--surface-2) !important;
+  color: var(--foreground) !important;
+}
+
+.swal2-bookly-toast .swal2-timer-progress-bar {
+  background: var(--primary) !important;
+  height: 2px !important;
+  opacity: 0.5;
+}
+
+/* Inline toast action ("Undo", "View cart"): a link-styled button, 44px tall target. */
+.swal2-bookly-toast .swal2-bookly-toast-actions {
+  grid-column: 2 !important;
+  justify-content: flex-start !important;
+  margin: 2px 0 0 !important;
+  padding: 0 !important;
+}
+
+.swal2-bookly-toast .swal2-bookly-toast-action {
+  min-height: 44px !important;
+  margin: -6px 0 -10px -8px !important;
+  padding: 0 8px !important;
+  border: 0 !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: var(--primary) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.swal2-bookly-toast .swal2-bookly-toast-action:hover {
+  background: var(--surface-2) !important;
+}
+
+.swal2-bookly-toast .swal2-bookly-toast-action:focus-visible {
+  outline: 2px solid var(--ring) !important;
+  outline-offset: 2px !important;
+}
+
+/* Mobile: MASTER puts toasts bottom-centre with a 16px inset. */
+@media (max-width: 639px) {
+  /* SweetAlert pins the toast container to a 360px box at the right edge; on phones
+     stretch it to the full width so the toast can actually sit in the centre. */
+  body.swal2-toast-shown .swal2-container.swal2-bottom-end {
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    padding: 0 16px calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .swal2-container.swal2-bottom-end > .swal2-popup {
+    grid-column: 1 / 4 !important;
+    justify-self: center !important;
+    width: 100% !important;
+    max-width: 400px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swal2-popup,
+  .swal2-container,
+  .swal2-icon,
+  .swal2-icon * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.theme-icon-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.95rem;
+  height: 2.95rem;
+  border-radius: 1.15rem;
+  border: 1px solid color-mix(in oklab, var(--border) 88%, white 12%);
+  background: color-mix(in oklab, var(--card) 92%, white 8%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 10px 24px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    transform 180ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease,
+    background 220ms ease;
+}
+
+.theme-icon-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 14px 28px rgba(15, 23, 42, 0.12);
+}
+
+.theme-icon-toggle:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+.theme-icon-toggle--dark {
+  border-color: color-mix(in oklab, var(--border) 65%, rgba(125, 211, 252, 0.22) 35%);
+  background: linear-gradient(180deg, rgba(29, 41, 66, 0.95), rgba(16, 24, 40, 0.96));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 14px 32px rgba(7, 13, 26, 0.26);
+}
+
+.theme-icon-toggle--mobile {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 0.95rem;
+  padding: 0 1rem;
+  border-radius: 1rem;
+}
+
+.theme-icon-toggle__glow {
+  position: absolute;
+  inset: auto auto 0.8rem 0.72rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: rgba(250, 204, 21, 0.95);
+  box-shadow: 0 0 22px rgba(250, 204, 21, 0.72);
+  transition: all 220ms ease;
+}
+
+.theme-icon-toggle--dark .theme-icon-toggle__glow {
+  inset: 0.8rem 0.78rem auto auto;
+  width: 0.22rem;
+  height: 0.22rem;
+  background: rgba(226, 232, 240, 0.92);
+  box-shadow:
+    0 0 0 0 rgba(255, 255, 255, 0.85),
+    0.42rem 0.26rem 0 0 rgba(255, 255, 255, 0.62),
+    -0.22rem 0.74rem 0 0 rgba(255, 255, 255, 0.48);
+}
+
+.theme-icon-toggle__rail {
+  position: absolute;
+  inset: 0.4rem;
+  border-radius: 0.95rem;
+  background:
+    linear-gradient(135deg, rgba(255, 240, 190, 0.34), rgba(255, 255, 255, 0.02));
+  opacity: 0.92;
+  transition: opacity 220ms ease, background 220ms ease;
+}
+
+.theme-icon-toggle--dark .theme-icon-toggle__rail {
+  background:
+    linear-gradient(135deg, rgba(125, 211, 252, 0.09), rgba(15, 23, 42, 0.04));
+  opacity: 1;
+}
+
+.theme-icon-toggle__halo {
+  position: absolute;
+  z-index: 1;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 211, 105, 0.42) 0%, rgba(255, 211, 105, 0.16) 48%, transparent 72%);
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+.theme-icon-toggle--dark .theme-icon-toggle__halo {
+  background: radial-gradient(circle, rgba(103, 232, 249, 0.34) 0%, rgba(103, 232, 249, 0.12) 48%, transparent 72%);
+}
+
+.theme-icon-toggle__label {
+  position: relative;
+  z-index: 2;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: color-mix(in oklab, var(--foreground) 78%, white 22%);
+}
+
+.theme-icon-toggle__core {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.05rem;
+  height: 2.05rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 244, 207, 0.92));
+  color: #d97706;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 10px 18px rgba(217, 119, 6, 0.16);
+  will-change: transform;
+  overflow: hidden;
+}
+
+.theme-icon-toggle--dark .theme-icon-toggle__core {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(37, 99, 235, 0.3));
+  color: #d9f7ff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 12px 20px rgba(8, 16, 32, 0.3);
+}
+
+.theme-icon-toggle__icon {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inset: 0;
+}
+
+.theme-icon-toggle__icon-stack {
+  position: relative;
+  display: inline-flex;
+  width: 100%;
+  height: 100%;
+}
+
+.theme-icon-toggle__icon--sun {
+  color: #d97706;
+}
+
+.theme-icon-toggle__icon--moon {
+  color: #d9f7ff;
+}
+
+/* Layered so Tailwind utilities can still override these on purpose (components < utilities). */
+@layer components {
+  /* ---------- Bookly v2 · hero surface (MASTER §2.1a) ---------- */
+  /* The only place a gradient is allowed. Daylight: inset panel. Night: full-bleed band. */
+  .hero-lapis {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    color: var(--on-lapis);
+    background-color: var(--lapis);
+    background-image: radial-gradient(110% 100% at 62% 40%, #26399E 0%, #14207A 45%, #0A102E 100%);
+    border-radius: var(--radius-xl);
+  }
+
+  /* Book-spine texture: paired 1–2px verticals, static, 5% opacity. */
+  .hero-lapis::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.05;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='184' height='8'%3E%3Cg fill='white'%3E%3Crect x='6' width='1' height='8'/%3E%3Crect x='9' width='2' height='8'/%3E%3Crect x='27' width='2' height='8'/%3E%3Crect x='31' width='1' height='8'/%3E%3Crect x='52' width='1' height='8'/%3E%3Crect x='55' width='1' height='8'/%3E%3Crect x='78' width='2' height='8'/%3E%3Crect x='82' width='1' height='8'/%3E%3Crect x='101' width='1' height='8'/%3E%3Crect x='104' width='2' height='8'/%3E%3Crect x='127' width='2' height='8'/%3E%3Crect x='131' width='1' height='8'/%3E%3Crect x='150' width='1' height='8'/%3E%3Crect x='153' width='1' height='8'/%3E%3Crect x='171' width='2' height='8'/%3E%3Crect x='175' width='1' height='8'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 184px 8px;
+  }
+
+  .hero-lapis :focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+
+  .dark .hero-lapis {
+    border-radius: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Display type — Home hero only (MASTER §3). */
+  .type-display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-synthesis: none;
+    font-size: clamp(2.75rem, 5.5vw, 4.75rem);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+  }
+
+  /* Eyebrow with the 48px ornament rule (MASTER §3, §4). */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 48px;
+    height: 1px;
+    background: currentColor;
+  }
+
+  .hero-lapis .eyebrow {
+    color: var(--gold);
+  }
+}
