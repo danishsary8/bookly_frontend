@@ -1,73 +1,85 @@
-# React + TypeScript + Vite
+# Bookly — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The web app for a bookstore e-commerce platform: a customer storefront and an admin area, built with **React 19**, **TypeScript**, **Vite** and **Tailwind CSS**.
 
-Currently, two official plugins are available:
+Backend API: [bookly_backend_v2](https://github.com/danishsary8/bookly_backend_v2)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-build-646CFF?logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**Storefront**
+- Home page and catalog browsing
+- Book detail pages
+- Favorites, cart and checkout
+- Order history and order details
+- Sign up, log in, OTP verification, forgot / reset password
+- Customer profile
 
-## Expanding the ESLint configuration
+**Admin area**
+- Dashboard
+- Books and catalog management
+- Orders, returns and promotions
+- Users and settings
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Tech stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+| Area | Choice |
+| --- | --- |
+| UI | React 19, TypeScript |
+| Build | Vite |
+| Styling | Tailwind CSS 4, Radix UI / Base UI components, lucide icons |
+| Routing | React Router 7 (protected customer and admin routes) |
+| HTTP | Axios with a shared client in `src/api/axios.ts` |
+| Animation | Motion, GSAP |
+| Hosting | Vercel (SPA rewrites in `vercel.json`) |
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Project structure
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+src/
+  api/          Axios client
+  services/     API calls per area (auth, books, customer, admin)
+  page/client/  Storefront pages
+  page/admin/   Admin pages
+  routes/       Route definitions and route guards
+  components/   Shared UI components
+  contexts/     React context (auth state, ...)
+  hooks/        Custom hooks
+  layouts/      Page layouts
+  types/        TypeScript types
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Getting started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Requirements: Node.js 20+.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone https://github.com/danishsary8/bookly_frontend.git
+cd bookly_frontend
+npm install
 ```
+
+Create a `.env` file:
+
+```env
+VITE_API_BASE_URL=http://localhost:8000/api/v1
+VITE_BOOK_IMAGE_BASE_URL=
+```
+
+```bash
+npm run dev       # development server
+npm run build     # type-check and production build
+npm run lint
+```
+
+## Status
+
+The frontend currently works with the first version of the API. The backend has been rebuilt as [bookly_backend_v2](https://github.com/danishsary8/bookly_backend_v2) (Laravel + PostgreSQL), and the frontend will be updated to the new `/api/v1` endpoints next.
+
+## Author
+
+Built by [danishsary8](https://github.com/danishsary8).
