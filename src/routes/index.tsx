@@ -31,6 +31,8 @@ const Users = lazy(() => import("../page/admin/Users"));
 const Settings = lazy(() => import("../page/admin/Settings"));
 const AdminAuthentication = lazy(() => import("../page/admin/AdminAuthentication"));
 const NotFound = lazy(() => import("../page/NotFound"));
+const BooksPage = lazy(() => import("../pages/catalog/BooksPage"));
+const SearchPage = lazy(() => import("../pages/catalog/SearchPage"));
 // Development-only reference page for the UI kit; not part of production builds.
 const UiKit = import.meta.env.DEV ? lazy(() => import("../pages/dev/UiKit")) : null;
 
@@ -47,6 +49,8 @@ const AppRoutes = () => {
         <Route element={<ClientLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/browse" element={<Browse />} />
+          <Route path="/books" element={<BooksPage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/books/:id" element={<BookDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/favorites" element={<Favorites />} />
