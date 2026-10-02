@@ -31,6 +31,8 @@ const Users = lazy(() => import("../page/admin/Users"));
 const Settings = lazy(() => import("../page/admin/Settings"));
 const AdminAuthentication = lazy(() => import("../page/admin/AdminAuthentication"));
 const NotFound = lazy(() => import("../page/NotFound"));
+// Development-only reference page for the UI kit; not part of production builds.
+const UiKit = import.meta.env.DEV ? lazy(() => import("../pages/dev/UiKit")) : null;
 
 const AppRoutes = () => {
   // Prefetch the book page while idle so the cover morph never waits on a lazy chunk.
@@ -48,6 +50,7 @@ const AppRoutes = () => {
           <Route path="/books/:id" element={<BookDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/favorites" element={<Favorites />} />
+          {UiKit ? <Route path="/ui-kit" element={<UiKit />} /> : null}
           <Route path="*" element={<NotFound />} />
           <Route element={<CustomerRoute />}>
             <Route path="/checkout" element={<Checkout />} />
