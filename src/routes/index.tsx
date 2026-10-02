@@ -6,6 +6,7 @@ import AdminLayout from "../layouts/AdminLayout";
 import ClientLayout from "../layouts/ClientLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import LegacyBrowseRedirect from "./LegacyBrowseRedirect";
+import LegacyOrderRedirect from "./LegacyOrderRedirect";
 import { GuestOnly, RequireCustomer, RequireVerified } from "./guards";
 
 const Home = lazy(() => import("../pages/HomePage"));
@@ -25,8 +26,12 @@ const ProfilePage = lazy(() => import("../pages/account/ProfilePage"));
 const SecurityPage = lazy(() => import("../pages/account/SecurityPage"));
 const AddressesPage = lazy(() => import("../pages/account/AddressesPage"));
 const WishlistPage = lazy(() => import("../pages/account/WishlistPage"));
-const CustomerOrders = lazy(() => import("../page/client/Orders"));
-const CustomerOrderDetail = lazy(() => import("../page/client/OrderDetail"));
+const OrdersPage = lazy(() => import("../pages/account/OrdersPage"));
+const OrderDetailPage = lazy(() => import("../pages/account/OrderDetailPage"));
+const ReturnRequestPage = lazy(() => import("../pages/account/ReturnRequestPage"));
+const ReturnsPage = lazy(() => import("../pages/account/ReturnsPage"));
+const ReturnDetailPage = lazy(() => import("../pages/account/ReturnDetailPage"));
+const ReviewsPage = lazy(() => import("../pages/account/ReviewsPage"));
 const Dashboard = lazy(() => import("../page/admin/Dashboard"));
 const Catalog = lazy(() => import("../page/admin/Catalog"));
 const Promotions = lazy(() => import("../page/admin/Promotions"));
@@ -62,6 +67,9 @@ const AppRoutes = () => {
         <Route path="/browse" element={<LegacyBrowseRedirect />} />
         <Route path="/profile" element={<Navigate to="/account/profile" replace />} />
         <Route path="/favorites" element={<Navigate to="/account/wishlist" replace />} />
+        <Route path="/orders" element={<Navigate to="/account/orders" replace />} />
+        <Route path="/orders/:id" element={<LegacyOrderRedirect />} />
+        <Route path="/invoices" element={<Navigate to="/account/orders" replace />} />
         <Route element={<ClientLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/books" element={<BooksPage />} />
@@ -85,12 +93,13 @@ const AppRoutes = () => {
               <Route path="security" element={<SecurityPage />} />
               <Route path="addresses" element={<AddressesPage />} />
               <Route path="wishlist" element={<WishlistPage />} />
+              <Route path="orders" element={<OrdersPage />} />
+              <Route path="orders/:id" element={<OrderDetailPage />} />
+              <Route path="orders/:id/return" element={<ReturnRequestPage />} />
+              <Route path="returns" element={<ReturnsPage />} />
+              <Route path="returns/:id" element={<ReturnDetailPage />} />
+              <Route path="reviews" element={<ReviewsPage />} />
             </Route>
-          </Route>
-          <Route element={<RequireCustomer />}>
-            <Route path="/orders" element={<CustomerOrders />} />
-            <Route path="/orders/:id" element={<CustomerOrderDetail />} />
-            <Route path="/invoices" element={<Navigate to="/orders" replace />} />
           </Route>
         </Route>
 
