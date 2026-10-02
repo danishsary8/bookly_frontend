@@ -41,7 +41,7 @@ export default function RegisterPage() {
         ...(values.phone ? { phone: values.phone } : {}),
       });
       // New accounts are unverified, so this continues to /verify-email (which keeps `next`).
-      afterSignIn(response.customer, next);
+      afterSignIn(response.customer, next, undefined, { justRegistered: true });
     } catch (error) {
       const message = applyApiErrors(error, setError, FIELDS);
       if (message) {

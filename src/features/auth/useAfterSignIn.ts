@@ -12,11 +12,11 @@ import { toast } from "@/stores/toast";
 export function useAfterSignIn() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  return (customer: Customer | undefined, next: string | null, greeting?: string) => {
+  return (customer: Customer | undefined, next: string | null, greeting?: string, options: { justRegistered?: boolean } = {}) => {
     queryClient.removeQueries({ queryKey: ["cart"] });
     queryClient.removeQueries({ queryKey: ["account"] });
     if (customer && customer.email_verified === false) {
-      navigate(withNext("/verify-email", next), { replace: true });
+      navigate(withNext("/verify-email", next), { replace: true, state: { justRegistered: options.justRegistered ?? false } });
       return;
     }
     if (greeting) toast.success(greeting);
