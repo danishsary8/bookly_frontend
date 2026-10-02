@@ -132,3 +132,28 @@ Audit of V1: React 19 + TypeScript + Vite 7 + Tailwind 4, ~14k lines, 13 storefr
   - dropped response on place order → retry → one order, confirmation, reload;
   - 375 px dark and desktop light: fixed an 8 px overflow on `/cart` (grid min-content, same fix as earlier phases).
 - Known: coupons are one use per customer (cancelling the order gives the use back), so test runs must cancel their orders.
+
+## Phase 7 — Orders, returns and reviews (branch `feature/orders-returns-reviews`)
+- [x] Account navigation gains Orders, Returns and Reviews. The overview's recent orders link to their detail (plus "See all orders"); the checkout confirmation links to "View your order".
+- [x] `/account/orders`: order cards (number, status badge, first titles, date, item count, total), a status filter and page number in the URL, and an empty state for no orders or no orders with that status.
+- [x] `/account/orders/:id`:
+  - lines and totals, shared with the confirmation page (`OrderItemsCard`, `DeliveryAddressCard`); delivery address; payment (cash on delivery and its status);
+  - a timeline of status changes with the shop's notes, latest marked as current;
+  - Cancel while pending (`can_cancel`), in a dialog with an optional reason that lands in the timeline;
+  - once delivered: "Request a return" with the last day (14-day window), or the API's reason it isn't possible (window closed, a return already in progress, nothing left), and "Review this book" on each line.
+- [x] `/account/orders/:id/return`: tick the books (physical formats only, up to the quantity still returnable), quantity, an optional note per book and a required reason; the API's refusals (window, quantities, one open return per order) are shown above the form.
+- [x] `/account/returns` and `/account/returns/:id`: status badge (requested / approved / not accepted / refunded, icon + fill + text like order statuses), books, the customer's reason, estimated or final refund, the shop's note, what happens next, and Withdraw while it's still requested.
+- [x] Reviews:
+  - on the book page, a "Your review" panel at the top of the Reviews tab: the customer's review with Edit / Delete (and a note if the shop hid it); "Write a review" once an order with the book has been delivered; otherwise when that becomes possible. Signed out: "Sign in to review it", which comes back to the panel.
+  - star rating input (native radios, arrow keys, spoken labels, hover preview) and an optional comment up to 2000 characters; saving refreshes the public list, the count and the book's rating.
+  - `/books/:id#your-review` opens the Reviews tab and scrolls to the panel.
+  - `/account/reviews`: all the customer's reviews with Edit (on the book page) and Delete.
+- [x] V1 `/orders` and `/orders/:id` (and `/invoices`) redirect to the account pages, outside the animated layout.
+- [x] Removed V1 `Orders.tsx`, `OrderDetail.tsx`, and what only they used: the old order status component, `lib/alerts`, `lib/cart`, `lib/receipt`, `customer.service` and the unused storefront settings context (one lint warning fewer).
+- [x] Tests: 149 pass (new: order list filter, cancel with reason, return entry and its refusal reason, old links, return form validation + payload + API refusal, withdraw, review post / existing / not yet / signed out, delete from the account list).
+- [x] Verified: lint (0 errors), typecheck, tests, build; browser pass against the local API with the demo account:
+  - list, filter, detail, cancel a fresh order with a reason, old link redirect, unknown order;
+  - return request → detail → list → order shows "in progress" → withdraw;
+  - review: sign in from the panel, rating required, post, edit, unbought book note, delete from the account;
+  - 375 px dark: no horizontal scroll on any new page, active account link kept in view; phase 6 cart and checkout scripts re-run clean.
+- Known: `sweetalert2` is no longer used by any page (its CSS and styles are still loaded, and the V1 admin modal checks for it); drop it with the V1 admin in phase 9.
