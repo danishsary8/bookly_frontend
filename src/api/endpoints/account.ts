@@ -11,6 +11,16 @@ export const accountKeys = {
   wishlist: (params: object) => ["account", "wishlist", toQueryParams(params)] as const,
 };
 
+/**
+ * Address body. The API also accepts null for the optional text fields (to clear
+ * them on edit); the OpenAPI schema doesn't say so, hence the widening here.
+ */
+export type AddressPayload = Omit<AddressInput, "address_line2" | "state" | "postal_code"> & {
+  address_line2?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
+};
+
 export const accountApi = {
   me: () => api.get<Resource<Customer>>("/me").then((r) => r.data),
   updateProfile: async (input: { name?: string; phone?: string | null }) => {
@@ -23,8 +33,8 @@ export const accountApi = {
     api.put<MessageResponse>("/me/password", input),
 
   addresses: () => api.get<Resource<Address[]>>("/addresses").then((r) => r.data),
-  createAddress: (input: AddressInput) => api.post<Resource<Address>>("/addresses", input).then((r) => r.data),
-  updateAddress: (id: number, input: Partial<AddressInput>) => api.patch<Resource<Address>>(`/addresses/${id}`, input).then((r) => r.data),
+  createAddress: (input: AddressPayload) => api.post<Resource<Address>>("/addresses", input).then((r) => r.data),
+  updateAddress: (id: number, input: Partial<AddressPayload>) => api.patch<Resource<Address>>(`/addresses/${id}`, input).then((r) => r.data),
   deleteAddress: (id: number) => api.delete(`/addresses/${id}`),
 
   wishlist: (params: { page?: number; per_page?: number } = {}) =>
