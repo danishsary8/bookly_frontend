@@ -90,7 +90,7 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
           </Link>
         </Heading>
         <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">{authors ? `by ${authors}` : " "}</p>
-        <StarRating value={book.rating_avg} count={book.review_count} className="mt-2" />
+        <StarRating value={book.rating_avg} count={book.review_count} compact className="mt-2" />
 
         <div className="mt-auto flex min-h-14 items-center justify-between gap-2 border-t border-border pt-3">
           <p className={cn("tabular-nums", outOfStock ? "text-muted-foreground" : "text-foreground")}>

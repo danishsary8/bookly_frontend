@@ -15,10 +15,12 @@ interface StarRatingProps {
   size?: "sm" | "lg";
   /** false = stars only (a single review's rating), no "4.5 · 12 reviews" text. */
   summary?: boolean;
+  /** Short "4.5 (12)" text for narrow cards; the full wording stays available to screen readers. */
+  compact?: boolean;
   className?: string;
 }
 
-export const StarRating = ({ value, count, size = "sm", summary = true, className }: StarRatingProps) => {
+export const StarRating = ({ value, count, size = "sm", summary = true, compact = false, className }: StarRatingProps) => {
   const rating = Math.max(0, Math.min(5, toNumber(value)));
   const reviews = Math.trunc(toNumber(count));
   const px = size === "lg" ? 20 : 16;
@@ -46,7 +48,11 @@ export const StarRating = ({ value, count, size = "sm", summary = true, classNam
           );
         })}
       </span>
-      {summary ? <span>
+      {summary && compact ? <span className="whitespace-nowrap">
+        <span className="font-semibold tabular-nums text-foreground">{rating.toFixed(1)}</span>{" "}
+        <span className="tabular-nums" aria-hidden="true">({reviews})</span>
+        <span className="sr-only">from {reviews} {reviews === 1 ? "review" : "reviews"}</span>
+      </span> : summary ? <span>
         <span className="font-semibold tabular-nums text-foreground">{rating.toFixed(1)}</span>
         <span aria-hidden="true"> · </span>
         <span className="tabular-nums">{reviews}</span> {reviews === 1 ? "review" : "reviews"}
