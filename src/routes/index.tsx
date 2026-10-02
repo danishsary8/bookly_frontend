@@ -6,9 +6,9 @@ import AdminLayout from "../layouts/AdminLayout";
 import ClientLayout from "../layouts/ClientLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import CustomerRoute from "./CustomerRoute";
+import LegacyBrowseRedirect from "./LegacyBrowseRedirect";
 
 const Home = lazy(() => import("../pages/HomePage"));
-const Browse = lazy(() => import("../page/client/Browse"));
 const Favorites = lazy(() => import("../page/client/Favorites"));
 const Cart = lazy(() => import("../page/client/Cart"));
 const Authentication = lazy(() => import("../page/client/Authentication"));
@@ -54,7 +54,7 @@ const AppRoutes = () => {
       <Routes>
         <Route element={<ClientLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/browse" element={<Browse />} />
+          <Route path="/browse" element={<LegacyBrowseRedirect />} />
           <Route path="/books" element={<BooksPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/authors" element={<AuthorsPage />} />
