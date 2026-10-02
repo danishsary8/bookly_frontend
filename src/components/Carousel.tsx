@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { motion, type PanInfo, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
+import { motion, type MotionValue, type PanInfo, type Transition, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
 import React, { type JSX } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -79,8 +79,8 @@ interface CarouselItemProps {
   itemWidth: number;
   round: boolean;
   trackItemOffset: number;
-  x: any;
-  transition: any;
+  x: MotionValue<number>;
+  transition: Transition;
   className?: string;
   rotate: number;
 }
@@ -216,12 +216,14 @@ export default function Carousel({
   useEffect(() => {
     const startIndex = isControlled ? Math.min(indexRef.current, Math.max(count - 1, 0)) : 0;
     const startingPosition = loop ? startIndex + 1 : startIndex;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset when the slide set changes
     setPosition(startingPosition);
     x.set(-startingPosition * trackItemOffset);
   }, [count, loop, trackItemOffset, x, isControlled]);
 
   useEffect(() => {
     if (!loop && position > renderIndices.length - 1) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clamp after the slide list shrinks
       setPosition(Math.max(0, renderIndices.length - 1));
     }
   }, [renderIndices.length, loop, position]);
@@ -230,6 +232,7 @@ export default function Carousel({
   useEffect(() => {
     if (!isControlled || count === 0) return;
     const target = Math.min(Math.max(index, 0), count - 1);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- follow the controlled index prop
     setPosition(prev => {
       const current = loop ? (prev - 1 + count) % count : prev;
       if (current === target) return prev;
