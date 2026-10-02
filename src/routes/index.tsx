@@ -23,6 +23,7 @@ const AccountLayout = lazy(() => import("../features/account/AccountLayout").the
 const AccountOverviewPage = lazy(() => import("../pages/account/AccountOverviewPage"));
 const ProfilePage = lazy(() => import("../pages/account/ProfilePage"));
 const SecurityPage = lazy(() => import("../pages/account/SecurityPage"));
+const AddressesPage = lazy(() => import("../pages/account/AddressesPage"));
 const CustomerOrders = lazy(() => import("../page/client/Orders"));
 const CustomerOrderDetail = lazy(() => import("../page/client/OrderDetail"));
 const Dashboard = lazy(() => import("../page/admin/Dashboard"));
@@ -78,6 +79,7 @@ const AppRoutes = () => {
               <Route index element={<AccountOverviewPage />} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="security" element={<SecurityPage />} />
+              <Route path="addresses" element={<AddressesPage />} />
             </Route>
           </Route>
           <Route path="/profile" element={<Navigate to="/account/profile" replace />} />
