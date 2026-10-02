@@ -2,7 +2,7 @@ import type { Transition, Variants } from "motion/react";
 
 /*
  * Motion tokens from design-system/bookly/MASTER.md §5, for `motion` components.
- * CSS has the same values as --duration-* / --ease-* in index.css.
+ * CSS has the same values as --dur-* / --ease-* in index.css.
  */
 
 export const duration = {
