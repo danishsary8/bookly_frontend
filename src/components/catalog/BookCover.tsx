@@ -34,8 +34,8 @@ export function BookCover({ src, title = "", alt = "", eager = false, className 
           className="size-full object-cover"
         />
       ) : (
-        <div role={alt ? "img" : undefined} aria-label={alt || undefined} className="flex size-full flex-col justify-center gap-2 border-l-2 border-primary/20 px-[12%]">
-          <span aria-hidden="true" className="line-clamp-4 font-display text-[clamp(0.9rem,8cqw,1.5rem)] leading-tight text-primary [container-type:inline-size]">
+        <div role={alt ? "img" : undefined} aria-label={alt || undefined} className="flex size-full flex-col justify-center gap-2 border-l-2 border-primary/20 px-[12%] [container-type:inline-size]">
+          <span aria-hidden="true" className="line-clamp-4 break-words font-display text-[clamp(0.85rem,10cqw,1.5rem)] leading-tight text-primary">
             {title}
           </span>
           <span aria-hidden="true" className="text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
