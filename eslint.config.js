@@ -19,5 +19,27 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Only affects hot reload during development; shadcn-style files export variants next to components.
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    },
+  },
+  {
+    // V1 code written for the old PHP API. Each file is rewritten against the V2 API in a later phase
+    // (see docs/V2_PLAN.md); delete its entry here when that happens. Do not add new files.
+    files: [
+      'src/page/**/*.tsx',
+      'src/services/**/*.ts',
+      'src/components/Authentication/**/*.tsx',
+      'src/components/BookDetailModal.tsx',
+      'src/layouts/AdminLayout.tsx',
+      'src/lib/passwordReset.ts',
+      'src/types/auth.types.ts',
+    ],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+    },
   },
 ])

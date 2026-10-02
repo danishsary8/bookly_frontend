@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,8 +22,13 @@ interface QuantityStepperProps {
 export const QuantityStepper = ({ value, onChange, min = 1, max = 99, label, showLabel = false, disabled, className }: QuantityStepperProps) => {
   const id = useId();
   const [draft, setDraft] = useState(String(value));
+  const [syncedValue, setSyncedValue] = useState(value);
 
-  useEffect(() => setDraft(String(value)), [value]);
+  // When the value changes from outside (e.g. the cart reloads), show it in the field.
+  if (value !== syncedValue) {
+    setSyncedValue(value);
+    setDraft(String(value));
+  }
 
   const clamp = (n: number) => Math.max(min, Math.min(max, Math.trunc(n)));
   const commit = () => {
