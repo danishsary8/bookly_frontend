@@ -333,4 +333,5 @@ A two-option segmented control in the header (and the mobile menu): `role="radio
 Full-bleed lapis everywhere in Daylight · more than one vermilion CTA per view · white text on vermilion · gold on light paper · faux-bold or faux-italic Gloock · status shown by colour alone · placeholder-only inputs · paragraphs under 16px · emoji as icons · autoplay without pause · animating layout properties · shadows at rest · radius > 10px · hard-coded hex in components.
 
 ## 9. Page overrides
-None yet.
+- `pages/header.md`: storefront header (44px search field, no elevation on scroll).
+- `pages/content.md`: help and legal pages and the 404 (the bookplate, its frame, the hero surface on content pages, 17px article text).

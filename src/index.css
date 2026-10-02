@@ -1122,6 +1122,36 @@
     border-bottom: 1px solid var(--border);
   }
 
+  /* Help-page bookplate (pages/content.md): a double gold hairline frame inside the
+     hero surface, with small diamond corners like a pasted ex-libris label. */
+  .bookplate-frame {
+    border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+    border-radius: 2px;
+  }
+
+  .bookplate-frame::after {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    border: 1px solid color-mix(in srgb, var(--gold) 18%, transparent);
+    border-radius: 1px;
+    pointer-events: none;
+  }
+
+  .bookplate-corner {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    background: var(--lapis);
+    border: 1px solid color-mix(in srgb, var(--gold) 70%, transparent);
+    rotate: 45deg;
+  }
+
+  .bookplate-corner.left-0 { margin-left: -5px; }
+  .bookplate-corner.right-0 { margin-right: -5px; }
+  .bookplate-corner.top-0 { margin-top: -5px; }
+  .bookplate-corner.bottom-0 { margin-bottom: -5px; }
+
   /* Display type — Home hero only (MASTER §3). */
   .type-display {
     font-family: var(--font-display);
