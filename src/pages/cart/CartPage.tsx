@@ -124,7 +124,7 @@ function CartContents() {
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-12 lg:gap-12">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-12 lg:gap-12">
       <section aria-labelledby="lines-title" className="lg:col-span-8">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 id="lines-title" className="font-display text-[1.563rem] leading-tight">

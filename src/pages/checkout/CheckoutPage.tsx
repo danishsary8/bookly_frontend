@@ -148,7 +148,7 @@ export default function CheckoutPage() {
     <div className="container-shell pb-16">
       <PageHeader crumbs={[{ label: "Home", to: "/" }, { label: "Cart", to: "/cart" }, { label: "Checkout" }]} title="Checkout" />
 
-      <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-12 lg:gap-12">
         <div className="grid content-start gap-10 lg:col-span-8">
           <Step n={1} title={shipsSomething ? "Delivery address" : "Contact address"}>
             {!shipsSomething ? <p className="-mt-2 text-sm text-muted-foreground">Everything in this order is digital; we still need an address for your receipt.</p> : null}
