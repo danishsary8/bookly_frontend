@@ -6,7 +6,7 @@ import AdminLayout from "../layouts/AdminLayout";
 import ClientLayout from "../layouts/ClientLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import LegacyBrowseRedirect from "./LegacyBrowseRedirect";
-import { GuestOnly, RequireCustomer } from "./guards";
+import { GuestOnly, RequireCustomer, RequireVerified } from "./guards";
 
 const Home = lazy(() => import("../pages/HomePage"));
 const Favorites = lazy(() => import("../page/client/Favorites"));
@@ -19,7 +19,10 @@ const ResetPasswordPage = lazy(() => import("../pages/auth/ResetPasswordPage"));
 const loadBookDetail = () => import("../pages/catalog/BookDetailPage");
 const BookDetail = lazy(loadBookDetail);
 const Checkout = lazy(() => import("../page/client/Checkout"));
-const Profile = lazy(() => import("../page/client/Profile"));
+const AccountLayout = lazy(() => import("../features/account/AccountLayout").then((m) => ({ default: m.AccountLayout })));
+const AccountOverviewPage = lazy(() => import("../pages/account/AccountOverviewPage"));
+const ProfilePage = lazy(() => import("../pages/account/ProfilePage"));
+const SecurityPage = lazy(() => import("../pages/account/SecurityPage"));
 const CustomerOrders = lazy(() => import("../page/client/Orders"));
 const CustomerOrderDetail = lazy(() => import("../page/client/OrderDetail"));
 const Dashboard = lazy(() => import("../page/admin/Dashboard"));
@@ -70,9 +73,16 @@ const AppRoutes = () => {
           <Route path="/favorites" element={<Favorites />} />
           {UiKit ? <Route path="/ui-kit" element={<UiKit />} /> : null}
           <Route path="*" element={<NotFound />} />
+          <Route element={<RequireVerified />}>
+            <Route path="/account" element={<AccountLayout />}>
+              <Route index element={<AccountOverviewPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="security" element={<SecurityPage />} />
+            </Route>
+          </Route>
+          <Route path="/profile" element={<Navigate to="/account/profile" replace />} />
           <Route element={<RequireCustomer />}>
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/profile" element={<Profile />} />
             <Route path="/orders" element={<CustomerOrders />} />
             <Route path="/orders/:id" element={<CustomerOrderDetail />} />
             <Route path="/invoices" element={<Navigate to="/orders" replace />} />
