@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 export function ToConfirm({ confirmed }: { confirmed: boolean }) {
   if (confirmed) return null;
   return (
-    <Badge tone="warning" shape="outline" className="ml-2 align-middle">
+    <Badge tone="warning" shape="outline" className="ml-2 align-middle font-sans">
       <CircleDashed aria-hidden="true" /> To be confirmed
     </Badge>
   );

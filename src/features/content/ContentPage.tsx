@@ -58,6 +58,7 @@ function Contents({ sections, numbered, active, onPick }: { sections: ContentSec
 export function ContentPage({
   title,
   documentTitle,
+  crumb,
   eyebrow,
   lead,
   facts,
@@ -69,6 +70,8 @@ export function ContentPage({
 }: {
   title: string;
   documentTitle?: string;
+  /** Short label for the breadcrumb when the title is long. */
+  crumb?: string;
   eyebrow: string;
   lead?: ReactNode;
   facts?: PlateFact[];
@@ -85,7 +88,7 @@ export function ContentPage({
   const [ids] = useState(() => sections.map((s) => s.id));
   const active = useActiveSection(ids);
   const [open, setOpen] = useState(false);
-  const crumbs: Crumb[] = [{ label: "Home", to: "/" }, { label: title }];
+  const crumbs: Crumb[] = [{ label: "Home", to: "/" }, { label: crumb ?? title }];
 
   return (
     <div className="container-shell pb-20 pt-6 sm:pt-8">

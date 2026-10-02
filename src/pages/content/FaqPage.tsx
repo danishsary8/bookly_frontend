@@ -205,6 +205,7 @@ export default function FaqPage() {
     <ContentPage
       title="Questions & answers"
       documentTitle="FAQ"
+      crumb="FAQ"
       eyebrow="Help"
       lead="Paying, delivery, returns, your account and reviews: the short answers, with links to the full details."
       plate={
