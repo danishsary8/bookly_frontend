@@ -9,6 +9,7 @@ import { BookCover } from "@/components/catalog/BookCover";
 import { BookShelf } from "@/components/catalog/BookShelf";
 import { FormatPicker } from "@/components/catalog/FormatPicker";
 import { ReviewsSection } from "@/components/catalog/ReviewsSection";
+import { YourReview } from "@/features/reviews/YourReview";
 import { coverLayoutId, type BookPreviewState } from "@/components/catalog/coverMorph";
 import { pickVariant, useAddToCart, useWishlist } from "@/components/catalog/useCatalogActions";
 import { Breadcrumb } from "@/components/Breadcrumb";
@@ -186,7 +187,9 @@ export default function BookDetailPage() {
   const { id } = useParams();
   const bookId = Number(id);
   const valid = Number.isInteger(bookId) && bookId > 0;
-  const preview = (useLocation().state as BookPreviewState | null)?.preview;
+  const location = useLocation();
+  const preview = (location.state as BookPreviewState | null)?.preview;
+  const { hash } = location;
   const query = useQuery({ ...catalogQueries.book(bookId), enabled: valid });
   const book = query.data;
   const shown: BookCard | undefined = book ?? (preview?.id === bookId ? preview : undefined);
@@ -305,7 +308,7 @@ export default function BookDetailPage() {
       )}
 
       {book ? (
-        <Tabs defaultValue="description" className="mt-16">
+        <Tabs defaultValue={hash === "#your-review" || hash === "#reviews" ? "reviews" : "description"} className="mt-16">
           <TabsList aria-label="About this book">
             <TabsTrigger value="description">Description</TabsTrigger>
             <TabsTrigger value="details">Details</TabsTrigger>
@@ -342,7 +345,10 @@ export default function BookDetailPage() {
             </dl>
           </TabsContent>
           <TabsContent value="reviews">
-            <ReviewsSection bookId={book.id!} />
+            <div className="grid gap-10">
+              <YourReview bookId={book.id!} />
+              <ReviewsSection bookId={book.id!} />
+            </div>
           </TabsContent>
         </Tabs>
       ) : null}
