@@ -1,5 +1,6 @@
 import { Heart, KeyRound, LayoutDashboard, LogOut, MapPin, UserRound } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import { FrozenOutlet } from "@/components/motion/FrozenOutlet";
 import { useSession } from "@/api/session";
 import type { Customer } from "@/api/types";
@@ -25,6 +26,18 @@ export function AccountLayout() {
   const session = useSession<Customer>("customer");
   const signOut = useSignOut();
   const firstName = session?.user?.name?.split(" ")[0];
+  const { pathname } = useLocation();
+  const strip = useRef<HTMLUListElement>(null);
+
+  // On phones the links scroll sideways; bring the current one into view (horizontally only,
+  // so the page itself doesn't jump).
+  useEffect(() => {
+    const list = strip.current;
+    const active = list?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!list || !active || list.scrollWidth <= list.clientWidth) return;
+    const left = active.offsetLeft - (list.clientWidth - active.offsetWidth) / 2;
+    list.scrollTo({ left: Math.max(0, left), behavior: "instant" as ScrollBehavior });
+  }, [pathname]);
 
   return (
     <div className="container-shell pb-16 pt-6 sm:pt-8">
@@ -36,7 +49,7 @@ export function AccountLayout() {
 
       <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12">
         <nav aria-label="Account" className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
-          <ul className="no-scrollbar -mx-4 flex gap-1 overflow-x-auto border-b border-border px-4 lg:mx-0 lg:grid lg:border-b-0 lg:px-0">
+          <ul ref={strip} className="no-scrollbar relative -mx-4 flex gap-1 overflow-x-auto border-b border-border px-4 lg:mx-0 lg:grid lg:border-b-0 lg:px-0">
             {accountSections.map(({ to, label, Icon, ...rest }) => (
               <li key={to} className="shrink-0">
                 <NavLink
