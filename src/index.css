@@ -4,14 +4,37 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Bookly design system v2 "Lapis & Vermilion" — see design-system/bookly/MASTER.md */
+/* Bookly design system v3 "Lapis & Vermilion" — see design-system/bookly/MASTER.md */
 @theme {
     --font-sans: "Hanken Grotesk", "Kantumruy Pro", system-ui, sans-serif;
     --font-display: "Gloock", "Kantumruy Pro", Georgia, serif;
+    /* Motion (MASTER §5) — keep in sync with src/lib/motion.ts */
     --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --ease-exit: cubic-bezier(0.55, 0.055, 0.675, 0.19);
     --shadow-lift: 0 18px 40px -24px rgb(7 11 34 / 0.35);
     --shadow-overlay: 0 32px 64px -32px rgb(7 11 34 / 0.55);
+    --container-shell: 80rem;
+}
+
+/* Non-colour tokens used through arbitrary values, e.g. z-(--z-drawer), duration-(--dur-overlay) */
+:root {
+    --dur-hover: 150ms;
+    --dur-toggle: 220ms;
+    --dur-overlay: 320ms;
+    --dur-reveal: 700ms;
+    --header-h: 4rem;
+    --z-header: 40;
+    --z-popover: 50;
+    --z-drawer: 60;
+    --z-dialog: 70;
+    --z-toast: 80;
+}
+
+@media (min-width: 900px) {
+    :root {
+        --header-h: 4.5rem;
+    }
 }
 
 @theme inline {
@@ -25,6 +48,10 @@
     --color-on-lapis-accent: var(--on-lapis-accent);
     --color-gold: var(--gold);
     --color-lapis: var(--lapis);
+    --color-success-tint: var(--success-tint);
+    --color-warning-tint: var(--warning-tint);
+    --color-destructive-tint: var(--destructive-tint);
+    --color-scrim: var(--scrim);
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
@@ -117,6 +144,12 @@
     --sidebar-accent-foreground: #14207A;
     --sidebar-border: #D9DDEC;
     --sidebar-ring: #14207A;
+
+    /* v3: semantic tints (icon chips, status badges, alerts) and overlay scrim */
+    --success-tint: color-mix(in oklab, var(--success) 12%, var(--card));
+    --warning-tint: color-mix(in oklab, var(--warning) 12%, var(--card));
+    --destructive-tint: color-mix(in oklab, var(--destructive) 10%, var(--card));
+    --scrim: rgb(7 11 34 / 0.5);
 }
 
 /* Lapis Night — dark (MASTER §2.2) */
@@ -163,6 +196,11 @@
     --sidebar-accent-foreground: #F1F2FA;
     --sidebar-border: #252D63;
     --sidebar-ring: #F2C84B;
+
+    --success-tint: color-mix(in oklab, var(--success) 16%, var(--card));
+    --warning-tint: color-mix(in oklab, var(--warning) 16%, var(--card));
+    --destructive-tint: color-mix(in oklab, var(--destructive) 14%, var(--card));
+    --scrim: rgb(3 5 18 / 0.65);
 }
 
 @layer base {
@@ -285,6 +323,23 @@
 
 /* Loading skeletons (MASTER §6.11): --surface-2 base, --card at 60% sweeping
    left to right every 1.4s, replaced by a static fill under reduced motion. */
+/* v3: popovers (select, menus, live search). Radix waits for the exit animation before unmounting. */
+@keyframes ui-pop-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+}
+@keyframes ui-pop-out {
+  to { opacity: 0; transform: scale(0.98); }
+}
+.ui-pop[data-state="open"] {
+  animation: ui-pop-in var(--dur-toggle) var(--ease-out-expo);
+}
+.ui-pop[data-state="closed"] {
+  animation: ui-pop-out var(--dur-hover) var(--ease-standard) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-pop[data-state] { animation: none; }
+}
+
 @keyframes skeleton-sweep {
   from {
     transform: translateX(-100%);
@@ -328,6 +383,16 @@
   /* Section container */
   .section-wrap {
     @apply max-w-7xl mx-auto px-6 lg:px-12;
+  }
+
+  /* v3 page container: 1280px, gutters 16 / 24 / 32 (MASTER §4) */
+  .container-shell {
+    @apply mx-auto w-full max-w-(--container-shell) px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Keeps anchored and focused content clear of the sticky header */
+  .scroll-mt-header {
+    scroll-margin-top: calc(var(--header-h) + 1rem);
   }
 
   /* Warm accent ring */

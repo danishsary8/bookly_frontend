@@ -1,5 +1,5 @@
-import { forwardRef, useId, useState, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from "react";
-import { AlertCircle, Eye, EyeOff } from "lucide-react";
+import { forwardRef, useId, useState, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
+import { AlertCircle, ChevronDown, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /*
@@ -140,3 +140,41 @@ export const PasswordField = forwardRef<HTMLInputElement, Omit<TextFieldProps, "
   },
 );
 PasswordField.displayName = "PasswordField";
+
+type SelectFieldProps = Omit<SelectHTMLAttributes<HTMLSelectElement>, "id"> & {
+  label: string;
+  hint?: ReactNode;
+  error?: string;
+  optional?: boolean;
+  id?: string;
+  containerClassName?: string;
+};
+
+/** Native select with the field frame (MASTER §6.14): best on phones, works with register(). */
+export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
+  ({ label, hint, error, optional, id, containerClassName, className, children, ...props }, ref) => {
+    const autoId = useId();
+    const fieldId = id ?? autoId;
+    return (
+      <FieldShell id={fieldId} label={label} hint={hint} error={error} optional={optional} className={containerClassName}>
+        <div className="relative">
+          <select
+            ref={ref}
+            id={fieldId}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={describedBy(fieldId, error, hint)}
+            className={cn(controlClassName, "h-12 appearance-none pr-11", className)}
+            {...props}
+          >
+            {children}
+          </select>
+          <ChevronDown
+            className="pointer-events-none absolute right-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
+        </div>
+      </FieldShell>
+    );
+  },
+);
+SelectField.displayName = "SelectField";

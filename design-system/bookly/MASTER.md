@@ -1,8 +1,8 @@
-# Bookly — Design System MASTER (v2 · Lapis & Vermilion)
+# Bookly — Design System MASTER (v3 · Lapis & Vermilion)
 
 > **Source of truth for every page, storefront and admin.** No page may introduce its own colors, fonts, spacing, radii, shadows or motion values. If a page genuinely needs a deviation, write it to `design-system/bookly/pages/<page>.md`; that file overrides this one for that page only.
 >
-> **Provenance:** hand-authored. v2.1 (2026-09-24) added hero depth (§2.1a). v2.2 widened the gradient at the user's request, tightened the hero's vertical rhythm, and lightened the on-lapis vermilion (`#FF8A6E` → `#FFA088` → `#FFB09A`) so it keeps passing on the brighter glow. v1 ("Ink & Brass") was written 2026-09-23 and replaced the same day by this v2 at the user's direction. The ui-ux-pro-max skill's search scripts and database were not installed on this machine, so no palette or font here came from a database match. Every contrast ratio below was measured (WCAG 2.1 relative luminance).
+> **Provenance:** hand-authored. v3 (2026-10-02, frontend V2) keeps every colour and font, adds named tokens for motion, layering, semantic tints and the page container, and specifies the V2 UI kit and shell (§4, §5, §6.14–6.22). v2.1 (2026-09-24) added hero depth (§2.1a). v2.2 widened the gradient at the user's request, tightened the hero's vertical rhythm, and lightened the on-lapis vermilion (`#FF8A6E` → `#FFA088` → `#FFB09A`) so it keeps passing on the brighter glow. v1 ("Ink & Brass") was written 2026-09-23 and replaced the same day by this v2 at the user's direction. The ui-ux-pro-max skill's search scripts and database were not installed on this machine, so no palette or font here came from a database match. Every contrast ratio below was measured (WCAG 2.1 relative luminance).
 >
 > Dials: **variance 7** (bold, asymmetric) · **motion 6** (standard scroll/stagger + one hero slideshow) · **density 5** (balanced catalogue).
 >
@@ -105,9 +105,9 @@ Tints on dark: `color-mix(in oklab, <semantic> 16%, var(--card))`.
 | success on card | 6.22 | 8.45 | 4.5 ✅ |
 | warning on card | 6.33 | 11.26 | 4.5 ✅ |
 | destructive on card | 7.76 | 8.41 | 4.5 ✅ |
-| success on its tint | 5.32 | — | 4.5 ✅ |
-| warning on its tint | 5.56 | — | 4.5 ✅ |
-| destructive on its tint | 6.31 | — | 4.5 ✅ |
+| success on `--success-tint` | 5.24 | 6.38 | 4.5 ✅ |
+| warning on `--warning-tint` | 5.30 | 8.06 | 4.5 ✅ |
+| destructive on `--destructive-tint` | 6.49 | 6.64 | 4.5 ✅ |
 | lapis on lapis-tint (footer, info) | 11.45 | — | 4.5 ✅ |
 | muted on lapis-tint | 6.17 | — | 4.5 ✅ |
 | text on lapis hero | 12.93 | 12.40 | 4.5 ✅ |
@@ -160,19 +160,25 @@ Book titles on cards: Gloock 1.125rem, 2-line clamp.
 
 ## 4. Spacing, layout, radius, elevation
 
-Unchanged from v1:
-- **Spacing:** `4 · 8 · 12 · 16 · 24 · 32 · 48 · 64` (Tailwind `1 2 3 4 6 8 12 16`). Sections `py-16` / `py-24` at ≥ lg.
-- **Container:** `max-w-[1280px]`, gutters 16/24/32. 12-col grid, `gap-6`. Asymmetric splits: hero `7/5`, detail `5/7`, cart `8/4`.
+- **Spacing:** `4 · 8 · 12 · 16 · 24 · 32 · 48 · 64` (Tailwind `1 2 3 4 6 8 12 16`). Sections `py-16` / `py-24` at ≥ lg. Inside a card: 16 (compact) or 24. Between a heading and its content: 16; between page sections: 64 (48 on mobile).
+- **Container (v3 token):** `.container-shell` = `max-w-(--container-shell)` (1280px) with gutters 16 / 24 / 32 at <640 / ≥640 / ≥1024. Every V2 page uses it; `.section-wrap` remains for V1 pages until they are rebuilt. 12-col grid, `gap-6`. Asymmetric splits: hero `7/5`, detail `5/7`, cart `8/4`.
+- **Header height:** `--header-h` 64px (72px ≥ 900px). Sticky offsets and `.scroll-mt-header` use it.
 - **Catalogue:** 2 / 3 / 4 columns at <640 / ≥768 / ≥1280. Covers fixed at **2:3**.
 - **Radius** (`--radius: 0.375rem`): covers 2px · inputs, badges 4px · buttons 6px · cards, modals, hero panel 10px (max).
-- **Elevation:** 0 = hairline; 1 lift `0 18px 40px -24px rgb(7 11 34 / 0.35)`; 2 overlay `0 32px 64px -32px rgb(7 11 34 / 0.55)`.
+- **Elevation:** 0 = hairline; 1 lift `--shadow-lift`; 2 overlay `--shadow-overlay`. Overlays sit on `--scrim` (navy 50% Daylight / 65% Night).
+- **Layering (v3 tokens):** `--z-header` 40 · `--z-popover` 50 (select, live-search results, menus) · `--z-drawer` 60 · `--z-dialog` 70 · `--z-toast` 80. Use `z-(--z-drawer)`; never a raw number.
+- **Semantic tints (v3 tokens):** `--success-tint`, `--warning-tint`, `--destructive-tint` (colour-mixed into `--card`), plus `--lapis-tint` for info. Used for icon chips, status badges and alerts only.
 - **Ornament:** a 1px × 48px rule in `--accent-text` (light) or gold (on lapis) before eyebrows. It's the only decorative device.
 
 ---
 
 ## 5. Motion (dial 6)
 
-Unchanged timing: 150ms hover/focus · 220ms toggles · 320ms drawers/modals (exits at 70%) · 700ms section reveal · 60ms stagger (max 8). Ease-out `cubic-bezier(0.16,1,0.3,1)`, standard `cubic-bezier(0.2,0,0,1)`. Transform and opacity only (plus `filter` for BlurText). **`prefers-reduced-motion` is mandatory:** static text, final numbers, no autoplay, no glare, no shimmer, colour-only hovers.
+Timing: 150ms hover/focus · 220ms toggles · 320ms drawers/modals (exits at 70%) · 360ms page transition · 700ms section reveal · 60ms stagger (max 8). Ease-out `cubic-bezier(0.16,1,0.3,1)`, standard `cubic-bezier(0.2,0,0,1)`, exit `cubic-bezier(0.55,0.055,0.675,0.19)`. Transform and opacity only (plus `filter` for BlurText). **`prefers-reduced-motion` is mandatory:** static text, final numbers, no autoplay, no glare, no shimmer, colour-only hovers.
+
+**One source of truth (v3):** CSS uses `--dur-*` and `--ease-*`; React uses `src/lib/motion.ts` (`duration`, `ease`, `transitions`, `riseIn`, `staggerChildren`, `staggerDelay`). Components never write their own numbers. Motion is the only animation library (GSAP was removed in V2; React Bits pieces that used it are rebuilt on Motion with the same props).
+
+**Page transitions:** route content fades in and rises 8px over 360ms (ease-out); the old page fades out over 150ms. The header, footer and open drawers never animate on navigation. Scroll resets to top on a new route, restores on back/forward, and focus moves to the new page's `h1` (or `main`) so screen readers announce the change. Reduced motion: instant swap.
 
 ### React Bits restyle
 | Component | Where | Settings (v2) |
@@ -182,7 +188,7 @@ Unchanged timing: 150ms hover/focus · 220ms toggles · 320ms drawers/modals (ex
 | **SpotlightCard** | Book cards, featured tiles | `rgba(20, 32, 122, 0.08)` Daylight / `rgba(154, 166, 255, 0.14)` Night |
 | **Carousel** | Home hero slideshow; auth side panel. ("More in this category" on Book Detail is a scroll-snap shelf with prev/next buttons instead, since several covers are visible at once and a one-slide carousel hid them.) | Fluid, loop, 5.5s autoplay, pause/play button, ←/→ keys, pauses on hover and focus, rotateY ±24°, gold active dot 24×8 on lapis |
 | **GlareHover** | The vermilion CTA only (one per view) | `glareColor #FFFFFF`, opacity 0.35, angle −30°, 700ms |
-| **AnimatedContent** | Below-the-fold sections, footer | distance 32, 0.7s, `power3.out`, threshold 0.15 |
+| **AnimatedContent** | Below-the-fold sections, footer | distance 32, 0.7s, `power3.out` (mapped to a bezier), threshold 0.15. Built on Motion |
 
 ---
 
@@ -271,6 +277,36 @@ SpotlightCard shell, radius 10, 1px border, padding 12 → cover 2:3 (radius 2, 
 
 ### 6.13 Footer
 Daylight: `--lapis-tint` bg, lapis wordmark, fg links. Night: `--card` bg with a top hairline. 4 columns → 1 on mobile. The newsletter field uses the standard field spec.
+
+### 6.14 Select
+Same frame as a field (h-12, radius 4, 1px `--input`, card bg) with a chevron-down at the right. Native `<select>` for simple forms (best on mobile); the custom listbox (Radix Select) for sort and filter bars: popover at `--z-popover`, card bg, overlay elevation, radius 6, max-height 320 scrolling, 44px rows, check icon on the selected row, typeahead, Esc closes and returns focus.
+
+### 6.15 Checkbox, radio, switch
+Checkbox and radio 20px boxes inside a 44px hit row, label clickable, 1px `--input` border; checked = solid `--primary` with a `--primary-foreground` check / dot. Switch 44×24 track, 20px thumb, 220ms; on = `--primary` track. All have the standard focus ring and `disabled` at 40%.
+
+### 6.16 Tabs
+Underline style: a row of 44px-tall triggers, 15px/600 muted → fg, active trigger in fg with a 2px `--primary` indicator that slides between tabs (Motion `layoutId`, 220ms; reduced motion: no slide). Arrow keys move between tabs (Radix Tabs). The row scrolls horizontally on mobile without a visible scrollbar.
+
+### 6.17 Dialog
+Centered, `min(92vw, 32rem)` (lg 40rem), card bg, radius 10, overlay elevation, padding 24, on `--scrim`. Title Gloock 1.5rem + optional description (muted). Close button 44×44 top-right. Footer: actions right-aligned (primary last), stacked full-width below 640px. Enters 320ms (scale 0.96 → 1 + fade), exits 220ms. `role="dialog"`, `aria-modal`, focus trap, Esc, return focus. **Confirm dialog** variant for destructive actions: destructive button label names the action ("Remove address"), never "OK".
+
+### 6.18 Drawer (generic)
+Same rules as the mobile menu (§6.10): side `right` (default) or `left`, `min(88vw, 400px)`, full height, sticky header (title + close) and optional sticky footer, body scrolls. Used by the cart drawer, the mobile menu and catalogue filters on mobile. Bottom-sheet variant below 640px for filters only.
+
+### 6.19 Cart drawer
+Opens from the header cart button and after "Add to cart". Header "Your cart (3)" · line list (cover 48×72, title 2-line clamp, format, quantity stepper, line price, remove) · footer: subtotal (tabular, in the selected currency), note "Shipping and discounts at checkout", **View cart** (outline) + **Checkout** (cta, the drawer's single vermilion button). Empty: the §6.6 empty-cart state. Loading: 3 line skeletons. Signed out: "Sign in to see your cart" + Sign in. (Phase 2 ships the shell; lines and totals come with the cart phase.)
+
+### 6.20 Header live search
+A field in the header (≥ 900px, max 28rem) and at the top of the mobile menu. `role="combobox"` + `aria-expanded` + `aria-controls` listbox, `aria-activedescendant` for ↑/↓; Enter opens the active result or, with none, `/search?q=`. Debounce 250ms, minimum 2 characters, results after the first 150ms only (no flash). Popover at `--z-popover`, card bg, overlay elevation, radius 10: up to 6 books (cover 32×48, title with the matched part in 600 weight, author, price) + a final "See all results for "{q}"" row. States: loading (3 row skeletons), no results ("No books match "{q}"" + search tips link), error (one muted line, retry). `/` focuses search from anywhere; Esc clears, then closes.
+
+### 6.21 Currency switch (USD / KHR)
+A two-option segmented control in the header (and the mobile menu): `role="radiogroup"` labelled "Currency", options "USD $" and "KHR ៛", 36px tall inside a 44px hit area, active option solid `--primary`, the indicator slides (220ms). The choice persists (localStorage) and every price on the page switches instantly; KHR prices come from the API, never from a client-side rate. KHR uses Kantumruy Pro digits fallback and `lang="km"` on the riel sign.
+
+### 6.22 Error states and the error boundary
+- **Inline error** (a widget failed): `--destructive-tint` panel, alert icon, one sentence, "Try again" (outline, sm).
+- **Page error** (a query for the whole page failed): the §6.6 layout with an alert icon on `--destructive-tint`, title "Something went wrong", the API's message when it's user-safe, **Try again** (primary) + **Go home** (link), and the request id in small muted mono ("Reference: 9f3c…") for support.
+- **Offline** (`kind: network`): wifi-off icon, "You're offline", retry.
+- **Error boundary:** wraps each route; a render crash shows the page-error state without the shell disappearing, and resets on navigation.
 
 ---
 

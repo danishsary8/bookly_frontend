@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { Loader2 } from "lucide-react"
 import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
@@ -26,6 +27,7 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-lapis-tint dark:hover:bg-border",
         ghost: "text-foreground hover:bg-secondary",
         link: "h-auto px-1 text-primary underline-offset-4 hover:underline active:scale-100",
+        "on-lapis": "border border-on-lapis-muted bg-transparent text-on-lapis hover:bg-on-lapis/10 focus-visible:ring-gold focus-visible:ring-offset-lapis",
       },
       size: {
         default: "h-11 px-5",
@@ -45,16 +47,23 @@ const buttonVariants = cva(
   }
 )
 
+type ButtonProps = React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+    /** Shows a spinner, disables the button and sets aria-busy. Pair it with a verb change ("Saving…"). */
+    loading?: boolean
+  }
+
 function Button({
   className,
   variant = "default",
   size = "default",
   asChild = false,
+  loading = false,
+  disabled,
+  children,
   ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
+}: ButtonProps) {
   const Comp = asChild ? Slot.Root : "button"
 
   return (
@@ -62,10 +71,22 @@ function Button({
       data-slot="button"
       data-variant={variant}
       data-size={size}
+      data-loading={loading || undefined}
+      aria-busy={loading || undefined}
+      disabled={disabled || loading}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
-    />
+    >
+      {asChild ? (
+        children
+      ) : (
+        <>
+          {loading ? <Loader2 className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
+          {children}
+        </>
+      )}
+    </Comp>
   )
 }
 
-export { Button, buttonVariants }
+export { Button, buttonVariants, type ButtonProps }

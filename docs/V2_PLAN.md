@@ -36,7 +36,9 @@ V2 upgrades this app (V1, written for the old PHP API) to the Laravel **Bookly A
 | 10 | `feature/launch` | Accessibility pass, SEO (titles, meta, Open Graph, sitemap, robots), performance and bundle split, Playwright smoke tests, Vercel deploy, CORS on the API, README with screenshots |
 
 Remaining V1-only files are listed in `eslint.config.js` (temporary lint exceptions). Each phase deletes the
-V1 files it replaces and their entries there.
+V1 files it replaces and their entries there. New V2 pages live in `src/pages/` (V1 pages stay in `src/page/` until
+replaced); shared components in `src/components/ui/` (UI kit) and `src/components/shell/` (site shell). The UI kit
+reference page is `/ui-kit` in development builds.
 
 ## Page inventory → API
 
