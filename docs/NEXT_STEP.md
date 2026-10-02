@@ -1,32 +1,32 @@
-# Next step — Phase 4: customer auth
+# Next step — Phase 5: account
 
-Branch: `feature/customer-auth` (from `main` after `feature/storefront-catalog` is merged).
+Branch: `feature/account` (from `main` after `feature/customer-auth` is merged).
 
 ## Goal
-Customers can create an account, verify their email, sign in and out, and reset a forgotten password on API v2, so the header, cart drawer, add-to-cart and wishlist (already built on the V2 session) light up.
+The signed-in customer's own area, built on API v2 with the Phase 2 kit and Phase 4 forms.
 
 | Route | Page | API |
 | --- | --- | --- |
-| `/register` | Sign up (name, email, password + confirm, optional phone) | `POST /auth/register` |
-| `/verify-email` | 6-digit code (OtpInput), resend with cooldown | `POST /auth/verify-email`, `/auth/resend-verification` |
-| `/login` | Email + password, `?next=` return path, social buttons shown as "coming soon" | `POST /auth/login` |
-| `/forgot-password`, `/reset-password` | Code by email, then new password | `POST /auth/forgot-password`, `/auth/reset-password` |
-| — | Protected-route wrapper for `/account/*`, `/checkout` (redirect to `/login?next=`) | session |
-| — | Session expiry: on `bookly:session-expired`, toast + sign-in prompt | client event |
+| `/account` | Overview: greeting, verified status, recent orders (3), quick links | `GET /me`, `GET /orders?per_page=3` |
+| `/account/profile` | Name and phone (email shown, not editable) | `GET /me`, `PATCH /me` |
+| `/account/security` | Change password (current + new + confirm); customers who signed up socially may have no password yet (`has_password`) | `PUT /me/password` |
+| `/account/addresses` | Address book: list, add, edit, delete, set default; max 10 | `GET/POST/PATCH/DELETE /addresses` |
+| `/account/wishlist` | Saved books grid, remove, add to cart | `GET /wishlist`, `DELETE /wishlist/{id}` |
 
 ## Notes
-- React Hook Form + Zod (owner decision); rules mirror the API (see `bookly_backend_v2` validation); 422 field errors map onto fields (`ApiError.field()`), 429 shows Retry-After.
-- `authApi` in `src/api/endpoints/auth.ts` already stores the session; reuse `AuthShell` styling but rebuild the V1 auth pages (`src/page/client/Authentication.tsx`, `OtpVerification`, `ForgotPassword`, `ResetPassword`, `src/components/Authentication/**`) and delete them with their `eslint.config.js` entries, plus V1 `lib/session.ts`/`services` pieces nothing else uses.
-- Respect `?next=` (only same-site paths) after login and registration. The catalogue already sends signed-out visitors to `/login?next=…`.
-- Unverified accounts: the API returns `email_unverified` on some actions; route them to `/verify-email`.
+- Wrap the area in `RequireVerified` (signed in + verified) and give it a shared layout: side navigation on desktop, a tab strip on phones (`Tabs`), and the account links already in the header menu and footer.
+- Forms: React Hook Form + Zod like Phase 4 (`applyApiErrors`, `FormAlert`, `TextField`, `SelectField`); mirror the backend rules in `bookly_backend_v2` (ProfileController, AddressController). Changing the password may revoke other tokens: check the API's response and keep this session working.
+- Addresses: dialog form (`Dialog`), `ConfirmDialog` for delete, default badge, empty state; the same form is reused at checkout in Phase 6.
+- After a profile change, refresh the stored session user (`updateSessionUser`) so the header greets the new name.
+- Delete the V1 pages this replaces (`src/page/client/Profile.tsx`, `Favorites.tsx`) and redirect `/profile` → `/account/profile`, `/favorites` → `/account/wishlist`; remove their lint exceptions if nothing else needs them.
 - Separate chore when convenient: upgrade Vitest to 5 for the `@vitest/mocker` advisory.
 
 ## Paste this into the next session
 ```
-Project: Bookly Frontend V2 (React 19 + TS + Vite + Tailwind 4), repo danishsary8/bookly_frontend, upgrading V1 in place against the Laravel API v2 (live: https://bookly-api-zasc.onrender.com/api/v1; local: php artisan serve in bookly_backend_v2 with DemoSeeder data).
+Project: Bookly Frontend V2 (React 19 + TS + Vite + Tailwind 4), repo danishsary8/bookly_frontend, upgrading V1 in place against the Laravel API v2 (live: https://bookly-api-zasc.onrender.com/api/v1; local: php artisan serve in bookly_backend_v2 with DemoSeeder data; local mail goes to storage/logs/laravel.log via the database queue).
 Read first: CLAUDE.md, docs/V2_PLAN.md, docs/WORKLOG.md, docs/NEXT_STEP.md, design-system/bookly/MASTER.md (v3).
-Status: Phases 0-3 merged (groundwork, typed API layer, UI kit + motion + site shell, storefront catalogue: Home, /books, /search, book page, authors, series, categories, publishers, recently viewed). /ui-kit in dev shows every component.
-Next: Phase 4 customer auth on branch feature/customer-auth, as listed in docs/NEXT_STEP.md: register, verify email, login (with ?next=), logout, forgot/reset password, protected routes, session-expiry handling, with React Hook Form + Zod. Rebuild and then delete the V1 auth pages. Ask me before any decision not covered by V2_PLAN or MASTER.
-Rules: small commits, human-style messages, no AI/tool names anywhere in git; no payment-provider or social-login work (buttons say "coming soon"); don't modify backend migrations or existing feature code without asking; I merge the PR myself. Verify with lint, typecheck, tests, build and a browser pass against the API before pushing. Update docs/WORKLOG.md as you go and docs/NEXT_STEP.md at the end.
+Status: Phases 0-4 merged (groundwork, typed API layer, UI kit + motion + site shell, storefront catalogue, customer auth: sign in/up with ?next=, email verification, password reset, route guards, session-expiry handling, React Hook Form + Zod).
+Next: Phase 5 account on branch feature/account, as listed in docs/NEXT_STEP.md: account overview, profile, change password, address book, wishlist page, with a shared account layout behind RequireVerified. Rebuild and then delete the V1 Profile and Favorites pages. Ask me before any decision not covered by V2_PLAN or MASTER.
+Rules: small commits, human-style messages, no AI/tool names anywhere in git; no payment-provider or social-login work; don't modify backend migrations or existing feature code without asking; I merge the PR myself. Verify with lint, typecheck, tests, build and a browser pass against the API before pushing. Update docs/WORKLOG.md as you go and docs/NEXT_STEP.md at the end.
 Output: short "what was done / what's next" summary plus a paste-ready prompt for the next session.
 ```

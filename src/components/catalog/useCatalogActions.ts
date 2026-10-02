@@ -5,26 +5,48 @@ import { cartApi, cartKeys } from "@/api/endpoints/cart";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { ApiError } from "@/api/errors";
 import { useSession } from "@/api/session";
-import type { BookCard, BookVariant } from "@/api/types";
+import type { BookCard, BookVariant, Customer } from "@/api/types";
+import { withNext } from "@/lib/forms";
 import { formatLabel } from "@/lib/catalog";
 import { openShellPanel } from "@/stores/shell";
 import { toast } from "@/stores/toast";
 
 /*
- * Add to cart and wishlist from anywhere in the catalogue. Both need an account:
- * a signed-out visitor gets a toast with a Sign in link that returns here.
+ * Add to cart and wishlist from anywhere in the catalogue. Both need a verified
+ * account; see useAccountGate for what other visitors are told.
  */
 
-const loginPath = (returnTo: string) => `/login?next=${encodeURIComponent(returnTo)}`;
-
-function useSignInPrompt() {
+/*
+ * Returns a function that checks the visitor can use cart/wishlist and, if not,
+ * explains why with a link that comes back here: signed out → Sign in; signed in
+ * but email not verified (the API refuses these actions until then) → Verify email.
+ */
+function useAccountGate() {
   const location = useLocation();
-  return (what: string) =>
+  const session = useSession<Customer>("customer");
+  const here = location.pathname + location.search;
+  const promptVerify = () =>
     toast.info({
-      title: `Sign in to ${what}`,
-      description: "It only takes a moment, and your cart and wishlist follow you to any device.",
-      action: { label: "Sign in", href: loginPath(location.pathname + location.search) },
+      title: "Verify your email first",
+      description: "Enter the 6-digit code we emailed you to start using your cart and wishlist.",
+      action: { label: "Verify email", href: withNext("/verify-email", here) },
     });
+  const check = (what: string) => {
+    if (!session) {
+      toast.info({
+        title: `Sign in to ${what}`,
+        description: "It only takes a moment, and your cart and wishlist follow you to any device.",
+        action: { label: "Sign in", href: withNext("/login", here) },
+      });
+      return false;
+    }
+    if (session.user?.email_verified === false) {
+      promptVerify();
+      return false;
+    }
+    return true;
+  };
+  return { check, promptVerify };
 }
 
 /** The cheapest format that can be bought right now. */
@@ -32,9 +54,8 @@ export const pickVariant = (variants: BookVariant[] | undefined) =>
   (variants ?? []).filter((v) => v.in_stock && v.id).sort((a, b) => Number(a.price_usd) - Number(b.price_usd))[0];
 
 export function useAddToCart() {
-  const session = useSession("customer");
   const queryClient = useQueryClient();
-  const promptSignIn = useSignInPrompt();
+  const gate = useAccountGate();
 
   const mutation = useMutation({
     mutationFn: async ({ book, variantId, quantity = 1 }: { book: BookCard; variantId?: number; quantity?: number }) => {
@@ -58,13 +79,16 @@ export function useAddToCart() {
         action: { label: "View cart", onClick: () => openShellPanel("cart") },
       });
     },
-    onError: (error) => toast.error({ title: "Couldn't add to cart", description: ApiError.from(error).message }),
+    onError: (error) => {
+      const apiError = ApiError.from(error);
+      if (apiError.kind === "email_unverified") return gate.promptVerify();
+      toast.error({ title: "Couldn't add to cart", description: apiError.message });
+    },
   });
 
   return {
     add: (book: BookCard, variantId?: number, quantity?: number) => {
-      if (!session) return promptSignIn("add books to your cart");
-      if (!book.id) return;
+      if (!gate.check("add books to your cart") || !book.id) return;
       mutation.mutate({ book, variantId, quantity });
     },
     pendingBookId: mutation.isPending ? mutation.variables?.book.id : undefined,
@@ -73,16 +97,17 @@ export function useAddToCart() {
 
 /** Saved book ids for the signed-in customer (first 100), and a toggle that updates them optimistically. */
 export function useWishlist() {
-  const session = useSession("customer");
+  const session = useSession<Customer>("customer");
   const queryClient = useQueryClient();
-  const promptSignIn = useSignInPrompt();
+  const gate = useAccountGate();
   const params = { per_page: 100 };
   const key = accountKeys.wishlist(params);
 
   const wishlist = useQuery({
     queryKey: key,
     queryFn: () => accountApi.wishlist(params),
-    enabled: Boolean(session),
+    // Unverified accounts can't read the wishlist yet (the API answers 403).
+    enabled: Boolean(session) && session?.user?.email_verified !== false,
     staleTime: 60_000,
   });
   const ids = new Set((session ? wishlist.data?.data ?? [] : []).map((b) => b.id));
@@ -104,7 +129,9 @@ export function useWishlist() {
       toast.success(saved ? { title: "Removed from your wishlist", description: book.title } : { title: "Saved to your wishlist", description: book.title, action: { label: "View wishlist", href: "/account/wishlist" } }),
     onError: (error, _vars, context) => {
       if (context?.previous) queryClient.setQueryData(key, context.previous);
-      toast.error({ title: "Couldn't update your wishlist", description: ApiError.from(error).message });
+      const apiError = ApiError.from(error);
+      if (apiError.kind === "email_unverified") return gate.promptVerify();
+      toast.error({ title: "Couldn't update your wishlist", description: apiError.message });
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["account", "wishlist"] }),
   });
@@ -112,8 +139,7 @@ export function useWishlist() {
   return {
     isSaved: (bookId: number | undefined) => bookId !== undefined && ids.has(bookId),
     toggle: (book: BookCard) => {
-      if (!session) return promptSignIn("save books to your wishlist");
-      if (!book.id) return;
+      if (!gate.check("save books to your wishlist") || !book.id) return;
       mutation.mutate({ book, saved: ids.has(book.id) });
     },
   };

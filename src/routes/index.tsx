@@ -5,16 +5,17 @@ import PublicRoute from "../components/PublicRoute";
 import AdminLayout from "../layouts/AdminLayout";
 import ClientLayout from "../layouts/ClientLayout";
 import ProtectedRoute from "./ProtectedRoute";
-import CustomerRoute from "./CustomerRoute";
 import LegacyBrowseRedirect from "./LegacyBrowseRedirect";
+import { GuestOnly, RequireCustomer } from "./guards";
 
 const Home = lazy(() => import("../pages/HomePage"));
 const Favorites = lazy(() => import("../page/client/Favorites"));
 const Cart = lazy(() => import("../page/client/Cart"));
-const Authentication = lazy(() => import("../page/client/Authentication"));
-const OtpVerification = lazy(() => import("../page/client/OtpVerification"));
-const ForgotPassword = lazy(() => import("../page/client/ForgotPassword"));
-const ResetPassword = lazy(() => import("../page/client/ResetPassword"));
+const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
+const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
+const VerifyEmailPage = lazy(() => import("../pages/auth/VerifyEmailPage"));
+const ForgotPasswordPage = lazy(() => import("../pages/auth/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("../pages/auth/ResetPasswordPage"));
 const loadBookDetail = () => import("../pages/catalog/BookDetailPage");
 const BookDetail = lazy(loadBookDetail);
 const Checkout = lazy(() => import("../page/client/Checkout"));
@@ -69,7 +70,7 @@ const AppRoutes = () => {
           <Route path="/favorites" element={<Favorites />} />
           {UiKit ? <Route path="/ui-kit" element={<UiKit />} /> : null}
           <Route path="*" element={<NotFound />} />
-          <Route element={<CustomerRoute />}>
+          <Route element={<RequireCustomer />}>
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/orders" element={<CustomerOrders />} />
@@ -78,12 +79,19 @@ const AppRoutes = () => {
           </Route>
         </Route>
 
+        <Route element={<GuestOnly />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+        </Route>
+        <Route element={<RequireCustomer />}>
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+        </Route>
+        {/* V1 sent password-reset codes to /verify-otp. */}
+        <Route path="/verify-otp" element={<Navigate to="/reset-password" replace />} />
+
         <Route element={<PublicRoute />}>
-          <Route path="/login" element={<Authentication />} />
-          <Route path="/register" element={<Authentication />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/verify-otp" element={<OtpVerification />} />
           <Route path="/superadmin/login" element={<AdminAuthentication />} />
         </Route>
 

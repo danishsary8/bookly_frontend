@@ -33,7 +33,6 @@ export default defineConfig([
       'src/components/Authentication/**/*.tsx',
       'src/components/BookDetailModal.tsx',
       'src/layouts/AdminLayout.tsx',
-      'src/lib/passwordReset.ts',
       'src/types/auth.types.ts',
     ],
     rules: {

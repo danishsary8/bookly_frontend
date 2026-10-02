@@ -59,3 +59,22 @@ Audit of V1: React 19 + TypeScript + Vite 7 + Tailwind 4, ~14k lines, 13 storefr
   - Quantity isn't capped by stock (the API exposes only in/out of stock); the API's "Only 1 left" message is shown instead.
   - `npm audit` reports a new moderate advisory in Vitest 3 (dev-only test runner, also on main); fixing needs Vitest 5, left for a separate chore.
   - Main bundle 673 kB (code splitting in phase 10).
+
+## Phase 4 — Customer auth (branch `feature/customer-auth`)
+- [x] React Hook Form 7 + Zod 4 (+ resolvers). Schemas in `src/features/auth/schemas.ts` mirror the API: name ≤ 150, email ≤ 190, password ≥ 8 with a letter and a number, matching confirmation, 6-digit codes. `applyApiErrors` puts 422 field messages on their fields and returns the rest for a form alert; `safeNext` accepts only same-site paths (blocks `//evil.com`, other origins, `javascript:`, loops back to auth pages).
+- [x] Pages (`src/pages/auth/`, framed by the existing AuthShell with its lapis quote panel): sign in (API message on 401, password cleared, `?next=`), create account (live password checklist, duplicate-email error on the field), verify email (6-cell code, wrong code on the cells, resend with cooldown, "sign out and start again"), forgot password, reset password (email kept across a refresh in sessionStorage, resend, success → sign in with a notice). Google/Facebook buttons are shown disabled as "coming soon".
+- [x] After sign-in: unverified accounts go to `/verify-email?next=…` (the API blocks cart, wishlist and checkout until then); others return to `next`. Cached cart and account data from a previous visitor is dropped.
+- [x] Guards (`src/routes/guards.tsx`): `RequireCustomer` (→ `/login?next=`), `RequireVerified` (→ `/verify-email?next=`), `GuestOnly` (signed in → `next`). V1's `/checkout`, `/profile`, `/orders` now use the V2 session guard. `/verify-otp` (V1 reset link) → `/reset-password`.
+- [x] Session expiry: `SessionWatcher` reacts to the API client's `bookly:session-expired`, clears the customer's cached data and shows one "You've been signed out" toast with a Sign in link back to the page; guarded pages redirect by themselves.
+- [x] Unverified customers: add to cart and the wishlist heart explain "Verify your email first" with a link instead of failing with a 403; the cart drawer shows a verify state and no cart request is made.
+- [x] Toaster moved to the app root (auth pages sit outside the shop layout) and its list is now a persistent `aria-live` region, which also keeps toasts announced while a drawer or dialog is open (Radix hides everything else from assistive tech, but leaves live regions).
+- [x] Shared fields merge an extra `aria-describedby` (e.g. the password checklist) with their own error/hint instead of replacing it.
+- [x] Removed V1 sign in / sign up / OTP / forgot / reset pages, the customer login and register forms, `lib/customer.ts`, `lib/passwordReset.ts`, the V1 customer route guard and one lint exception. V1 admin sign-in stays until phase 9.
+- [x] Tests: 115 pass (new: schemas, forms helpers, cooldown, and an integration suite for sign-in, sign-up, verification, reset, guards and session expiry).
+- [x] Verified: lint (0 errors), typecheck, tests, build; browser pass against the local API reading real codes from the mail log:
+  - register (from a book page) → verify (wrong code, then the right one) → back on the book;
+  - sign out → forgot → reset → sign in with the new password;
+  - guest-only redirect and an unsafe `next` ignored;
+  - expired token → toast and the protected page redirects;
+  - unverified account → no 403s;
+  - 375 px with no horizontal scroll, and dark mode.

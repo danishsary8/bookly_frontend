@@ -3,7 +3,6 @@ import { useLocation } from "react-router-dom";
 import { RouteErrorBoundary } from "@/components/ErrorBoundary";
 import { PageTransition } from "@/components/motion/PageTransition";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
-import { Toaster } from "@/components/ui/toaster";
 import { closeShellPanel } from "@/stores/shell";
 import { CartDrawer } from "./CartDrawer";
 import { MobileMenu } from "./MobileMenu";
@@ -13,7 +12,7 @@ import { SiteHeader } from "./SiteHeader";
 /*
  * The storefront frame: skip link, sticky header, the routed page (transition +
  * error boundary + lazy-load fallback), footer, and the overlays that live
- * outside the page (cart drawer, mobile menu, toasts).
+ * outside the page (cart drawer, mobile menu). Toasts live at the app root.
  */
 
 function PageFallback() {
@@ -51,7 +50,6 @@ export function SiteShell({ children }: { children: ReactNode }) {
       <SiteFooter />
       <CartDrawer />
       <MobileMenu />
-      <Toaster />
     </div>
   );
 }

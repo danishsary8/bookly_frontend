@@ -46,8 +46,9 @@ export const FieldShell = ({ id, label, hint, error, optional, children, classNa
   </div>
 );
 
-const describedBy = (id: string, error?: string, hint?: ReactNode) =>
-  error ? `${id}-error` : hint ? `${id}-hint` : undefined;
+/** The field's own error/hint id, plus any extra ids the caller passes (e.g. a password checklist). */
+const describedBy = (id: string, error?: string, hint?: ReactNode, extra?: string) =>
+  [error ? `${id}-error` : hint ? `${id}-hint` : null, extra].filter(Boolean).join(" ") || undefined;
 
 type TextFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "id"> & {
   label: string;
@@ -59,7 +60,7 @@ type TextFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "id"> & {
 };
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
-  ({ label, hint, error, optional, id, containerClassName, className, ...props }, ref) => {
+  ({ label, hint, error, optional, id, containerClassName, className, "aria-describedby": extraDescribedBy, ...props }, ref) => {
     const autoId = useId();
     const fieldId = id ?? autoId;
     return (
@@ -68,7 +69,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
           ref={ref}
           id={fieldId}
           aria-invalid={error ? true : undefined}
-          aria-describedby={describedBy(fieldId, error, hint)}
+          aria-describedby={describedBy(fieldId, error, hint, extraDescribedBy)}
           className={cn(controlClassName, "h-12", className)}
           {...props}
         />
@@ -88,7 +89,7 @@ type TextAreaFieldProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "id"
 };
 
 export const TextAreaField = forwardRef<HTMLTextAreaElement, TextAreaFieldProps>(
-  ({ label, hint, error, optional, id, containerClassName, className, ...props }, ref) => {
+  ({ label, hint, error, optional, id, containerClassName, className, "aria-describedby": extraDescribedBy, ...props }, ref) => {
     const autoId = useId();
     const fieldId = id ?? autoId;
     return (
@@ -97,7 +98,7 @@ export const TextAreaField = forwardRef<HTMLTextAreaElement, TextAreaFieldProps>
           ref={ref}
           id={fieldId}
           aria-invalid={error ? true : undefined}
-          aria-describedby={describedBy(fieldId, error, hint)}
+          aria-describedby={describedBy(fieldId, error, hint, extraDescribedBy)}
           className={cn(controlClassName, "min-h-24 py-3 leading-6", className)}
           {...props}
         />
@@ -108,7 +109,7 @@ export const TextAreaField = forwardRef<HTMLTextAreaElement, TextAreaFieldProps>
 TextAreaField.displayName = "TextAreaField";
 
 export const PasswordField = forwardRef<HTMLInputElement, Omit<TextFieldProps, "type">>(
-  ({ label, hint, error, optional, id, containerClassName, className, ...props }, ref) => {
+  ({ label, hint, error, optional, id, containerClassName, className, "aria-describedby": extraDescribedBy, ...props }, ref) => {
     const autoId = useId();
     const fieldId = id ?? autoId;
     const [visible, setVisible] = useState(false);
@@ -120,7 +121,7 @@ export const PasswordField = forwardRef<HTMLInputElement, Omit<TextFieldProps, "
             id={fieldId}
             type={visible ? "text" : "password"}
             aria-invalid={error ? true : undefined}
-            aria-describedby={describedBy(fieldId, error, hint)}
+            aria-describedby={describedBy(fieldId, error, hint, extraDescribedBy)}
             className={cn(controlClassName, "h-12 pr-12", className)}
             {...props}
           />
@@ -152,7 +153,7 @@ type SelectFieldProps = Omit<SelectHTMLAttributes<HTMLSelectElement>, "id"> & {
 
 /** Native select with the field frame (MASTER §6.14): best on phones, works with register(). */
 export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
-  ({ label, hint, error, optional, id, containerClassName, className, children, ...props }, ref) => {
+  ({ label, hint, error, optional, id, containerClassName, className, children, "aria-describedby": extraDescribedBy, ...props }, ref) => {
     const autoId = useId();
     const fieldId = id ?? autoId;
     return (
@@ -162,7 +163,7 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
             ref={ref}
             id={fieldId}
             aria-invalid={error ? true : undefined}
-            aria-describedby={describedBy(fieldId, error, hint)}
+            aria-describedby={describedBy(fieldId, error, hint, extraDescribedBy)}
             className={cn(controlClassName, "h-12 appearance-none pr-11", className)}
             {...props}
           >

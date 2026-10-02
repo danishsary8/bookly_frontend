@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { useReducedMotion } from "motion/react";
 import { ArrowLeft, BookOpen, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import Carousel from "./Carousel";
-import { useStorefrontSettings } from "../contexts/StorefrontSettingsContext";
 
 /*
  * Shared frame for Sign in / Create account / Forgot password / Reset password.
@@ -106,13 +105,12 @@ const QuotePanel = () => {
 };
 
 const Wordmark = ({ onLapis = false }: { onLapis?: boolean }) => {
-  const { settings } = useStorefrontSettings();
   return (
-    <Link to="/" className="group inline-flex items-center gap-2.5 rounded-lg transition-opacity duration-150 hover:opacity-80" aria-label={`${settings.store_name} home`}>
+    <Link to="/" className="group inline-flex items-center gap-2.5 rounded-lg transition-opacity duration-150 hover:opacity-80" aria-label="Bookly home">
       <span className={`grid h-9 w-9 place-items-center rounded-md ${onLapis ? "bg-on-lapis text-lapis" : "bg-primary text-primary-foreground"}`}>
         <BookOpen className="h-[18px] w-[18px]" aria-hidden="true" />
       </span>
-      <span className={`font-display text-xl leading-tight ${onLapis ? "text-on-lapis" : "text-primary"}`}>{settings.store_name}</span>
+      <span className={`font-display text-xl leading-tight ${onLapis ? "text-on-lapis" : "text-primary"}`}>Bookly</span>
     </Link>
   );
 };

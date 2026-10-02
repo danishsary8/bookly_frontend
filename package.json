@@ -14,6 +14,7 @@
     "api:types": "node scripts/generate-api-types.mjs"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
     "@tailwindcss/postcss": "^4.1.18",
     "@tanstack/react-query": "^5.104.0",
     "axios": "^1.13.5",
@@ -26,11 +27,13 @@
     "radix-ui": "^1.4.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-hook-form": "^7.89.0",
     "react-icons": "^5.7.0",
     "react-router-dom": "^7.13.0",
     "sweetalert2": "^11.26.24",
     "tailwind-merge": "^3.5.0",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

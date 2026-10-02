@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingBag } from "lucide-react";
-import { Link } from "react-router-dom";
+import { MailCheck, ShoppingBag } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { cartQueries } from "@/api/endpoints/cart";
 import { useSession } from "@/api/session";
+import type { Customer } from "@/api/types";
+import { withNext } from "@/lib/forms";
 import { CoverThumb } from "@/components/CoverThumb";
 import { EmptyState } from "@/components/EmptyState";
 import { buttonVariants } from "@/components/ui/button";
@@ -27,10 +29,18 @@ const FORMAT_LABEL: Record<string, string> = {
   audiobook: "Audiobook",
 };
 
+/** The cart needs a signed-in customer with a verified email (the API answers 403 before that). */
+function useUsableCart() {
+  const session = useSession<Customer>("customer");
+  const verified = session?.user?.email_verified !== false;
+  const cart = useQuery({ ...cartQueries.cart(), enabled: Boolean(session) && verified });
+  return { session, verified, cart };
+}
+
 function CartBody() {
-  const session = useSession("customer");
+  const { session, verified, cart } = useUsableCart();
   const currency = useCurrency();
-  const cart = useQuery({ ...cartQueries.cart(), enabled: Boolean(session) });
+  const location = useLocation();
 
   if (!session) {
     return (
@@ -47,6 +57,22 @@ function CartBody() {
         secondaryAction={
           <Link to="/register" onClick={closeShellPanel} className={buttonVariants({ variant: "link" })}>
             Create an account
+          </Link>
+        }
+      />
+    );
+  }
+
+  if (!verified) {
+    return (
+      <EmptyState
+        icon={MailCheck}
+        headingLevel="h3"
+        title="Verify your email to use your cart"
+        description="Enter the 6-digit code we emailed you when you signed up."
+        action={
+          <Link to={withNext("/verify-email", location.pathname + location.search)} onClick={closeShellPanel} className={buttonVariants({ variant: "default" })}>
+            Verify email
           </Link>
         }
       />
@@ -108,10 +134,9 @@ function CartBody() {
 }
 
 function CartSummary() {
-  const session = useSession("customer");
+  const { session, verified, cart } = useUsableCart();
   const currency = useCurrency();
-  const cart = useQuery({ ...cartQueries.cart(), enabled: Boolean(session) });
-  if (!session || !cart.data?.items?.length) return null;
+  if (!session || !verified || !cart.data?.items?.length) return null;
 
   return (
     <DrawerFooter className="grid gap-4">
@@ -139,9 +164,8 @@ function CartSummary() {
 
 export function CartDrawer() {
   const panel = useShellPanel();
-  const session = useSession("customer");
-  const cart = useQuery({ ...cartQueries.cart(), enabled: Boolean(session) });
-  const count = session ? (cart.data?.item_count ?? 0) : 0;
+  const { session, verified, cart } = useUsableCart();
+  const count = session && verified ? (cart.data?.item_count ?? 0) : 0;
 
   return (
     <Drawer open={panel === "cart"} onOpenChange={(open) => (open ? openShellPanel("cart") : closeShellPanel())}>
