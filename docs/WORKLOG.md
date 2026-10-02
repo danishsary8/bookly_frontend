@@ -78,3 +78,34 @@ Audit of V1: React 19 + TypeScript + Vite 7 + Tailwind 4, ~14k lines, 13 storefr
   - expired token → toast and the protected page redirects;
   - unverified account → no 403s;
   - 375 px with no horizontal scroll, and dark mode.
+
+## Phase 5 — Account (branch `feature/account`)
+- [x] Account area at `/account/*` behind `RequireVerified`, with its own layout:
+  - side navigation at ≥ 1024px;
+  - on phones, a scrolling link strip that keeps the current section in view;
+  - a Sign out button;
+  - a frozen nested outlet, so a page fading out keeps its own section.
+- [x] Overview: greeting, verified status, "member since", tiles for profile / addresses / wishlist / password, and the three latest orders with the new V2 `OrderStatusBadge` (MASTER §6.3a: icon + fill style + text).
+- [x] Profile: name and phone (`PATCH /me`). The email is shown read-only. Save is enabled only after a change, with "Discard changes". A saved name updates the session, so the header greets you by the new name straight away.
+- [x] Password (`PUT /me/password`):
+  - A wrong current password shows on that field.
+  - Accounts without a password (social sign-up) get "Set a password" without the current-password field.
+  - The page says that other devices are signed out; this session stays.
+- [x] Address book:
+  - List with the default marked; add and edit in a dialog, prefilled with the customer's name and phone.
+  - Make default; delete with confirmation, explaining that another address becomes the default.
+  - The API's limit of 10 is enforced.
+  - The fields are free text (owner decision), with Cambodia as the starting country.
+  - `AddressForm` and `AddressCard` are reusable for checkout.
+  - The frontend payload type allows `null` to clear optional fields; the API accepts it, the OpenAPI schema doesn't say so.
+- [x] Wishlist page: saved books as catalogue cards with pagination in the URL. The heart removes a book with Undo in the toast; the bag adds to cart. Empty state when nothing is saved.
+- [x] `/profile` → `/account/profile` and `/favorites` → `/account/wishlist` (both outside the animated layout). Removed V1 Profile and Favorites plus the V1 book card, quick-view modal, cover morph and local favourites, which nothing used any more (and one lint exception).
+- [x] Tests: 127 pass (new: account schemas; profile save, wrong current password, social "set a password", address list/add/delete/limit, account guard).
+- [x] Verified: lint (0 errors), typecheck, tests, build; browser pass against the local API with the demo account:
+  - sign-in redirect to the account; profile save updates the header;
+  - wrong and right current password;
+  - address add (validation) → make default → edit → delete the default (another becomes default);
+  - wishlist save → remove → undo;
+  - 375 px with no horizontal scroll (fixed a 115 px overflow from the phone nav strip);
+  - earlier phases' browser scripts re-run clean.
+- Known: "Orders" isn't in the account navigation yet, and recent orders don't link to details; both arrive with phase 7.

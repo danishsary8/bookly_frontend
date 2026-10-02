@@ -6,10 +6,9 @@ import AdminLayout from "../layouts/AdminLayout";
 import ClientLayout from "../layouts/ClientLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import LegacyBrowseRedirect from "./LegacyBrowseRedirect";
-import { GuestOnly, RequireCustomer } from "./guards";
+import { GuestOnly, RequireCustomer, RequireVerified } from "./guards";
 
 const Home = lazy(() => import("../pages/HomePage"));
-const Favorites = lazy(() => import("../page/client/Favorites"));
 const Cart = lazy(() => import("../page/client/Cart"));
 const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
@@ -19,7 +18,12 @@ const ResetPasswordPage = lazy(() => import("../pages/auth/ResetPasswordPage"));
 const loadBookDetail = () => import("../pages/catalog/BookDetailPage");
 const BookDetail = lazy(loadBookDetail);
 const Checkout = lazy(() => import("../page/client/Checkout"));
-const Profile = lazy(() => import("../page/client/Profile"));
+const AccountLayout = lazy(() => import("../features/account/AccountLayout").then((m) => ({ default: m.AccountLayout })));
+const AccountOverviewPage = lazy(() => import("../pages/account/AccountOverviewPage"));
+const ProfilePage = lazy(() => import("../pages/account/ProfilePage"));
+const SecurityPage = lazy(() => import("../pages/account/SecurityPage"));
+const AddressesPage = lazy(() => import("../pages/account/AddressesPage"));
+const WishlistPage = lazy(() => import("../pages/account/WishlistPage"));
 const CustomerOrders = lazy(() => import("../page/client/Orders"));
 const CustomerOrderDetail = lazy(() => import("../page/client/OrderDetail"));
 const Dashboard = lazy(() => import("../page/admin/Dashboard"));
@@ -55,6 +59,8 @@ const AppRoutes = () => {
       <Routes>
         {/* Redirects sit outside the layout so the page transition never re-runs them. */}
         <Route path="/browse" element={<LegacyBrowseRedirect />} />
+        <Route path="/profile" element={<Navigate to="/account/profile" replace />} />
+        <Route path="/favorites" element={<Navigate to="/account/wishlist" replace />} />
         <Route element={<ClientLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/books" element={<BooksPage />} />
@@ -67,12 +73,19 @@ const AppRoutes = () => {
           <Route path="/publishers/:id" element={<PublisherPage />} />
           <Route path="/books/:id" element={<BookDetail />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/favorites" element={<Favorites />} />
           {UiKit ? <Route path="/ui-kit" element={<UiKit />} /> : null}
           <Route path="*" element={<NotFound />} />
+          <Route element={<RequireVerified />}>
+            <Route path="/account" element={<AccountLayout />}>
+              <Route index element={<AccountOverviewPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="security" element={<SecurityPage />} />
+              <Route path="addresses" element={<AddressesPage />} />
+              <Route path="wishlist" element={<WishlistPage />} />
+            </Route>
+          </Route>
           <Route element={<RequireCustomer />}>
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/profile" element={<Profile />} />
             <Route path="/orders" element={<CustomerOrders />} />
             <Route path="/orders/:id" element={<CustomerOrderDetail />} />
             <Route path="/invoices" element={<Navigate to="/orders" replace />} />

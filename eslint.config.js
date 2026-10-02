@@ -31,7 +31,6 @@ export default defineConfig([
       'src/page/**/*.tsx',
       'src/services/**/*.ts',
       'src/components/Authentication/**/*.tsx',
-      'src/components/BookDetailModal.tsx',
       'src/layouts/AdminLayout.tsx',
       'src/types/auth.types.ts',
     ],

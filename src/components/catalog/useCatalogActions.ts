@@ -126,7 +126,12 @@ export function useWishlist() {
       return { previous };
     },
     onSuccess: (_data, { book, saved }) =>
-      toast.success(saved ? { title: "Removed from your wishlist", description: book.title } : { title: "Saved to your wishlist", description: book.title, action: { label: "View wishlist", href: "/account/wishlist" } }),
+      toast.success(
+        saved
+          ? // Removing is one click, so it can be undone from the toast.
+            { title: "Removed from your wishlist", description: book.title, action: { label: "Undo", onClick: () => mutation.mutate({ book, saved: false }) } }
+          : { title: "Saved to your wishlist", description: book.title, action: { label: "View wishlist", href: "/account/wishlist" } },
+      ),
     onError: (error, _vars, context) => {
       if (context?.previous) queryClient.setQueryData(key, context.previous);
       const apiError = ApiError.from(error);
