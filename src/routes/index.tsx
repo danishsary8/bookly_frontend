@@ -15,7 +15,7 @@ const Authentication = lazy(() => import("../page/client/Authentication"));
 const OtpVerification = lazy(() => import("../page/client/OtpVerification"));
 const ForgotPassword = lazy(() => import("../page/client/ForgotPassword"));
 const ResetPassword = lazy(() => import("../page/client/ResetPassword"));
-const loadBookDetail = () => import("../page/client/BookDetail");
+const loadBookDetail = () => import("../pages/catalog/BookDetailPage");
 const BookDetail = lazy(loadBookDetail);
 const Checkout = lazy(() => import("../page/client/Checkout"));
 const Profile = lazy(() => import("../page/client/Profile"));
