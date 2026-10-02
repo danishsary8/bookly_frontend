@@ -42,6 +42,8 @@ const Users = lazy(() => import("../page/admin/Users"));
 const Settings = lazy(() => import("../page/admin/Settings"));
 const AdminAuthentication = lazy(() => import("../page/admin/AdminAuthentication"));
 const ShippingPage = lazy(() => import("../pages/content/ShippingPage"));
+const ReturnsPolicyPage = lazy(() => import("../pages/content/ReturnsPolicyPage"));
+const FaqPage = lazy(() => import("../pages/content/FaqPage"));
 const NotFound = lazy(() => import("../page/NotFound"));
 const BooksPage = lazy(() => import("../pages/catalog/BooksPage"));
 const SearchPage = lazy(() => import("../pages/catalog/SearchPage"));
@@ -84,6 +86,8 @@ const AppRoutes = () => {
           <Route path="/books/:id" element={<BookDetail />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/shipping" element={<ShippingPage />} />
+          <Route path="/returns-policy" element={<ReturnsPolicyPage />} />
+          <Route path="/faq" element={<FaqPage />} />
           {UiKit ? <Route path="/ui-kit" element={<UiKit />} /> : null}
           <Route path="*" element={<NotFound />} />
           <Route element={<RequireVerified />}>
