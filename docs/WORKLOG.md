@@ -109,3 +109,26 @@ Audit of V1: React 19 + TypeScript + Vite 7 + Tailwind 4, ~14k lines, 13 storefr
   - 375 px with no horizontal scroll (fixed a 115 px overflow from the phone nav strip);
   - earlier phases' browser scripts re-run clean.
 - Known: "Orders" isn't in the account navigation yet, and recent orders don't link to details; both arrive with phase 7.
+
+## Phase 6 — Cart and checkout (branch `feature/cart-checkout`)
+- [x] Cart helpers (`src/features/cart/`): the API's blocking issues (unavailable, out of stock, not enough stock; a price change is only information), 10 per line, ebooks and audiobooks one per order, and the stock left when it's short.
+- [x] `useCartMutations`: quantity changes are optimistic and roll back with the API's reason (e.g. "Only 1 left in stock."); remove shows an Undo toast; every change updates the cart cache, so the header count and drawer follow at once.
+- [x] Editable cart drawer and the `/cart` page (8/4 layout) share one `CartLineItem` and one sign-in / verify-email gate. Digital lines have no stepper. "Empty cart" asks first. "Continue to checkout" is disabled while a line blocks it.
+- [x] Coupon: checked with `POST /cart/coupon/check`, kept for the visit in sessionStorage and re-checked whenever the cart changes. A coupon that stops fitting (e.g. under its minimum after a removal) is dropped with the API's reason instead of being sent silently.
+- [x] `/checkout` (behind `RequireVerified`):
+  - 1) delivery address: saved addresses as radio cards with the default preselected; "Add a new address" opens the Phase 5 `AddressForm` and selects the new one (inline when there are none);
+  - 2) payment: cash on delivery; card and Bakong KHQR shown disabled "coming soon";
+  - 3) review: the lines, with totals (subtotal, discount, shipping, tax, total) from `POST /checkout/preview`. A coupon the preview rejects is removed with a toast.
+  - An address is always required: the API asks for `address_id` even for ebook-only carts.
+- [x] Placing the order is safe to retry. One idempotency key per attempt:
+  - an answer from the API (stock changed, coupon no longer valid) gets a fresh key and a refreshed cart and preview;
+  - a lost response keeps the same key and keeps the page in place, even though the cart is now empty on the server ("We couldn't confirm your order"); trying again returns the order already created (checked: two POSTs, one order).
+- [x] `/checkout/success/:id`: thank-you header, order number and status, items, totals (USD, total also in riel), delivery address, "what happens next", links. It uses the checkout response straight away and reloads from `GET /orders/{id}`, so a refresh works. The coupon and cart cache are cleared after the order.
+- [x] Removed V1 `Cart.tsx` and `Checkout.tsx`; nothing else became unused (the V1 order pages still use the old helpers until phase 7).
+- [x] Tests: 137 pass (new: cart rules, coupon store, cart page coupon + blocked line, checkout default address / COD / place order, key reuse after a lost response and a new key after a refusal, empty cart → cart, confirmation on a fresh visit).
+- [x] Verified: lint (0 errors), typecheck, tests, build; browser pass against the local API with the demo account:
+  - stock-limit rollback, digital line, bad and good coupons, coupon dropped after a removal, undo, empty cart;
+  - checkout: empty cart → /cart, default address, COD only, WELCOME10 totals, new address from checkout;
+  - dropped response on place order → retry → one order, confirmation, reload;
+  - 375 px dark and desktop light: fixed an 8 px overflow on `/cart` (grid min-content, same fix as earlier phases).
+- Known: coupons are one use per customer (cancelling the order gives the use back), so test runs must cancel their orders.
