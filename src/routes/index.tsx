@@ -17,7 +17,8 @@ const ForgotPasswordPage = lazy(() => import("../pages/auth/ForgotPasswordPage")
 const ResetPasswordPage = lazy(() => import("../pages/auth/ResetPasswordPage"));
 const loadBookDetail = () => import("../pages/catalog/BookDetailPage");
 const BookDetail = lazy(loadBookDetail);
-const Checkout = lazy(() => import("../page/client/Checkout"));
+const CheckoutPage = lazy(() => import("../pages/checkout/CheckoutPage"));
+const OrderConfirmationPage = lazy(() => import("../pages/checkout/OrderConfirmationPage"));
 const AccountLayout = lazy(() => import("../features/account/AccountLayout").then((m) => ({ default: m.AccountLayout })));
 const AccountOverviewPage = lazy(() => import("../pages/account/AccountOverviewPage"));
 const ProfilePage = lazy(() => import("../pages/account/ProfilePage"));
@@ -76,6 +77,8 @@ const AppRoutes = () => {
           {UiKit ? <Route path="/ui-kit" element={<UiKit />} /> : null}
           <Route path="*" element={<NotFound />} />
           <Route element={<RequireVerified />}>
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/checkout/success/:id" element={<OrderConfirmationPage />} />
             <Route path="/account" element={<AccountLayout />}>
               <Route index element={<AccountOverviewPage />} />
               <Route path="profile" element={<ProfilePage />} />
@@ -85,7 +88,6 @@ const AppRoutes = () => {
             </Route>
           </Route>
           <Route element={<RequireCustomer />}>
-            <Route path="/checkout" element={<Checkout />} />
             <Route path="/orders" element={<CustomerOrders />} />
             <Route path="/orders/:id" element={<CustomerOrderDetail />} />
             <Route path="/invoices" element={<Navigate to="/orders" replace />} />
