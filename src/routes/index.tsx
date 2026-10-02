@@ -13,9 +13,9 @@ const Favorites = lazy(() => import("../page/client/Favorites"));
 const Cart = lazy(() => import("../page/client/Cart"));
 const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
-const OtpVerification = lazy(() => import("../page/client/OtpVerification"));
-const ForgotPassword = lazy(() => import("../page/client/ForgotPassword"));
-const ResetPassword = lazy(() => import("../page/client/ResetPassword"));
+const VerifyEmailPage = lazy(() => import("../pages/auth/VerifyEmailPage"));
+const ForgotPasswordPage = lazy(() => import("../pages/auth/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("../pages/auth/ResetPasswordPage"));
 const loadBookDetail = () => import("../pages/catalog/BookDetailPage");
 const BookDetail = lazy(loadBookDetail);
 const Checkout = lazy(() => import("../page/client/Checkout"));
@@ -82,12 +82,16 @@ const AppRoutes = () => {
         <Route element={<GuestOnly />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Route>
+        <Route element={<RequireCustomer />}>
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+        </Route>
+        {/* V1 sent password-reset codes to /verify-otp. */}
+        <Route path="/verify-otp" element={<Navigate to="/reset-password" replace />} />
 
         <Route element={<PublicRoute />}>
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/verify-otp" element={<OtpVerification />} />
           <Route path="/superadmin/login" element={<AdminAuthentication />} />
         </Route>
 
