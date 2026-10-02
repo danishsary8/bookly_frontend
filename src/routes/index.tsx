@@ -52,9 +52,10 @@ const AppRoutes = () => {
   return (
     <Suspense fallback={<div className="section-wrap py-10"><Loading /></div>}>
       <Routes>
+        {/* Redirects sit outside the layout so the page transition never re-runs them. */}
+        <Route path="/browse" element={<LegacyBrowseRedirect />} />
         <Route element={<ClientLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/browse" element={<LegacyBrowseRedirect />} />
           <Route path="/books" element={<BooksPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/authors" element={<AuthorsPage />} />
