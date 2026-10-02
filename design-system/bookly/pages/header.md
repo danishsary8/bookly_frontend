@@ -1,7 +1,7 @@
 # Header — page overrides
 
 > Overrides `design-system/bookly/MASTER.md` for the storefront header only.
-> Migrated to v2 "Lapis & Vermilion" on 2026-09-24.
+> Migrated to v2 "Lapis & Vermilion" on 2026-09-24. Applies to the V2 header (`src/components/shell/SiteHeader.tsx`, 2026-10-02).
 
 ## Deviations from MASTER
 
