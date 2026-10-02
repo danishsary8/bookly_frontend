@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, MapPin, PackageCheck, Phone, Truck } from "lucide-react";
+import { CheckCircle2, PackageCheck, Truck } from "lucide-react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { orderQueries } from "@/api/endpoints/orders";
 import { ApiError } from "@/api/errors";
@@ -9,10 +9,8 @@ import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { buttonVariants } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
-import { formatAddressLines } from "@/features/account/address";
+import { DeliveryAddressCard, OrderItemsCard } from "@/features/orders/OrderSummary";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { formatLabel } from "@/lib/catalog";
-import { formatMoney, formatUsd, useCurrency } from "@/stores/currency";
 
 /*
  * /checkout/success/:id: thank-you page. Shows the order straight from the
@@ -33,7 +31,6 @@ export default function OrderConfirmationPage() {
   const id = Number(useParams().id);
   const fromCheckout = (useLocation().state as { order?: Order } | null)?.order;
   const order = useQuery({ ...orderQueries.order(id), enabled: Number.isInteger(id) && id > 0, initialData: fromCheckout?.id === id ? fromCheckout : undefined });
-  const currency = useCurrency();
   useDocumentTitle(order.data ? `Order ${order.data.order_number}` : "Order confirmed");
 
   if (!Number.isInteger(id) || id <= 0 || (order.isError && ApiError.from(order.error).kind === "not_found")) {
@@ -52,7 +49,6 @@ export default function OrderConfirmationPage() {
   }
 
   const o = order.data;
-  const address = o.shipping_address;
 
   return (
     <div className="container-shell pb-16 pt-8 sm:pt-12">
@@ -71,65 +67,8 @@ export default function OrderConfirmationPage() {
           </div>
         </header>
 
-        <section aria-labelledby="order-items" className="rounded-xl border border-border bg-card p-5 sm:p-6">
-          <h2 id="order-items" className="font-display text-[1.563rem] leading-tight">
-            {o.item_count} {o.item_count === 1 ? "item" : "items"}
-          </h2>
-          <ul className="mt-4 divide-y divide-border">
-            {(o.items ?? []).map((item) => (
-              <li key={item.id} className="flex items-baseline justify-between gap-4 py-3">
-                <span className="min-w-0">
-                  <Link to={`/books/${item.book_id}`} className="font-semibold underline-offset-4 hover:underline">
-                    {item.title}
-                  </Link>
-                  <span className="block text-sm text-muted-foreground">
-                    {formatLabel(item.format)} · Qty {item.quantity} × {formatUsd(item.unit_price_usd)}
-                  </span>
-                </span>
-                <span className="shrink-0 font-semibold tabular-nums">{formatUsd(item.subtotal_usd)}</span>
-              </li>
-            ))}
-          </ul>
-          <dl className="mt-2 grid gap-2 border-t border-border pt-4 text-[15px]">
-            <div className="flex justify-between">
-              <dt className="text-muted-foreground">Subtotal</dt>
-              <dd className="tabular-nums">{formatUsd(o.subtotal_usd)}</dd>
-            </div>
-            {Number(o.discount_usd) > 0 ? (
-              <div className="flex justify-between text-success">
-                <dt>Discount{o.coupon_code ? ` (${o.coupon_code})` : ""}</dt>
-                <dd className="tabular-nums">−{formatUsd(o.discount_usd)}</dd>
-              </div>
-            ) : null}
-            <div className="flex justify-between">
-              <dt className="text-muted-foreground">Shipping</dt>
-              <dd className="tabular-nums">{formatUsd(o.shipping_fee_usd)}</dd>
-            </div>
-            <div className="mt-2 flex items-baseline justify-between border-t border-border pt-3">
-              <dt className="font-semibold">Total to pay on delivery</dt>
-              <dd className="text-2xl font-semibold tabular-nums">{formatMoney(o.total_usd, o.total_khr, currency)}</dd>
-            </div>
-          </dl>
-        </section>
-
-        {address ? (
-          <section aria-labelledby="order-address" className="grid gap-2 rounded-xl border border-border bg-card p-5 sm:p-6">
-            <h2 id="order-address" className="flex items-center gap-2 font-display text-[1.563rem] leading-tight">
-              <MapPin className="size-5 text-primary" aria-hidden="true" /> Delivering to
-            </h2>
-            <address className="grid not-italic leading-6">
-              <span className="font-semibold">{address.recipient_name}</span>
-              {formatAddressLines(address).map((line) => (
-                <span key={line} className="text-muted-foreground">
-                  {line}
-                </span>
-              ))}
-              <span className="mt-1 inline-flex items-center gap-1.5 tabular-nums text-muted-foreground">
-                <Phone className="size-4" aria-hidden="true" /> {address.phone}
-              </span>
-            </address>
-          </section>
-        ) : null}
+        <OrderItemsCard order={o} totalLabel="Total to pay on delivery" />
+        <DeliveryAddressCard address={o.shipping_address} />
 
         <section aria-labelledby="whats-next">
           <h2 id="whats-next" className="font-display text-[1.563rem] leading-tight">
@@ -152,8 +91,8 @@ export default function OrderConfirmationPage() {
           <Link to="/books" className={buttonVariants()}>
             Keep browsing
           </Link>
-          <Link to="/account" className={buttonVariants({ variant: "outline" })}>
-            Go to your account
+          <Link to={`/account/orders/${o.id}`} className={buttonVariants({ variant: "outline" })}>
+            View your order
           </Link>
         </div>
       </div>
