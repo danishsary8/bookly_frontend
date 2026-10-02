@@ -9,7 +9,7 @@ import LegacyBrowseRedirect from "./LegacyBrowseRedirect";
 import { GuestOnly, RequireCustomer, RequireVerified } from "./guards";
 
 const Home = lazy(() => import("../pages/HomePage"));
-const Cart = lazy(() => import("../page/client/Cart"));
+const CartPage = lazy(() => import("../pages/cart/CartPage"));
 const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
 const VerifyEmailPage = lazy(() => import("../pages/auth/VerifyEmailPage"));
@@ -72,7 +72,7 @@ const AppRoutes = () => {
           <Route path="/categories/:slug" element={<CategoryPage />} />
           <Route path="/publishers/:id" element={<PublisherPage />} />
           <Route path="/books/:id" element={<BookDetail />} />
-          <Route path="/cart" element={<Cart />} />
+          <Route path="/cart" element={<CartPage />} />
           {UiKit ? <Route path="/ui-kit" element={<UiKit />} /> : null}
           <Route path="*" element={<NotFound />} />
           <Route element={<RequireVerified />}>
