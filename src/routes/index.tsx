@@ -31,6 +31,7 @@ const OrderDetailPage = lazy(() => import("../pages/account/OrderDetailPage"));
 const ReturnRequestPage = lazy(() => import("../pages/account/ReturnRequestPage"));
 const ReturnsPage = lazy(() => import("../pages/account/ReturnsPage"));
 const ReturnDetailPage = lazy(() => import("../pages/account/ReturnDetailPage"));
+const ReviewsPage = lazy(() => import("../pages/account/ReviewsPage"));
 const Dashboard = lazy(() => import("../page/admin/Dashboard"));
 const Catalog = lazy(() => import("../page/admin/Catalog"));
 const Promotions = lazy(() => import("../page/admin/Promotions"));
@@ -97,6 +98,7 @@ const AppRoutes = () => {
               <Route path="orders/:id/return" element={<ReturnRequestPage />} />
               <Route path="returns" element={<ReturnsPage />} />
               <Route path="returns/:id" element={<ReturnDetailPage />} />
+              <Route path="reviews" element={<ReviewsPage />} />
             </Route>
           </Route>
         </Route>

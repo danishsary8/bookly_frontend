@@ -1,4 +1,4 @@
-import { Heart, KeyRound, LayoutDashboard, LogOut, MapPin, Package, RotateCcw, UserRound } from "lucide-react";
+import { Heart, KeyRound, LayoutDashboard, LogOut, MapPin, MessageSquareText, Package, RotateCcw, UserRound } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { FrozenOutlet } from "@/components/motion/FrozenOutlet";
@@ -18,6 +18,7 @@ const accountSections = [
   { to: "/account", label: "Overview", Icon: LayoutDashboard, end: true },
   { to: "/account/orders", label: "Orders", Icon: Package },
   { to: "/account/returns", label: "Returns", Icon: RotateCcw },
+  { to: "/account/reviews", label: "Reviews", Icon: MessageSquareText },
   { to: "/account/profile", label: "Profile", Icon: UserRound },
   { to: "/account/security", label: "Password", Icon: KeyRound },
   { to: "/account/addresses", label: "Addresses", Icon: MapPin },
