@@ -323,6 +323,23 @@
 
 /* Loading skeletons (MASTER §6.11): --surface-2 base, --card at 60% sweeping
    left to right every 1.4s, replaced by a static fill under reduced motion. */
+/* v3: popovers (select, menus, live search). Radix waits for the exit animation before unmounting. */
+@keyframes ui-pop-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+}
+@keyframes ui-pop-out {
+  to { opacity: 0; transform: scale(0.98); }
+}
+.ui-pop[data-state="open"] {
+  animation: ui-pop-in var(--dur-toggle) var(--ease-out-expo);
+}
+.ui-pop[data-state="closed"] {
+  animation: ui-pop-out var(--dur-hover) var(--ease-standard) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-pop[data-state] { animation: none; }
+}
+
 @keyframes skeleton-sweep {
   from {
     transform: translateX(-100%);
