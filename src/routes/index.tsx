@@ -33,6 +33,12 @@ const AdminAuthentication = lazy(() => import("../page/admin/AdminAuthentication
 const NotFound = lazy(() => import("../page/NotFound"));
 const BooksPage = lazy(() => import("../pages/catalog/BooksPage"));
 const SearchPage = lazy(() => import("../pages/catalog/SearchPage"));
+const AuthorsPage = lazy(() => import("../pages/catalog/AuthorsPage"));
+const AuthorPage = lazy(() => import("../pages/catalog/AuthorPage"));
+const SeriesListPage = lazy(() => import("../pages/catalog/SeriesListPage"));
+const SeriesPage = lazy(() => import("../pages/catalog/SeriesPage"));
+const CategoryPage = lazy(() => import("../pages/catalog/CategoryPage"));
+const PublisherPage = lazy(() => import("../pages/catalog/PublisherPage"));
 // Development-only reference page for the UI kit; not part of production builds.
 const UiKit = import.meta.env.DEV ? lazy(() => import("../pages/dev/UiKit")) : null;
 
@@ -51,6 +57,12 @@ const AppRoutes = () => {
           <Route path="/browse" element={<Browse />} />
           <Route path="/books" element={<BooksPage />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/authors" element={<AuthorsPage />} />
+          <Route path="/authors/:id" element={<AuthorPage />} />
+          <Route path="/series" element={<SeriesListPage />} />
+          <Route path="/series/:id" element={<SeriesPage />} />
+          <Route path="/categories/:slug" element={<CategoryPage />} />
+          <Route path="/publishers/:id" element={<PublisherPage />} />
           <Route path="/books/:id" element={<BookDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/favorites" element={<Favorites />} />
