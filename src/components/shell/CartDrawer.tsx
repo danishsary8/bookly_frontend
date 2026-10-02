@@ -1,12 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
 import { MailCheck, ShoppingBag } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { cartQueries } from "@/api/endpoints/cart";
-import { useSession } from "@/api/session";
-import type { Customer } from "@/api/types";
 import { withNext } from "@/lib/forms";
-import { CoverThumb } from "@/components/CoverThumb";
 import { EmptyState } from "@/components/EmptyState";
+import { CartLineItem } from "@/features/cart/CartLineItem";
+import { useCartMutations, useUsableCart } from "@/features/cart/useCart";
 import { buttonVariants } from "@/components/ui/button";
 import { Drawer, DrawerBody, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { ErrorState } from "@/components/ui/error-state";
@@ -16,30 +13,16 @@ import { formatMoney, useCurrency } from "@/stores/currency";
 import { closeShellPanel, openShellPanel, useShellPanel } from "@/stores/shell";
 
 /*
- * MASTER §6.19 cart drawer, Phase 2 shell: every state (signed out, loading,
- * error, empty, lines) and the footer with subtotal, View cart and Checkout.
- * Lines are read-only here; quantity, remove and coupons come with the cart
- * phase, which reuses this drawer.
+ * MASTER §6.19 cart drawer: every state (signed out, unverified, loading, error,
+ * empty) and editable lines (quantity, remove with undo, the API's issues), then
+ * the footer with subtotal, View cart and Checkout (disabled while an issue
+ * blocks it). Coupons are applied on the cart page and at checkout.
  */
 
-const FORMAT_LABEL: Record<string, string> = {
-  hardcover: "Hardcover",
-  paperback: "Paperback",
-  ebook: "Ebook",
-  audiobook: "Audiobook",
-};
-
-/** The cart needs a signed-in customer with a verified email (the API answers 403 before that). */
-function useUsableCart() {
-  const session = useSession<Customer>("customer");
-  const verified = session?.user?.email_verified !== false;
-  const cart = useQuery({ ...cartQueries.cart(), enabled: Boolean(session) && verified });
-  return { session, verified, cart };
-}
 
 function CartBody() {
   const { session, verified, cart } = useUsableCart();
-  const currency = useCurrency();
+  const mutations = useCartMutations();
   const location = useLocation();
 
   if (!session) {
@@ -109,25 +92,9 @@ function CartBody() {
   }
 
   return (
-    <ul className="grid gap-5" aria-label="Items in your cart">
+    <ul className="grid gap-6" aria-label="Items in your cart">
       {items.map((line) => (
-        <li key={line.id} className="flex gap-3">
-          <CoverThumb src={line.cover_image_url} className="h-[72px] w-12" />
-          <div className="min-w-0 flex-1">
-            <Link
-              to={`/books/${line.book?.id}`}
-              onClick={closeShellPanel}
-              className="line-clamp-2 font-semibold leading-snug text-foreground underline-offset-4 hover:underline"
-            >
-              {line.book?.title}
-            </Link>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {FORMAT_LABEL[line.format ?? ""] ?? line.format} · Qty {line.quantity}
-            </p>
-            {line.issues?.length ? <p className="mt-1 text-sm text-warning">{line.issues[0]?.message}</p> : null}
-          </div>
-          <p className="shrink-0 text-sm font-semibold tabular-nums">{formatMoney(line.line_total_usd, line.line_total_khr, currency)}</p>
-        </li>
+        <CartLineItem key={line.id} line={line} compact busy={mutations.busyLineId === line.id} onQuantity={mutations.setQuantity} onRemove={mutations.remove} onNavigate={closeShellPanel} />
       ))}
     </ul>
   );
@@ -144,7 +111,9 @@ function CartSummary() {
         <span className="font-semibold">Subtotal</span>
         <span className="text-lg font-semibold tabular-nums">{formatMoney(cart.data.subtotal_usd, cart.data.subtotal_khr, currency)}</span>
       </div>
-      <p className="-mt-2 text-sm text-muted-foreground">Shipping and discounts are worked out at checkout.</p>
+      <p className="-mt-2 text-sm text-muted-foreground">
+        {cart.data.can_checkout === false ? "Fix the items marked above before checking out." : "Shipping and discounts are worked out at checkout."}
+      </p>
       <div className="grid grid-cols-2 gap-3">
         <Link to="/cart" onClick={closeShellPanel} className={cn(buttonVariants({ variant: "outline" }), "w-full")}>
           View cart
