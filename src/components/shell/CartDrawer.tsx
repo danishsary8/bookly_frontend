@@ -1,7 +1,7 @@
-import { MailCheck, ShoppingBag } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
-import { withNext } from "@/lib/forms";
+import { ShoppingBag } from "lucide-react";
+import { Link } from "react-router-dom";
 import { EmptyState } from "@/components/EmptyState";
+import { CartGate } from "@/features/cart/CartGate";
 import { CartLineItem } from "@/features/cart/CartLineItem";
 import { useCartMutations, useUsableCart } from "@/features/cart/useCart";
 import { buttonVariants } from "@/components/ui/button";
@@ -21,46 +21,8 @@ import { closeShellPanel, openShellPanel, useShellPanel } from "@/stores/shell";
 
 
 function CartBody() {
-  const { session, verified, cart } = useUsableCart();
+  const { cart } = useUsableCart();
   const mutations = useCartMutations();
-  const location = useLocation();
-
-  if (!session) {
-    return (
-      <EmptyState
-        icon={ShoppingBag}
-        headingLevel="h3"
-        title="Sign in to see your cart"
-        description="Your cart is saved to your account, so it follows you to any device."
-        action={
-          <Link to="/login" onClick={closeShellPanel} className={buttonVariants({ variant: "default" })}>
-            Sign in
-          </Link>
-        }
-        secondaryAction={
-          <Link to="/register" onClick={closeShellPanel} className={buttonVariants({ variant: "link" })}>
-            Create an account
-          </Link>
-        }
-      />
-    );
-  }
-
-  if (!verified) {
-    return (
-      <EmptyState
-        icon={MailCheck}
-        headingLevel="h3"
-        title="Verify your email to use your cart"
-        description="Enter the 6-digit code we emailed you when you signed up."
-        action={
-          <Link to={withNext("/verify-email", location.pathname + location.search)} onClick={closeShellPanel} className={buttonVariants({ variant: "default" })}>
-            Verify email
-          </Link>
-        }
-      />
-    );
-  }
 
   if (cart.isPending) {
     return (
@@ -146,7 +108,9 @@ export function CartDrawer() {
           <DrawerDescription className="sr-only">Books in your cart and the subtotal.</DrawerDescription>
         </DrawerHeader>
         <DrawerBody>
-          <CartBody />
+          <CartGate headingLevel="h3" onNavigate={closeShellPanel}>
+            <CartBody />
+          </CartGate>
         </DrawerBody>
         <CartSummary />
       </DrawerContent>
