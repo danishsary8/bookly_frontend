@@ -35,7 +35,7 @@ export function CurrencySwitch({ className }: { className?: string }) {
             key={option.value}
             value={option.value}
             className={cn(
-              "relative grid h-9 min-w-12 place-items-center rounded-md px-2 text-sm font-semibold tabular-nums transition-colors duration-150",
+              "relative grid h-9 min-w-14 place-items-center whitespace-nowrap rounded-md px-2.5 text-sm font-semibold tabular-nums transition-colors duration-150",
               "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card",
               active ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
             )}

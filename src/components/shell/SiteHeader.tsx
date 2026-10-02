@@ -42,15 +42,15 @@ export function SiteHeader() {
 
         <nav aria-label="Main" className="ml-2 hidden min-[900px]:block">
           <ul className="flex items-center gap-1">
-            {primaryNav.map((item) => {
+            {primaryNav.map((item, index) => {
               const active = isActivePath(location.pathname, item.to);
               return (
-                <li key={item.to}>
+                <li key={item.to} className={cn(index >= 3 && "hidden xl:block")}>
                   <NavLink
                     to={item.to}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "relative inline-flex h-11 items-center rounded-md px-3 text-[15px] font-medium transition-colors duration-150",
+                      "relative inline-flex h-11 items-center whitespace-nowrap rounded-md px-3 text-[15px] font-medium transition-colors duration-150",
                       "outline-none focus-visible:ring-2 focus-visible:ring-ring",
                       active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                     )}
