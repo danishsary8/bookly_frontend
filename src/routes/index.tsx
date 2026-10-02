@@ -7,7 +7,7 @@ import ClientLayout from "../layouts/ClientLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import CustomerRoute from "./CustomerRoute";
 
-const Home = lazy(() => import("../page/client/Home"));
+const Home = lazy(() => import("../pages/HomePage"));
 const Browse = lazy(() => import("../page/client/Browse"));
 const Favorites = lazy(() => import("../page/client/Favorites"));
 const Cart = lazy(() => import("../page/client/Cart"));
