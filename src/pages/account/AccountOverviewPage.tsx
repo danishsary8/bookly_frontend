@@ -11,26 +11,30 @@ import { buttonVariants } from "@/components/ui/button";
 import { InlineError } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AccountSection } from "@/features/account/AccountSection";
+import { orderDate } from "@/features/orders/format";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { formatMoney, useCurrency } from "@/stores/currency";
-
-const dateFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
 function RecentOrder({ order }: { order: Order }) {
   const currency = useCurrency();
   return (
-    <li className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-border py-4 first:border-t-0">
-      <div className="grid gap-0.5">
-        <p className="font-semibold tabular-nums">{order.order_number}</p>
-        <p className="text-sm text-muted-foreground">
-          {order.placed_at ? dateFormat.format(new Date(order.placed_at)) : null}
-          {order.item_count ? ` · ${order.item_count} ${order.item_count === 1 ? "item" : "items"}` : null}
-        </p>
-      </div>
-      <div className="flex items-center gap-4">
-        <OrderStatusBadge status={order.status} />
-        <p className="min-w-20 text-right font-semibold tabular-nums">{formatMoney(order.total_usd, order.total_khr, currency)}</p>
-      </div>
+    <li className="border-t border-border first:border-t-0">
+      <Link
+        to={`/account/orders/${order.id}`}
+        className="-mx-2 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 rounded-md px-2 py-4 outline-none transition-colors duration-150 hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span className="grid gap-0.5">
+          <span className="font-semibold tabular-nums">{order.order_number}</span>
+          <span className="text-sm text-muted-foreground">
+            {orderDate(order.placed_at)}
+            {order.item_count ? ` · ${order.item_count} ${order.item_count === 1 ? "item" : "items"}` : null}
+          </span>
+        </span>
+        <span className="flex items-center gap-4">
+          <OrderStatusBadge status={order.status} />
+          <span className="min-w-20 text-right font-semibold tabular-nums">{formatMoney(order.total_usd, order.total_khr, currency)}</span>
+        </span>
+      </Link>
     </li>
   );
 }
@@ -88,9 +92,16 @@ export default function AccountOverviewPage() {
       </ul>
 
       <section aria-labelledby="recent-orders" className="rounded-xl border border-border bg-card p-5 sm:p-6">
-        <h2 id="recent-orders" className="font-display text-[1.563rem] leading-tight">
-          Recent orders
-        </h2>
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h2 id="recent-orders" className="font-display text-[1.563rem] leading-tight">
+            Recent orders
+          </h2>
+          {orders.data?.data.length ? (
+            <Link to="/account/orders" className="text-sm font-semibold text-primary underline-offset-4 hover:underline">
+              See all orders
+            </Link>
+          ) : null}
+        </div>
         <div className="mt-4">
           {orders.isPending ? (
             <SkeletonGroup label="Loading orders…" className="grid gap-4">
