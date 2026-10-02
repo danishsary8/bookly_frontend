@@ -24,7 +24,7 @@ export function SiteFooter({ className }: { className?: string }) {
         </div>
         {footerNav.map((column) => (
           <nav key={column.title} aria-labelledby={`footer-${column.title}`}>
-            <h2 id={`footer-${column.title}`} className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+            <h2 id={`footer-${column.title}`} className="font-sans text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
               {column.title}
             </h2>
             <ul className="mt-3 grid gap-0.5">
