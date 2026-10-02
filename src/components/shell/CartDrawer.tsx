@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cartQueries } from "@/api/endpoints/cart";
 import { useSession } from "@/api/session";
+import { CoverThumb } from "@/components/CoverThumb";
 import { EmptyState } from "@/components/EmptyState";
 import { buttonVariants } from "@/components/ui/button";
 import { Drawer, DrawerBody, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -85,13 +86,7 @@ function CartBody() {
     <ul className="grid gap-5" aria-label="Items in your cart">
       {items.map((line) => (
         <li key={line.id} className="flex gap-3">
-          <span className="grid h-[72px] w-12 shrink-0 place-items-center overflow-hidden rounded-[2px] bg-surface-2">
-            {line.cover_image_url ? (
-              <img src={line.cover_image_url} alt="" className="size-full object-cover" loading="lazy" />
-            ) : (
-              <BookOpen className="size-5 text-muted-foreground" aria-hidden="true" />
-            )}
-          </span>
+          <CoverThumb src={line.cover_image_url} className="h-[72px] w-12" />
           <div className="min-w-0 flex-1">
             <Link
               to={`/books/${line.book?.id}`}

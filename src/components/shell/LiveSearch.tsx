@@ -1,9 +1,10 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, BookOpen, Search, X } from "lucide-react";
+import { ArrowRight, Search, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import type { BookCard } from "@/api/types";
+import { CoverThumb } from "@/components/CoverThumb";
 import { SkeletonRow } from "@/components/ui/skeleton";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
@@ -235,13 +236,7 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
                 onClick={() => book.id && go(`/books/${book.id}`)}
                 className={cn("flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2", active === index && "bg-secondary")}
               >
-                <span className="grid h-12 w-8 shrink-0 place-items-center overflow-hidden rounded-[2px] bg-surface-2">
-                  {book.cover_image_url ? (
-                    <img src={book.cover_image_url} alt="" className="size-full object-cover" loading="lazy" />
-                  ) : (
-                    <BookOpen className="size-4 text-muted-foreground" aria-hidden="true" />
-                  )}
-                </span>
+                <CoverThumb src={book.cover_image_url} className="h-12 w-8" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[15px] text-foreground">
                     {highlightParts(book.title ?? "", term).map((part, i) =>
