@@ -34,7 +34,7 @@ export function AccountLayout() {
       </p>
       <p className="mt-2 text-lg text-muted-foreground">{firstName ? `Signed in as ${session?.user?.email}` : " "}</p>
 
-      <div className="mt-6 grid gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12">
         <nav aria-label="Account" className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
           <ul className="no-scrollbar -mx-4 flex gap-1 overflow-x-auto border-b border-border px-4 lg:mx-0 lg:grid lg:border-b-0 lg:px-0">
             {accountSections.map(({ to, label, Icon, ...rest }) => (
