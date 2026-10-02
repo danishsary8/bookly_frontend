@@ -27,23 +27,22 @@ const focusQuietly = (element: HTMLElement) => {
 export function PageTransition({ children, mainId = "content" }: { children: ReactNode; mainId?: string }) {
   const location = useLocation();
   const navigationType = useNavigationType();
-  const firstRoute = useRef(true);
-  const firstPaint = useRef(true);
+  // Last pathname each effect acted on. Comparing paths (rather than a "first run" flag) keeps the
+  // landing page untouched even when development StrictMode runs the effects twice, and ignores
+  // search-param changes such as catalogue filters.
+  const scrolledFor = useRef(location.pathname);
+  const focusedFor = useRef(location.pathname);
 
   useLayoutEffect(() => {
-    if (firstPaint.current) {
-      firstPaint.current = false;
-      return;
-    }
+    if (scrolledFor.current === location.pathname) return;
+    scrolledFor.current = location.pathname;
     if (location.hash || navigationType === "POP") return;
     window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
   }, [location.pathname, location.hash, navigationType]);
 
   useEffect(() => {
-    if (firstRoute.current) {
-      firstRoute.current = false;
-      return;
-    }
+    if (focusedFor.current === location.pathname) return;
+    focusedFor.current = location.pathname;
     if (location.hash) return;
 
     const main = document.getElementById(mainId);

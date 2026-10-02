@@ -1156,3 +1156,9 @@
     color: var(--gold);
   }
 }
+
+/* Headings and <main> receive focus after a route change so screen readers announce the new page
+   (PageTransition). They are not controls, so no focus ring is drawn on them. */
+:is(h1, h2, main)[tabindex="-1"]:focus {
+  outline: none;
+}

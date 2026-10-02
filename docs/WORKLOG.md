@@ -38,3 +38,24 @@ Audit of V1: React 19 + TypeScript + Vite 7 + Tailwind 4, ~14k lines, 13 storefr
 - [x] Tests: 22 new (UI kit, shell, toast store, pagination and highlight helpers, nav). Totals: 63 pass, 3 live-API tests skipped by default.
 - [x] Verified: lint (0 errors), typecheck, tests, build; browser pass against the local API with demo data at 1366/1024/900/375 px, both themes, reduced motion: dialog focus trap + return focus, confirm dialog busy state, drawer scrim close, select and tabs by keyboard, pagination, toasts (error persists), KHR prices, live search results and keyboard, signed-in header ("Cart, 2 items"), cart drawer lines, account menu, mobile menu closes on navigation, no horizontal scroll at 375 px.
 - Known until later phases: header and footer links to `/books`, `/authors`, `/series`, `/search`, `/account/*` and content pages show the 404 page until those pages are built (phase 3 onward). Sign-in state comes from the V2 session, which the V1 login page doesn't write; phase 4 rebuilds login. Main bundle 668 kB (code splitting in phase 10).
+
+## Phase 3 — Storefront catalogue (branch `feature/storefront-catalog`)
+- [x] Helpers: `src/lib/catalog.ts` (filters ⇄ URL, sort and format labels; malformed values are dropped before reaching the API), recently viewed store (last 12 books in localStorage, synced across tabs), `useDocumentTitle`.
+- [x] Catalogue components (`src/components/catalog/`): `BookCover` (titled placeholder when there's no image), V2 `BookCard` (MASTER §6.12, compact rating, "from" price, New / Out of stock badges), `BookGrid`, `BookShelf` (scroll-snap row with prev/next), `PageHeader`, `CatalogFilters`, `ActiveFilters`, `CatalogBrowser`, `FormatPicker`, `ReviewsSection`, `AuthorAvatar`, `NotFoundState`, cover morph helper.
+- [x] Add to cart and wishlist work from every card and the book page (`useCatalogActions`). Cards add the cheapest format in stock; the wishlist updates optimistically. Signed out → a toast with Sign in (`/login?next=…`).
+- [x] Pages (`src/pages/`): Home (hero with BlurText, CountUp stats and cover slideshow, service promises, new arrivals, categories, best rated, series spotlight, authors, recently viewed), `/books` (filters in a sidebar or a phone bottom sheet, chips, sort, pagination, all in the URL), `/search`, `/books/:id` (format picker, price per format, quantity, add to cart, wishlist, description/details/reviews tabs, series and author shelves, recently viewed, sticky purchase bar on phones, not-found state), `/authors`, `/authors/:id`, `/series`, `/series/:id` (reading order), `/categories/:slug`, `/publishers/:id`.
+- [x] Removed V1 Home, Browse and BookDetail, and the components only they used (sample book list, combobox and its inputs, `@base-ui/react`). `/browse?search=x` → `/search?q=x`, `/browse` → `/books`.
+- [x] Fixes found in the browser pass:
+  - The page fading out of a route transition re-rendered with the new URL, so the next page existed twice for 150 ms (two h1s, double requests). `FrozenOutlet` keeps each layer on its own route.
+  - The leaving page's title cleanup overwrote the new title.
+  - StrictMode's double effects focused the landing page's h1 (now compared by pathname, which also stops filter changes from scrolling to the top).
+  - The sticky purchase bar missed fast scrolls (scroll check instead of IntersectionObserver) and covered the footer.
+  - A redirect inside the animated layout re-ran with the new URL.
+  - Mobile toolbar overflow; truncated sort select; serif footer headings.
+- [x] Tests: 85 pass (new: catalogue filters/URL, recently viewed, book meta, BooksPage filters/empty/sign-in prompt, book page format and cart flow and not-found, /browse redirect).
+- [x] Verified: lint (0 errors), typecheck, tests, build; browser pass against the local API with demo data at 1366 and 375 px and in dark mode. Covered: filters, sort, Back/Forward, page past the end, search, add to cart (signed out and in, including the API's out-of-stock message), wishlist toggle, format switch, tabs, reviews, shelves, recently viewed, every not-found state, the Home hero keyboard controls, no horizontal scroll.
+- Known:
+  - Covers come from picsum.photos in the demo data, which this sandbox can't reach, so screenshots show the placeholder cover.
+  - Quantity isn't capped by stock (the API exposes only in/out of stock); the API's "Only 1 left" message is shown instead.
+  - `npm audit` reports a new moderate advisory in Vitest 3 (dev-only test runner, also on main); fixing needs Vitest 5, left for a separate chore.
+  - Main bundle 673 kB (code splitting in phase 10).

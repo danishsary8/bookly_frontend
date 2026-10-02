@@ -6,16 +6,16 @@ import AdminLayout from "../layouts/AdminLayout";
 import ClientLayout from "../layouts/ClientLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import CustomerRoute from "./CustomerRoute";
+import LegacyBrowseRedirect from "./LegacyBrowseRedirect";
 
-const Home = lazy(() => import("../page/client/Home"));
-const Browse = lazy(() => import("../page/client/Browse"));
+const Home = lazy(() => import("../pages/HomePage"));
 const Favorites = lazy(() => import("../page/client/Favorites"));
 const Cart = lazy(() => import("../page/client/Cart"));
 const Authentication = lazy(() => import("../page/client/Authentication"));
 const OtpVerification = lazy(() => import("../page/client/OtpVerification"));
 const ForgotPassword = lazy(() => import("../page/client/ForgotPassword"));
 const ResetPassword = lazy(() => import("../page/client/ResetPassword"));
-const loadBookDetail = () => import("../page/client/BookDetail");
+const loadBookDetail = () => import("../pages/catalog/BookDetailPage");
 const BookDetail = lazy(loadBookDetail);
 const Checkout = lazy(() => import("../page/client/Checkout"));
 const Profile = lazy(() => import("../page/client/Profile"));
@@ -31,6 +31,14 @@ const Users = lazy(() => import("../page/admin/Users"));
 const Settings = lazy(() => import("../page/admin/Settings"));
 const AdminAuthentication = lazy(() => import("../page/admin/AdminAuthentication"));
 const NotFound = lazy(() => import("../page/NotFound"));
+const BooksPage = lazy(() => import("../pages/catalog/BooksPage"));
+const SearchPage = lazy(() => import("../pages/catalog/SearchPage"));
+const AuthorsPage = lazy(() => import("../pages/catalog/AuthorsPage"));
+const AuthorPage = lazy(() => import("../pages/catalog/AuthorPage"));
+const SeriesListPage = lazy(() => import("../pages/catalog/SeriesListPage"));
+const SeriesPage = lazy(() => import("../pages/catalog/SeriesPage"));
+const CategoryPage = lazy(() => import("../pages/catalog/CategoryPage"));
+const PublisherPage = lazy(() => import("../pages/catalog/PublisherPage"));
 // Development-only reference page for the UI kit; not part of production builds.
 const UiKit = import.meta.env.DEV ? lazy(() => import("../pages/dev/UiKit")) : null;
 
@@ -44,9 +52,18 @@ const AppRoutes = () => {
   return (
     <Suspense fallback={<div className="section-wrap py-10"><Loading /></div>}>
       <Routes>
+        {/* Redirects sit outside the layout so the page transition never re-runs them. */}
+        <Route path="/browse" element={<LegacyBrowseRedirect />} />
         <Route element={<ClientLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/browse" element={<Browse />} />
+          <Route path="/books" element={<BooksPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/authors" element={<AuthorsPage />} />
+          <Route path="/authors/:id" element={<AuthorPage />} />
+          <Route path="/series" element={<SeriesListPage />} />
+          <Route path="/series/:id" element={<SeriesPage />} />
+          <Route path="/categories/:slug" element={<CategoryPage />} />
+          <Route path="/publishers/:id" element={<PublisherPage />} />
           <Route path="/books/:id" element={<BookDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/favorites" element={<Favorites />} />

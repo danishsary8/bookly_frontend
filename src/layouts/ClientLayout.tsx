@@ -1,9 +1,9 @@
-import { Outlet } from "react-router-dom";
+import { FrozenOutlet } from "../components/motion/FrozenOutlet";
 import { SiteShell } from "../components/shell/SiteShell";
 
 const ClientLayout = () => (
     <SiteShell>
-        <Outlet />
+        <FrozenOutlet />
     </SiteShell>
 );
 
