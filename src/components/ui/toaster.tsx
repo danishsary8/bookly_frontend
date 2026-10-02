@@ -95,7 +95,9 @@ function Toaster() {
   const toasts = useToasts()
   return (
     <section aria-label="Notifications" className="pointer-events-none fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-(--z-toast) sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[400px]">
-      <ol className="flex flex-col gap-3">
+      {/* A persistent live region: announced reliably, and kept visible to assistive tech while a
+          dialog or drawer is open (Radix hides everything else, but leaves [aria-live] alone). */}
+      <ol aria-live="polite" className="flex flex-col gap-3">
         <AnimatePresence initial={false}>
           {toasts.map((t) => (
             <ToastCard key={t.id} toast={t} />
