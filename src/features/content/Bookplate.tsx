@@ -40,9 +40,9 @@ export function Bookplate({ eyebrow, title, lead, facts, children, className }: 
             )}
           >
             {facts.map((fact, i) => (
-              <div key={i} className="grid grid-cols-[5.5rem_minmax(0,1fr)] items-baseline gap-4 py-3 text-left sm:flex sm:flex-col sm:items-center sm:gap-2 sm:px-4 sm:py-0 sm:text-center">
+              <div key={i} className="grid grid-cols-[7.5rem_minmax(0,1fr)] items-baseline gap-4 py-3 text-left sm:flex sm:flex-col sm:items-center sm:gap-2 sm:px-4 sm:py-0 sm:text-center">
                 <dt className="order-2 text-[15px] leading-6 text-on-lapis-muted sm:max-w-[22ch]">{fact.label}</dt>
-                <dd className="order-1 font-display text-[1.75rem] leading-none tabular-nums text-gold sm:text-[2.25rem]">{fact.value}</dd>
+                <dd className="order-1 whitespace-nowrap font-display text-[1.75rem] leading-none tabular-nums text-gold sm:text-[2.25rem]">{fact.value}</dd>
               </div>
             ))}
           </dl>
