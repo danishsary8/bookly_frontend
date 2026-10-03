@@ -32,6 +32,7 @@ export default function StaffTwoFactorSetupPage() {
   const [codeError, setCodeError] = useState<string | undefined>();
   const [formError, setFormError] = useState<string | null>(null);
   const started = useRef(false);
+  const codeRef = useRef<HTMLDivElement>(null);
 
   const start = useMutation({
     mutationFn: staffAuthApi.setupTwoFactor,
@@ -61,7 +62,10 @@ export default function StaffTwoFactorSetupPage() {
     onError: (error) => {
       setCode("");
       const apiError = ApiError.from(error);
-      if (apiError.status === 422) setCodeError("That code didn't work. Check the app shows Bookly and use the code showing now.");
+      if (apiError.status === 422) {
+        setCodeError("That code didn't work. Check the app shows Bookly and use the code showing now.");
+        requestAnimationFrame(() => codeRef.current?.querySelector("input")?.focus());
+      }
       else setFormError(apiError.message);
     },
   });
@@ -119,7 +123,9 @@ export default function StaffTwoFactorSetupPage() {
         <li className="grid gap-3">
           <p className="font-semibold">2. Enter the 6-digit code it shows</p>
           <form onSubmit={submit} noValidate className="grid gap-5">
-            <OtpInput value={code} onChange={setCode} label="Authentication code" error={codeError} disabled={!setup || confirm.isPending} />
+            <div ref={codeRef}>
+              <OtpInput value={code} onChange={setCode} label="Authentication code" error={codeError} disabled={!setup || confirm.isPending} />
+            </div>
             <Button type="submit" size="lg" className="w-full" loading={confirm.isPending} disabled={!setup}>
               Turn on and continue
             </Button>

@@ -30,6 +30,7 @@ export default function StaffLoginPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const alertRef = useRef<HTMLDivElement>(null);
+  const codeRef = useRef<HTMLDivElement>(null);
 
   const { register, handleSubmit, setError, resetField, formState } = useForm<LoginValues>({ resolver: zodResolver(loginSchema) });
   const { errors, isSubmitting } = formState;
@@ -70,7 +71,10 @@ export default function StaffLoginPage() {
     } catch (error) {
       const apiError = ApiError.from(error);
       setCode("");
-      if (apiError.status === 422) setCodeError("That code didn't work. Codes change every 30 seconds: use the one showing now.");
+      if (apiError.status === 422) {
+        setCodeError("That code didn't work. Codes change every 30 seconds: use the one showing now.");
+        requestAnimationFrame(() => codeRef.current?.querySelector("input")?.focus());
+      }
       else if (apiError.kind === "unauthenticated" || apiError.status === 429) {
         // Expired attempt or too many wrong codes: start again from the password.
         setChallenge(null);
@@ -86,7 +90,9 @@ export default function StaffLoginPage() {
       <StaffAuthFrame title="Enter your code" lead="Open your authenticator app and enter the 6-digit code for Bookly.">
         <form onSubmit={(event) => void submitCode(event)} noValidate className="grid gap-5">
           {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
-          <OtpInput value={code} onChange={setCode} label="Authentication code" error={codeError} autoFocus disabled={verifying} />
+          <div ref={codeRef}>
+            <OtpInput value={code} onChange={setCode} label="Authentication code" error={codeError} autoFocus disabled={verifying} />
+          </div>
           <Button type="submit" size="lg" className="w-full" loading={verifying}>
             {verifying ? "Checking…" : "Verify and sign in"}
           </Button>
