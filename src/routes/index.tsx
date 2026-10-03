@@ -8,6 +8,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import LegacyBrowseRedirect from "./LegacyBrowseRedirect";
 import LegacyOrderRedirect from "./LegacyOrderRedirect";
 import { GuestOnly, RequireCustomer, RequireVerified } from "./guards";
+import { RequireStaff, RequireStaffSetup, StaffGuestOnly } from "./adminGuards";
 
 const Home = lazy(() => import("../pages/HomePage"));
 const CartPage = lazy(() => import("../pages/cart/CartPage"));
@@ -32,6 +33,11 @@ const ReturnRequestPage = lazy(() => import("../pages/account/ReturnRequestPage"
 const ReturnsPage = lazy(() => import("../pages/account/ReturnsPage"));
 const ReturnDetailPage = lazy(() => import("../pages/account/ReturnDetailPage"));
 const ReviewsPage = lazy(() => import("../pages/account/ReviewsPage"));
+const StaffLoginPage = lazy(() => import("../pages/admin/auth/StaffLoginPage"));
+const StaffTwoFactorSetupPage = lazy(() => import("../pages/admin/auth/StaffTwoFactorSetupPage"));
+const StaffResetPasswordPage = lazy(() => import("../pages/admin/auth/StaffResetPasswordPage"));
+const AdminShell = lazy(() => import("../features/admin/AdminShell").then((m) => ({ default: m.AdminShell })));
+const DashboardPage = lazy(() => import("../pages/admin/DashboardPage"));
 const Dashboard = lazy(() => import("../page/admin/Dashboard"));
 const Catalog = lazy(() => import("../page/admin/Catalog"));
 const Promotions = lazy(() => import("../page/admin/Promotions"));
@@ -125,6 +131,19 @@ const AppRoutes = () => {
         </Route>
         <Route element={<RequireCustomer />}>
           <Route path="/verify-email" element={<VerifyEmailPage />} />
+        </Route>
+        {/* Staff (V2 admin). */}
+        <Route element={<StaffGuestOnly />}>
+          <Route path="/admin/login" element={<StaffLoginPage />} />
+          <Route path="/admin/reset-password" element={<StaffResetPasswordPage />} />
+        </Route>
+        <Route element={<RequireStaffSetup />}>
+          <Route path="/admin/two-factor" element={<StaffTwoFactorSetupPage />} />
+        </Route>
+        <Route element={<RequireStaff />}>
+          <Route path="/admin" element={<AdminShell />}>
+            <Route index element={<DashboardPage />} />
+          </Route>
         </Route>
         {/* V1 sent password-reset codes to /verify-otp. */}
         <Route path="/verify-otp" element={<Navigate to="/reset-password" replace />} />
