@@ -62,7 +62,7 @@ export default function ContactPage() {
                   </span>
                   <span className="grid min-w-0 gap-0.5">
                     <span className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{label}</span>
-                    <span className="truncate text-[1.25rem] font-semibold tabular-nums text-foreground underline-offset-4 group-hover:text-primary group-hover:underline">
+                    <span className="text-[1.25rem] font-semibold [overflow-wrap:anywhere] tabular-nums text-foreground underline-offset-4 group-hover:text-primary group-hover:underline">
                       {value}
                     </span>
                     <span className="text-[15px] text-muted-foreground">{detail}</span>
