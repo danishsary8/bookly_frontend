@@ -335,3 +335,4 @@ Full-bleed lapis everywhere in Daylight · more than one vermilion CTA per view 
 ## 9. Page overrides
 - `pages/header.md`: storefront header (44px search field, no elevation on scroll).
 - `pages/content.md`: help and legal pages and the 404 (the bookplate, its frame, the hero surface on content pages, 17px article text).
+- `pages/admin.md`: the staff area (no page transitions or showpieces, sidebar frame, dense tables, the dashboard chart, staff sign-in).
