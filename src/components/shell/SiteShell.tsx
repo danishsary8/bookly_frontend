@@ -6,6 +6,7 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { closeShellPanel } from "@/stores/shell";
 import { CartDrawer } from "./CartDrawer";
 import { MobileMenu } from "./MobileMenu";
+import { OfflineBanner } from "./OfflineBanner";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 
@@ -40,6 +41,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         Skip to content
       </a>
       <SiteHeader />
+      <OfflineBanner />
       <main id="content" tabIndex={-1} className="relative flex-1 outline-none">
         <PageTransition>
           <RouteErrorBoundary>
