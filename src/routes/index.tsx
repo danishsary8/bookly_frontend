@@ -38,6 +38,9 @@ const StaffTwoFactorSetupPage = lazy(() => import("../pages/admin/auth/StaffTwoF
 const StaffResetPasswordPage = lazy(() => import("../pages/admin/auth/StaffResetPasswordPage"));
 const AdminShell = lazy(() => import("../features/admin/AdminShell").then((m) => ({ default: m.AdminShell })));
 const DashboardPage = lazy(() => import("../pages/admin/DashboardPage"));
+const AdminBooksPage = lazy(() => import("../pages/admin/BooksPage"));
+const BookEditPage = lazy(() => import("../pages/admin/BookEditPage"));
+const LookupPage = lazy(() => import("../pages/admin/LookupPage"));
 const Dashboard = lazy(() => import("../page/admin/Dashboard"));
 const Catalog = lazy(() => import("../page/admin/Catalog"));
 const Promotions = lazy(() => import("../page/admin/Promotions"));
@@ -143,6 +146,13 @@ const AppRoutes = () => {
         <Route element={<RequireStaff />}>
           <Route path="/admin" element={<AdminShell />}>
             <Route index element={<DashboardPage />} />
+            <Route path="books" element={<AdminBooksPage />} />
+            <Route path="books/new" element={<BookEditPage />} />
+            <Route path="books/:id" element={<BookEditPage key="edit" />} />
+            <Route path="authors" element={<LookupPage key="authors" kind="authors" />} />
+            <Route path="categories" element={<LookupPage key="categories" kind="categories" />} />
+            <Route path="publishers" element={<LookupPage key="publishers" kind="publishers" />} />
+            <Route path="series" element={<LookupPage key="series" kind="series" />} />
           </Route>
         </Route>
         {/* V1 sent password-reset codes to /verify-otp. */}
