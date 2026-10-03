@@ -1,34 +1,30 @@
-# Next step — Phase 8: content pages
+# Next step — Phase 9: admin panel
 
-Branch: `feature/content-pages` (from `main` after `feature/orders-returns-reviews` is merged).
+Branch: `feature/admin-panel` (from `main` after `feature/content-pages` is merged).
 
 ## Goal
-Every link in the footer and header leads to a real, on-brand page, and errors are handled gracefully.
+Staff run the shop from `/admin` on API v2: sign in with two-factor authentication, see how the shop is doing, and manage the catalogue, orders, returns, reviews, coupons, customers, staff, exchange rates and the audit log. Every screen in docs/V2_PLAN.md "Staff / admin" is rebuilt, then the V1 admin (`src/page/admin/*`, `AdminLayout`, the old services and `sweetalert2`) is deleted.
 
-| Route | Page |
-| --- | --- |
-| `/about` | Who Bookly is, what it sells, why (short, editorial) |
-| `/faq` | Accordion of common questions (orders, cash on delivery, delivery, returns, accounts, reviews) |
-| `/shipping` | Delivery areas and times, the flat fee (API: `SHIPPING_FLAT_FEE`, $2.00), digital books need no delivery |
-| `/returns-policy` | 14-day window after delivery (API: `RETURN_WINDOW_DAYS`), physical books only, how to request one in the account |
-| `/privacy`, `/terms` | Legal pages with a last-updated date |
-| `/contact` | How to reach the shop |
-| 404 | V2 not-found page (replaces V1 `src/page/NotFound.tsx`) |
-| 500 / offline | Friendly error page for crashes (error boundary) and a "you're offline" state |
+## Suggested split (decide at the start of the session)
+Phase 9 has 14 screens plus staff auth, more than any earlier phase. Two branches keep each PR reviewable:
+- **9a `feature/admin-core`**: staff sign-in, 2FA setup and challenge, forgot/reset password, the admin shell (sidebar, header bell for low-stock notifications, role-aware navigation), dashboard (summary + sales chart), books with formats and stock, and the lookups (authors, categories, publishers, series).
+- **9b `feature/admin-operations`**: orders (status changes, CSV export), returns (approve, reject, refund), reviews (hide/show), coupons, customers (stats, deactivate), staff members (invite, roles, deactivate, reset 2FA), exchange rates, audit log; then delete the V1 admin and `sweetalert2`.
 
 ## Notes
-- Questions to ask the owner before writing: the real contact details (email, phone, Telegram, address, opening hours); whether `/contact` should have a form (the API has no contact endpoint, so a form would need backend work or a `mailto:`); delivery areas and times; and whether to draft the privacy/terms text as placeholders marked for legal review.
-- Facts that the API enforces (fee, window, physical-only returns, one review per book after delivery) must match the backend config; don't invent policies.
-- Content pages share one layout (MASTER typography, max reading width, table of contents on long pages). Use `PageHeader` and set page titles.
-- Delete V1 `NotFound` and anything `orphans` then shows as unused.
-- Chores when convenient: drop `sweetalert2` with the V1 admin (phase 9); upgrade Vitest to 5 for the `@vitest/mocker` advisory.
+- API: `/staff/*` (see the route list in bookly_backend_v2/routes/api.php). Staff tokens are separate from customer tokens (`setSession("staff", …)` in the Phase 1 session store).
+- Roles: check what the API allows per role and hide what a member can't do (the API still enforces it).
+- Design: admin is dense and quiet: tables, filters in the URL, the same tokens and components as the shop; no bookplates or hero surfaces. Charts follow MASTER (lapis series, gold only on lapis). Write `design-system/bookly/pages/admin.md` for any admin-specific deviation.
+- Destructive actions (delete book, deactivate, reject, refund) always confirm and name the thing.
+- Before launch (not this phase): replace the placeholders in `src/content/shop.ts` and have the Privacy/Terms drafts reviewed.
+- Local runs: start Vite with `VITE_API_BASE_URL=http://localhost:8000/api/v1`, otherwise it uses the live API from `.env`.
+- Chore when convenient: upgrade Vitest to 5 for the `@vitest/mocker` advisory.
 
 ## Paste this into the next session
 ```
-Project: Bookly Frontend V2 (React 19 + TS + Vite + Tailwind 4), repo danishsary8/bookly_frontend, upgrading V1 in place against the Laravel API v2 (live: https://bookly-api-zasc.onrender.com/api/v1; local: php artisan serve in bookly_backend_v2 with DemoSeeder data; local mail goes to storage/logs/laravel.log via the database queue).
-Read first: CLAUDE.md, docs/V2_PLAN.md, docs/WORKLOG.md, docs/NEXT_STEP.md, design-system/bookly/MASTER.md (v3).
-Status: Phases 0-7 merged (groundwork, typed API layer, UI kit + motion + site shell, storefront catalogue, customer auth, account area, cart + checkout, orders with timeline and cancel, returns, reviews).
-Next: Phase 8 content pages on branch feature/content-pages, as listed in docs/NEXT_STEP.md: about, FAQ, shipping & delivery, returns policy, privacy, terms, contact, and V2 404 / 500 / offline pages. Ask me first for the contact details, delivery areas and times, whether contact needs a form, and how to handle the legal text. Rebuild and then delete the V1 NotFound page. Ask me before any decision not covered by V2_PLAN or MASTER.
+Project: Bookly Frontend V2 (React 19 + TS + Vite + Tailwind 4), repo danishsary8/bookly_frontend, upgrading V1 in place against the Laravel API v2 (live: https://bookly-api-zasc.onrender.com/api/v1; local: php artisan serve in bookly_backend_v2 with DemoSeeder data, Vite started with VITE_API_BASE_URL=http://localhost:8000/api/v1; local mail goes to storage/logs/laravel.log via the database queue).
+Read first: CLAUDE.md, docs/V2_PLAN.md, docs/WORKLOG.md, docs/NEXT_STEP.md, design-system/bookly/MASTER.md (v3) and design-system/bookly/pages/*.md.
+Status: Phases 0-8 merged (groundwork, typed API layer, UI kit + motion + site shell, storefront catalogue, customer auth, account area, cart + checkout, orders/returns/reviews, content pages with the bookplate design, 404 and offline states).
+Next: Phase 9 admin panel, as listed in docs/NEXT_STEP.md and the "Staff / admin" table in docs/V2_PLAN.md. First ask me whether to split it into 9a (staff auth with 2FA, admin shell, dashboard, books, lookups) and 9b (orders, returns, reviews, coupons, customers, staff, exchange rates, audit log, delete V1 admin). Rebuild and then delete the V1 admin pages. Ask me before any decision not covered by V2_PLAN or MASTER.
 Rules: small commits, human-style messages, no AI/tool names anywhere in git; no payment-provider work (card and KHQR stay "coming soon"); don't modify backend migrations or existing feature code without asking; I merge the PR myself. Verify with lint, typecheck, tests, build and a browser pass against the API before pushing. Update docs/WORKLOG.md as you go and docs/NEXT_STEP.md at the end.
 Output: short "what was done / what's next" summary plus a paste-ready prompt for the next session.
 ```

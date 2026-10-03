@@ -10,6 +10,11 @@ import { ErrorState } from "@/components/ui/error-state";
  */
 
 const CRASH = new ApiError({ kind: "unexpected", message: "This page hit a problem while loading. Please try again." });
+const OFFLINE = new ApiError({ kind: "network", message: "You're offline." });
+
+// A lazily loaded page whose code can't be downloaded (offline, or a deploy replaced the files).
+const isLoadFailure = (error: Error) =>
+  /dynamically imported module|Importing a module script failed|Loading chunk|error loading dynamically/i.test(error.message);
 
 type Props = { children: ReactNode; resetKey?: string };
 type State = { error: Error | null };
@@ -33,8 +38,9 @@ class Boundary extends Component<Props, State> {
     if (this.state.error) {
       return (
         <ErrorState
-          error={CRASH}
-          onRetry={() => this.setState({ error: null })}
+          error={isLoadFailure(this.state.error) && !navigator.onLine ? OFFLINE : CRASH}
+          // React.lazy keeps a failed import, so only a reload fetches the page's code again.
+          onRetry={() => (isLoadFailure(this.state.error!) ? window.location.reload() : this.setState({ error: null }))}
           className="py-24"
         />
       );
