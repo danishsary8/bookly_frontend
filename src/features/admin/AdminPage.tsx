@@ -5,7 +5,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 export function AdminPage({ title, lead, actions, back, children }: { title: string; lead?: ReactNode; actions?: ReactNode; back?: ReactNode; children: ReactNode }) {
   useDocumentTitle(`${title} · Staff`);
   return (
-    <div className="mx-auto grid w-full max-w-[1200px] gap-6">
+    <div className="mx-auto grid w-full max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-6">
       <div className="grid gap-3">
         {back}
         <div className="flex flex-wrap items-end justify-between gap-4">

@@ -134,7 +134,7 @@ export default function BooksPage() {
           className="rounded-xl border border-dashed border-border"
         />
       ) : (
-        <div className={cn("overflow-x-auto rounded-xl border border-border bg-card", books.isPlaceholderData && "opacity-60 transition-opacity")}>
+        <div className={cn("relative overflow-x-auto rounded-xl border border-border bg-card", books.isPlaceholderData && "opacity-60 transition-opacity")}>
           <table className="w-full min-w-[720px] text-left text-[15px]">
             <thead className="border-b border-border bg-surface-2 text-sm text-muted-foreground">
               <tr>

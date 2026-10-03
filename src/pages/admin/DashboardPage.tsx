@@ -136,8 +136,8 @@ export default function DashboardPage() {
                   <thead className="text-sm text-muted-foreground">
                     <tr>
                       <th scope="col" className="pb-2 font-normal">Book</th>
-                      <th scope="col" className="pb-2 text-right font-normal">Copies</th>
-                      <th scope="col" className="pb-2 text-right font-normal">Sales</th>
+                      <th scope="col" className="pb-2 pl-4 text-right font-normal">Copies</th>
+                      <th scope="col" className="pb-2 pl-4 text-right font-normal">Sales</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -148,8 +148,8 @@ export default function DashboardPage() {
                             {b.title}
                           </Link>
                         </th>
-                        <td className="py-2 text-right">{b.copies_sold}</td>
-                        <td className="py-2 text-right">{formatUsd(b.sales_usd)}</td>
+                        <td className="py-2 pl-4 text-right">{b.copies_sold}</td>
+                        <td className="whitespace-nowrap py-2 pl-4 text-right">{formatUsd(b.sales_usd)}</td>
                       </tr>
                     ))}
                   </tbody>

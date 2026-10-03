@@ -103,7 +103,12 @@ export function SalesChart({ days }: { days: DailySales[] }) {
                 <rect x={PAD.left + band * i} y={PAD.top} width={band} height={plotH} fill="transparent" />
                 {path ? <path d={path} className={active === null || active === i ? "fill-primary" : "fill-primary/45"} /> : null}
                 {i % labelEvery === 0 || i === days.length - 1 ? (
-                  <text x={PAD.left + band * i + band / 2} y={HEIGHT - 8} textAnchor="middle" className="fill-muted-foreground text-[12px]">
+                  <text
+                    x={i === days.length - 1 ? Math.min(PAD.left + band * i + band / 2 + 12, width - PAD.right) : PAD.left + band * i + band / 2}
+                    y={HEIGHT - 8}
+                    textAnchor={i === days.length - 1 ? "end" : "middle"}
+                    className="fill-muted-foreground text-[12px]"
+                  >
                     {dayLabel.format(parse(d.date))}
                   </text>
                 ) : null}
@@ -134,7 +139,7 @@ export function SalesChart({ days }: { days: DailySales[] }) {
       </div>
       <details className="group text-sm">
         <summary className="inline-flex min-h-11 cursor-pointer items-center font-semibold text-primary">Show as a table</summary>
-        <div className="mt-2 max-h-72 overflow-auto rounded-md border border-border">
+        <div className="relative mt-2 max-h-72 overflow-auto rounded-md border border-border">
           <table id={`${id}-table`} className="w-full text-left tabular-nums">
             <caption className="sr-only">Net revenue, gross revenue, refunds and orders placed per day</caption>
             <thead className="sticky top-0 bg-surface-2 text-muted-foreground">
