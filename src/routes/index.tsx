@@ -8,7 +8,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import LegacyBrowseRedirect from "./LegacyBrowseRedirect";
 import LegacyOrderRedirect from "./LegacyOrderRedirect";
 import { GuestOnly, RequireCustomer, RequireVerified } from "./guards";
-import { RequireStaff, RequireStaffSetup, StaffGuestOnly } from "./adminGuards";
+import { RequireAdminRole, RequireStaff, RequireStaffSetup, StaffGuestOnly } from "./adminGuards";
 
 const Home = lazy(() => import("../pages/HomePage"));
 const CartPage = lazy(() => import("../pages/cart/CartPage"));
@@ -49,6 +49,9 @@ const ReviewsAdminPage = lazy(() => import("../pages/admin/ReviewsAdminPage"));
 const CouponsAdminPage = lazy(() => import("../pages/admin/CouponsAdminPage"));
 const CustomersAdminPage = lazy(() => import("../pages/admin/CustomersAdminPage"));
 const CustomerAdminPage = lazy(() => import("../pages/admin/CustomerAdminPage"));
+const MembersAdminPage = lazy(() => import("../pages/admin/MembersAdminPage"));
+const ExchangeRatesPage = lazy(() => import("../pages/admin/ExchangeRatesPage"));
+const AuditLogPage = lazy(() => import("../pages/admin/AuditLogPage"));
 const Dashboard = lazy(() => import("../page/admin/Dashboard"));
 const Catalog = lazy(() => import("../page/admin/Catalog"));
 const Promotions = lazy(() => import("../page/admin/Promotions"));
@@ -169,6 +172,11 @@ const AppRoutes = () => {
             <Route path="coupons" element={<CouponsAdminPage />} />
             <Route path="customers" element={<CustomersAdminPage />} />
             <Route path="customers/:id" element={<CustomerAdminPage />} />
+            <Route element={<RequireAdminRole />}>
+              <Route path="members" element={<MembersAdminPage />} />
+              <Route path="exchange-rates" element={<ExchangeRatesPage />} />
+              <Route path="audit-log" element={<AuditLogPage />} />
+            </Route>
           </Route>
         </Route>
         {/* V1 sent password-reset codes to /verify-otp. */}

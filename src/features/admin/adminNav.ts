@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { BookCopy, Building2, FolderTree, LayoutDashboard, Library, MessageSquareText, Package, PenTool, RotateCcw, TicketPercent, Users } from "lucide-react";
+import { ArrowLeftRight, BookCopy, Building2, FolderTree, LayoutDashboard, Library, MessageSquareText, Package, PenTool, RotateCcw, ScrollText, ShieldCheck, TicketPercent, Users } from "lucide-react";
 import type { StaffRole } from "@/api/endpoints/staff";
 
 export type AdminNavItem = { to: string; label: string; Icon: ComponentType<{ className?: string }>; end?: boolean; roles?: StaffRole[] };
@@ -28,6 +28,14 @@ export const adminNav: AdminNavGroup[] = [
       { to: "/admin/categories", label: "Categories", Icon: FolderTree },
       { to: "/admin/publishers", label: "Publishers", Icon: Building2 },
       { to: "/admin/series", label: "Series", Icon: Library },
+    ],
+  },
+  {
+    label: "Admin",
+    items: [
+      { to: "/admin/members", label: "Staff members", Icon: ShieldCheck, roles: ["admin"] },
+      { to: "/admin/exchange-rates", label: "Exchange rate", Icon: ArrowLeftRight, roles: ["admin"] },
+      { to: "/admin/audit-log", label: "Audit log", Icon: ScrollText, roles: ["admin"] },
     ],
   },
 ];
