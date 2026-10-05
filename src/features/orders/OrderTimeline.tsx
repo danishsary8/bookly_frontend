@@ -3,7 +3,8 @@ import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { cn } from "@/lib/utils";
 import { orderDateTime } from "./format";
 
-type History = NonNullable<Order["status_history"]>;
+/** Customer view: status, note, time. The staff view adds who made the change. */
+type History = Array<NonNullable<Order["status_history"]>[number] & { changed_by?: { name: string } | null }>;
 
 /** The order's status changes, oldest first, with the shop's notes; the latest is marked as current. */
 export function OrderTimeline({ history }: { history: History }) {
@@ -32,6 +33,7 @@ export function OrderTimeline({ history }: { history: History }) {
                   {last ? <span className="sr-only">(current status)</span> : null}
                 </div>
                 {entry.note ? <p className="text-[15px] text-muted-foreground">{entry.note}</p> : null}
+                {entry.changed_by ? <p className="text-sm text-muted-foreground">by {entry.changed_by.name}</p> : null}
               </div>
             </li>
           );
