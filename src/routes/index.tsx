@@ -45,6 +45,10 @@ const OrdersAdminPage = lazy(() => import("../pages/admin/OrdersAdminPage"));
 const OrderAdminPage = lazy(() => import("../pages/admin/OrderAdminPage"));
 const ReturnsAdminPage = lazy(() => import("../pages/admin/ReturnsAdminPage"));
 const ReturnAdminPage = lazy(() => import("../pages/admin/ReturnAdminPage"));
+const ReviewsAdminPage = lazy(() => import("../pages/admin/ReviewsAdminPage"));
+const CouponsAdminPage = lazy(() => import("../pages/admin/CouponsAdminPage"));
+const CustomersAdminPage = lazy(() => import("../pages/admin/CustomersAdminPage"));
+const CustomerAdminPage = lazy(() => import("../pages/admin/CustomerAdminPage"));
 const Dashboard = lazy(() => import("../page/admin/Dashboard"));
 const Catalog = lazy(() => import("../page/admin/Catalog"));
 const Promotions = lazy(() => import("../page/admin/Promotions"));
@@ -161,6 +165,10 @@ const AppRoutes = () => {
             <Route path="orders/:id" element={<OrderAdminPage />} />
             <Route path="returns" element={<ReturnsAdminPage />} />
             <Route path="returns/:id" element={<ReturnAdminPage />} />
+            <Route path="reviews" element={<ReviewsAdminPage />} />
+            <Route path="coupons" element={<CouponsAdminPage />} />
+            <Route path="customers" element={<CustomersAdminPage />} />
+            <Route path="customers/:id" element={<CustomerAdminPage />} />
           </Route>
         </Route>
         {/* V1 sent password-reset codes to /verify-otp. */}
