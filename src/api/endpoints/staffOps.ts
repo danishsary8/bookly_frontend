@@ -97,8 +97,8 @@ export type ReturnFilters = { status?: string; q?: string; page?: number; per_pa
 export type ReviewFilters = { visible?: boolean | null; q?: string; max_rating?: number; page?: number; per_page?: number };
 export type CouponFilters = { q?: string; active?: boolean | null; page?: number; per_page?: number };
 export type CustomerFilters = { q?: string; active?: boolean | null; page?: number; per_page?: number };
-export type MemberFilters = { q?: string; role?: StaffRole; page?: number; per_page?: number };
-export type AuditFilters = { staff_user_id?: number; entity_type?: string; from?: string; to?: string; page?: number; per_page?: number };
+export type MemberFilters = { q?: string; role?: StaffRole; active?: boolean | null; page?: number; per_page?: number };
+export type AuditFilters = { staff_user_id?: number; action?: string; entity_type?: string; entity_id?: number; from?: string; to?: string; page?: number; per_page?: number };
 
 /** Booleans that may be "not filtered" (null): 1 / 0 for the API, omitted when null. */
 const bool = (v: boolean | null | undefined) => (v === true ? 1 : v === false ? 0 : undefined);
@@ -145,7 +145,7 @@ export const opsApi = {
   setCustomerActive: (id: number, active: boolean) =>
     api.post<Resource<StaffCustomer>>(`/staff/customers/${id}/${active ? "activate" : "deactivate"}`, {}).then((r) => r.data),
 
-  members: (f: MemberFilters = {}) => api.get<Paginated<StaffMember>>("/staff/members", { params: toQueryParams(f) }),
+  members: (f: MemberFilters = {}) => api.get<Paginated<StaffMember>>("/staff/members", { params: toQueryParams({ ...f, active: bool(f.active) }) }),
   inviteMember: (input: { name: string; email: string; role: StaffRole }) => api.post<Resource<StaffMember>>("/staff/members", input).then((r) => r.data),
   updateMember: (id: number, input: { name?: string; role?: StaffRole }) => api.patch<Resource<StaffMember>>(`/staff/members/${id}`, input).then((r) => r.data),
   setMemberActive: (id: number, active: boolean) =>
