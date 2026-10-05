@@ -1,17 +1,22 @@
 import type { ComponentType } from "react";
-import { BookCopy, FolderTree, LayoutDashboard, Library, PenTool, Building2 } from "lucide-react";
+import { BookCopy, Building2, FolderTree, LayoutDashboard, Library, Package, PenTool, RotateCcw } from "lucide-react";
 import type { StaffRole } from "@/api/endpoints/staff";
 
 export type AdminNavItem = { to: string; label: string; Icon: ComponentType<{ className?: string }>; end?: boolean; roles?: StaffRole[] };
 export type AdminNavGroup = { label: string; items: AdminNavItem[] };
 
 /*
- * Admin navigation. Phase 9a ships Overview and Catalogue; Sales (orders, returns,
- * reviews, coupons, customers) and Admin (staff, exchange rates, audit log) are
- * added in 9b. `roles` hides an item from staff the API would refuse anyway.
+ * Admin navigation, grouped. `roles` hides an item from staff the API would refuse anyway.
  */
 export const adminNav: AdminNavGroup[] = [
   { label: "Overview", items: [{ to: "/admin", label: "Dashboard", Icon: LayoutDashboard, end: true }] },
+  {
+    label: "Sales",
+    items: [
+      { to: "/admin/orders", label: "Orders", Icon: Package },
+      { to: "/admin/returns", label: "Returns", Icon: RotateCcw },
+    ],
+  },
   {
     label: "Catalogue",
     items: [
