@@ -1,17 +1,25 @@
 import type { ComponentType } from "react";
-import { BookCopy, FolderTree, LayoutDashboard, Library, PenTool, Building2 } from "lucide-react";
+import { ArrowLeftRight, BookCopy, Building2, FolderTree, LayoutDashboard, Library, MessageSquareText, Package, PenTool, RotateCcw, ScrollText, ShieldCheck, TicketPercent, Users } from "lucide-react";
 import type { StaffRole } from "@/api/endpoints/staff";
 
 export type AdminNavItem = { to: string; label: string; Icon: ComponentType<{ className?: string }>; end?: boolean; roles?: StaffRole[] };
 export type AdminNavGroup = { label: string; items: AdminNavItem[] };
 
 /*
- * Admin navigation. Phase 9a ships Overview and Catalogue; Sales (orders, returns,
- * reviews, coupons, customers) and Admin (staff, exchange rates, audit log) are
- * added in 9b. `roles` hides an item from staff the API would refuse anyway.
+ * Admin navigation, grouped. `roles` hides an item from staff the API would refuse anyway.
  */
 export const adminNav: AdminNavGroup[] = [
   { label: "Overview", items: [{ to: "/admin", label: "Dashboard", Icon: LayoutDashboard, end: true }] },
+  {
+    label: "Sales",
+    items: [
+      { to: "/admin/orders", label: "Orders", Icon: Package },
+      { to: "/admin/returns", label: "Returns", Icon: RotateCcw },
+      { to: "/admin/reviews", label: "Reviews", Icon: MessageSquareText },
+      { to: "/admin/coupons", label: "Coupons", Icon: TicketPercent },
+      { to: "/admin/customers", label: "Customers", Icon: Users },
+    ],
+  },
   {
     label: "Catalogue",
     items: [
@@ -20,6 +28,14 @@ export const adminNav: AdminNavGroup[] = [
       { to: "/admin/categories", label: "Categories", Icon: FolderTree },
       { to: "/admin/publishers", label: "Publishers", Icon: Building2 },
       { to: "/admin/series", label: "Series", Icon: Library },
+    ],
+  },
+  {
+    label: "Admin",
+    items: [
+      { to: "/admin/members", label: "Staff members", Icon: ShieldCheck, roles: ["admin"] },
+      { to: "/admin/exchange-rates", label: "Exchange rate", Icon: ArrowLeftRight, roles: ["admin"] },
+      { to: "/admin/audit-log", label: "Audit log", Icon: ScrollText, roles: ["admin"] },
     ],
   },
 ];
