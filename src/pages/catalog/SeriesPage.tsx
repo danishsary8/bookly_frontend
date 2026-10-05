@@ -23,7 +23,7 @@ export default function SeriesPage() {
   const cart = useAddToCart();
   const wishlist = useWishlist();
   const showSkeleton = useSkeletonVisible(series.isPending);
-  useDocumentTitle(series.data?.name);
+  useDocumentTitle(series.data?.name, { description: series.data?.description || (series.data ? `Every book in the ${series.data.name} series, in reading order.` : null) });
 
   if (!valid || (series.isError && ApiError.from(series.error).kind === "not_found")) {
     return <NotFoundState what="series" backTo="/series" backLabel="All series" />;

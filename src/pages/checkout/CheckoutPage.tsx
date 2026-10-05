@@ -222,6 +222,7 @@ export default function CheckoutPage() {
             ) : preview.isError && !couponError ? (
               <ErrorState error={preview.error} onRetry={() => preview.refetch()} headingLevel="h3" showHomeLink={false} />
             ) : data ? (
+              <>
               <dl className="grid gap-2 text-[15px]" aria-busy={preview.isFetching || undefined}>
                 <Row label={<span className="text-muted-foreground">Subtotal</span>} amount={data.subtotal} />
                 {Number(data.discount?.usd) > 0 ? <Row label="Discount" amount={data.discount} negative className="text-success" /> : null}
@@ -231,8 +232,9 @@ export default function CheckoutPage() {
                   <dt className="font-semibold">Total</dt>
                   <dd className="text-2xl font-semibold tabular-nums">{formatMoney(data.total?.usd, data.total?.khr, currency)}</dd>
                 </div>
-                <p className="text-sm text-muted-foreground">Pay the courier in cash when your order arrives.</p>
               </dl>
+              <p className="text-sm text-muted-foreground">Pay the courier in cash when your order arrives.</p>
+              </>
             ) : null}
 
             {blocked ? (

@@ -1,5 +1,5 @@
 import * as React from "react"
-import { motion } from "motion/react"
+import { m } from "motion/react"
 import { Tabs as TabsPrimitive } from "radix-ui"
 
 import { useControllableState } from "@/hooks/useControllableState"
@@ -62,7 +62,7 @@ function TabsTrigger({ className, value, children, ...props }: React.ComponentPr
     >
       {children}
       {active ? (
-        <motion.span
+        <m.span
           layoutId={tabs.layoutId}
           transition={transitions.toggle}
           className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary"

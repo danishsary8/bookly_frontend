@@ -84,7 +84,7 @@ export function ContentPage({
   /** Full-width content after the article (a shelf, a call to action). */
   after?: ReactNode;
 }) {
-  useDocumentTitle(documentTitle ?? title);
+  useDocumentTitle(documentTitle ?? title, { description: typeof lead === "string" ? lead : null });
   const [ids] = useState(() => sections.map((s) => s.id));
   const active = useActiveSection(ids);
   const [open, setOpen] = useState(false);

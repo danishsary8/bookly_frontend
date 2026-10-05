@@ -20,7 +20,7 @@ const elsewhere = [
  * is "out of print", with a search straight to /search and a few ways back in.
  */
 export default function NotFoundPage() {
-  useDocumentTitle("Page not found");
+  useDocumentTitle("Page not found", { noindex: true });
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
 

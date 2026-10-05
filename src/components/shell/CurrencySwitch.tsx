@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { RadioGroup } from "radix-ui";
 import { useId } from "react";
 import { transitions } from "@/lib/motion";
@@ -41,7 +41,7 @@ export function CurrencySwitch({ className }: { className?: string }) {
             )}
           >
             {active ? (
-              <motion.span layoutId={layoutId} transition={transitions.toggle} className="absolute inset-0 rounded-md bg-primary" aria-hidden="true" />
+              <m.span layoutId={layoutId} transition={transitions.toggle} className="absolute inset-0 rounded-md bg-primary" aria-hidden="true" />
             ) : null}
             <span className="relative">
               {option.label} <span lang={option.lang} aria-hidden="true">{option.symbol}</span>

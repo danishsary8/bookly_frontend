@@ -12,7 +12,7 @@ export default function PublisherPage() {
   const id = Number(useParams().id);
   const publishers = useQuery(catalogQueries.publishers({ per_page: 100 }));
   const publisher = publishers.data?.data.find((p) => p.id === id);
-  useDocumentTitle(publisher?.name);
+  useDocumentTitle(publisher?.name, { description: publisher ? `Books published by ${publisher.name}, at Bookly.` : null });
 
   if (publishers.isError) return <div className="container-shell py-16"><ErrorState error={publishers.error} onRetry={() => publishers.refetch()} headingLevel="h1" /></div>;
   if (publishers.data && !publisher) return <NotFoundState what="publisher" backTo="/books" backLabel="Browse all books" />;

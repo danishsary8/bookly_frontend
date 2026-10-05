@@ -18,7 +18,7 @@ import { rangeSummary } from "@/lib/pagination";
 const PER_PAGE = 24;
 
 export default function AuthorsPage() {
-  useDocumentTitle("Authors");
+  useDocumentTitle("Authors", { description: "Find books by author at Bookly." });
   const [params, setParams] = useSearchParams();
   const q = params.get("q")?.trim() ?? "";
   const page = Math.max(1, Number(params.get("page")) || 1);

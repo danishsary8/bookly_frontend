@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { AlertCircle, CheckCircle2, Info, X } from "lucide-react"
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, m } from "motion/react"
 import { Link } from "react-router-dom"
 
 import { transitions } from "@/lib/motion"
@@ -38,7 +38,7 @@ function ToastCard({ toast }: { toast: Toast }) {
   const close = () => dismissToast(toast.id)
 
   return (
-    <motion.li
+    <m.div
       layout
       role={toast.tone === "error" ? "alert" : "status"}
       initial={{ opacity: 0, y: 16 }}
@@ -87,7 +87,7 @@ function ToastCard({ toast }: { toast: Toast }) {
       >
         <X className="size-[18px]" aria-hidden="true" />
       </button>
-    </motion.li>
+    </m.div>
   )
 }
 
@@ -97,13 +97,13 @@ function Toaster() {
     <section aria-label="Notifications" className="pointer-events-none fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-(--z-toast) sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[400px]">
       {/* A persistent live region: announced reliably, and kept visible to assistive tech while a
           dialog or drawer is open (Radix hides everything else, but leaves [aria-live] alone). */}
-      <ol aria-live="polite" className="flex flex-col gap-3">
+      <div aria-live="polite" className="flex flex-col gap-3">
         <AnimatePresence initial={false}>
           {toasts.map((t) => (
             <ToastCard key={t.id} toast={t} />
           ))}
         </AnimatePresence>
-      </ol>
+      </div>
     </section>
   )
 }
