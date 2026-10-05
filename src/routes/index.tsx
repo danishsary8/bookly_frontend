@@ -1,10 +1,8 @@
 import { Suspense, lazy, useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import Loading from "../components/ui/loading";
-import PublicRoute from "../components/PublicRoute";
-import AdminLayout from "../layouts/AdminLayout";
 import ClientLayout from "../layouts/ClientLayout";
-import ProtectedRoute from "./ProtectedRoute";
+import LegacyAdminRedirect from "./LegacyAdminRedirect";
 import LegacyBrowseRedirect from "./LegacyBrowseRedirect";
 import LegacyOrderRedirect from "./LegacyOrderRedirect";
 import { GuestOnly, RequireCustomer, RequireVerified } from "./guards";
@@ -52,15 +50,6 @@ const CustomerAdminPage = lazy(() => import("../pages/admin/CustomerAdminPage"))
 const MembersAdminPage = lazy(() => import("../pages/admin/MembersAdminPage"));
 const ExchangeRatesPage = lazy(() => import("../pages/admin/ExchangeRatesPage"));
 const AuditLogPage = lazy(() => import("../pages/admin/AuditLogPage"));
-const Dashboard = lazy(() => import("../page/admin/Dashboard"));
-const Catalog = lazy(() => import("../page/admin/Catalog"));
-const Promotions = lazy(() => import("../page/admin/Promotions"));
-const Orders = lazy(() => import("../page/admin/Orders"));
-const Returns = lazy(() => import("../page/admin/Returns"));
-const Books = lazy(() => import("../page/admin/Books"));
-const Users = lazy(() => import("../page/admin/Users"));
-const Settings = lazy(() => import("../page/admin/Settings"));
-const AdminAuthentication = lazy(() => import("../page/admin/AdminAuthentication"));
 const ShippingPage = lazy(() => import("../pages/content/ShippingPage"));
 const ReturnsPolicyPage = lazy(() => import("../pages/content/ReturnsPolicyPage"));
 const FaqPage = lazy(() => import("../pages/content/FaqPage"));
@@ -182,23 +171,8 @@ const AppRoutes = () => {
         {/* V1 sent password-reset codes to /verify-otp. */}
         <Route path="/verify-otp" element={<Navigate to="/reset-password" replace />} />
 
-        <Route element={<PublicRoute />}>
-          <Route path="/superadmin/login" element={<AdminAuthentication />} />
-        </Route>
-
-        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-          <Route element={<AdminLayout />}>
-            <Route path="/superadmin" element={<Dashboard />} />
-            <Route path="/superadmin/orders" element={<Orders />} />
-            <Route path="/superadmin/returns" element={<Returns />} />
-            <Route path="/superadmin/catalog" element={<Catalog />} />
-            <Route path="/superadmin/promotions" element={<Promotions />} />
-            <Route path="/superadmin/books" element={<Books />} />
-            <Route path="/superadmin/users" element={<Users />} />
-            <Route path="/superadmin/settings" element={<Settings />} />
-          </Route>
-        </Route>
-
+        {/* V1 admin lived at /superadmin. */}
+        <Route path="/superadmin/*" element={<LegacyAdminRedirect />} />
       </Routes>
     </Suspense>
   );
