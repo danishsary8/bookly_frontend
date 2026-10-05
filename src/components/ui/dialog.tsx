@@ -2,6 +2,7 @@ import * as React from "react"
 import { X } from "lucide-react"
 import { AnimatePresence, m } from "motion/react"
 import { Dialog as DialogPrimitive } from "radix-ui"
+import { useReturnFocus } from "./useReturnFocus"
 
 import { Button } from "@/components/ui/button"
 import { useControllableState } from "@/hooks/useControllableState"
@@ -45,8 +46,9 @@ type DialogContentProps = Omit<React.ComponentProps<typeof DialogPrimitive.Conte
   hideClose?: boolean
 }
 
-function DialogContent({ className, children, size = "md", hideClose = false, ...props }: DialogContentProps) {
+function DialogContent({ className, children, size = "md", hideClose = false, onCloseAutoFocus, ...props }: DialogContentProps) {
   const open = React.useContext(OpenContext)
+  const returnFocus = useReturnFocus(open, onCloseAutoFocus)
   return (
     <AnimatePresence>
       {open ? (
@@ -60,7 +62,7 @@ function DialogContent({ className, children, size = "md", hideClose = false, ..
             />
           </DialogPrimitive.Overlay>
           <div className="pointer-events-none fixed inset-0 z-(--z-dialog) grid place-items-center overflow-y-auto p-4">
-            <DialogPrimitive.Content asChild forceMount {...props}>
+            <DialogPrimitive.Content asChild forceMount onCloseAutoFocus={returnFocus} {...props}>
               <m.div
                 data-slot="dialog-content"
                 className={cn(

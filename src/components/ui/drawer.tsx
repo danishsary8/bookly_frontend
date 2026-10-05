@@ -2,6 +2,7 @@ import * as React from "react"
 import { X } from "lucide-react"
 import { AnimatePresence, m } from "motion/react"
 import { Dialog as DialogPrimitive } from "radix-ui"
+import { useReturnFocus } from "./useReturnFocus"
 
 import { useControllableState } from "@/hooks/useControllableState"
 import { transitions } from "@/lib/motion"
@@ -50,8 +51,9 @@ type DrawerContentProps = Omit<React.ComponentProps<typeof DialogPrimitive.Conte
   side?: Side
 }
 
-function DrawerContent({ className, children, side = "right", ...props }: DrawerContentProps) {
+function DrawerContent({ className, children, side = "right", onCloseAutoFocus, ...props }: DrawerContentProps) {
   const open = React.useContext(OpenContext)
+  const returnFocus = useReturnFocus(open, onCloseAutoFocus)
   return (
     <AnimatePresence>
       {open ? (
@@ -64,7 +66,7 @@ function DrawerContent({ className, children, side = "right", ...props }: Drawer
               exit={{ opacity: 0, transition: transitions.exit }}
             />
           </DialogPrimitive.Overlay>
-          <DialogPrimitive.Content asChild forceMount {...props}>
+          <DialogPrimitive.Content asChild forceMount onCloseAutoFocus={returnFocus} {...props}>
             <m.div
               data-slot="drawer-content"
               data-side={side}
