@@ -1,6 +1,6 @@
 import * as React from "react"
 import { X } from "lucide-react"
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, m } from "motion/react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { Button } from "@/components/ui/button"
@@ -52,7 +52,7 @@ function DialogContent({ className, children, size = "md", hideClose = false, ..
       {open ? (
         <DialogPrimitive.Portal forceMount>
           <DialogPrimitive.Overlay asChild forceMount>
-            <motion.div
+            <m.div
               className="fixed inset-0 z-(--z-dialog) bg-scrim"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1, transition: transitions.enter }}
@@ -61,7 +61,7 @@ function DialogContent({ className, children, size = "md", hideClose = false, ..
           </DialogPrimitive.Overlay>
           <div className="pointer-events-none fixed inset-0 z-(--z-dialog) grid place-items-center overflow-y-auto p-4">
             <DialogPrimitive.Content asChild forceMount {...props}>
-              <motion.div
+              <m.div
                 data-slot="dialog-content"
                 className={cn(
                   "pointer-events-auto relative w-full rounded-xl border border-border bg-card p-6 text-card-foreground shadow-overlay outline-none",
@@ -81,7 +81,7 @@ function DialogContent({ className, children, size = "md", hideClose = false, ..
                     <X className="size-5" aria-hidden="true" />
                   </DialogPrimitive.Close>
                 )}
-              </motion.div>
+              </m.div>
             </DialogPrimitive.Content>
           </div>
         </DialogPrimitive.Portal>

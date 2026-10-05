@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { useLocation, useNavigationType } from "react-router-dom";
 import { duration, ease, transitions } from "@/lib/motion";
 
@@ -71,7 +71,7 @@ export function PageTransition({ children, mainId = "content" }: { children: Rea
 
   return (
     <AnimatePresence mode="popLayout" initial={false}>
-      <motion.div
+      <m.div
         key={location.pathname}
         data-route={location.pathname}
         initial={{ opacity: 0, y: 8 }}
@@ -79,7 +79,7 @@ export function PageTransition({ children, mainId = "content" }: { children: Rea
         exit={{ opacity: 0, transition: { duration: duration.hover, ease: ease.standard } }}
       >
         {children}
-      </motion.div>
+      </m.div>
     </AnimatePresence>
   );
 }

@@ -1,6 +1,6 @@
 import * as React from "react"
 import { X } from "lucide-react"
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, m } from "motion/react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { useControllableState } from "@/hooks/useControllableState"
@@ -57,7 +57,7 @@ function DrawerContent({ className, children, side = "right", ...props }: Drawer
       {open ? (
         <DialogPrimitive.Portal forceMount>
           <DialogPrimitive.Overlay asChild forceMount>
-            <motion.div
+            <m.div
               className="fixed inset-0 z-(--z-drawer) bg-scrim"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1, transition: transitions.enter }}
@@ -65,7 +65,7 @@ function DrawerContent({ className, children, side = "right", ...props }: Drawer
             />
           </DialogPrimitive.Overlay>
           <DialogPrimitive.Content asChild forceMount {...props}>
-            <motion.div
+            <m.div
               data-slot="drawer-content"
               data-side={side}
               className={cn(
@@ -78,7 +78,7 @@ function DrawerContent({ className, children, side = "right", ...props }: Drawer
               exit={{ ...offscreen[side], transition: transitions.exit }}
             >
               {children}
-            </motion.div>
+            </m.div>
           </DialogPrimitive.Content>
         </DialogPrimitive.Portal>
       ) : null}

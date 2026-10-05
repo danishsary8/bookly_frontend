@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { motion, type Variants } from "motion/react";
+import { m, type Variants } from "motion/react";
 import { staggerDelay, transitions } from "@/lib/motion";
 
 /*
@@ -18,7 +18,7 @@ const item: Variants = {
 type StaggerProps = { children: ReactNode; className?: string; as?: "div" | "ul" | "ol" };
 
 export function Stagger({ children, className, as = "div" }: StaggerProps) {
-  const Component = motion[as];
+  const Component = m[as];
   return (
     <Component className={className} variants={container} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }}>
       {children}
@@ -29,7 +29,7 @@ export function Stagger({ children, className, as = "div" }: StaggerProps) {
 type StaggerItemProps = { children: ReactNode; index: number; className?: string; as?: "div" | "li" };
 
 export function StaggerItem({ children, index, className, as = "div" }: StaggerItemProps) {
-  const Component = motion[as];
+  const Component = m[as];
   return (
     <Component className={className} variants={item} custom={index}>
       {children}

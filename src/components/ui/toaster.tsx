@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { AlertCircle, CheckCircle2, Info, X } from "lucide-react"
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, m } from "motion/react"
 import { Link } from "react-router-dom"
 
 import { transitions } from "@/lib/motion"
@@ -38,7 +38,7 @@ function ToastCard({ toast }: { toast: Toast }) {
   const close = () => dismissToast(toast.id)
 
   return (
-    <motion.li
+    <m.li
       layout
       role={toast.tone === "error" ? "alert" : "status"}
       initial={{ opacity: 0, y: 16 }}
@@ -87,7 +87,7 @@ function ToastCard({ toast }: { toast: Toast }) {
       >
         <X className="size-[18px]" aria-hidden="true" />
       </button>
-    </motion.li>
+    </m.li>
   )
 }
 

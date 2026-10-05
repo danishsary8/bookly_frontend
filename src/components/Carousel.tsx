@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { motion, type MotionValue, type PanInfo, type Transition, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
+import { m, type MotionValue, type PanInfo, type Transition, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
 import React, { type JSX } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -92,20 +92,20 @@ function CarouselItem({ item, content, index, itemWidth, round, trackItemOffset,
 
   if (content !== undefined) {
     return (
-      <motion.div
+      <m.div
         className={cn('relative shrink-0 overflow-hidden cursor-grab active:cursor-grabbing', className)}
         style={{ width: itemWidth, height: '100%', rotateY }}
         transition={transition}
       >
         {content}
-      </motion.div>
+      </m.div>
     );
   }
 
   if (!item) return null;
 
   return (
-    <motion.div
+    <m.div
       key={`${item?.id ?? index}-${index}`}
       className={`relative shrink-0 flex flex-col ${
         round
@@ -129,7 +129,7 @@ function CarouselItem({ item, content, index, itemWidth, round, trackItemOffset,
         <div className="mb-1 font-black text-lg text-white">{item.title}</div>
         <p className="text-sm text-white">{item.description}</p>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -338,7 +338,7 @@ export default function Carousel({
         ...(round && { height: `${baseWidth}px` })
       }}
     >
-      <motion.div
+      <m.div
         className="flex h-full"
         drag={isAnimating ? false : 'x'}
         {...dragProps}
@@ -370,12 +370,12 @@ export default function Carousel({
             rotate={reduceMotion ? 0 : rotate}
           />
         ))}
-      </motion.div>
+      </m.div>
       {showIndicators && (
         <div className={`flex w-full justify-center ${round ? 'absolute z-20 bottom-12 left-1/2 -translate-x-1/2' : ''}`}>
           <div className="mt-4 flex w-[150px] justify-between px-8">
             {Array.from({ length: count }, (_, dotIndex) => (
-              <motion.button
+              <m.button
                 type="button"
                 key={dotIndex}
                 aria-label={`Go to slide ${dotIndex + 1}`}
