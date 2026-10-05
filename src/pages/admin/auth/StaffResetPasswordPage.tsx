@@ -24,10 +24,13 @@ const backToSignIn = (
  * /admin/reset-password: email → 6-digit code + new password, on one page.
  * Two-step verification stays on after a reset (the API's rule): a reset email
  * alone never opens a staff account.
+ * "I already have a code" skips sending: new staff get a setup code (72 hours)
+ * in their invitation email, and sending a fresh code would cancel it.
  */
 export default function StaffResetPasswordPage() {
   const navigate = useNavigate();
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [hadCode, setHadCode] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const alertRef = useRef<HTMLDivElement>(null);
 
@@ -52,11 +55,22 @@ export default function StaffResetPasswordPage() {
     }
   };
 
+  const continueWithCode = ({ email }: ForgotPasswordValues) => {
+    setFormError(null);
+    setHadCode(true);
+    setSentTo(email);
+    reset.setValue("email", email);
+  };
+
   const save = async (values: ResetPasswordValues) => {
     setFormError(null);
     try {
       await staffAuthApi.resetPassword(values);
-      toast.success({ title: "Password updated", description: "Sign in with your new password and your authenticator code." });
+      toast.success(
+        hadCode
+          ? { title: "Password saved", description: "Sign in with it. If two-step verification isn't set up yet, you'll do that next." }
+          : { title: "Password updated", description: "Sign in with your new password and your authenticator code." },
+      );
       navigate("/admin/login", { replace: true });
     } catch (error) {
       const message = applyApiErrors(error, reset.setError, ["code", "password", "password_confirmation"]);
@@ -71,9 +85,15 @@ export default function StaffResetPasswordPage() {
         <form onSubmit={(event) => void ask.handleSubmit(sendCode)(event)} noValidate className="grid gap-5">
           {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
           <TextField label="Work email" type="email" autoComplete="username" inputMode="email" error={ask.formState.errors.email?.message} {...ask.register("email")} />
-          <Button type="submit" size="lg" className="w-full" loading={ask.formState.isSubmitting}>
-            Send code
-          </Button>
+          <div className="grid gap-2">
+            <Button type="submit" size="lg" className="w-full" loading={ask.formState.isSubmitting}>
+              Send code
+            </Button>
+            <Button type="button" variant="outline" size="lg" className="w-full" disabled={ask.formState.isSubmitting} onClick={() => void ask.handleSubmit(continueWithCode)()}>
+              I already have a code
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground">New to the team? Use the setup code from your invitation email.</p>
         </form>
       </StaffAuthFrame>
     );
@@ -81,11 +101,17 @@ export default function StaffResetPasswordPage() {
 
   return (
     <StaffAuthFrame
-      title="Set a new password"
+      title={hadCode ? "Choose your password" : "Set a new password"}
       lead={
-        <p>
-          If <strong className="font-semibold text-foreground">{sentTo}</strong> is a staff account, we've sent it a code. It expires in 15 minutes.
-        </p>
+        hadCode ? (
+          <p>
+            Enter the 6-digit code emailed to <strong className="font-semibold text-foreground">{sentTo}</strong>. Invitation codes last 72 hours, reset codes 15 minutes.
+          </p>
+        ) : (
+          <p>
+            If <strong className="font-semibold text-foreground">{sentTo}</strong> is a staff account, we've sent it a code. It expires in 15 minutes.
+          </p>
+        )
       }
       footer={backToSignIn}
     >
@@ -96,9 +122,9 @@ export default function StaffResetPasswordPage() {
           <Controller
             control={reset.control}
             name="code"
-            render={({ field, fieldState }) => <OtpInput value={field.value} onChange={field.onChange} label="Reset code" error={fieldState.error?.message} autoFocus />}
+            render={({ field, fieldState }) => <OtpInput value={field.value} onChange={field.onChange} label={hadCode ? "Code from your email" : "Reset code"} error={fieldState.error?.message} autoFocus />}
           />
-          <ResendCode send={() => staffAuthApi.forgotPassword(sentTo)} startCoolingDown />
+          <ResendCode send={() => staffAuthApi.forgotPassword(sentTo)} startCoolingDown={!hadCode} />
         </div>
         <div className="grid gap-3">
           <PasswordField label="New password" autoComplete="new-password" aria-describedby="staff-password-rules" error={reset.formState.errors.password?.message} {...reset.register("password")} />
@@ -106,7 +132,7 @@ export default function StaffResetPasswordPage() {
         </div>
         <PasswordField label="Confirm new password" autoComplete="new-password" error={reset.formState.errors.password_confirmation?.message} {...reset.register("password_confirmation")} />
         <Button type="submit" size="lg" className="w-full" loading={reset.formState.isSubmitting}>
-          Save new password
+          {hadCode ? "Save password" : "Save new password"}
         </Button>
       </form>
     </StaffAuthFrame>
