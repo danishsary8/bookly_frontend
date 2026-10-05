@@ -195,7 +195,11 @@ export default function BookDetailPage() {
   const shown: BookCard | undefined = book ?? (preview?.id === bookId ? preview : undefined);
   const showSkeleton = useSkeletonVisible(query.isPending && !shown);
   const recent = useRecentlyViewed();
-  useDocumentTitle(shown?.title ?? (query.isError ? "Book not found" : null));
+  useDocumentTitle(shown?.title ?? (query.isError ? "Book not found" : null), {
+    description: book ? book.description || `${book.title}${book.authors?.length ? ` by ${book.authors.map((a) => a.name).join(", ")}` : ""}. Order from Bookly, delivered across Cambodia.` : null,
+    image: shown?.cover_image_url,
+    noindex: query.isError,
+  });
 
   const firstAuthor = book?.authors?.[0];
   const byAuthor = useQuery({ ...catalogQueries.books({ author_id: firstAuthor?.id, per_page: 9 }), enabled: Boolean(firstAuthor?.id) });

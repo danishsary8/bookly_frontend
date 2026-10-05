@@ -12,7 +12,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
 
 export default function SeriesListPage() {
-  useDocumentTitle("Series");
+  useDocumentTitle("Series", { description: "Book series at Bookly, each listed in reading order." });
   const [params] = useSearchParams();
   const page = Math.max(1, Number(params.get("page")) || 1);
   const series = useQuery({ ...catalogQueries.seriesList({ page, per_page: 24 }), placeholderData: (prev) => prev });

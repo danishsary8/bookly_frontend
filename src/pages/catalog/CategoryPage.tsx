@@ -12,7 +12,7 @@ export default function CategoryPage() {
   const { slug } = useParams();
   const categories = useQuery(catalogQueries.categories());
   const category = categories.data?.find((c) => c.slug === slug);
-  useDocumentTitle(category?.name);
+  useDocumentTitle(category?.name, { description: category ? `${category.name} books at Bookly, delivered across Cambodia.` : null });
 
   if (categories.isError) return <div className="container-shell py-16"><ErrorState error={categories.error} onRetry={() => categories.refetch()} headingLevel="h1" /></div>;
   if (categories.data && !category) return <NotFoundState what="category" backTo="/books" backLabel="Browse all books" />;

@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/catalog/PageHeader";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export default function BooksPage() {
-  useDocumentTitle("All books");
+  useDocumentTitle("All books", { description: "Browse every book at Bookly: filter by category, format, language and price, in dollars or riel." });
   return (
     <div className="container-shell pb-16">
       <PageHeader

@@ -20,7 +20,7 @@ export default function SearchPage() {
     setLastQ(q);
     setDraft(q);
   }
-  useDocumentTitle(q ? `Search: ${q}` : "Search");
+  useDocumentTitle(q ? `Search: ${q}` : "Search", { noindex: true });
 
   const submit = (event: FormEvent) => {
     event.preventDefault();

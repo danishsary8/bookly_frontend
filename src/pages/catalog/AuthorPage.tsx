@@ -13,7 +13,7 @@ export default function AuthorPage() {
   const id = Number(useParams().id);
   const valid = Number.isInteger(id) && id > 0;
   const author = useQuery({ ...catalogQueries.author(id), enabled: valid });
-  useDocumentTitle(author.data?.name);
+  useDocumentTitle(author.data?.name, { description: author.data?.bio || (author.data ? `Books by ${author.data.name} at Bookly.` : null), image: author.data?.photo_url });
 
   if (!valid || (author.isError && ApiError.from(author.error).kind === "not_found")) {
     return <NotFoundState what="author" backTo="/authors" backLabel="All authors" />;
