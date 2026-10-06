@@ -56,6 +56,7 @@ npm run dev               # http://localhost:5173
 | `VITE_API_BASE_URL` | The API, including `/api/v1`. Local: `http://localhost:8000/api/v1` (`php artisan serve` in the backend, with `DemoSeeder` data). Live: `https://bookly-api-zasc.onrender.com/api/v1` (free plan: the first request after a quiet spell takes 30–60 s). |
 | `VITE_SITE_URL` | The site's public address, used at build time for `sitemap.xml`, `robots.txt` and share links. Leave empty locally. |
 | `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key: a bot check on sign-up, sign-in and the forms that email a code. Off when empty; the API needs `TURNSTILE_SECRET_KEY` at the same time. |
+| `VITE_GOOGLE_CLIENT_ID`, `VITE_FACEBOOK_APP_ID` | Turn on "Continue with Google / Facebook". Each provider shows once its id is set; the API needs the matching keys. |
 
 The API only accepts requests from the origins in its `CORS_ALLOWED_ORIGINS` (by default `http://localhost:5173`).
 
