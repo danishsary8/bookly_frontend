@@ -247,6 +247,39 @@ describe("customer", () => {
     expect(screen.getByText(/removed 48 hours after signing up/)).toBeInTheDocument();
   });
 
+  it("lets an admin delete an unfinished sign-up from the list after confirming", async () => {
+    signIn(admin);
+    vi.spyOn(opsApi, "customers").mockResolvedValue(page([pending], { counts: { verified: 1, unverified: 1 } }));
+    const remove = vi.spyOn(opsApi, "deleteCustomer").mockResolvedValue(undefined as never);
+    app("/admin/customers?view=unverified");
+    await userEvent.click(await screen.findByRole("button", { name: "Delete Vanna Ly's sign-up" }));
+    const dialog = screen.getByRole("alertdialog");
+    expect(dialog).toHaveTextContent("vanna@example.com can be used to sign up again");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
+    await waitFor(() => expect(remove).toHaveBeenCalledWith(9));
+    expect(await screen.findByText("Vanna Ly's sign-up was deleted")).toBeInTheDocument();
+  });
+
+  it("shows staff no delete buttons, and admins none for verified customers", async () => {
+    signIn(staff);
+    vi.spyOn(opsApi, "customers").mockResolvedValue(page([pending], { counts: { verified: 1, unverified: 1 } }));
+    app("/admin/customers?view=unverified");
+    expect(await screen.findByRole("link", { name: "Vanna Ly" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Delete/ })).not.toBeInTheDocument();
+  });
+
+  it("deletes from the customer page and goes back to the list", async () => {
+    signIn(admin);
+    vi.spyOn(opsApi, "customer").mockResolvedValue(pending);
+    vi.spyOn(opsApi, "customers").mockResolvedValue(page([], { counts: { verified: 1, unverified: 0 } }));
+    const remove = vi.spyOn(opsApi, "deleteCustomer").mockResolvedValue(undefined as never);
+    app("/admin/customers/9");
+    await userEvent.click(await screen.findByRole("button", { name: "Delete now" }));
+    await userEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Delete" }));
+    await waitFor(() => expect(remove).toHaveBeenCalledWith(9));
+    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/admin/customers?view=unverified"));
+  });
+
   it("explains an unfinished sign-up on its page", async () => {
     signIn(staff);
     vi.spyOn(opsApi, "customer").mockResolvedValue(pending);

@@ -261,3 +261,8 @@ Audit of V1: React 19 + TypeScript + Vite 7 + Tailwind 4, ~14k lines, 13 storefr
 
 ## Visible Turnstile box (branch `feature/turnstile-visible`)
 - [x] Owner's request: show Cloudflare's box under the fields like a classic sign-in form. The widget now uses `appearance: "always"` (checks by itself, then shows "Success!"; a suspicious visitor gets a tick box) and reserves its 65px so the button doesn't jump when it loads. Same on sign-in, sign-up, forgot password and the "Resend code" links. Tests and a layout check on desktop and phone.
+
+## Sign-in rules and deleting unfinished sign-ups (branch `feature/signin-rules`)
+- [x] Owner's rule: Google/Facebook must not sign in to an email that already has an account. Backend (`bookly_backend_v2`, same branch): a verified or closed account with that email answers 409 and says how to sign in ("This email already has a Bookly account. Sign in with your email and password instead."); returning social customers are matched by their provider id; an unfinished sign-up with that email becomes the social account. The website shows the API's message above the buttons.
+- [x] Admins can delete an unfinished sign-up straight away (owner had no free email left to test Google): "Delete" on each row of Customers → Not verified yet, and "Delete now" on the customer's page, both behind a confirmation that says the email can be used again. API `DELETE /staff/customers/{id}` refuses verified customers and anything with orders, returns, reviews or addresses; audit-logged.
+- [x] Verified: lint (0 errors), typecheck, 215 unit tests, build; 226 backend tests; browser pass against the local API: admin deleted an unfinished sign-up from the list and it was gone from the database; no page errors.

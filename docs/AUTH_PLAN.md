@@ -1,6 +1,6 @@
 # Sign-in and account upgrades: plan
 
-Status: owner approved every item on 2026-10-06 (keep the order, 48 hours, Telegram option A, migration OK, +855 only, no SMS, Facebook links by email, library card). PRs 1–4 built (branches `feature/unverified-signups`, `feature/turnstile`, `feature/social-sign-in`); PRs 5–6 next.
+Status: owner approved every item on 2026-10-06 (keep the order, 48 hours, Telegram option A, migration OK, +855 only, no SMS, Facebook links by email, library card). **Changed 2026-10-06 by the owner:** Google and Facebook never sign in to an email that already has a verified account (that person signs in as before); only an unfinished sign-up with the same email becomes the social account. PRs 1–4 built (branches `feature/unverified-signups`, `feature/turnstile`, `feature/social-sign-in`); PRs 5–6 next.
 Written 2026-10-06 after reading the auth code in both repos: `bookly_backend_v2` (`AuthController`, `SocialAuthController`, `SocialTokenVerifier`, `OtpService`, the `customers` table, staff `CustomerController`) and this frontend (`src/features/auth`, `src/pages/auth`, `OtpInput`, `AuthShell`).
 
 The four requests, in the order this plan suggests building them:
