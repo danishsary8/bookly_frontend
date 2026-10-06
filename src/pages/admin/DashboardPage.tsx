@@ -113,7 +113,7 @@ export default function DashboardPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <Tile label="Orders placed" value={s.orders_placed} />
               <Tile label="Average order" value={formatUsd(s.average_order_value_usd)} detail="delivered orders" />
-              <Tile label="New customers" value={s.new_customers} />
+              <Tile label="New customers" value={s.new_customers} detail="verified their email" />
             </div>
           </div>
 

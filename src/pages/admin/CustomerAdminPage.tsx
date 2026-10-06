@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, BadgeCheck, Ban, Mail, Phone, RotateCcw } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Ban, Clock3, Mail, Phone, RotateCcw } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { opsApi, opsKeys, opsQueries } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
@@ -13,7 +13,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { useStaff } from "@/features/admin/staffSession";
-import { orderDate } from "@/features/orders/format";
+import { orderDate, orderDateTime } from "@/features/orders/format";
 import { formatUsd } from "@/stores/currency";
 import { toast } from "@/stores/toast";
 
@@ -96,6 +96,16 @@ export default function CustomerAdminPage() {
         ) : null
       }
     >
+      {c.removal_at ? (
+        <div role="note" className="flex gap-3 rounded-xl border border-warning/40 bg-warning-tint p-4 text-[15px] leading-6">
+          <Clock3 className="mt-0.5 size-5 shrink-0 text-warning" aria-hidden="true" />
+          <p>
+            <strong className="font-semibold">Unfinished sign-up.</strong> {c.name} hasn't entered the code we emailed, so they can't order yet. The
+            account is removed on <time dateTime={c.removal_at}>{orderDateTime(c.removal_at)}</time> unless they finish. If they're stuck, they can sign
+            up again with the same email to get a new code.
+          </p>
+        </div>
+      ) : null}
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="grid content-start gap-6">
           {s ? (
