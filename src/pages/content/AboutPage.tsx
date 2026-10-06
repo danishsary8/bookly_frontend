@@ -57,7 +57,7 @@ export default function AboutPage() {
             <>
               <p>
                 Switch between dollars and riel at the top of any page. When you order, nothing is charged: you pay the courier in cash when the books
-                arrive, with one ${policy.shippingFeeUsd} delivery fee per order.
+                arrive, with one delivery fee per order: ${policy.shippingFeesUsd.phnomPenh} in Phnom Penh, ${policy.shippingFeesUsd.provinces} to the provinces.
               </p>
               <p>
                 Printed books can be returned within {policy.returnWindowDays} days of delivery, from your account. The details are in{" "}

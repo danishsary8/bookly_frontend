@@ -70,8 +70,8 @@ const groups: Array<{ id: string; title: string; items: Faq[] }> = [
         q: "How much is delivery?",
         a: (
           <p>
-            ${policy.shippingFeeUsd} per order with printed books, however many books are in it. Orders with only ebooks or audiobooks have no delivery
-            fee.
+            ${policy.shippingFeesUsd.phnomPenh} per order in Phnom Penh and ${policy.shippingFeesUsd.provinces} to the provinces, however many books are
+            in it. Orders with only ebooks or audiobooks have no delivery fee.
           </p>
         ),
       },
