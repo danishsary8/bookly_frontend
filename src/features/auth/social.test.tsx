@@ -101,6 +101,19 @@ describe("social sign-in", () => {
     expect(post).toHaveBeenCalledTimes(1);
   });
 
+  it("tells someone whose email already has an account how to sign in instead", async () => {
+    vi.stubEnv("VITE_GOOGLE_CLIENT_ID", "client-1");
+    fakeGoogle();
+    vi.spyOn(api, "post").mockRejectedValue(
+      new ApiError({ kind: "conflict", status: 409, message: "This email already has a Bookly account. Sign in with your email and password instead." }),
+    );
+    app();
+    await userEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+    google!.callback({ access_token: "g-token" });
+    expect(await screen.findByText("This email already has a Bookly account. Sign in with your email and password instead.")).toBeInTheDocument();
+    expect(getSession("customer")).toBeNull();
+  });
+
   it("signs in with Facebook", async () => {
     vi.stubEnv("VITE_FACEBOOK_APP_ID", "app-1");
     const login = vi.fn((cb: (r: { status: string; authResponse?: { accessToken: string } }) => void) => cb({ status: "connected", authResponse: { accessToken: "fb-token" } }));

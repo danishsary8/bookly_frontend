@@ -1,15 +1,21 @@
-import { useQuery } from "@tanstack/react-query";
-import { Ban, Clock3, MailCheck, Users } from "lucide-react";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Ban, Clock3, MailCheck, Trash2, Users } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
-import { opsQueries } from "@/api/endpoints/staffOps";
+import { opsApi, opsQueries, type StaffCustomer } from "@/api/endpoints/staffOps";
+import { ApiError } from "@/api/errors";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/dialog";
 import { Pagination } from "@/components/ui/pagination";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { ListState, ListTabs, SearchBox, Segmented, TableCard, td, th, thead } from "@/features/admin/listKit";
 import { removalLabel } from "@/features/admin/removal";
+import { useStaff } from "@/features/admin/staffSession";
 import { useListParams } from "@/features/admin/useListParams";
 import { orderDate } from "@/features/orders/format";
 import { rangeSummary } from "@/lib/pagination";
+import { toast } from "@/stores/toast";
 
 type View = "verified" | "unverified";
 
@@ -39,6 +45,19 @@ export default function CustomersAdminPage() {
   const counts = meta?.counts;
   const list = customers.data?.data ?? [];
   const pending = view === "unverified";
+  const isAdmin = useStaff()?.user.role === "admin";
+  const canDelete = pending && isAdmin;
+  const queryClient = useQueryClient();
+  const [deleting, setDeleting] = useState<StaffCustomer | null>(null);
+  const remove = useMutation({
+    mutationFn: (c: StaffCustomer) => opsApi.deleteCustomer(c.id),
+    onSuccess: (_, c) => {
+      void queryClient.invalidateQueries({ queryKey: ["staff", "customers"] });
+      toast.success({ title: `${c.name}'s sign-up was deleted`, description: `${c.email} can be used to sign up again.` });
+    },
+    onError: (error) => toast.error({ title: "Couldn't delete the sign-up", description: ApiError.from(error).message }),
+    onSettled: () => setDeleting(null),
+  });
   const filtered = Boolean(q) || filter !== "all";
 
   // Switching tabs keeps the search and filter, and goes back to page 1.
@@ -105,6 +124,11 @@ export default function CustomersAdminPage() {
               <th scope="col" className={th}>{pending ? "Status" : "Signs in with"}</th>
               <th scope="col" className={`${th} text-right`}>Orders</th>
               <th scope="col" className={th}>{pending ? "Signed up" : "Joined"}</th>
+              {canDelete ? (
+                <th scope="col" className={th}>
+                  <span className="sr-only">Actions</span>
+                </th>
+              ) : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -135,12 +159,34 @@ export default function CustomersAdminPage() {
                 </td>
                 <td className={`${td} text-right tabular-nums`}>{c.orders_count ?? 0}</td>
                 <td className={`${td} whitespace-nowrap text-sm text-muted-foreground`}>{orderDate(c.created_at)}</td>
+                {canDelete ? (
+                  <td className={`${td} text-right`}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDeleting(c)}
+                      aria-label={`Delete ${c.name}'s sign-up`}
+                      className="text-destructive hover:bg-destructive-tint"
+                    >
+                      <Trash2 aria-hidden="true" /> Delete
+                    </Button>
+                  </td>
+                ) : null}
               </tr>
             ))}
           </tbody>
         </TableCard>
       </ListState>
       <Pagination page={meta?.current_page ?? 1} lastPage={meta?.last_page ?? 1} hrefFor={hrefFor} />
+      <ConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(open) => (open ? null : setDeleting(null))}
+        title={`Delete ${deleting?.name ?? "this"}'s sign-up?`}
+        description={`They never entered their code, so they have no orders. The account is deleted for good and ${deleting?.email ?? "the email"} can be used to sign up again.`}
+        confirmLabel="Delete"
+        loading={remove.isPending}
+        onConfirm={() => deleting && remove.mutate(deleting)}
+      />
     </AdminPage>
   );
 }

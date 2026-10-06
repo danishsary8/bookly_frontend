@@ -148,6 +148,8 @@ export const opsApi = {
   customers: (f: CustomerFilters = {}) =>
     api.get<StaffCustomerPage>("/staff/customers", { params: toQueryParams({ ...f, active: bool(f.active), verified: bool(f.verified) }) }),
   customer: (id: number) => api.get<Resource<StaffCustomer>>(`/staff/customers/${id}`).then((r) => r.data),
+  /** Admins: delete an unfinished sign-up now (frees its email). Verified customers are refused. */
+  deleteCustomer: (id: number) => api.delete(`/staff/customers/${id}`),
   setCustomerActive: (id: number, active: boolean) =>
     api.post<Resource<StaffCustomer>>(`/staff/customers/${id}/${active ? "activate" : "deactivate"}`, {}).then((r) => r.data),
 
