@@ -1,4 +1,5 @@
 import axios, { type AxiosRequestConfig } from "axios";
+import { reportError } from "@/lib/monitoring";
 import { ApiError } from "./errors";
 import { clearSession, getToken, type SessionKind } from "./session";
 
@@ -30,6 +31,20 @@ http.interceptors.response.use(
   (error) => {
     const apiError = ApiError.from(error);
     const sentToken = Boolean(error?.config?.headers?.Authorization);
+
+    // Tell the developers about failures that aren't the visitor's doing: server errors, unexpected
+    // answers, and network failures while the device says it's online (CORS, DNS, a host that's down).
+    const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+    if (apiError.kind === "server" || apiError.kind === "unexpected" || (apiError.kind === "network" && !offline && !axios.isCancel(error))) {
+      const method = (error?.config?.method ?? "get").toUpperCase();
+      const path = String(error?.config?.url ?? "").split("?")[0];
+      const failure = new Error(`API ${method} ${path} → ${apiError.status ?? apiError.kind}`);
+      failure.name = "ApiFailure";
+      reportError(failure, {
+        tags: { api_status: apiError.status ?? apiError.kind, api_method: method, api_path: path, request_id: apiError.requestId },
+        extra: { requestId: apiError.requestId, kind: apiError.kind },
+      });
+    }
 
     if (apiError.kind === "unauthenticated" && sentToken) {
       const kind = sessionKindFor(error.config?.url);
