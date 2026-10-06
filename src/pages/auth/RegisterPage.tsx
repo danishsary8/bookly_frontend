@@ -13,6 +13,7 @@ import { SocialButtons } from "@/features/auth/SocialButtons";
 import { registerSchema, type RegisterValues } from "@/features/auth/schemas";
 import { useAfterSignIn } from "@/features/auth/useAfterSignIn";
 import { applyApiErrors, withNext } from "@/lib/forms";
+import { useTurnstile } from "@/features/auth/turnstile";
 
 const FIELDS = ["name", "email", "phone", "password", "password_confirmation"] as const;
 
@@ -29,6 +30,7 @@ export default function RegisterPage() {
   });
   const { errors, isSubmitting } = formState;
   const password = useWatch({ control, name: "password" });
+  const turnstile = useTurnstile("register");
 
   const submit = async (values: RegisterValues) => {
     setFormError(null);
@@ -39,6 +41,7 @@ export default function RegisterPage() {
         password: values.password,
         password_confirmation: values.password_confirmation,
         ...(values.phone ? { phone: values.phone } : {}),
+        turnstile_token: await turnstile.getToken(),
       });
       // New accounts are unverified, so this continues to /verify-email (which keeps `next`).
       afterSignIn(response.customer, next, undefined, { justRegistered: true });
@@ -48,6 +51,8 @@ export default function RegisterPage() {
         setFormError(message);
         requestAnimationFrame(() => alertRef.current?.focus());
       }
+    } finally {
+      turnstile.reset();
     }
   };
 
@@ -77,6 +82,8 @@ export default function RegisterPage() {
           <PasswordChecklist id="password-rules" value={password ?? ""} />
         </div>
         <PasswordField label="Confirm password" autoComplete="new-password" error={errors.password_confirmation?.message} {...register("password_confirmation")} />
+
+        {turnstile.widget}
 
         <CtaGlare block>
           <Button type="submit" variant="cta" size="lg" className="w-full" loading={isSubmitting}>

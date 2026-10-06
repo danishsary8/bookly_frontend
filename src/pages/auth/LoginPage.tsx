@@ -12,6 +12,7 @@ import { SocialButtons } from "@/features/auth/SocialButtons";
 import { loginSchema, type LoginValues } from "@/features/auth/schemas";
 import { useAfterSignIn } from "@/features/auth/useAfterSignIn";
 import { applyApiErrors, withNext } from "@/lib/forms";
+import { useTurnstile } from "@/features/auth/turnstile";
 
 type LoginState = { email?: string; notice?: string } | null;
 
@@ -29,11 +30,12 @@ export default function LoginPage() {
   });
   const { errors, isSubmitting } = formState;
   const email = useWatch({ control, name: "email" });
+  const turnstile = useTurnstile("login");
 
   const submit = async (values: LoginValues) => {
     setFormError(null);
     try {
-      const response = await authApi.login(values.email, values.password);
+      const response = await authApi.login(values.email, values.password, await turnstile.getToken());
       const firstName = response.customer?.name?.split(" ")[0];
       afterSignIn(response.customer, next, firstName ? `Welcome back, ${firstName}` : "Welcome back");
     } catch (error) {
@@ -43,6 +45,8 @@ export default function LoginPage() {
         setFormError(message);
         requestAnimationFrame(() => alertRef.current?.focus());
       }
+    } finally {
+      turnstile.reset();
     }
   };
 
@@ -81,6 +85,8 @@ export default function LoginPage() {
             Forgot password?
           </Link>
         </div>
+
+        {turnstile.widget}
 
         <CtaGlare block>
           <Button type="submit" variant="cta" size="lg" className="w-full" loading={isSubmitting}>

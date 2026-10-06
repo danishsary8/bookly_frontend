@@ -93,7 +93,7 @@ export default function ResetPasswordPage() {
               <OtpInput value={field.value} onChange={field.onChange} label="Reset code" error={fieldState.error?.message} autoFocus={Boolean(knownEmail)} />
             )}
           />
-          {email ? <ResendCode send={() => authApi.forgotPassword(email)} startCoolingDown={state?.justSent} /> : null}
+          {email ? <ResendCode send={(token) => authApi.forgotPassword(email, token)} startCoolingDown={state?.justSent} turnstileAction="forgot_password" /> : null}
         </div>
         <div className="grid gap-3">
           <PasswordField label="New password" autoComplete="new-password" aria-describedby="new-password-rules" error={errors.password?.message} {...register("password")} />
