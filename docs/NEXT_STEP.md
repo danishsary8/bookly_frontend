@@ -29,6 +29,7 @@ Branch: `chore/go-live-checks` (from `main` after `chore/go-live` is merged). Th
 - Sign in, cart, checkout on the live site by hand once.
 
 ## Later
+- Owner's plan (do later): friendlier failure screens and error reporting. Customers never see technical wording (no "API server is unavailable"); they see a calm, familiar message such as "Something went wrong on our side. Please try again in a moment." with Try again, and the shop keeps working where it can. Developers get the details instead: errors from the browser (and the API) are sent with the page, request, status, request id and stack to a place they watch (e.g. Sentry, or a Telegram bot for alerts), so they know what broke and where to fix it.
 - Real contact details, delivery fees and areas, reviewed privacy / terms in `src/content/shop.ts`; then remove the placeholder and draft markers.
 - Optional: per-book link previews (pre-render or an edge function), custom domain, analytics, Google Search Console with the sitemap.
 - Card and KHQR stay "coming soon" until the owner gives payment API keys. Chore: Vitest 5 for the `@vitest/mocker` advisory.
