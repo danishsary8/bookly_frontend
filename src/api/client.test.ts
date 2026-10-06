@@ -1,8 +1,11 @@
 import type { AxiosAdapter, InternalAxiosRequestConfig } from "axios";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { reportError } from "@/lib/monitoring";
 import { api, http, newIdempotencyKey, SESSION_EXPIRED_EVENT, sessionKindFor } from "./client";
 import { ApiError } from "./errors";
 import { getToken, setSession } from "./session";
+
+vi.mock("@/lib/monitoring", () => ({ reportError: vi.fn() }));
 
 const sent: InternalAxiosRequestConfig[] = [];
 const respond = (status: number, data: unknown = {}): AxiosAdapter => async (config) => {
@@ -74,5 +77,36 @@ describe("newIdempotencyKey", () => {
     const a = newIdempotencyKey();
     expect(a).toMatch(/^[A-Za-z0-9_-]{8,100}$/);
     expect(newIdempotencyKey()).not.toBe(a);
+  });
+});
+
+describe("error reporting", () => {
+  afterEach(() => vi.mocked(reportError).mockClear());
+
+  it("reports server errors with the request, status and request id", async () => {
+    http.defaults.adapter = async (config) => {
+      const { AxiosError } = await import("axios");
+      throw new AxiosError("fail", "ERR_BAD_RESPONSE", config, undefined, { status: 500, data: {}, headers: { "x-request-id": "req-1" }, statusText: "", config });
+    };
+    await expect(api.get("/books?page=2")).rejects.toBeInstanceOf(ApiError);
+    expect(reportError).toHaveBeenCalledTimes(1);
+    const [error, details] = vi.mocked(reportError).mock.calls[0];
+    expect((error as Error).message).toBe("API GET /books → 500");
+    expect(details?.tags).toMatchObject({ api_status: 500, api_method: "GET", api_path: "/books", request_id: "req-1" });
+  });
+
+  it("doesn't report the visitor's own mistakes or being offline", async () => {
+    http.defaults.adapter = respond(422, { message: "The email has already been taken." });
+    await expect(api.post("/auth/register", {})).rejects.toBeInstanceOf(ApiError);
+
+    const online = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    http.defaults.adapter = async (config) => {
+      const { AxiosError } = await import("axios");
+      throw new AxiosError("Network Error", "ERR_NETWORK", config);
+    };
+    await expect(api.get("/books")).rejects.toBeInstanceOf(ApiError);
+    online.mockRestore();
+
+    expect(reportError).not.toHaveBeenCalled();
   });
 });

@@ -1,3 +1,4 @@
+import { reportError } from "@/lib/monitoring";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { ApiError } from "@/api/errors";
@@ -32,6 +33,10 @@ class Boundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     if (import.meta.env.DEV) console.error(error, info.componentStack);
+    // A page's code that can't download while offline isn't a bug; everything else is.
+    if (!(isLoadFailure(error) && !navigator.onLine)) {
+      reportError(error, { tags: { source: "error-boundary" }, extra: { componentStack: info.componentStack } });
+    }
   }
 
   render() {
