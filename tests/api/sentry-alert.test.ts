@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { messageFor, POST, validSignature } from "./sentry-alert";
+import { messageFor, POST, validSignature } from "../../api/sentry-alert";
 
 const SECRET = "test-secret";
 const sign = (body: string) => createHmac("sha256", SECRET).update(body).digest("hex");
