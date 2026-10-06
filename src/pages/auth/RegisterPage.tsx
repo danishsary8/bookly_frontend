@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { AuthPage } from "@/features/auth/AuthPage";
 import { PasswordChecklist } from "@/features/auth/PasswordChecklist";
 import { SocialButtons } from "@/features/auth/SocialButtons";
+import { anySocialEnabled } from "@/features/auth/social";
 import { registerSchema, type RegisterValues } from "@/features/auth/schemas";
 import { useAfterSignIn } from "@/features/auth/useAfterSignIn";
 import { applyApiErrors, withNext } from "@/lib/forms";
@@ -72,6 +73,7 @@ export default function RegisterPage() {
     >
       <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid gap-5">
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
+        {anySocialEnabled() ? <SocialButtons next={next} /> : null}
 
         <TextField label="Full name" autoComplete="name" error={errors.name?.message} {...register("name")} />
         <TextField label="Email" type="email" autoComplete="email" inputMode="email" placeholder="name@example.com" hint="We'll send a 6-digit code to confirm it." error={errors.email?.message} {...register("email")} />
@@ -91,7 +93,7 @@ export default function RegisterPage() {
           </Button>
         </CtaGlare>
 
-        <SocialButtons />
+        {anySocialEnabled() ? null : <SocialButtons next={next} />}
       </form>
     </AuthPage>
   );

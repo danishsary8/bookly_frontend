@@ -9,6 +9,7 @@ import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { AuthPage } from "@/features/auth/AuthPage";
 import { SocialButtons } from "@/features/auth/SocialButtons";
+import { anySocialEnabled } from "@/features/auth/social";
 import { loginSchema, type LoginValues } from "@/features/auth/schemas";
 import { useAfterSignIn } from "@/features/auth/useAfterSignIn";
 import { applyApiErrors, withNext } from "@/lib/forms";
@@ -72,6 +73,7 @@ export default function LoginPage() {
       <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid gap-5">
         {state?.notice && !formError ? <FormAlert tone="success">{state.notice}</FormAlert> : null}
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
+        {anySocialEnabled() ? <SocialButtons next={next} /> : null}
 
         <TextField label="Email" type="email" autoComplete="email" inputMode="email" placeholder="name@example.com" error={errors.email?.message} {...register("email")} />
 
@@ -94,7 +96,7 @@ export default function LoginPage() {
           </Button>
         </CtaGlare>
 
-        <SocialButtons />
+        {anySocialEnabled() ? null : <SocialButtons next={next} />}
       </form>
     </AuthPage>
   );

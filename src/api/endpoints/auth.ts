@@ -23,6 +23,9 @@ export const authApi = {
   register: (input: RegisterInput) => api.post<LoginResponse & { message: string }>("/auth/register", input).then(startSession),
   login: (email: string, password: string, turnstileToken?: string) =>
     api.post<LoginResponse>("/auth/login", { email, password, ...withToken(turnstileToken) }).then(startSession),
+  /** Signs in (or up) with a Google / Facebook access token; the API checks it with the provider. */
+  social: (provider: "google" | "facebook", accessToken: string) =>
+    api.post<LoginResponse>(`/auth/social/${provider}`, { access_token: accessToken }).then(startSession),
   /** Revokes the token on the server; the local session ends even if that request fails. */
   logout: async () => {
     try {
