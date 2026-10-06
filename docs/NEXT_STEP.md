@@ -1,23 +1,31 @@
-# Next step — friendly error screens and error reporting
+# Next step — set up error reporting, then real shop details
 
-Branch: `feature/error-reporting` (from `main` after `chore/go-live-checks` is merged). The site is live at https://bookly-frontend-five.vercel.app.
+The site is live at https://bookly-frontend-five.vercel.app. The code for friendly errors and reporting is done; the owner connects the accounts below. Next code branch: `chore/shop-details` (from `main`).
 
-## Owner checks on the live site (5 minutes, after merging)
-Vercel deploys `main` by itself now. Once the new deployment says **Ready**:
-1. Open https://bookly-frontend-five.vercel.app/robots.txt: it should end with `Sitemap: https://bookly-frontend-five.vercel.app/sitemap.xml`.
-2. Open that sitemap link: it should list `/books/…`, `/authors/…`, `/series/…` pages from the live catalogue.
-3. Paste the site address into a Telegram or Facebook chat: the preview card should show the blue "Books delivered across Cambodia" image.
-4. Sign in as a customer, add a book to the cart and place a cash-on-delivery order, then open it in the admin and move it to Processing.
-5. Optional: Chrome DevTools → Lighthouse → Mobile → Analyze on the home page (expect about 75–80 on phone, about 100 on desktop; this session measured those on a production build).
+## Owner setup for error reporting (after merging both PRs)
+Merge the backend PR (`bookly_backend_v2`, `fix/signup-email`) and the frontend PR (`feature/error-reporting`). Never paste keys or tokens in chat.
 
-## Goal (owner's plan)
-Customers never see technical wording; developers get the details.
-- **Customers**: calm, familiar messages wherever a request fails, e.g. "Something went wrong on our side. Please try again in a moment." with **Try again**; "You're offline" stays; pages keep working where they can (e.g. the cart still opens). Review every error state and toast for leftover technical text.
-- **Developers**: browser errors and failed API calls (5xx, network, crashes caught by the error boundary) are reported with page, action, request, status, the API's request id and the stack, so it's clear what broke and where.
+**1. Sentry (free)**
+1. Sign up at sentry.io → create a project, platform **React**, name `bookly-frontend`. Copy its **DSN**.
+2. Create a second project, platform **Laravel**, name `bookly-api`. Copy its DSN.
+3. Vercel → bookly-frontend → Settings → Environment Variables: `VITE_SENTRY_DSN` = the React DSN (Production).
+4. Render → API service → Environment: `SENTRY_LARAVEL_DSN` = the Laravel DSN.
+5. Optional (readable stack traces): Sentry → Settings → Auth Tokens → create one with release and source-map rights; in Vercel add `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` (your org slug), `SENTRY_PROJECT` = `bookly-frontend`.
 
-## Decide first (ask the owner)
-- Where reports go: **Sentry** (free plan; grouping, stack traces with source maps, alerts by email) or a **Telegram bot** (instant message to a chat; simple, but no grouping), or both (Sentry for details + Telegram alert for new issues). The API already has Sentry support (backend Phase 7), so Sentry on both sides is the natural fit.
-- The owner creates the Sentry project / Telegram bot and puts the key or token in Vercel's environment variables; never in chat or in git.
+**2. Telegram bot**
+1. In Telegram, message **@BotFather** → `/newbot` → follow the steps → copy the **bot token**.
+2. Send any message to your new bot, then open `https://api.telegram.org/bot<TOKEN>/getUpdates` in the browser and copy `"chat":{"id": …}` (your chat id).
+3. Vercel → Environment Variables: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
+
+**3. Connect Sentry to the Telegram function**
+1. Sentry → Settings → Developer Settings → **Custom Integrations → Create New Integration → Internal Integration**, name `Telegram`.
+2. Webhook URL: `https://bookly-frontend-five.vercel.app/api/sentry-alert`; turn on **Alert Rule Action**; under Webhooks tick **issue**; permissions: Issue & Event = Read. Save, then copy the **Client Secret**.
+3. Vercel → Environment Variables: `SENTRY_WEBHOOK_SECRET` = that client secret. Redeploy the frontend.
+4. Sentry → Alerts → create an issue alert for each project: "A new issue is created" → action "Send a notification via Telegram (integration)".
+
+**4. Email (if not done)** Render → Environment → Brevo SMTP as in the backend's DEPLOYMENT.md ("Email on Render"), then redeploy.
+
+**Check:** register with a new email (the code arrives); open `https://bookly-frontend-five.vercel.app/books/999999999` while the API is up: nothing technical on screen. To test the alert, trigger a test error from Sentry's project settings or wait for a real one; a Telegram message should arrive within a minute.
 
 ## Later
 - Real contact details, delivery fees and areas, reviewed privacy / terms in `src/content/shop.ts`; then remove the placeholder and draft markers.
@@ -28,10 +36,10 @@ Customers never see technical wording; developers get the details.
 
 ## Paste this into the next session
 ```
-Project: Bookly Frontend V2 (React 19 + TS + Vite + Tailwind 4), repo danishsary8/bookly_frontend, live at https://bookly-frontend-five.vercel.app on the Laravel API v2 (live: https://bookly-api-zasc.onrender.com/api/v1; local: php artisan serve in bookly_backend_v2 with DemoSeeder data, Vite with VITE_API_BASE_URL=http://localhost:8000/api/v1).
+Project: Bookly Frontend V2 (React 19 + TS + Vite + Tailwind 4), repo danishsary8/bookly_frontend, live at https://bookly-frontend-five.vercel.app on the Laravel API v2 (repo danishsary8/bookly_backend_v2; live: https://bookly-api-zasc.onrender.com/api/v1; local: php artisan serve with DemoSeeder data, Vite with VITE_API_BASE_URL=http://localhost:8000/api/v1).
 Read first: CLAUDE.md, README.md, docs/WORKLOG.md, docs/NEXT_STEP.md.
-Status: V2 is complete and live (go-live checks merged).
-Next: friendly error screens and error reporting on branch feature/error-reporting, as in docs/NEXT_STEP.md. First ask me where reports should go (Sentry, Telegram bot, or both) and give me step-by-step instructions for creating the account/bot and adding its key to Vercel; never ask me to paste secrets in chat. Then: customer-facing messages with no technical wording, and developer reports with page, request, status, request id and stack. Ask me before using my Vercel or Render accounts and before any decision not covered by V2_PLAN or MASTER.
-Rules: small commits, human-style messages, no AI/tool names anywhere in git (commit as git user "danishsary" <187593185+danishsary8@users.noreply.github.com>); no payment-provider work (card and KHQR stay "coming soon"); don't modify backend migrations or existing feature code without asking; I merge the PR myself. Verify with lint, typecheck, tests, build and a browser pass before pushing. Update docs/WORKLOG.md as you go and docs/NEXT_STEP.md at the end. If something needs me, give me short step-by-step instructions.
+Status: V2 is live; friendly errors + Sentry/Telegram reporting merged; I did the owner setup in docs/NEXT_STEP.md (tell me if anything there looks unconnected).
+Next: on branch chore/shop-details, put in the real shop details I send you (contact, delivery fees and areas, reviewed privacy/terms in src/content/shop.ts) and remove the placeholder and draft markers. If I haven't sent them yet, ask me for them first, as a short checklist.
+Rules: small commits, human-style messages, no AI/tool names anywhere in git (commit as git user "danishsary" <187593185+danishsary8@users.noreply.github.com>); no payment-provider work (card and KHQR stay "coming soon"); don't modify backend migrations or existing feature code without asking; I merge the PRs myself; never ask me to paste secrets in chat. Verify with lint, typecheck, tests, build and a browser pass before pushing. Update docs/WORKLOG.md as you go and docs/NEXT_STEP.md at the end. If something needs me, give me short step-by-step instructions.
 Output: short "what was done / what's next" summary plus a paste-ready prompt for the next session.
 ```
