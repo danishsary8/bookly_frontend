@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Lock, TicketPercent } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { accountQueries } from "@/api/endpoints/account";
@@ -71,8 +71,16 @@ export default function CheckoutPage() {
   const coupon = useCoupon();
   const { cart } = useUsableCart();
   const addresses = useQuery(accountQueries.addresses());
-  const preview = useQuery({ ...cartQueries.preview(coupon), enabled: Boolean(cart.data?.items?.length), retry: false });
   const [chosenAddress, setChosenAddress] = useState<number | null>(null);
+  const list = addresses.data ?? [];
+  const addressId = chosenAddress ?? list.find((a) => a.is_default)?.id ?? list[0]?.id ?? null;
+  // Delivery depends on the address (Phnom Penh or the provinces), so the totals follow the chosen one.
+  const preview = useQuery({
+    ...cartQueries.preview(coupon, addressId),
+    enabled: Boolean(cart.data?.items?.length) && !addresses.isPending,
+    retry: false,
+    placeholderData: keepPreviousData,
+  });
   const [formError, setFormError] = useState<string | null>(null);
   // Set when the last attempt lost its response: the order may exist even though the cart
   // now looks empty, so the page stays put and the retry (same key) returns that order.
@@ -87,9 +95,6 @@ export default function CheckoutPage() {
     setCoupon(null);
     toast.info({ title: `${coupon} was removed`, description: couponError });
   }, [couponError, coupon]);
-
-  const list = addresses.data ?? [];
-  const addressId = chosenAddress ?? list.find((a) => a.is_default)?.id ?? list[0]?.id ?? null;
 
   const place = useMutation({
     mutationFn: () => cartApi.placeOrder({ address_id: addressId!, payment_method: "cod", ...(coupon ? { coupon_code: coupon } : {}) }, idempotencyKey.current),
@@ -226,7 +231,14 @@ export default function CheckoutPage() {
               <dl className="grid gap-2 text-[15px]" aria-busy={preview.isFetching || undefined}>
                 <Row label={<span className="text-muted-foreground">Subtotal</span>} amount={data.subtotal} />
                 {Number(data.discount?.usd) > 0 ? <Row label="Discount" amount={data.discount} negative className="text-success" /> : null}
-                {shipsSomething ? <Row label={<span className="text-muted-foreground">Shipping</span>} amount={data.shipping_fee} /> : null}
+                {shipsSomething ? <Row
+                    label={
+                      <span className="text-muted-foreground">
+                        Delivery{data.delivery_area ? ` (${data.delivery_area === "phnom_penh" ? "Phnom Penh" : "provinces"})` : ""}
+                      </span>
+                    }
+                    amount={data.shipping_fee}
+                  /> : null}
                 {Number(data.tax?.usd) > 0 ? <Row label={<span className="text-muted-foreground">Tax</span>} amount={data.tax} /> : null}
                 <div className="mt-2 flex items-baseline justify-between gap-4 border-t border-border pt-3">
                   <dt className="font-semibold">Total</dt>

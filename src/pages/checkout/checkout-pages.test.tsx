@@ -18,7 +18,7 @@ import OrderConfirmationPage from "./OrderConfirmationPage";
 
 const customer: Customer = { id: 1, name: "Sok Dara", email: "dara@example.com", phone: null, email_verified: true, has_password: true };
 const home: Address = { id: 11, label: "Home", recipient_name: "Sok Dara", phone: "012345678", address_line1: "House 12, St 240", address_line2: null, city: "Phnom Penh", state: null, postal_code: null, country: "Cambodia", is_default: true };
-const work: Address = { ...home, id: 12, label: "Work", is_default: false };
+const work: Address = { ...home, id: 12, label: "Work", city: "Siem Reap", is_default: false };
 const cart: Cart = {
   id: 1,
   items: [{ id: 5, book_variant_id: 3, book: { id: 1, title: "The Mekong Letters" }, format: "paperback", quantity: 2, unit_price_usd: "12.99", unit_price_khr: "53259", line_total_usd: "25.98", line_total_khr: "106518", issues: [] }],
@@ -28,16 +28,23 @@ const cart: Cart = {
   can_checkout: true,
 };
 const amount = (usd: string) => ({ usd, khr: String(Math.round(Number(usd) * 4100)) });
-const preview = (coupon: string | null): CheckoutPreview => ({
-  subtotal: amount("25.98"),
-  discount: amount(coupon ? "2.59" : "0.00"),
-  shipping_fee: amount("2.00"),
-  tax: amount("0.00"),
-  total: amount(coupon ? "25.39" : "27.98"),
-  coupon_code: coupon,
-  requires_shipping: true,
-  can_checkout: true,
-});
+// The default address (Home) is in Phnom Penh; Work is in Siem Reap, which costs the provinces fee.
+const preview = (coupon: string | null, addressId: number | null = null): CheckoutPreview => {
+  const provinces = addressId === work.id;
+  const shipping = provinces ? 3 : 1.5;
+  const discount = coupon ? 2.59 : 0;
+  return {
+    subtotal: amount("25.98"),
+    discount: amount(discount.toFixed(2)),
+    shipping_fee: amount(shipping.toFixed(2)),
+    tax: amount("0.00"),
+    total: amount((25.98 - discount + shipping).toFixed(2)),
+    coupon_code: coupon,
+    requires_shipping: true,
+    delivery_area: provinces ? "provinces" : "phnom_penh",
+    can_checkout: true,
+  };
+};
 const order: Order = {
   id: 42,
   order_number: "BK-000042",
@@ -70,7 +77,7 @@ const app = (route: string) =>
 beforeEach(() => {
   setSession("customer", { token: "t", expiresAt: null, user: customer });
   vi.spyOn(cartApi, "cart").mockResolvedValue(cart);
-  vi.spyOn(cartApi, "preview").mockImplementation(async (code) => preview(code ?? null));
+  vi.spyOn(cartApi, "preview").mockImplementation(async (code, addressId) => preview(code ?? null, addressId ?? null));
   vi.spyOn(accountApi, "addresses").mockResolvedValue([work, home]);
   vi.spyOn(accountApi, "wishlist").mockResolvedValue({ data: [], meta: { current_page: 1, last_page: 1, per_page: 100, total: 0 } } as never);
 });
@@ -129,6 +136,19 @@ describe("CheckoutPage", () => {
     expect(await screen.findByRole("heading", { level: 1, name: /Thank you/ })).toBeInTheDocument();
     expect(screen.getByText(/BK-000042/)).toBeInTheDocument();
     expect(getCoupon()).toBeNull();
+  });
+
+  it("prices delivery for the chosen address", async () => {
+    const user = userEvent.setup();
+    app("/checkout");
+    const summary = await screen.findByRole("complementary", { name: "Order total" });
+    expect(await within(summary).findByText("Delivery (Phnom Penh)")).toBeInTheDocument();
+    expect(within(summary).getByText("$1.50")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("radio", { name: /Work/ }));
+    expect(await within(summary).findByText("Delivery (provinces)")).toBeInTheDocument();
+    expect(within(summary).getByText("$3.00")).toBeInTheDocument();
+    expect(cartApi.preview).toHaveBeenLastCalledWith(null, work.id);
   });
 
   it("retries with the same key after a lost response, and a new key after a refusal", async () => {

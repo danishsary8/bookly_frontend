@@ -1403,7 +1403,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Totals for the cart (subtotal, discount, shipping, tax, total in USD and KHR) */
+        /**
+         * Totals for the cart (subtotal, discount, shipping, tax, total in USD and KHR)
+         * @description Delivery is priced for address_id, else the default address: Phnom Penh 1.50 USD, the provinces 3.00 USD (SHIPPING_FEE_PHNOM_PENH / SHIPPING_FEE_PROVINCES).
+         */
         post: {
             parameters: {
                 query?: never;
@@ -1415,6 +1418,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         coupon_code?: string;
+                        address_id?: number;
                     };
                 };
             };
@@ -1429,6 +1433,13 @@ export interface paths {
                             data?: components["schemas"]["CheckoutPreview"];
                         };
                     };
+                };
+                /** @description address_id is not one of your addresses, or a bad coupon */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
             };
         };
@@ -1670,7 +1681,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Request a return (delivered orders, within 14 days, physical formats only) */
+        /** Request a return (delivered orders, within 3 days of delivery, physical formats only) */
         post: {
             parameters: {
                 query?: never;
@@ -4075,6 +4086,11 @@ export interface components {
             coupon_code?: string | null;
             /** @description false when the cart only has ebooks/audiobooks */
             requires_shipping?: boolean;
+            /**
+             * @description Area the shipping fee was priced for; null when the customer has no address yet (the provinces fee is quoted)
+             * @enum {string|null}
+             */
+            delivery_area?: "phnom_penh" | "provinces" | null;
             can_checkout?: boolean;
         };
         CouponCheck: {

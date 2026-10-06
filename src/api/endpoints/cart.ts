@@ -4,7 +4,7 @@ import type { Cart, CheckoutPreview, CouponCheck, Order, Resource } from "../typ
 
 export const cartKeys = {
   cart: () => ["cart"] as const,
-  preview: (couponCode: string | null) => ["cart", "preview", couponCode ?? ""] as const,
+  preview: (couponCode: string | null, addressId: number | null = null) => ["cart", "preview", couponCode ?? "", addressId ?? 0] as const,
 };
 
 export interface PlaceOrderInput {
@@ -25,8 +25,11 @@ export const cartApi = {
   clear: () => api.delete<Resource<Cart>>("/cart").then(cartData),
 
   checkCoupon: (code: string) => api.post<Resource<CouponCheck>>("/cart/coupon/check", { code }).then((r) => r.data),
-  preview: (couponCode?: string | null) =>
-    api.post<Resource<CheckoutPreview>>("/checkout/preview", couponCode ? { coupon_code: couponCode } : {}).then((r) => r.data),
+  /** Totals for the cart; delivery is priced for `addressId` (else the default address). */
+  preview: (couponCode?: string | null, addressId?: number | null) =>
+    api
+      .post<Resource<CheckoutPreview>>("/checkout/preview", { ...(couponCode ? { coupon_code: couponCode } : {}), ...(addressId ? { address_id: addressId } : {}) })
+      .then((r) => r.data),
 
   /**
    * Places the order. Pass the same `idempotencyKey` when retrying after a timeout so the API returns
@@ -38,6 +41,6 @@ export const cartApi = {
 
 export const cartQueries = {
   cart: () => queryOptions({ queryKey: cartKeys.cart(), queryFn: cartApi.cart, staleTime: 0 }),
-  preview: (couponCode: string | null) =>
-    queryOptions({ queryKey: cartKeys.preview(couponCode), queryFn: () => cartApi.preview(couponCode), staleTime: 0 }),
+  preview: (couponCode: string | null, addressId: number | null = null) =>
+    queryOptions({ queryKey: cartKeys.preview(couponCode, addressId), queryFn: () => cartApi.preview(couponCode, addressId), staleTime: 0 }),
 };
