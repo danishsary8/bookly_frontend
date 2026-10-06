@@ -52,16 +52,21 @@ export function SocialButtons({ next = null }: { next?: string | null }) {
   const afterSignIn = useAfterSignIn();
   const [busy, setBusy] = useState<Provider | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [failed, setFailed] = useState<Partial<Record<Provider, boolean>>>({});
   const [, setLoaded] = useState(0);
+
+  const load = (provider: Provider) =>
+    prepare(provider)
+      .then(() => {
+        setFailed((f) => ({ ...f, [provider]: false }));
+        setLoaded((n) => n + 1);
+      })
+      .catch(() => setFailed((f) => ({ ...f, [provider]: true })));
 
   // Load the provider scripts as soon as the buttons show, so a click can open the popup.
   const key = enabled.join(",");
   useEffect(() => {
-    for (const provider of key ? (key.split(",") as Provider[]) : []) {
-      prepare(provider)
-        .then(() => setLoaded((n) => n + 1))
-        .catch(() => undefined);
-    }
+    for (const provider of key ? (key.split(",") as Provider[]) : []) void load(provider);
   }, [key]);
 
   if (!anySocialEnabled()) {
@@ -86,8 +91,12 @@ export function SocialButtons({ next = null }: { next?: string | null }) {
   const start = (provider: Provider) => {
     setError(null);
     if (!isReady(provider)) {
-      setError(`${NAMES[provider]} sign-in is still loading. Try again in a moment, or check that nothing is blocking ${NAMES[provider]} on this site.`);
-      void prepare(provider).then(() => setLoaded((n) => n + 1)).catch(() => undefined);
+      setError(
+        failed[provider]
+          ? `${NAMES[provider]} sign-in couldn't load. Check your connection, or allow ${NAMES[provider]} if you use an ad or tracker blocker, then try again.`
+          : `${NAMES[provider]} sign-in is still loading. Try again in a moment.`,
+      );
+      void load(provider);
       return;
     }
     // The popup must open inside this click, so the token is requested before any state update.
