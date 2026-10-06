@@ -15,6 +15,7 @@ import StaffResetPasswordPage from "./auth/StaffResetPasswordPage";
 import AuditLogPage from "./AuditLogPage";
 import CouponsAdminPage from "./CouponsAdminPage";
 import CustomerAdminPage from "./CustomerAdminPage";
+import CustomersAdminPage from "./CustomersAdminPage";
 import ExchangeRatesPage from "./ExchangeRatesPage";
 import MembersAdminPage from "./MembersAdminPage";
 import OrderAdminPage from "./OrderAdminPage";
@@ -47,6 +48,7 @@ const app = (route: string) =>
           <Route path="/admin/returns/:id" element={<ReturnAdminPage />} />
           <Route path="/admin/reviews" element={<ReviewsAdminPage />} />
           <Route path="/admin/coupons" element={<CouponsAdminPage />} />
+          <Route path="/admin/customers" element={<CustomersAdminPage />} />
           <Route path="/admin/customers/:id" element={<CustomerAdminPage />} />
           <Route element={<RequireAdminRole />}>
             <Route path="/admin/members" element={<MembersAdminPage />} />
@@ -212,7 +214,47 @@ describe("customer", () => {
     stats: { orders_by_status: { delivered: 2 }, returns_count: 0, reviews_count: 1, lifetime_spent_usd: "40.00", last_order_at: "2026-10-01T00:00:00Z" },
     recent_orders: [],
     created_at: "2026-09-01T00:00:00Z",
+    removal_at: null,
   };
+  const pending: StaffCustomer = {
+    ...customer,
+    id: 9,
+    name: "Vanna Ly",
+    email: "vanna@example.com",
+    email_verified: false,
+    login_methods: ["password"],
+    created_at: new Date(Date.now() - 20 * 3_600_000).toISOString(),
+    removal_at: new Date(Date.now() + 28 * 3_600_000).toISOString(),
+  };
+
+  it("opens on verified customers, with a second tab for unfinished sign-ups", async () => {
+    signIn(staff);
+    const list = vi.spyOn(opsApi, "customers").mockImplementation(async (f = {}) =>
+      f.verified === false ? page([pending], { counts: { verified: 1, unverified: 1 } }) : page([customer], { counts: { verified: 1, unverified: 1 } }),
+    );
+    app("/admin/customers?q=a");
+    const tabs = await screen.findByRole("navigation", { name: "Customer accounts" });
+    expect(await screen.findByRole("link", { name: "Sokha Chan" })).toBeInTheDocument();
+    expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ verified: true, q: "a" }));
+    expect(within(tabs).getByRole("link", { name: /Verified/ })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByText("Password")).toBeInTheDocument();
+
+    await userEvent.click(within(tabs).getByRole("link", { name: /Not verified yet\s*1/ }));
+    expect(await screen.findByRole("link", { name: "Vanna Ly" })).toBeInTheDocument();
+    expect(screen.getByTestId("where")).toHaveTextContent("/admin/customers?q=a&view=unverified");
+    expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ verified: false, q: "a" }));
+    expect(screen.getByText("Removed in 1 day")).toBeInTheDocument();
+    expect(screen.getByText(/removed 48 hours after signing up/)).toBeInTheDocument();
+  });
+
+  it("explains an unfinished sign-up on its page", async () => {
+    signIn(staff);
+    vi.spyOn(opsApi, "customer").mockResolvedValue(pending);
+    app("/admin/customers/9");
+    const note = await screen.findByRole("note");
+    expect(note).toHaveTextContent("Unfinished sign-up.");
+    expect(note).toHaveTextContent("unless they finish");
+  });
 
   it("shows staff the account without the deactivate button", async () => {
     signIn(staff);
