@@ -11,6 +11,7 @@ import { AuthPage } from "@/features/auth/AuthPage";
 import { rememberResetEmail } from "@/features/auth/resetEmail";
 import { forgotPasswordSchema, type ForgotPasswordValues } from "@/features/auth/schemas";
 import { applyApiErrors, withNext } from "@/lib/forms";
+import { useTurnstile } from "@/features/auth/turnstile";
 
 /* Step 1 of 2: ask for a reset code by email. The API answers the same way whether or not the email exists. */
 export default function ForgotPasswordPage() {
@@ -26,10 +27,12 @@ export default function ForgotPasswordPage() {
     defaultValues: { email: prefill },
   });
 
+  const turnstile = useTurnstile("forgot_password");
+
   const submit = async ({ email }: ForgotPasswordValues) => {
     setFormError(null);
     try {
-      await authApi.forgotPassword(email);
+      await authApi.forgotPassword(email, await turnstile.getToken());
       rememberResetEmail(email);
       navigate(withNext("/reset-password", next), { state: { email, justSent: true } });
     } catch (error) {
@@ -38,6 +41,8 @@ export default function ForgotPasswordPage() {
         setFormError(message);
         requestAnimationFrame(() => alertRef.current?.focus());
       }
+    } finally {
+      turnstile.reset();
     }
   };
 
@@ -58,6 +63,7 @@ export default function ForgotPasswordPage() {
       <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid gap-5">
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
         <TextField label="Email" type="email" autoComplete="email" inputMode="email" placeholder="name@example.com" error={formState.errors.email?.message} {...register("email")} />
+        {turnstile.widget}
         <CtaGlare block>
           <Button type="submit" variant="cta" size="lg" className="w-full" loading={formState.isSubmitting}>
             {formState.isSubmitting ? "Sending code…" : "Send reset code"}

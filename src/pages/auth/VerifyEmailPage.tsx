@@ -96,7 +96,7 @@ export default function VerifyEmailPage() {
             )}
           </Button>
         </CtaGlare>
-        <ResendCode send={authApi.resendVerification} startCoolingDown={fromRegistration} />
+        <ResendCode send={authApi.resendVerification} startCoolingDown={fromRegistration} turnstileAction="resend_code" />
       </form>
     </AuthPage>
   );
