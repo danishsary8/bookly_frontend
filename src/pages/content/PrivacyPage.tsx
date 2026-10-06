@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
+import { shop } from "@/content/shop";
 import { ContentPage } from "@/features/content/ContentPage";
 import { LegalNotice } from "@/features/content/LegalNotice";
 
 /*
- * /privacy: a plain-language draft that describes what the app actually stores and
- * why (checked against the API and this frontend on 2026-10-02). Marked as a draft
- * until the owner has it reviewed (src/content/shop.ts → legal.reviewed).
+ * /privacy: what the app actually stores and why, in plain language (checked against the
+ * API and this frontend on 2026-10-02, approved by the owner 2026-10-06).
  */
 export default function PrivacyPage() {
   return (
@@ -13,7 +13,7 @@ export default function PrivacyPage() {
       title="Privacy"
       documentTitle="Privacy policy"
       eyebrow="Legal"
-      lead="What Bookly keeps about you, why, who sees it, and what you can change yourself."
+      lead={`What ${shop.name} keeps about you, why, who sees it, and what you can change yourself.`}
       numbered
       notice={<LegalNotice />}
       sections={[

@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { delivery, policy } from "@/content/shop";
 import { ContentPage } from "@/features/content/ContentPage";
-import { ToConfirm } from "@/features/content/ToConfirm";
 
 /* /shipping: what delivery costs, where and how fast, paying the courier, following an order. */
 export default function ShippingPage() {
@@ -11,7 +10,7 @@ export default function ShippingPage() {
       eyebrow="Help"
       lead="Printed books come to your door and you pay the courier when they arrive. Ebooks and audiobooks need no delivery at all."
       facts={[
-        { value: `$${policy.shippingFeeUsd}`, label: "flat delivery fee per order, however many books" },
+        { value: `$${policy.shippingFeesUsd.phnomPenh}`, label: `delivery per order in Phnom Penh ($${policy.shippingFeesUsd.provinces} to the provinces)` },
         { value: "Free", label: "for orders with only ebooks or audiobooks" },
         { value: "Cash", label: "paid to the courier, in US dollars or riel" },
       ]}
@@ -22,10 +21,14 @@ export default function ShippingPage() {
           body: (
             <>
               <p>
-                Every order with a printed book (hardcover or paperback) has one delivery fee of <strong>${policy.shippingFeeUsd}</strong>. It doesn't
-                change with the number of books, so two novels and a cookbook cost the same to deliver as one paperback.
+                Every order with a printed book (hardcover or paperback) has one delivery fee: <strong>${policy.shippingFeesUsd.phnomPenh}</strong> in
+                Phnom Penh and <strong>${policy.shippingFeesUsd.provinces}</strong> to the provinces. It doesn't change with the number of books, so two
+                novels and a cookbook cost the same to deliver as one paperback.
               </p>
-              <p>Orders with only ebooks or audiobooks have no delivery fee. You'll see the fee, and the total, at checkout before you place the order.</p>
+              <p>
+                Orders with only ebooks or audiobooks have no delivery fee. The fee follows the delivery address you choose, and you'll see it, and the
+                total, at checkout before you place the order.
+              </p>
             </>
           ),
         },
@@ -35,13 +38,12 @@ export default function ShippingPage() {
           body: (
             <>
               <p>
-                Delivery times count from when your order is confirmed, on working days.
-                <ToConfirm confirmed={delivery.confirmed} />
+                Delivery times count from when your order is confirmed, on working days (Monday to Saturday).
               </p>
               <ul>
                 {delivery.areas.map((a) => (
                   <li key={a.area}>
-                    <strong>{a.area}:</strong> {a.time}
+                    <strong>{a.area}:</strong> {a.time}, ${a.feeUsd}
                   </li>
                 ))}
               </ul>

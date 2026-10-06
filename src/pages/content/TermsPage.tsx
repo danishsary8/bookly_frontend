@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import { policy } from "@/content/shop";
+import { policy, shop } from "@/content/shop";
 import { ContentPage } from "@/features/content/ContentPage";
 import { LegalNotice } from "@/features/content/LegalNotice";
 
 /*
- * /terms: a plain-language draft of the rules of buying from Bookly, matching what
- * the API enforces. Marked as a draft until reviewed (src/content/shop.ts → legal.reviewed).
+ * /terms: the rules of buying from Bookly Shop in plain language, matching what the API
+ * enforces (approved by the owner 2026-10-06).
  * Section ids are linked from elsewhere (/terms#reviews from the FAQ).
  */
 export default function TermsPage() {
@@ -14,7 +14,7 @@ export default function TermsPage() {
       title="Terms of sale"
       documentTitle="Terms"
       eyebrow="Legal"
-      lead="The rules for buying from Bookly: your account, prices, paying, delivery, returns and reviews."
+      lead={`The rules for buying from ${shop.name}: your account, prices, paying, delivery, returns and reviews.`}
       numbered
       notice={<LegalNotice />}
       sections={[
@@ -67,7 +67,8 @@ export default function TermsPage() {
           title: "Delivery",
           body: (
             <p>
-              Each order with printed books has a flat delivery fee of ${policy.shippingFeeUsd}; orders with only ebooks or audiobooks have none. See{" "}
+              Each order with printed books has one delivery fee, ${policy.shippingFeesUsd.phnomPenh} in Phnom Penh and ${policy.shippingFeesUsd.provinces}{" "}
+              to the provinces, set by the delivery address; orders with only ebooks or audiobooks have none. See{" "}
               <Link to="/shipping">shipping & delivery</Link> for areas and times.
             </p>
           ),
