@@ -65,7 +65,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
       </a>
       <SiteHeader />
       <OfflineBanner />
-      <main id="content" tabIndex={-1} className="relative flex-1 outline-none">
+      {/* At least a screen tall: the footer stays below the fold while a page or its data loads, so it never jumps (layout shift). */}
+      <main id="content" tabIndex={-1} className="relative min-h-dvh flex-1 outline-none">
         <PageTransition>
           <RouteErrorBoundary>
             <Suspense fallback={<PageFallback />}>{children}</Suspense>
