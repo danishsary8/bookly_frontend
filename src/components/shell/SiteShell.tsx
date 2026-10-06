@@ -1,11 +1,9 @@
-import { Suspense, useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { RouteErrorBoundary } from "@/components/ErrorBoundary";
 import { PageTransition } from "@/components/motion/PageTransition";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
-import { closeShellPanel } from "@/stores/shell";
-import { CartDrawer } from "./CartDrawer";
-import { MobileMenu } from "./MobileMenu";
+import { closeShellPanel, useShellPanel, type ShellPanel } from "@/stores/shell";
 import { OfflineBanner } from "./OfflineBanner";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
@@ -15,6 +13,20 @@ import { SiteHeader } from "./SiteHeader";
  * error boundary + lazy-load fallback), footer, and the overlays that live
  * outside the page (cart drawer, mobile menu). Toasts live at the app root.
  */
+
+// The cart drawer and mobile menu (and the dialog code they need) aren't part of the first paint:
+// they load when first opened, or earlier when the browser is idle.
+const loadCartDrawer = () => import("./CartDrawer");
+const loadMobileMenu = () => import("./MobileMenu");
+const CartDrawer = lazy(() => loadCartDrawer().then((mod) => ({ default: mod.CartDrawer })));
+const MobileMenu = lazy(() => loadMobileMenu().then((mod) => ({ default: mod.MobileMenu })));
+
+/** Mounts an overlay from the first time it opens, then keeps it (so it can animate closed). */
+function useOpenedOnce(panel: ShellPanel, which: ShellPanel) {
+  const [opened, setOpened] = useState(false);
+  if (!opened && panel === which) setOpened(true);
+  return opened;
+}
 
 function PageFallback() {
   return (
@@ -31,6 +43,17 @@ export function SiteShell({ children }: { children: ReactNode }) {
 
   // A link inside a drawer navigates; the drawer shouldn't stay open over the new page.
   useEffect(() => closeShellPanel(), [pathname]);
+
+  const panel = useShellPanel();
+  const cartOpened = useOpenedOnce(panel, "cart");
+  const menuOpened = useOpenedOnce(panel, "menu");
+  useEffect(() => {
+    const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 2000));
+    idle(() => {
+      void loadCartDrawer();
+      void loadMobileMenu();
+    });
+  }, []);
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
@@ -50,8 +73,10 @@ export function SiteShell({ children }: { children: ReactNode }) {
         </PageTransition>
       </main>
       <SiteFooter />
-      <CartDrawer />
-      <MobileMenu />
+      <Suspense fallback={null}>
+        {cartOpened ? <CartDrawer /> : null}
+        {menuOpened ? <MobileMenu /> : null}
+      </Suspense>
     </div>
   );
 }
