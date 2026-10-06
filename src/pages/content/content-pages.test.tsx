@@ -52,13 +52,15 @@ afterEach(() => {
 });
 
 describe("help pages", () => {
-  it("shipping quotes the delivery fee the API charges and lists its sections", () => {
+  it("shipping quotes the delivery fees the API charges and lists its sections", () => {
     app("/shipping");
     expect(screen.getByRole("heading", { level: 1, name: "Shipping & delivery" })).toBeInTheDocument();
-    expect(plateFacts()[0]).toBe(`$${policy.shippingFeeUsd}: flat delivery fee per order, however many books`);
+    expect(plateFacts()[0]).toBe(`$${policy.shippingFeesUsd.phnomPenh}: delivery per order in Phnom Penh ($${policy.shippingFeesUsd.provinces} to the provinces)`);
     const contents = screen.getAllByRole("navigation", { name: "On this page" })[0];
     expect(within(contents).getAllByRole("link", { name: /What delivery costs/ })[0]).toHaveAttribute("href", "#cost");
-    expect(screen.getAllByText("To be confirmed").length).toBeGreaterThan(0);
+    expect(screen.getByText(/1 working day, \$1\.50/)).toBeInTheDocument();
+    expect(screen.getByText(/2 to 3 working days, \$3\.00/)).toBeInTheDocument();
+    expect(screen.queryByText("To be confirmed")).not.toBeInTheDocument();
   });
 
   it("returns policy states the window from the shop config", () => {
@@ -80,12 +82,14 @@ describe("help pages", () => {
     expect(open).toHaveAttribute("aria-expanded", "true");
   });
 
-  it("contact links open Telegram, the phone and email, marked until confirmed", () => {
+  it("contact links open Telegram, the phone and email, and says the shop is online only", () => {
     app("/contact");
     expect(screen.getByRole("link", { name: new RegExp(contact.email) })).toHaveAttribute("href", `mailto:${contact.email}`);
     expect(screen.getByRole("link", { name: new RegExp(contact.phone.replace("+", "\\+")) })).toHaveAttribute("href", contact.phoneHref);
     expect(screen.getByRole("link", { name: /Telegram/ })).toHaveAttribute("target", "_blank");
-    expect(screen.getAllByText("To be confirmed")).toHaveLength(contact.confirmed ? 0 : 2);
+    expect(screen.getByRole("link", { name: /Telegram/ })).toHaveAttribute("href", "https://t.me/danishashai");
+    expect(screen.getByText("Online only")).toBeInTheDocument();
+    expect(screen.queryByText("To be confirmed")).not.toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });
 
@@ -102,11 +106,11 @@ describe("legal pages", () => {
   it.each([
     ["/privacy", "Privacy"],
     ["/terms", "Terms of sale"],
-  ])("%s is numbered and marked as a draft", (route, title) => {
+  ])("%s is numbered, from Bookly Shop and no longer a draft", (route, title) => {
     app(route);
     expect(screen.getByRole("heading", { level: 1, name: title })).toBeInTheDocument();
-    expect(screen.getByRole("note")).toHaveTextContent("Draft, not yet reviewed.");
-    expect(screen.getByText(/Last updated/)).toBeInTheDocument();
+    expect(screen.queryByText(/Draft, not yet reviewed/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Bookly Shop · Last updated/)).toBeInTheDocument();
     expect(within(screen.getAllByRole("navigation", { name: "On this page" })[0]).getAllByText("1.").length).toBeGreaterThan(0);
   });
 

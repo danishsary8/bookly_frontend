@@ -1,10 +1,9 @@
 import type { ComponentType } from "react";
-import { ArrowUpRight, Clock3, HelpCircle, Mail, MapPin, Package, Phone, RotateCcw, Send } from "lucide-react";
+import { ArrowUpRight, Clock3, HelpCircle, Mail, Package, Phone, RotateCcw, Send, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { contact } from "@/content/shop";
 import { Bookplate } from "@/features/content/Bookplate";
-import { ToConfirm } from "@/features/content/ToConfirm";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 type Channel = { Icon: ComponentType<{ className?: string }>; label: string; value: string; href: string; detail: string; external?: boolean };
@@ -24,7 +23,7 @@ const selfServe = [
 /*
  * /contact: direct ways to reach the shop (no form: links that open Telegram,
  * the phone or email), opening hours, and the answers people usually write in for.
- * The details are placeholders from src/content/shop.ts until the owner confirms them.
+ * The details come from src/content/shop.ts.
  */
 export default function ContactPage() {
   useDocumentTitle("Contact us");
@@ -47,7 +46,6 @@ export default function ContactPage() {
         <section aria-labelledby="channels" className="lg:col-span-7">
           <h2 id="channels" className="font-display text-[clamp(1.6rem,2.6vw,2rem)] leading-[1.15]">
             Talk to us
-            <ToConfirm confirmed={contact.confirmed} />
           </h2>
           <ul className="mt-6 grid border-t border-border">
             {channels.map(({ Icon, label, value, href, detail, external }) => (
@@ -79,7 +77,6 @@ export default function ContactPage() {
           <section className="grid gap-5 rounded-xl border border-border bg-card p-5 sm:p-6">
             <h2 id="visit" className="font-display text-[1.563rem] leading-tight">
               Opening hours
-              <ToConfirm confirmed={contact.confirmed} />
             </h2>
             <dl className="grid gap-2 text-[15px]">
               {contact.hours.map((h) => (
@@ -94,15 +91,11 @@ export default function ContactPage() {
             </dl>
             <div className="grid gap-1 border-t border-border pt-4">
               <p className="flex items-center gap-2 text-sm font-semibold">
-                <MapPin className="size-4 text-primary" aria-hidden="true" /> Shop address
+                <Truck className="size-4 text-primary" aria-hidden="true" /> Online only
               </p>
-              <address className="not-italic text-muted-foreground">
-                {contact.address.map((line) => (
-                  <span key={line} className="block">
-                    {line}
-                  </span>
-                ))}
-              </address>
+              <p className="text-muted-foreground">
+                There's no shop to visit: order here and we deliver to your door. See <Link to="/shipping">shipping & delivery</Link>.
+              </p>
             </div>
             <p className="text-sm text-muted-foreground">Times are Phnom Penh time.</p>
           </section>
