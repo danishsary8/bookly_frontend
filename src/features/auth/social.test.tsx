@@ -125,11 +125,25 @@ describe("social sign-in", () => {
     await waitFor(() => expect(post).toHaveBeenCalledWith("/auth/social/facebook", { access_token: "fb-token" }));
   });
 
-  it("asks to try again when the provider's script hasn't loaded yet", async () => {
+  it("loads Google's script as a plain script (it has no CORS headers) and asks to try again while it loads", async () => {
     vi.stubEnv("VITE_GOOGLE_CLIENT_ID", "client-1");
     app();
+    const script = document.head.querySelector<HTMLScriptElement>('script[src="https://accounts.google.com/gsi/client"]');
+    expect(script).not.toBeNull();
+    expect(script!.crossOrigin).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
-    expect(await screen.findByText(/Google sign-in is still loading/)).toBeInTheDocument();
+    expect(await screen.findByText("Google sign-in is still loading. Try again in a moment.")).toBeInTheDocument();
     document.head.querySelectorAll('script[src*="accounts.google.com"]').forEach((s) => s.remove());
   });
+
+  it("says when Google's script couldn't load", async () => {
+    vi.stubEnv("VITE_GOOGLE_CLIENT_ID", "client-1");
+    app();
+    const script = document.head.querySelector<HTMLScriptElement>('script[src="https://accounts.google.com/gsi/client"]')!;
+    script.dispatchEvent(new Event("error"));
+    await userEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+    expect(await screen.findByText(/Google sign-in couldn't load/)).toBeInTheDocument();
+    document.head.querySelectorAll('script[src*="accounts.google.com"]').forEach((s) => s.remove());
+  });
+
 });

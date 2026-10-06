@@ -37,6 +37,7 @@ AUTH_PLAN PR 1 unfinished sign-ups, PR 2 Cloudflare Turnstile, PRs 3–4 Google 
 - Owner then: gateway.telegram.org → log in with Telegram → add balance ($5 ≈ 500 codes) → API token → Render `TELEGRAM_GATEWAY_TOKEN`.
 
 ## Later
+- Owner's later list: a production-grade admin dashboard on real data (everything a real shop admin has), and stricter security around deleting anything (e.g. re-enter password / 2FA code, typed confirmation, admin-only, full audit trail).
 - Owner's later list (after the important work): move the API from Render to **Railway** (owner has free credit there; no sleeping); and, as the very last project task, a full frontend redesign starting from the landing page.
 - Phone performance above 90 would need pre-rendered HTML for the public pages (bigger change; decide later). Optional: per-book link previews, custom domain + shop email, analytics, Google Search Console with the sitemap.
 - Let preview deployments call the API (CORS pattern for `bookly-frontend-*.vercel.app`; small backend change, owner decides).

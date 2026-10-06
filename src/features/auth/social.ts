@@ -68,7 +68,9 @@ function loadScript(provider: Provider): Promise<void> {
     const script = document.createElement("script");
     script.src = SCRIPTS[provider];
     script.async = true;
-    script.crossOrigin = "anonymous";
+    // Facebook's snippet asks for an anonymous CORS fetch. Google's script is served without CORS
+    // headers, so asking for one makes the browser block it: load it as a plain script.
+    if (provider === "facebook") script.crossOrigin = "anonymous";
     if (provider === "google") script.onload = () => resolve();
     script.onerror = () => {
       delete loading[provider];
