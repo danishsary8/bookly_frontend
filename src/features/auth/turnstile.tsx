@@ -6,8 +6,8 @@ import { ShieldAlert } from "lucide-react";
  *
  * - Off unless VITE_TURNSTILE_SITE_KEY is set (local, tests, until the owner adds the key); then the
  *   forms send no token and the API, which has no secret either, doesn't ask for one.
- * - Cloudflare's script loads only on these pages, and the widget runs in "interaction-only" mode:
- *   most people never see it; a box appears only when Cloudflare wants someone to tick it.
+ * - Cloudflare's script loads only on these pages. The widget always shows under the fields (owner's
+ *   choice): it checks on its own and turns to "Success!"; only a suspicious visitor has to tick it.
  * - Tokens are single-use: `getToken()` waits for one (the check takes about a second), and
  *   `reset()` after each request fetches a fresh one for the next try.
  */
@@ -54,7 +54,6 @@ export function useTurnstile(action: string, active = true) {
   const token = useRef<string | null>(null);
   const waiting = useRef<Array<(value: string | undefined) => void>>([]);
   const [problem, setProblem] = useState(false);
-  const [interactive, setInteractive] = useState(false);
 
   const settle = (value: string | undefined) => {
     for (const resolve of waiting.current.splice(0)) resolve(value);
@@ -71,7 +70,7 @@ export function useTurnstile(action: string, active = true) {
           action,
           theme: document.documentElement.classList.contains("dark") ? "dark" : "light",
           size: "flexible",
-          appearance: "interaction-only",
+          appearance: "always",
           callback: (value: string) => {
             token.current = value;
             setProblem(false);
@@ -86,8 +85,6 @@ export function useTurnstile(action: string, active = true) {
             settle(undefined);
             return true; // handled: no console noise from Cloudflare's script
           },
-          "before-interactive-callback": () => setInteractive(true),
-          "after-interactive-callback": () => setInteractive(false),
         });
       })
       .catch(() => {
@@ -120,9 +117,9 @@ export function useTurnstile(action: string, active = true) {
   }, []);
 
   const widget = enabled ? (
-    <div className={interactive || problem ? "grid gap-2" : "contents"}>
-      {/* The box only takes space while Cloudflare is asking for a tick. */}
-      <div ref={el} className={interactive ? "min-h-[65px]" : undefined} />
+    <div className="grid gap-2">
+      {/* Cloudflare's box ("Verifying…" → "Success!") is 65px tall; reserving it stops the button from jumping. */}
+      <div ref={el} className={problem ? undefined : "min-h-[65px]"} />
       {problem ? (
         <p className="flex items-start gap-2 text-sm text-muted-foreground" role="status">
           <ShieldAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />

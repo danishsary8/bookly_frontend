@@ -61,7 +61,7 @@ describe("Turnstile", () => {
     const post = vi.spyOn(api, "post").mockResolvedValue({ token: "tok", expires_at: null, customer });
     app();
     await waitFor(() => expect(options).toBeDefined());
-    expect(options).toMatchObject({ sitekey: "site-key", action: "login", appearance: "interaction-only" });
+    expect(options).toMatchObject({ sitekey: "site-key", action: "login", appearance: "always" });
 
     // Submitting before the check finishes waits for its token.
     await signIn();
