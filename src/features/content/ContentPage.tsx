@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { Breadcrumb, type Crumb } from "@/components/Breadcrumb";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { cn } from "@/lib/utils";
@@ -85,6 +86,15 @@ export function ContentPage({
   after?: ReactNode;
 }) {
   useDocumentTitle(documentTitle ?? title, { description: typeof lead === "string" ? lead : null });
+  // Opening /privacy#delete from another site: the page is loaded after the browser looked for the
+  // section, so jump to it once it exists.
+  const { hash } = useLocation();
+  useEffect(() => {
+    const id = decodeURIComponent(hash.slice(1));
+    if (!id) return;
+    const frame = requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: "start" }));
+    return () => cancelAnimationFrame(frame);
+  }, [hash]);
   const [ids] = useState(() => sections.map((s) => s.id));
   const active = useActiveSection(ids);
   const [open, setOpen] = useState(false);

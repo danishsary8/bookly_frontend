@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { shop } from "@/content/shop";
+import { contact, shop } from "@/content/shop";
 import { ContentPage } from "@/features/content/ContentPage";
 import { LegalNotice } from "@/features/content/LegalNotice";
 
@@ -25,6 +25,10 @@ export default function PrivacyPage() {
               <li>
                 <strong>Your account:</strong> your name, email address, phone number if you add one, and your password (stored only as a one-way hash,
                 never readable).
+              </li>
+              <li>
+                <strong>If you sign in with Google or Facebook:</strong> the name and email address they share with us and an account number that links
+                them to your Bookly account. Never your password there, your contacts or your posts.
               </li>
               <li>
                 <strong>Delivery addresses:</strong> the recipient's name, phone number and address for each address you save.
@@ -69,6 +73,10 @@ export default function PrivacyPage() {
                 <li>
                   <strong>The companies that host Bookly</strong> store the data for us and can't use it for anything else.
                 </li>
+                <li>
+                  <strong>Cloudflare</strong> checks the sign-in, sign-up and password forms for bots. For that check it sees your IP address and
+                  browser details, not what you type.
+                </li>
               </ul>
               <p>We don't sell your data or share it with advertisers.</p>
             </>
@@ -110,6 +118,27 @@ export default function PrivacyPage() {
               <p>
                 To change your email address, get a copy of your data, or close your account and delete your data, <Link to="/contact">contact us</Link>{" "}
                 from the email on your account. We keep order records the law requires us to keep.
+              </p>
+            </>
+          ),
+        },
+        {
+          id: "delete",
+          title: "Deleting your account and data",
+          body: (
+            <>
+              <p>You can ask us to delete your account and the data that goes with it at any time, including if you signed in with Google or Facebook:</p>
+              <ol>
+                <li>
+                  Message us on Telegram ({contact.telegram}) or email <a href={`mailto:${contact.email}`}>{contact.email}</a> from the email on your account,
+                  saying you want your account deleted.
+                </li>
+                <li>We confirm it's you, then delete your account, addresses, cart, wishlist and reviews within 30 days and tell you when it's done.</li>
+                <li>Order records the law requires us to keep stay, without your account attached.</li>
+              </ol>
+              <p>
+                If you used Facebook, you can also remove Bookly from Facebook under Settings &amp; privacy → Settings → Apps and websites. For Google, it's
+                under your Google Account → Security → Your connections to third-party apps &amp; services.
               </p>
             </>
           ),
