@@ -67,7 +67,12 @@ export interface StaffCustomer {
   stats?: { orders_by_status: Record<string, number>; returns_count: number; reviews_count: number; lifetime_spent_usd: string; last_order_at: string | null };
   recent_orders?: Order[];
   created_at: string;
+  /** Unfinished sign-ups only: when the account is deleted unless the customer enters their code. */
+  removal_at: string | null;
 }
+
+/** The customer list also counts both tabs (same search and active filters). */
+export type StaffCustomerPage = Paginated<StaffCustomer> & { meta: Paginated<StaffCustomer>["meta"] & { counts?: { verified: number; unverified: number } } };
 
 export type StaffMember = StaffUser & { is_active: boolean; updated_at: string };
 
@@ -96,7 +101,7 @@ export type OrderFilters = { status?: OrderStatus; q?: string; from?: string; to
 export type ReturnFilters = { status?: string; q?: string; page?: number; per_page?: number };
 export type ReviewFilters = { visible?: boolean | null; q?: string; max_rating?: number; page?: number; per_page?: number };
 export type CouponFilters = { q?: string; active?: boolean | null; page?: number; per_page?: number };
-export type CustomerFilters = { q?: string; active?: boolean | null; page?: number; per_page?: number };
+export type CustomerFilters = { q?: string; active?: boolean | null; verified?: boolean | null; page?: number; per_page?: number };
 export type MemberFilters = { q?: string; role?: StaffRole; active?: boolean | null; page?: number; per_page?: number };
 export type AuditFilters = { staff_user_id?: number; action?: string; entity_type?: string; entity_id?: number; from?: string; to?: string; page?: number; per_page?: number };
 
@@ -140,7 +145,8 @@ export const opsApi = {
   updateCoupon: (id: number, input: CouponInput) => api.patch<Resource<Coupon>>(`/staff/coupons/${id}`, input).then((r) => r.data),
   deleteCoupon: (id: number) => api.delete(`/staff/coupons/${id}`),
 
-  customers: (f: CustomerFilters = {}) => api.get<Paginated<StaffCustomer>>("/staff/customers", { params: toQueryParams({ ...f, active: bool(f.active) }) }),
+  customers: (f: CustomerFilters = {}) =>
+    api.get<StaffCustomerPage>("/staff/customers", { params: toQueryParams({ ...f, active: bool(f.active), verified: bool(f.verified) }) }),
   customer: (id: number) => api.get<Resource<StaffCustomer>>(`/staff/customers/${id}`).then((r) => r.data),
   setCustomerActive: (id: number, active: boolean) =>
     api.post<Resource<StaffCustomer>>(`/staff/customers/${id}/${active ? "activate" : "deactivate"}`, {}).then((r) => r.data),

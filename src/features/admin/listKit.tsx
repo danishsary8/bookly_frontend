@@ -1,5 +1,6 @@
 import { useState, type ComponentType, type FormEvent, type ReactNode } from "react";
 import { Search } from "lucide-react";
+import { Link } from "react-router-dom";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
@@ -54,6 +55,54 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
         </button>
       ))}
     </div>
+  );
+}
+
+/**
+ * Underline tabs (MASTER §6.16 look) that split one list into views, as links so each view has its own
+ * address. The active tab is `aria-current="page"`; counts are optional (shown once loaded).
+ */
+export function ListTabs<T extends string>({
+  label,
+  value,
+  tabs,
+  hrefFor,
+}: {
+  label: string;
+  value: T;
+  tabs: Array<{ value: T; label: string; count?: number }>;
+  hrefFor: (value: T) => string;
+}) {
+  return (
+    <nav aria-label={label} className="no-scrollbar flex gap-6 overflow-x-auto border-b border-border">
+      {tabs.map((tab) => {
+        const active = tab.value === value;
+        return (
+          <Link
+            key={tab.value}
+            to={hrefFor(tab.value)}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "relative inline-flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-t-md text-[15px] font-semibold outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+              active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {tab.label}
+            {tab.count === undefined ? null : (
+              <span
+                className={cn(
+                  "min-w-6 rounded-full px-1.5 py-0.5 text-center text-xs tabular-nums",
+                  active ? "bg-primary text-primary-foreground" : "bg-surface-2 text-muted-foreground",
+                )}
+              >
+                {tab.count}
+              </span>
+            )}
+            {active ? <span aria-hidden="true" className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" /> : null}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
 
