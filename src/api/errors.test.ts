@@ -35,6 +35,18 @@ describe("ApiError.from", () => {
     expect(error.message).not.toContain("SQLSTATE");
   });
 
+  it("shows the API's explanation for a 503, but not the framework's default text", () => {
+    expect(ApiError.from(httpError(503, { message: "We couldn't send the email just now. Please try again in a few minutes." })).message).toMatch(/couldn't send the email/);
+    expect(ApiError.from(httpError(503, { message: "Service Unavailable" })).message).toMatch(/something went wrong on our side/i);
+  });
+
+  it("never shows axios or JavaScript error text to customers", () => {
+    expect(ApiError.from(httpError(400, {})).message).not.toMatch(/request failed|status code/i);
+    const bug = ApiError.from(new TypeError("Cannot read properties of undefined (reading 'id')"));
+    expect(bug.message).not.toMatch(/undefined|TypeError/);
+    expect(bug.kind).toBe("unexpected");
+  });
+
   it("treats a missing response as a network problem", () => {
     const error = ApiError.from(new AxiosError("Network Error", "ERR_NETWORK"));
     expect(error.kind).toBe("network");

@@ -52,7 +52,8 @@ export class ApiError extends Error {
   static from(error: unknown): ApiError {
     if (error instanceof ApiError) return error;
     if (!isAxiosError(error)) {
-      return new ApiError({ kind: "network", message: error instanceof Error ? error.message : NETWORK_MESSAGE });
+      // Not an HTTP failure (a bug in our code): never show its technical text.
+      return new ApiError({ kind: "unexpected", message: SERVER_MESSAGE });
     }
 
     const response = error.response;
@@ -69,8 +70,13 @@ export class ApiError extends Error {
       return typeof value === "string" ? value : null;
     };
     const requestId = header("x-request-id");
-    const message = body.message || error.message;
+    // The API's own messages are written for customers; axios's ("Request failed with status code 400") aren't.
+    const message = body.message || SERVER_MESSAGE;
 
+    // 503 with a real message is a temporary, explained problem (e.g. "We couldn't send the email just now…").
+    if (status === 503 && body.message && body.message !== "Service Unavailable") {
+      return new ApiError({ kind: "server", status, message: body.message, requestId });
+    }
     if (status >= 500) return new ApiError({ kind: "server", status, message: SERVER_MESSAGE, requestId });
     if (status === 401) return new ApiError({ kind: "unauthenticated", status, message, requestId });
     if (status === 403) {
