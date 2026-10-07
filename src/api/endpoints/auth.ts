@@ -67,6 +67,11 @@ export const authApi = {
     if (response.customer) updateSessionUser("customer", response.customer);
     return response;
   },
+  /** Sign in with a phone number, step 1: the API answers the same whether or not the number has an account. */
+  phoneLogin: (phone: string, turnstileToken?: string) =>
+    api.post<MessageResponse & { phone?: string }>("/auth/phone-login", { phone, ...withToken(turnstileToken) }),
+  /** Step 2: the Telegram code signs in like a password. */
+  phoneLoginVerify: (phone: string, code: string) => api.post<LoginResponse>("/auth/phone-login/verify", { phone, code }).then(startSession),
   forgotPassword: (email: string, turnstileToken?: string) => api.post<MessageResponse>("/auth/forgot-password", { email, ...withToken(turnstileToken) }),
   resetPassword: (input: { email: string; code: string; password: string; password_confirmation: string }) =>
     api.post<MessageResponse>("/auth/reset-password", input),
