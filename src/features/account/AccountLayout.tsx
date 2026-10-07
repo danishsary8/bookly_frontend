@@ -20,7 +20,7 @@ const accountSections = [
   { to: "/account/returns", label: "Returns", Icon: RotateCcw },
   { to: "/account/reviews", label: "Reviews", Icon: MessageSquareText },
   { to: "/account/profile", label: "Profile", Icon: UserRound },
-  { to: "/account/security", label: "Password", Icon: KeyRound },
+  { to: "/account/security", label: "Sign-in & security", Icon: KeyRound },
   { to: "/account/addresses", label: "Addresses", Icon: MapPin },
   { to: "/account/wishlist", label: "Wishlist", Icon: Heart },
 ] as const;

@@ -9,6 +9,7 @@ import { PasswordField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { AccountSection } from "@/features/account/AccountSection";
+import { SignInMethods } from "@/features/account/SignInMethods";
 import { passwordSchema, type PasswordValues } from "@/features/account/schemas";
 import { PasswordChecklist } from "@/features/auth/PasswordChecklist";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -16,15 +17,22 @@ import { applyApiErrors } from "@/lib/forms";
 import { toast } from "@/stores/toast";
 
 /*
- * /account/security: change (or, for social sign-up accounts, set) the password.
- * The API keeps this session and signs out every other device.
+ * /account/security: how this account signs in (email, phone with Telegram, Google, Facebook) and the
+ * password form: change it, or set one for accounts made with Google/Facebook. Saving a password keeps
+ * this session and signs out every other device.
  */
 export default function SecurityPage() {
-  useDocumentTitle("Password");
+  useDocumentTitle("Sign-in & security");
   const session = useSession<Customer>("customer");
   const me = useQuery(accountQueries.me());
-  const hasPassword = (me.data ?? session?.user)?.has_password !== false;
-  return <PasswordForm key={String(hasPassword)} hasPassword={hasPassword} />;
+  const customer = me.data ?? session?.user;
+  const hasPassword = customer?.has_password !== false;
+  return (
+    <AccountSection title="Sign-in & security" lead="How you sign in to Bookly, and your password.">
+      <SignInMethods customer={customer} />
+      <PasswordForm key={String(hasPassword)} hasPassword={hasPassword} />
+    </AccountSection>
+  );
 }
 
 function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
@@ -62,10 +70,15 @@ function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
   };
 
   return (
-    <AccountSection
-      title={hasPassword ? "Change password" : "Set a password"}
-      lead={hasPassword ? "Use a password you don't use anywhere else." : "You signed up with Google or Facebook. Set a password to also sign in with your email."}
-    >
+    <section id="password" aria-labelledby="password-title" className="grid scroll-mt-24 gap-3">
+      <div className="grid gap-1">
+        <h2 id="password-title" className="font-display text-[1.563rem] leading-tight">
+          {hasPassword ? "Change password" : "Set a password"}
+        </h2>
+        <p className="text-[15px] text-muted-foreground">
+          {hasPassword ? "Use a password you don't use anywhere else." : "You signed up with Google or Facebook. Set a password to also sign in with your email."}
+        </p>
+      </div>
       <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid max-w-xl gap-5 rounded-xl border border-border bg-card p-5 sm:p-6">
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
         {/* Lets password managers match the change to the right account. */}
@@ -81,6 +94,6 @@ function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
           {isSubmitting ? "Saving…" : hasPassword ? "Change password" : "Set password"}
         </Button>
       </form>
-    </AccountSection>
+    </section>
   );
 }

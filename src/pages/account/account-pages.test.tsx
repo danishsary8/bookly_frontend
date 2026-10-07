@@ -88,7 +88,8 @@ describe("SecurityPage", () => {
     vi.mocked(accountApi.me).mockResolvedValue({ ...customer, has_password: false });
     const change = vi.spyOn(accountApi, "changePassword").mockResolvedValue({ message: "Password changed." });
     app("/account/security");
-    expect(await screen.findByRole("heading", { level: 1, name: "Set a password" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 2, name: "Set a password" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Sign-in & security" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Current password", { selector: "input" })).not.toBeInTheDocument();
     await user.type(screen.getByLabelText("New password", { selector: "input" }), "newpass123");
     await user.type(screen.getByLabelText("Confirm new password", { selector: "input" }), "newpass123");

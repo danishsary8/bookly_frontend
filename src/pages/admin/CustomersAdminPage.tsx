@@ -53,7 +53,7 @@ export default function CustomersAdminPage() {
     mutationFn: (c: StaffCustomer) => opsApi.deleteCustomer(c.id),
     onSuccess: (_, c) => {
       void queryClient.invalidateQueries({ queryKey: ["staff", "customers"] });
-      toast.success({ title: `${c.name}'s sign-up was deleted`, description: `${c.email} can be used to sign up again.` });
+      toast.success({ title: `${c.name}'s sign-up was deleted`, description: `${c.email ?? c.phone ?? "Their details"} can be used to sign up again.` });
     },
     onError: (error) => toast.error({ title: "Couldn't delete the sign-up", description: ApiError.from(error).message }),
     onSettled: () => setDeleting(null),
@@ -138,7 +138,7 @@ export default function CustomersAdminPage() {
                   <Link to={`/admin/customers/${c.id}`} className="font-semibold underline-offset-4 hover:text-primary hover:underline">
                     {c.name}
                   </Link>
-                  <span className="block text-sm text-muted-foreground">{c.email}</span>
+                  <span className="block text-sm text-muted-foreground">{c.email ?? c.phone}</span>
                 </th>
                 <td className={td}>
                   <span className="flex flex-wrap items-center gap-1.5">
@@ -182,7 +182,7 @@ export default function CustomersAdminPage() {
         open={deleting !== null}
         onOpenChange={(open) => (open ? null : setDeleting(null))}
         title={`Delete ${deleting?.name ?? "this"}'s sign-up?`}
-        description={`They never entered their code, so they have no orders. The account is deleted for good and ${deleting?.email ?? "the email"} can be used to sign up again.`}
+        description={`They never entered their code, so they have no orders. The account is deleted for good and ${deleting?.email ?? deleting?.phone ?? "the email"} can be used to sign up again.`}
         confirmLabel="Delete"
         loading={remove.isPending}
         onConfirm={() => deleting && remove.mutate(deleting)}
