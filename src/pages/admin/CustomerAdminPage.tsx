@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  ArchiveRestore,
   ArrowLeft,
   BadgeCheck,
   Ban,
@@ -9,6 +10,7 @@ import {
   Phone,
   RotateCcw,
   Trash2,
+  UserX,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { opsApi, opsKeys, opsQueries } from "@/api/endpoints/staffOps";
@@ -21,6 +23,8 @@ import { ConfirmDialog } from "@/components/ui/dialog";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { ReopenDialog } from "@/features/admin/ReopenAccount";
+import { useReopenCustomer } from "@/features/admin/useReopenCustomer";
 import { useStaff } from "@/features/admin/staffSession";
 import { orderDate, orderDateTime } from "@/features/orders/format";
 import { formatUsd } from "@/stores/currency";
@@ -34,8 +38,8 @@ const SIGN_IN: Record<string, string> = {
 
 /*
  * /admin/customers/:id: contact details, how they sign in, what they've bought
- * (net of refunds), recent orders, and (admins) deactivate / reactivate, or delete an
- * unfinished sign-up straight away.
+ * (net of refunds), recent orders, and (admins) deactivate / reactivate, delete an
+ * unfinished sign-up straight away, or reopen an account the customer closed (within its 30 days).
  */
 export default function CustomerAdminPage() {
   const id = Number(useParams().id);
@@ -46,6 +50,8 @@ export default function CustomerAdminPage() {
   const customer = useQuery({ ...opsQueries.customer(id), enabled: valid });
   const [confirm, setConfirm] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmReopen, setConfirmReopen] = useState(false);
+  const reopen = useReopenCustomer(() => setConfirmReopen(false));
   const navigate = useNavigate();
   const remove = useMutation({
     mutationFn: () => opsApi.deleteCustomer(id),
@@ -125,6 +131,7 @@ export default function CustomerAdminPage() {
     );
 
   const c = customer.data;
+  const closed = Boolean(c.closed_at);
   const verified = c.verified ?? c.email_verified;
   const s = c.stats;
   const orderCount = s
@@ -137,6 +144,11 @@ export default function CustomerAdminPage() {
       back={back}
       lead={
         <span className="flex flex-wrap items-center gap-2">
+          {closed ? (
+            <Badge tone="neutral" shape="solid">
+              <UserX aria-hidden="true" /> Closed
+            </Badge>
+          ) : null}
           {c.is_active ? null : (
             <Badge tone="danger" shape="outline">
               <Ban aria-hidden="true" /> Deactivated
@@ -161,7 +173,11 @@ export default function CustomerAdminPage() {
         </span>
       }
       actions={
-        isAdmin ? (
+        isAdmin && closed ? (
+          <Button variant="outline" onClick={() => setConfirmReopen(true)}>
+            <ArchiveRestore aria-hidden="true" /> Reopen account
+          </Button>
+        ) : isAdmin ? (
           <span className="flex flex-wrap gap-2">
             {verified ? null : (
               <Button
@@ -193,6 +209,17 @@ export default function CustomerAdminPage() {
         ) : null
       }
     >
+      {closed && c.closed_at && c.erase_at ? (
+        <div role="note" className="flex gap-3 rounded-xl border border-border bg-surface-2 p-4 text-[15px] leading-6">
+          <UserX className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <p>
+            <strong className="font-semibold">Closed by the customer</strong> on <time dateTime={c.closed_at}>{orderDateTime(c.closed_at)}</time>. They're
+            signed out and can't sign in. Their name, email, phone and addresses are erased on{" "}
+            <time dateTime={c.erase_at}>{orderDateTime(c.erase_at)}</time>; orders stay.{" "}
+            {isAdmin ? "If they ask to come back before then, reopen the account." : "If they ask to come back before then, an admin can reopen the account."}
+          </p>
+        </div>
+      ) : null}
       {c.removal_at ? (
         <div
           role="note"
@@ -362,6 +389,7 @@ export default function CustomerAdminPage() {
         loading={remove.isPending}
         onConfirm={() => remove.mutate()}
       />
+      <ReopenDialog customer={confirmReopen ? c : null} onOpenChange={setConfirmReopen} loading={reopen.isPending} onConfirm={() => reopen.mutate(c)} />
     </AdminPage>
   );
 }

@@ -289,6 +289,63 @@ describe("customer", () => {
     expect(note).toHaveTextContent("unless they finish");
   });
 
+  const closedOne: StaffCustomer = {
+    ...customer,
+    id: 12,
+    name: "Dara Keo",
+    email: "dara@example.com",
+    closed_at: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+    erase_at: new Date(Date.now() + 27 * 86_400_000).toISOString(),
+  };
+
+  it("lists closed accounts in their own tab, and an admin reopens one after confirming", async () => {
+    signIn(admin);
+    const list = vi.spyOn(opsApi, "customers").mockImplementation(async (f = {}) =>
+      f.closed ? page([closedOne], { counts: { verified: 1, unverified: 0, closed: 1 } }) : page([customer], { counts: { verified: 1, unverified: 0, closed: 1 } }),
+    );
+    const reopen = vi.spyOn(opsApi, "reopenCustomer").mockResolvedValue({ ...closedOne, closed_at: null, erase_at: null });
+    app("/admin/customers");
+    const tabs = await screen.findByRole("navigation", { name: "Customer accounts" });
+    expect(await screen.findByRole("link", { name: "Sokha Chan" })).toBeInTheDocument();
+    await userEvent.click(within(tabs).getByRole("link", { name: /Closed\s*1/ }));
+
+    expect(await screen.findByRole("link", { name: "Dara Keo" })).toBeInTheDocument();
+    expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ closed: true }));
+    expect(screen.getByText("Erased in 27 days")).toBeInTheDocument();
+    expect(screen.getByText(/erased 30 days after closing/)).toBeInTheDocument();
+    expect(screen.queryByRole("radiogroup", { name: "Show" })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Reopen Dara Keo's account" }));
+    const dialog = screen.getByRole("alertdialog", { name: "Reopen Dara Keo's account?" });
+    expect(dialog).toHaveTextContent("recorded in the audit log");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Reopen account" }));
+    await waitFor(() => expect(reopen).toHaveBeenCalledWith(12));
+    expect(await screen.findByText("Dara Keo's account is open again")).toBeInTheDocument();
+  });
+
+  it("shows staff closed accounts without the reopen button", async () => {
+    signIn(staff);
+    vi.spyOn(opsApi, "customers").mockResolvedValue(page([closedOne], { counts: { verified: 1, unverified: 0, closed: 1 } }));
+    app("/admin/customers?view=closed");
+    expect(await screen.findByRole("link", { name: "Dara Keo" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Reopen/ })).not.toBeInTheDocument();
+  });
+
+  it("explains a closed account on its page and lets an admin reopen it", async () => {
+    signIn(admin);
+    vi.spyOn(opsApi, "customer").mockResolvedValue(closedOne);
+    const reopen = vi.spyOn(opsApi, "reopenCustomer").mockResolvedValue({ ...closedOne, closed_at: null, erase_at: null });
+    app("/admin/customers/12");
+    const note = await screen.findByRole("note");
+    expect(note).toHaveTextContent("Closed by the customer");
+    expect(note).toHaveTextContent("orders stay");
+    expect(screen.queryByRole("button", { name: "Deactivate" })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Reopen account" }));
+    await userEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Reopen account" }));
+    await waitFor(() => expect(reopen).toHaveBeenCalledWith(12));
+  });
+
   it("shows staff the account without the deactivate button", async () => {
     signIn(staff);
     vi.spyOn(opsApi, "customer").mockResolvedValue(customer);
