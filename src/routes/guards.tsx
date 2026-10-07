@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation, useSearchParams } from "react-router-dom
 import { useSession } from "@/api/session";
 import type { Customer } from "@/api/types";
 import { safeNext, withNext } from "@/lib/forms";
+import { needsVerifying } from "@/features/auth/verification";
 
 /*
  * Route guards for the customer area (V2 session). Each redirect carries the page
@@ -23,7 +24,7 @@ export function RequireVerified() {
   const session = useSession<Customer>("customer");
   const location = useLocation();
   if (!session) return <Navigate to={withNext("/login", here(location))} replace />;
-  if (session.user?.email_verified === false) return <Navigate to={withNext("/verify-email", here(location))} replace />;
+  if (needsVerifying(session.user)) return <Navigate to={withNext("/verify-email", here(location))} replace />;
   return <Outlet />;
 }
 

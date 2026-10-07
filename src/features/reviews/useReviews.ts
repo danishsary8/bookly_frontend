@@ -3,6 +3,7 @@ import { catalogKeys } from "@/api/endpoints/catalog";
 import { orderQueries, ordersApi, type ReviewInput } from "@/api/endpoints/orders";
 import { useSession } from "@/api/session";
 import type { Customer, OwnReview } from "@/api/types";
+import { isVerified } from "@/features/auth/verification";
 
 /** Enough for any customer's own reviews / delivered orders in one request (the API's per_page maximum). */
 const ALL = 100;
@@ -14,7 +15,7 @@ const ALL = 100;
  */
 export function useReviewState(bookId: number) {
   const session = useSession<Customer>("customer");
-  const verified = Boolean(session) && session?.user?.email_verified !== false;
+  const verified = Boolean(session) && isVerified(session?.user);
   const mine = useQuery({ ...orderQueries.myReviews({ per_page: ALL }), enabled: verified });
   const delivered = useQuery({ ...orderQueries.orders({ status: "delivered", per_page: ALL }), enabled: verified });
 

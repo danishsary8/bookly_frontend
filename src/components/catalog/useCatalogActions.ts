@@ -10,6 +10,7 @@ import { withNext } from "@/lib/forms";
 import { formatLabel } from "@/lib/catalog";
 import { openShellPanel } from "@/stores/shell";
 import { toast } from "@/stores/toast";
+import { isVerified, needsVerifying } from "@/features/auth/verification";
 
 /*
  * Add to cart and wishlist from anywhere in the catalogue. Both need a verified
@@ -40,7 +41,7 @@ function useAccountGate() {
       });
       return false;
     }
-    if (session.user?.email_verified === false) {
+    if (needsVerifying(session.user)) {
       promptVerify();
       return false;
     }
@@ -107,7 +108,7 @@ export function useWishlist() {
     queryKey: key,
     queryFn: () => accountApi.wishlist(params),
     // Unverified accounts can't read the wishlist yet (the API answers 403).
-    enabled: Boolean(session) && session?.user?.email_verified !== false,
+    enabled: Boolean(session) && isVerified(session?.user),
     staleTime: 60_000,
   });
   const ids = new Set((session ? wishlist.data?.data ?? [] : []).map((b) => b.id));
