@@ -116,8 +116,8 @@ export default function PrivacyPage() {
                 In <Link to="/account">your account</Link> you can change your name, phone, password and addresses, and edit or delete your reviews.
               </p>
               <p>
-                To change your email address, get a copy of your data, or close your account and delete your data, <Link to="/contact">contact us</Link>{" "}
-                from the email on your account. We keep order records the law requires us to keep.
+                You can close your account yourself in <Link to="/account/security">Account → Sign-in &amp; security</Link>. To change your email address or get
+                a copy of your data, <Link to="/contact">contact us</Link> from the email on your account. We keep order records the law requires us to keep.
               </p>
             </>
           ),
@@ -127,15 +127,22 @@ export default function PrivacyPage() {
           title: "Deleting your account and data",
           body: (
             <>
-              <p>You can ask us to delete your account and the data that goes with it at any time, including if you signed in with Google or Facebook:</p>
+              <p>You can delete your account and the data that goes with it at any time, including if you signed in with Google or Facebook:</p>
               <ol>
                 <li>
-                  Message us on Telegram ({contact.telegram}) or email <a href={`mailto:${contact.email}`}>{contact.email}</a> from the email on your account,
-                  saying you want your account deleted.
+                  Sign in and open <Link to="/account/security">Account → Sign-in &amp; security</Link>, then <strong>Delete my account</strong>. Confirm with your
+                  password, or with Google or Facebook if you signed up with them. Orders on their way and open returns need to finish first.
                 </li>
-                <li>We confirm it's you, then delete your account, addresses, cart, wishlist and reviews within 30 days and tell you when it's done.</li>
-                <li>Order records the law requires us to keep stay, without your account attached.</li>
+                <li>
+                  You're signed out everywhere and your reviews, wishlist and cart are removed at once. Your name, email, phone number and addresses are erased
+                  30 days later.
+                </li>
+                <li>Order records the law requires us to keep stay, without your personal details attached.</li>
               </ol>
+              <p>
+                Can't sign in? Message us on Telegram ({contact.telegram}) or email <a href={`mailto:${contact.email}`}>{contact.email}</a> and we'll do it for you
+                once we've confirmed it's you.
+              </p>
               <p>
                 If you used Facebook, you can also remove Bookly from Facebook under Settings &amp; privacy → Settings → Apps and websites. For Google, it's
                 under your Google Account → Security → Your connections to third-party apps &amp; services.

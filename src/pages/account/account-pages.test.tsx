@@ -98,6 +98,42 @@ describe("SecurityPage", () => {
   });
 });
 
+describe("Delete my account", () => {
+  it("asks for the password and DELETE, then signs out and goes home", async () => {
+    const user = userEvent.setup();
+    const close = vi.spyOn(accountApi, "closeAccount").mockResolvedValue({ message: "Your account is closed. We erase your personal details on Fri, Nov 6, 2026." });
+    app("/account/security");
+    await user.click(await screen.findByRole("button", { name: "Delete my account…" }));
+    const dialog = screen.getByRole("alertdialog");
+    const submit = within(dialog).getByRole("button", { name: "Delete my account" });
+    expect(submit).toBeDisabled();
+    await user.type(within(dialog).getByLabelText("Type DELETE to confirm"), "DELETE");
+    await user.click(submit);
+    expect(within(dialog).getByText("Enter your password.")).toBeInTheDocument();
+    await user.type(within(dialog).getByLabelText("Your password", { selector: "input" }), "reading123");
+    await user.click(submit);
+    await waitFor(() => expect(close).toHaveBeenCalledWith({ confirm: "DELETE", password: "reading123" }));
+    expect(await screen.findByText("elsewhere")).toBeInTheDocument();
+    expect(getSession("customer")).toBeNull();
+    expect(notifications().getByText("Your account is closed")).toBeInTheDocument();
+  });
+
+  it("shows why the API refused, and keeps the account", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(accountApi, "closeAccount").mockRejectedValue(
+      new ApiError({ kind: "validation", status: 422, message: "You have an order on its way. Cancel it, or wait until it is delivered, then close your account." }),
+    );
+    app("/account/security");
+    await user.click(await screen.findByRole("button", { name: "Delete my account…" }));
+    const dialog = screen.getByRole("alertdialog");
+    await user.type(within(dialog).getByLabelText("Your password", { selector: "input" }), "reading123");
+    await user.type(within(dialog).getByLabelText("Type DELETE to confirm"), "DELETE");
+    await user.click(within(dialog).getByRole("button", { name: "Delete my account" }));
+    expect(await within(dialog).findByText(/order on its way/)).toBeInTheDocument();
+    expect(getSession("customer")).not.toBeNull();
+  });
+});
+
 describe("AddressesPage", () => {
   it("lists addresses with the default marked, and adds a new one prefilled with the customer's details", async () => {
     const user = userEvent.setup();

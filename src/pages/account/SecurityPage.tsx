@@ -9,6 +9,7 @@ import { PasswordField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { AccountSection } from "@/features/account/AccountSection";
+import { CloseAccount } from "@/features/account/CloseAccount";
 import { SignInMethods } from "@/features/account/SignInMethods";
 import { passwordSchema, type PasswordValues } from "@/features/account/schemas";
 import { PasswordChecklist } from "@/features/auth/PasswordChecklist";
@@ -28,9 +29,10 @@ export default function SecurityPage() {
   const customer = me.data ?? session?.user;
   const hasPassword = customer?.has_password !== false;
   return (
-    <AccountSection title="Sign-in & security" lead="How you sign in to Bookly, and your password.">
+    <AccountSection title="Sign-in & security" lead="How you sign in to Bookly, your password, and closing your account.">
       <SignInMethods customer={customer} />
       <PasswordForm key={String(hasPassword)} hasPassword={hasPassword} />
+      <CloseAccount customer={customer} />
     </AccountSection>
   );
 }
