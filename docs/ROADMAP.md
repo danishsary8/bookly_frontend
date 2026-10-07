@@ -12,7 +12,7 @@ every day, then growth, then looks.
 - [x] AUTH_PLAN PR 6: library-card sign-up/verify screens with the gold "Member" stamp, "Send it by email instead", account **Sign-in & security** (verify/change phone, connected Google/Facebook, password).
 - [x] Self-service **delete my account** (`feature/delete-account`): password or Google/Facebook to confirm, type DELETE, open orders block it, details erased after 30 days.
 - [ ] Owner: Telegram Gateway account, $5 balance, `TELEGRAM_GATEWAY_TOKEN` on Render (steps in NEXT_STEP.md).
-- [ ] Connect / disconnect Google and Facebook from Sign-in & security (block removing the last way in: "Add a password first").
+- [x] Connect / disconnect Google and Facebook from Sign-in & security (block removing the last way in: "Add a password first") (`feature/connect-social`, both repos).
 - [ ] Add or change the email from the account (code to the new address), so phone-only Facebook customers can add one.
 - [ ] Sign in with phone number + Telegram code (today phone-only accounts sign in with Facebook only).
 - [ ] Admin: see closed accounts and reopen one within its 30 days (with an audit entry).
