@@ -14,7 +14,7 @@ every day, then growth, then looks.
 - [ ] Owner: Telegram Gateway account, $5 balance, `TELEGRAM_GATEWAY_TOKEN` on Render (steps in NEXT_STEP.md).
 - [x] Connect / disconnect Google and Facebook from Sign-in & security (block removing the last way in: "Add a password first") (`feature/connect-social`, both repos).
 - [x] Add or change the email from the account (code to the new address), so phone-only Facebook customers can add one (`feature/change-email`, both repos; new migration for the code kinds).
-- [ ] Sign in with phone number + Telegram code (today phone-only accounts sign in with Facebook only).
+- [x] Sign in with phone number + Telegram code (today phone-only accounts sign in with Facebook only) (`feature/phone-sign-in`, both repos).
 - [ ] Admin: see closed accounts and reopen one within its 30 days (with an audit entry).
 
 ## Phase 2 · Reliability (before real customers)
