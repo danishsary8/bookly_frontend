@@ -19,6 +19,10 @@ every day, then growth, then looks.
 
 ## Phase 2 · Reliability (before real customers)
 - [ ] Move the API from Render to **Railway** (owner's free credit): no sleeping, so no 30–50 s first load. Add a scheduler (unfinished sign-up clean-up, `customers:erase-closed`, low-stock checks) and a **queue worker** so emails and Telegram sends never slow a request. Keep Render until Railway passes a full check, then switch the website's API address.
+  - [x] Plan written: backend `docs/RAILWAY_PLAN.md` (branch `docs/railway-plan`). Railway blocks SMTP on Free/Trial/Hobby → Brevo HTTP API; a database queue would keep Neon awake past its free 100 compute-hours → Redis for queue + cache; web + one `jobs` container; keep Neon; Hobby ≈ $5/month all-in. **Waiting for the owner's 5 decisions.**
+  - [ ] Code: `feature/brevo-api-mail`, `feature/railway-jobs` (jobs role + Redis), `chore/railway-config` (IaC + DEPLOYMENT.md).
+  - [ ] Owner: Railway Hobby, GitHub access, Brevo API key, shared variables, `railway config apply`, domain, Wait for CI, usage limit.
+  - [ ] Full check on Railway, switch `VITE_API_BASE_URL` on Vercel, watch a day, suspend Render after a week.
 - [ ] Database: confirm Neon backups / point-in-time restore, and do one restore drill.
 - [ ] Uptime check on the API and website (free monitor) with Telegram alerts.
 - [ ] Sentry source maps (owner adds `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` on Vercel) and a backend release tag, so every alert shows real file names.
