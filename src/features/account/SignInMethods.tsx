@@ -12,6 +12,8 @@ import { TextField } from "@/components/form/Field";
 import { OtpInput } from "@/components/form/OtpInput";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Row } from "@/features/account/SecurityRow";
+import { SocialConnection } from "@/features/account/SocialConnection";
 import { phoneSchema, verifyEmailSchema, type PhoneValues, type VerifyEmailValues } from "@/features/auth/schemas";
 import { useTurnstile } from "@/features/auth/turnstile";
 import { rememberChannel, useTelegramCodes, verifyPath } from "@/features/auth/verification";
@@ -20,7 +22,7 @@ import { toast } from "@/stores/toast";
 
 /*
  * Account → Sign-in & security: every way into this account at a glance (email, phone, Google, Facebook,
- * password) and what each one still needs. The phone is verified here with a Telegram code; a new number
+ * password) and what each one still needs. Google and Facebook connect and disconnect here (SocialConnection). The phone is verified here with a Telegram code; a new number
  * replaces the old one only once its code comes back.
  */
 
@@ -34,28 +36,6 @@ const NotVerified = () => (
     <CircleAlert aria-hidden="true" /> Not verified
   </Badge>
 );
-
-function Row({ icon, label, value, status, action, children }: { icon: ReactNode; label: string; value: ReactNode; status?: ReactNode; action?: ReactNode; children?: ReactNode }) {
-  return (
-    <li className="grid gap-3 py-4 first:pt-0 last:pb-0">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-lapis-tint text-primary">{icon}</span>
-        <div className="grid min-w-0 flex-1 gap-0.5">
-          <span className="text-sm font-semibold text-muted-foreground">{label}</span>
-          <span className="flex flex-wrap items-center gap-2 break-all text-[15px] text-foreground">
-            {value}
-            {status}
-          </span>
-        </div>
-        {action}
-      </div>
-      {children}
-    </li>
-  );
-}
-
-const GoogleIcon = () => <span className="text-sm font-bold" aria-hidden="true">G</span>;
-const FacebookIcon = () => <span className="text-sm font-bold" aria-hidden="true">f</span>;
 
 export function SignInMethods({ customer }: { customer: Customer | undefined }) {
   const navigate = useNavigate();
@@ -118,16 +98,8 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
             <p className="text-sm text-muted-foreground">Checking phone numbers with a Telegram code is coming soon.</p>
           ) : null}
         </Row>
-        <Row
-          icon={<GoogleIcon />}
-          label="Google"
-          value={customer?.connected?.google ? "Connected" : <span className="text-muted-foreground">Not connected</span>}
-        />
-        <Row
-          icon={<FacebookIcon />}
-          label="Facebook"
-          value={customer?.connected?.facebook ? "Connected" : <span className="text-muted-foreground">Not connected</span>}
-        />
+        <SocialConnection provider="google" customer={customer} />
+        <SocialConnection provider="facebook" customer={customer} />
         <Row
           icon={<KeyRound className="size-5" aria-hidden="true" />}
           label="Password"
