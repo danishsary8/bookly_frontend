@@ -105,6 +105,8 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
         >
           {editingPhone ? (
             <PhoneVerifier initial={verifiedPhone ? "" : (customer?.phone ?? "")} onDone={() => setEditingPhone(false)} />
+          ) : telegramCodes && verifiedPhone ? (
+            <p className="text-sm text-muted-foreground">You can also sign in with this number and a Telegram code.</p>
           ) : !telegramCodes && !verifiedPhone ? (
             <p className="text-sm text-muted-foreground">Checking phone numbers with a Telegram code is coming soon.</p>
           ) : null}
