@@ -117,14 +117,16 @@ const Wordmark = ({ onLapis = false }: { onLapis?: boolean }) => {
 
 interface AuthShellProps {
   children: ReactNode;
+  /** Replaces the quotes on the lapis panel (sign-up and verify show the library card). */
+  panel?: ReactNode;
 }
 
-export const AuthShell = ({ children }: AuthShellProps) => (
+export const AuthShell = ({ children, panel }: AuthShellProps) => (
   <div className="min-h-screen bg-background">
     <div className="mx-auto grid min-h-screen max-w-[1280px] lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-8 lg:p-6">
       <aside className="hero-lapis hidden flex-col justify-between p-10 lg:flex xl:p-12">
         <Wordmark onLapis />
-        <QuotePanel />
+        {panel ?? <QuotePanel />}
       </aside>
 
       <main id="content" tabIndex={-1} className="flex flex-col px-4 py-6 sm:px-6 lg:py-10">

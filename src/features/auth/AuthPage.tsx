@@ -8,10 +8,24 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
  * an eyebrow, the page's h1 (BlurText, MASTER §5) with a plain-text accessible
  * name, a lead line, the form, and an optional footer row of links.
  */
-export function AuthPage({ eyebrow, title, lead, children, footer }: { eyebrow: string; title: string; lead: ReactNode; children: ReactNode; footer?: ReactNode }) {
+export function AuthPage({
+  eyebrow,
+  title,
+  lead,
+  children,
+  footer,
+  panel,
+}: {
+  eyebrow: string;
+  title: string;
+  lead: ReactNode;
+  children: ReactNode;
+  footer?: ReactNode;
+  panel?: ReactNode;
+}) {
   useDocumentTitle(title);
   return (
-    <AuthShell>
+    <AuthShell panel={panel}>
       <p className="eyebrow">{eyebrow}</p>
       <h1 className="mt-3 text-[clamp(2.25rem,4vw,3.05rem)] leading-[1.08] text-foreground" aria-label={title}>
         <BlurText
