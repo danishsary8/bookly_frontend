@@ -7,18 +7,23 @@ Order rule: first what blocks real customers or loses money/data, then what the 
 every day, then growth, then looks.
 
 ## Phase 1 · Sign-in (now)
-- [ ] AUTH_PLAN PR 5 (backend + frontend, `feature/telegram-codes`): phone `+855` on the account (new migration), Telegram Gateway codes (option A, email still required), resend by channel, verify phone, limits (3/hour, 10/day per number), Turnstile on every send.
-- [ ] AUTH_PLAN PR 6: library-card sign-up/verify screens, "Send it by email instead", account **Sign-in & security** card (verify phone, connected Google/Facebook).
-- [ ] Owner: Telegram Gateway account, $5 balance, token on Render.
-- [ ] Self-service **delete my account** in Account → Security (Facebook's data-deletion rule expects it; today the privacy page only explains the steps). Re-enter password or code, then a 30-day grace period.
+- [x] AUTH_PLAN PR 5 (`feature/telegram-codes`, both repos): phone `+855` on the account (new migration), Telegram Gateway codes (option A), resend by channel, verify phone, limits (3/hour, 10/day per number), Turnstile on every send.
+- [x] Owner's rule (2026-10-07): new **Facebook** sign-ups give a phone number; email optional (`/sign-up/facebook`).
+- [x] AUTH_PLAN PR 6: library-card sign-up/verify screens with the gold "Member" stamp, "Send it by email instead", account **Sign-in & security** (verify/change phone, connected Google/Facebook, password).
+- [x] Self-service **delete my account** (`feature/delete-account`): password or Google/Facebook to confirm, type DELETE, open orders block it, details erased after 30 days.
+- [ ] Owner: Telegram Gateway account, $5 balance, `TELEGRAM_GATEWAY_TOKEN` on Render (steps in NEXT_STEP.md).
+- [ ] Connect / disconnect Google and Facebook from Sign-in & security (block removing the last way in: "Add a password first").
+- [ ] Add or change the email from the account (code to the new address), so phone-only Facebook customers can add one.
+- [ ] Sign in with phone number + Telegram code (today phone-only accounts sign in with Facebook only).
+- [ ] Admin: see closed accounts and reopen one within its 30 days (with an audit entry).
 
 ## Phase 2 · Reliability (before real customers)
-- [ ] Move the API from Render to **Railway** (owner's free credit): no sleeping, so no 30–50 s first load. Add a scheduler (unfinished sign-up clean-up, low-stock checks) and a **queue worker** so emails and Telegram sends never slow a request. Keep Render until Railway passes a full check, then switch the website's API address.
+- [ ] Move the API from Render to **Railway** (owner's free credit): no sleeping, so no 30–50 s first load. Add a scheduler (unfinished sign-up clean-up, `customers:erase-closed`, low-stock checks) and a **queue worker** so emails and Telegram sends never slow a request. Keep Render until Railway passes a full check, then switch the website's API address.
 - [ ] Database: confirm Neon backups / point-in-time restore, and do one restore drill.
 - [ ] Uptime check on the API and website (free monitor) with Telegram alerts.
 - [ ] Sentry source maps (owner adds `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` on Vercel) and a backend release tag, so every alert shows real file names.
 - [ ] Preview deployments may call the API (CORS for `bookly-frontend-*.vercel.app`).
-- [ ] Chores: Vitest 5 (`@vitest/mocker` advisory), dependency updates in both repos, re-check rate limits on every public endpoint.
+- [ ] Chores: unit tests stub `GET /auth/options` once (quiet test output); Vitest 5 (`@vitest/mocker` advisory), dependency updates in both repos, re-check rate limits on every public endpoint.
 
 ## Phase 3 · Admin dashboard, production grade (real data)
 - [ ] Dashboard: revenue, orders and average order for today / 7 / 30 days / custom range, compared with the period before; orders by status; top books and categories; low stock; new verified customers; charts.
