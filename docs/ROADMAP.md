@@ -15,7 +15,7 @@ every day, then growth, then looks.
 - [x] Connect / disconnect Google and Facebook from Sign-in & security (block removing the last way in: "Add a password first") (`feature/connect-social`, both repos).
 - [x] Add or change the email from the account (code to the new address), so phone-only Facebook customers can add one (`feature/change-email`, both repos; new migration for the code kinds).
 - [x] Sign in with phone number + Telegram code (today phone-only accounts sign in with Facebook only) (`feature/phone-sign-in`, both repos).
-- [ ] Admin: see closed accounts and reopen one within its 30 days (with an audit entry).
+- [x] Admin: see closed accounts and reopen one within its 30 days (with an audit entry) (`feature/reopen-accounts`, both repos).
 
 ## Phase 2 · Reliability (before real customers)
 - [ ] Move the API from Render to **Railway** (owner's free credit): no sleeping, so no 30–50 s first load. Add a scheduler (unfinished sign-up clean-up, `customers:erase-closed`, low-stock checks) and a **queue worker** so emails and Telegram sends never slow a request. Keep Render until Railway passes a full check, then switch the website's API address.
