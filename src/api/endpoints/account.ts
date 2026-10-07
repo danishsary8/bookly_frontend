@@ -31,6 +31,9 @@ export const accountApi = {
   /** current_password is not needed for accounts created with Google/Facebook (has_password false). */
   changePassword: (input: { current_password?: string; password: string; password_confirmation: string }) =>
     api.put<MessageResponse>("/me/password", input),
+  /** Closes the account (password, or a fresh Google/Facebook token for accounts without one). */
+  closeAccount: (input: { confirm: "DELETE"; password?: string; provider?: "google" | "facebook"; access_token?: string }) =>
+    api.delete<MessageResponse & { erase_at?: string }>("/me", { data: input }),
 
   addresses: () => api.get<Resource<Address[]>>("/addresses").then((r) => r.data),
   createAddress: (input: AddressPayload) => api.post<Resource<Address>>("/addresses", input).then((r) => r.data),

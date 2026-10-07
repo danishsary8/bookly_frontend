@@ -280,3 +280,17 @@ Audit of V1: React 19 + TypeScript + Vite 7 + Tailwind 4, ~14k lines, 13 storefr
 
 ## Roadmap (branch `docs/roadmap`)
 - [x] `docs/ROADMAP.md`: every remaining task in seven phases, most important first (sign-in → reliability incl. Railway → production admin dashboard with strict delete security → shop completeness incl. Khmer → SEO/legal → tests and security → redesign last). `NEXT_STEP.md` points to it.
+
+## Telegram codes, library card, Facebook phone step (branch `feature/telegram-codes`, AUTH_PLAN PRs 5–6)
+- [x] Backend (same branch in `bookly_backend_v2`): phone numbers (+855, `libphonenumber`), Telegram Gateway codes, `verify_by` on sign-up, resend by channel, `POST /auth/phone` + `/auth/verify-phone`, `GET /auth/options`; an account is verified by email **or** phone. Owner's rule (2026-10-07): new Facebook customers give a phone number, email optional. 240 tests.
+- [x] Sign-up: "Where should we send your code?" (Email / Telegram radio cards, shown once the API has a gateway token); Telegram makes the phone field required (+855 checked before sending).
+- [x] Signature: the **library card** on the lapis panel (`LibraryCard`) writes the reader's name and where the code goes as they type, shows the card number once the account exists, and gets a gold double-ringed **"Member" stamp** pressed onto it when the code is right (one 420 ms press; reduced motion just shows it). Phones get a slim strip above the code boxes.
+- [x] `/verify-email?via=email|telegram`: "Check Telegram" / "Check your email", resend on the same channel, "Send it by email instead", the page stays for the stamp before moving on. Channel remembered for guards. Facebook customers whose email Facebook already confirmed see the phone code once with "Skip for now".
+- [x] `/sign-up/facebook`: after "Continue with Facebook", new customers add their phone number (email prefilled from Facebook, optional). The Facebook token stays in memory only.
+- [x] Account → **Sign-in & security**: email, phone (verify or change with a Telegram code; the old number stays until the new code is entered), Google, Facebook, password. Admin customer pages show email/phone verified and cope with customers without an email.
+- [x] Verified: lint (0 errors), typecheck, 232 unit tests (new: Telegram sign-up and card, options off, verify-phone and stamp, switch to email, Facebook phone step, schemas), build. Browser pass against the local API with a stand-in Telegram Gateway (`TELEGRAM_GATEWAY_URL`): Telegram sign-up → code → stamp → shopping unlocked; security page; a number without Telegram shows the API's message; Facebook phone step on phone and desktop; no page errors.
+
+## Delete my account (branch `feature/delete-account`, on top of `feature/telegram-codes`)
+- [x] Backend `DELETE /me` (password, or a fresh Google/Facebook token; type DELETE; open orders/returns block it). Closing signs out everywhere, removes reviews, wishlist and cart; `customers:erase-closed` erases name, email, phone, sign-in ids and addresses after 30 days and keeps orders. 244 backend tests.
+- [x] Sign-in & security → **Delete my account…** dialog: password (or "Confirm with Google/Facebook"), type DELETE, the API's reason if it refuses; afterwards signed out with "Your account is closed". Privacy policy §7 now points to it.
+- [x] Verified: lint, typecheck, 234 unit tests, build; browser pass: a customer closed their account and the API marked it closed; no page errors.
