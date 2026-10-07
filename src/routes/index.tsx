@@ -12,6 +12,7 @@ const Home = lazy(() => import("../pages/HomePage"));
 const CartPage = lazy(() => import("../pages/cart/CartPage"));
 const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
+const FacebookSignUpPage = lazy(() => import("../pages/auth/FacebookSignUpPage"));
 const VerifyEmailPage = lazy(() => import("../pages/auth/VerifyEmailPage"));
 const ForgotPasswordPage = lazy(() => import("../pages/auth/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("../pages/auth/ResetPasswordPage"));
@@ -129,6 +130,7 @@ const AppRoutes = () => {
         <Route element={<GuestOnly />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/sign-up/facebook" element={<FacebookSignUpPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Route>

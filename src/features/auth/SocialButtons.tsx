@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { authApi } from "@/api/endpoints/auth";
 import { ApiError } from "@/api/errors";
 import { FormAlert } from "@/components/form/FormAlert";
@@ -12,6 +13,14 @@ import { useAfterSignIn } from "./useAfterSignIn";
  * with neither configured the buttons stay visible but disabled, marked "coming soon".
  * Pages put the buttons above the email form when they work, below it while they don't.
  */
+
+/** What /sign-up/facebook needs from the first sign-in attempt (kept in memory only, never stored). */
+export interface FacebookSignUpState {
+  accessToken: string;
+  profile: { name: string | null; email: string | null };
+  telegramCodes: boolean;
+  next: string | null;
+}
 
 const NAMES: Record<Provider, string> = { google: "Google", facebook: "Facebook" };
 
@@ -50,6 +59,7 @@ function Divider({ children }: { children: string }) {
 export function SocialButtons({ next = null }: { next?: string | null }) {
   const enabled = (["google", "facebook"] as const).filter(socialEnabled);
   const afterSignIn = useAfterSignIn();
+  const navigate = useNavigate();
   const [busy, setBusy] = useState<Provider | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [failed, setFailed] = useState<Partial<Record<Provider, boolean>>>({});
@@ -102,19 +112,32 @@ export function SocialButtons({ next = null }: { next?: string | null }) {
     // The popup must open inside this click, so the token is requested before any state update.
     const token = requestToken(provider);
     setBusy(provider);
+    let accessToken = "";
     token
-      .then((accessToken) => authApi.social(provider, accessToken))
+      .then((t) => authApi.social(provider, (accessToken = t)))
       .then((response) => {
         const firstName = response.customer?.name?.split(" ")[0];
-        afterSignIn(response.customer, next, firstName ? `Welcome, ${firstName}` : "Welcome to Bookly");
+        afterSignIn(response.customer, next, firstName ? `Welcome, ${firstName}` : "Welcome to Bookly", { verifyBy: response.verify_by });
       })
       .catch((err: unknown) => {
         if (err instanceof SocialCancelled) return;
+        const apiError = ApiError.from(err);
+        // A new Facebook customer: the API wants their phone number first (owner's rule).
+        if (apiError.data.needs === "phone") {
+          const state: FacebookSignUpState = {
+            accessToken,
+            profile: (apiError.data.profile as FacebookSignUpState["profile"]) ?? { name: null, email: null },
+            telegramCodes: apiError.data.telegram_codes === true,
+            next,
+          };
+          navigate("/sign-up/facebook", { state });
+          return;
+        }
         if (err instanceof Error && err.message === "popup_blocked") {
           setError(`Your browser blocked the ${NAMES[provider]} window. Allow pop-ups for this site, then try again.`);
           return;
         }
-        setError(ApiError.from(err).message);
+        setError(apiError.message);
       })
       .finally(() => setBusy(null));
   };
