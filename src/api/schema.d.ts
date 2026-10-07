@@ -1005,6 +1005,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/phone-login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in with a phone number, step 1 (Telegram code)
+         * @description Sends a sign-in code to the Telegram of an active account that proved this +855 number. Answers the same for every number (known or not), and counts against the number's limits (3 an hour, 10 a day) either way, so it cannot be used to find customers. 503 while Telegram codes are off.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        phone: string;
+                        turnstile_token?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Same answer for every number */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                422: components["responses"]["Validation"];
+                /** @description Telegram codes are off */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone-login/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in with a phone number, step 2 (the code)
+         * @description Five wrong codes throw the code away. Signs in like POST /auth/login.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        phone: string;
+                        code: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Signed in: customer, token, expires_at */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Wrong or expired code */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/reset-password": {
         parameters: {
             query?: never;
@@ -4556,8 +4659,8 @@ export interface components {
                 google?: boolean;
                 facebook?: boolean;
             };
-            /** @description Ways this account can sign in today (password counts only with an email). The last one cannot be removed. */
-            sign_in_methods?: ("password" | "google" | "facebook")[];
+            /** @description Ways this account can sign in today (password counts only with an email; phone only while Telegram codes are on). The last one cannot be removed. */
+            sign_in_methods?: ("password" | "google" | "facebook" | "phone")[];
             /** Format: date-time */
             created_at?: string;
         };
