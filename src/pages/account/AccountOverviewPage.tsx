@@ -3,6 +3,7 @@ import { ArrowRight, BadgeCheck, Heart, KeyRound, MapPin, Package, UserRound } f
 import { Link } from "react-router-dom";
 import { accountQueries } from "@/api/endpoints/account";
 import { orderQueries } from "@/api/endpoints/orders";
+import { isVerified } from "@/features/auth/verification";
 import { useSession } from "@/api/session";
 import type { Customer, Order } from "@/api/types";
 import { EmptyState } from "@/components/EmptyState";
@@ -54,7 +55,7 @@ export default function AccountOverviewPage() {
     { to: "/account/profile", label: "Profile", Icon: UserRound, detail: customer?.phone ? customer.phone : "Add a phone number" },
     { to: "/account/addresses", label: "Addresses", Icon: MapPin, detail: addresses.data ? `${addresses.data.length} saved` : " " },
     { to: "/account/wishlist", label: "Wishlist", Icon: Heart, detail: wishlist.data ? `${wishlist.data.meta.total ?? 0} saved ${wishlist.data.meta.total === 1 ? "book" : "books"}` : " " },
-    { to: "/account/security", label: "Password", Icon: KeyRound, detail: customer?.has_password === false ? "Set a password" : "Change your password" },
+    { to: "/account/security", label: "Sign-in & security", Icon: KeyRound, detail: customer?.phone_verified ? "Email, phone and password" : "Verify your phone, change your password" },
   ];
 
   return (
@@ -62,9 +63,9 @@ export default function AccountOverviewPage() {
       title={`Hello, ${firstName}`}
       lead={
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          {customer?.email_verified ? (
+          {isVerified(customer) ? (
             <span className="inline-flex items-center gap-1.5 text-success">
-              <BadgeCheck className="size-4" aria-hidden="true" /> Email verified
+              <BadgeCheck className="size-4" aria-hidden="true" /> {customer?.email_verified ? "Email verified" : "Phone verified"}
             </span>
           ) : null}
           {memberSince ? <span>Reading with Bookly since {memberSince}</span> : null}

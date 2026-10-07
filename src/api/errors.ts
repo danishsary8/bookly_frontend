@@ -26,6 +26,8 @@ export class ApiError extends Error {
   readonly retryAfter: number | null;
   /** X-Request-Id of the failed request; show it so support can find the log lines. */
   readonly requestId: string | null;
+  /** The response body, for the few answers that carry more than a message (e.g. Facebook's `needs: "phone"`). */
+  readonly data: Record<string, unknown>;
 
   constructor(init: {
     kind: ApiErrorKind;
@@ -34,6 +36,7 @@ export class ApiError extends Error {
     fieldErrors?: Record<string, string[]>;
     retryAfter?: number | null;
     requestId?: string | null;
+    data?: Record<string, unknown>;
   }) {
     super(init.message);
     this.name = "ApiError";
@@ -42,6 +45,7 @@ export class ApiError extends Error {
     this.fieldErrors = init.fieldErrors ?? {};
     this.retryAfter = init.retryAfter ?? null;
     this.requestId = init.requestId ?? null;
+    this.data = init.data ?? {};
   }
 
   /** First message for a field, for showing under a form input. */
@@ -82,14 +86,14 @@ export class ApiError extends Error {
     if (status === 403) {
       const kind: ApiErrorKind = body.two_factor_setup_required
         ? "two_factor_setup_required"
-        : /verify your email/i.test(message)
+        : /verify your (email|account)/i.test(message)
           ? "email_unverified"
           : "forbidden";
       return new ApiError({ kind, status, message, requestId });
     }
     if (status === 404) return new ApiError({ kind: "not_found", status, message: "We couldn't find that.", requestId });
     if (status === 409) return new ApiError({ kind: "conflict", status, message, requestId });
-    if (status === 422) return new ApiError({ kind: "validation", status, message, fieldErrors: body.errors ?? {}, requestId });
+    if (status === 422) return new ApiError({ kind: "validation", status, message, fieldErrors: body.errors ?? {}, requestId, data: body as Record<string, unknown> });
     if (status === 429) {
       const retryAfter = Number(header("retry-after")) || null;
       return new ApiError({

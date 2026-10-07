@@ -101,7 +101,7 @@ describe("LoginPage", () => {
     await user.type(screen.getByLabelText("Email"), "dara@example.com");
     await user.type(passwordInput("Password"), "reading123");
     await user.click(screen.getByRole("button", { name: "Sign in" }));
-    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/verify-email?next=%2Fcheckout"));
+    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/verify-email?via=email&next=%2Fcheckout"));
   });
 });
 
@@ -133,10 +133,11 @@ describe("VerifyEmailPage", () => {
     app("/verify-email?next=%2Fbooks%2F7");
     await user.click(screen.getByLabelText("Digit 1 of 6"));
     await user.paste("123456");
-    await user.click(screen.getByRole("button", { name: /Verify email/ }));
+    await user.click(screen.getByRole("button", { name: /Verify and continue/ }));
     expect(await screen.findByText("The code is invalid or has expired.")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /Verify email/ }));
-    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/books/7"));
+    await user.click(screen.getByRole("button", { name: /Verify and continue/ }));
+    expect(await screen.findByRole("button", { name: /Stamping your card/ })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/books/7"), { timeout: 3000 });
     expect(post).toHaveBeenLastCalledWith("/auth/verify-email", { code: "123456" });
     expect(getSession<{ email_verified: boolean }>("customer")?.user.email_verified).toBe(true);
   });

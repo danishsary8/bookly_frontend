@@ -58,9 +58,15 @@ export type CouponInput = Partial<{
 export interface StaffCustomer {
   id: number;
   name: string;
-  email: string;
+  /** Null for Facebook customers who signed up with a phone number only. */
+  email: string | null;
   phone: string | null;
+  /** The number proven with a Telegram code (+85512345678), if any. */
+  phone_number?: string | null;
+  phone_verified?: boolean;
   email_verified: boolean;
+  /** Email or phone proven: a real account that can order. */
+  verified?: boolean;
   is_active: boolean;
   login_methods: string[];
   orders_count?: number;

@@ -5,11 +5,12 @@ import { useSession } from "@/api/session";
 import type { Cart, CartLine, Customer } from "@/api/types";
 import { formatLabel } from "@/lib/catalog";
 import { toast } from "@/stores/toast";
+import { isVerified } from "@/features/auth/verification";
 
 /** The cart needs a signed-in customer with a verified email (the API answers 403 before that). */
 export function useUsableCart() {
   const session = useSession<Customer>("customer");
-  const verified = session?.user?.email_verified !== false;
+  const verified = !session || isVerified(session.user);
   const cart = useQuery({ ...cartQueries.cart(), enabled: Boolean(session) && verified });
   return { session, verified, cart };
 }

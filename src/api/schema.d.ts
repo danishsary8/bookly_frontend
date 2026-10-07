@@ -510,7 +510,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create an account; a 6-digit code is emailed to verify it */
+        /**
+         * Create an account; a 6-digit code goes to the email, or to the phone's Telegram (verify_by)
+         * @description verify_by=telegram needs a Cambodian phone and GET /auth/options telegram_codes=true; if Telegram cannot deliver, nothing is created and the phone field explains why. If the email belongs to a sign-up that was never verified, that account is taken over (new name and password, its old sessions and codes cancelled). Sign-ups still unverified after UNVERIFIED_CUSTOMER_HOURS (48) are deleted. A verified, deactivated or deleted account keeps its email (422).
+         */
         post: {
             parameters: {
                 query?: never;
@@ -527,12 +530,20 @@ export interface paths {
                         /** @description Letters and numbers */
                         password: string;
                         password_confirmation: string;
+                        /** @description Required with verify_by=telegram (+855 only) */
                         phone?: string;
+                        /**
+                         * @default email
+                         * @enum {string}
+                         */
+                        verify_by?: "email" | "telegram";
+                        /** @description Cloudflare Turnstile token; required once TURNSTILE_SECRET_KEY is set */
+                        turnstile_token?: string;
                     };
                 };
             };
             responses: {
-                /** @description Account + token. Shopping routes return 403 until the email is verified. */
+                /** @description Account + token + verify_by. Shopping routes return 403 until the code is entered. */
                 201: {
                     headers: {
                         [name: string]: unknown;
@@ -541,12 +552,52 @@ export interface paths {
                         "application/json": components["schemas"]["TokenResponse"] & {
                             customer?: components["schemas"]["Customer"];
                             message?: string;
+                            /** @enum {string} */
+                            verify_by?: "email" | "telegram";
                         };
                     };
                 };
                 422: components["responses"]["Validation"];
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What sign-up can offer: telegram_codes is true once TELEGRAM_GATEWAY_TOKEN is set */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Options */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            telegram_codes?: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -575,6 +626,8 @@ export interface paths {
                     "application/json": {
                         email: string;
                         password: string;
+                        /** @description Cloudflare Turnstile token; required once TURNSTILE_SECRET_KEY is set */
+                        turnstile_token?: string;
                     };
                 };
             };
@@ -626,7 +679,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Log in with a Google or Facebook access token (account linked by email) */
+        /**
+         * Log in with a Google or Facebook access token
+         * @description Signs in the account already linked to this Google/Facebook id, or creates one. An email that already has a verified (or closed) account is refused with 409 and told how to sign in instead; an unfinished sign-up with that email becomes the social account (its password and sessions are removed). A new Facebook account needs a Cambodian phone number and its email is optional: without phone the answer is 422 with needs=phone and profile {name, email}; call again with the same access_token, phone, optional email and turnstile_token. The response then says where the code went (verify_by: telegram, email, or null when Facebook confirmed the email).
+         */
         post: {
             parameters: {
                 query?: never;
@@ -640,6 +696,11 @@ export interface paths {
                 content: {
                     "application/json": {
                         access_token: string;
+                        /** @description Facebook sign-up only */
+                        phone?: string;
+                        /** @description Facebook sign-up only, optional */
+                        email?: string;
+                        turnstile_token?: string;
                     };
                 };
             };
@@ -660,6 +721,20 @@ export interface paths {
                 };
                 /** @description Provider rejected the token */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description The email already has an account: sign in as before */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description needs=phone (Facebook sign-up), or the phone/email is invalid, taken or cannot get a code */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -763,7 +838,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Send a new verification code (3 per 10 min) */
+        /** Send a new verification code by email or Telegram (3 per 10 min; Telegram also 3/hour and 10/day per number) */
         post: {
             parameters: {
                 query?: never;
@@ -771,10 +846,111 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @default email
+                         * @enum {string}
+                         */
+                        channel?: "email" | "telegram";
+                        turnstile_token?: string;
+                    };
+                };
+            };
             responses: {
                 /** @description Sent */
                 200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                422: components["responses"]["Validation"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add or change the phone number: sends a Telegram code; the number is saved once verified */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        phone: string;
+                        turnstile_token?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Code sent */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                422: components["responses"]["Validation"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/verify-phone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify the phone number with the Telegram code */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        code?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Verified (customer in the body) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Wrong or expired code, or the number is taken */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -809,6 +985,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         email?: string;
+                        turnstile_token?: string;
                     };
                 };
             };
@@ -3317,7 +3494,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Customers (q, active, verified) */
+        /**
+         * Customers (q, active, verified)
+         * @description meta.counts {verified, unverified} counts both tabs with the same q/active filters. Each unverified, active customer has removal_at: when the unfinished sign-up is deleted.
+         */
         get: {
             parameters: {
                 query?: never;
@@ -3374,7 +3554,34 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        /** (admin) Delete an unfinished sign-up now, freeing its email */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Verified, or has orders, returns, reviews or addresses */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -4114,10 +4321,21 @@ export interface components {
         Customer: {
             id?: number;
             name?: string;
-            email?: string;
+            /** @description Null for Facebook accounts that signed up with a phone number only */
+            email?: string | null;
+            /** @description Contact number as shown to people */
             phone?: string | null;
+            /** @description Verified number in international form (+85512345678) */
+            phone_number?: string | null;
+            phone_verified?: boolean;
             email_verified?: boolean;
+            /** @description Email or phone proven; only verified customers can shop */
+            verified?: boolean;
             has_password?: boolean;
+            connected?: {
+                google?: boolean;
+                facebook?: boolean;
+            };
             /** Format: date-time */
             created_at?: string;
         };

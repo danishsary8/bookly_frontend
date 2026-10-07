@@ -125,6 +125,7 @@ export default function CustomerAdminPage() {
     );
 
   const c = customer.data;
+  const verified = c.verified ?? c.email_verified;
   const s = c.stats;
   const orderCount = s
     ? Object.values(s.orders_by_status).reduce((a, b) => a + b, 0)
@@ -145,9 +146,15 @@ export default function CustomerAdminPage() {
             <Badge tone="success" shape="tint">
               <BadgeCheck aria-hidden="true" /> Email verified
             </Badge>
-          ) : (
+          ) : null}
+          {c.phone_verified ? (
+            <Badge tone="success" shape="tint">
+              <BadgeCheck aria-hidden="true" /> Phone verified
+            </Badge>
+          ) : null}
+          {verified ? null : (
             <Badge tone="warning" shape="outline">
-              Email not verified
+              Not verified yet
             </Badge>
           )}
           Customer since {orderDate(c.created_at)}
@@ -156,7 +163,7 @@ export default function CustomerAdminPage() {
       actions={
         isAdmin ? (
           <span className="flex flex-wrap gap-2">
-            {c.email_verified ? null : (
+            {verified ? null : (
               <Button
                 variant="outline"
                 onClick={() => setConfirmDelete(true)}
@@ -253,7 +260,7 @@ export default function CustomerAdminPage() {
               </h2>
               {orderCount ? (
                 <Link
-                  to={`/admin/orders?q=${encodeURIComponent(c.email)}`}
+                  to={`/admin/orders?q=${encodeURIComponent(c.email ?? c.name)}`}
                   className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
                 >
                   All their orders
@@ -303,13 +310,19 @@ export default function CustomerAdminPage() {
           >
             Contact
           </h2>
-          <a
-            href={`mailto:${c.email}`}
-            className="inline-flex min-w-0 items-center gap-2 text-[15px] [overflow-wrap:anywhere] hover:text-primary"
-          >
-            <Mail className="size-4 text-muted-foreground" aria-hidden="true" />{" "}
-            {c.email}
-          </a>
+          {c.email ? (
+            <a
+              href={`mailto:${c.email}`}
+              className="inline-flex min-w-0 items-center gap-2 text-[15px] [overflow-wrap:anywhere] hover:text-primary"
+            >
+              <Mail className="size-4 text-muted-foreground" aria-hidden="true" />{" "}
+              {c.email}
+            </a>
+          ) : (
+            <p className="inline-flex items-center gap-2 text-[15px] text-muted-foreground">
+              <Mail className="size-4" aria-hidden="true" /> No email (signed up with Facebook and a phone number)
+            </p>
+          )}
           {c.phone ? (
             <a
               href={`tel:${c.phone}`}
@@ -344,7 +357,7 @@ export default function CustomerAdminPage() {
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
         title={`Delete ${c.name}'s sign-up?`}
-        description={`They never entered their code, so they have no orders. The account is deleted for good and ${c.email} can be used to sign up again.`}
+        description={`They never entered their code, so they have no orders. The account is deleted for good and ${c.email ?? "their phone number"} can be used to sign up again.`}
         confirmLabel="Delete"
         loading={remove.isPending}
         onConfirm={() => remove.mutate()}

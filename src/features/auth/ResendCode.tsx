@@ -6,8 +6,8 @@ import { useTurnstile } from "./turnstile";
 import { toast } from "@/stores/toast";
 
 /*
- * "Didn't get it? Resend code" with a cooldown. The API allows 3 code emails per
- * 10 minutes; a 429 starts the cooldown from its Retry-After instead. Customer pages pass
+ * "Didn't get it? Resend code" with a cooldown. The API allows 3 codes per
+ * 10 minutes (and 3 Telegram codes an hour per number); a 429 starts the cooldown from its Retry-After instead. Customer pages pass
  * `turnstileAction` so the request carries a Cloudflare Turnstile token (staff pages don't).
  */
 const COOLDOWN_S = 60;
@@ -16,10 +16,12 @@ export function ResendCode({
   send,
   startCoolingDown = false,
   turnstileAction,
+  sentMessage = "Check your inbox (and spam folder). It may take a minute.",
 }: {
   send: (turnstileToken?: string) => Promise<unknown>;
   startCoolingDown?: boolean;
   turnstileAction?: string;
+  sentMessage?: string;
 }) {
   const cooldown = useCooldown(startCoolingDown ? COOLDOWN_S : 0);
   const [sending, setSending] = useState(false);
@@ -34,8 +36,7 @@ export function ResendCode({
       await send(await turnstile.getToken());
       toast.success({
         title: "New code sent",
-        description:
-          "Check your inbox (and spam folder). It may take a minute.",
+        description: sentMessage,
       });
       cooldown.start(COOLDOWN_S);
     } catch (error) {
