@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { accountApi, accountKeys, accountQueries } from "@/api/endpoints/account";
 import { useSession } from "@/api/session";
 import type { Customer } from "@/api/types";
@@ -14,7 +15,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { applyApiErrors } from "@/lib/forms";
 import { toast } from "@/stores/toast";
 
-/* /account/profile: name and phone. The email is the sign-in identity, so it is shown but not editable. */
+/* /account/profile: name and phone. The email is the sign-in identity: shown here, changed on Sign-in & security (with a code). */
 export default function ProfilePage() {
   useDocumentTitle("Profile");
   const session = useSession<Customer>("customer");
@@ -63,7 +64,11 @@ function ProfileForm({ customer }: { customer: Customer }) {
           </label>
           <input id="profile-email" value={customer.email ?? ""} readOnly aria-describedby="profile-email-hint" className="h-12 rounded-md border border-border bg-surface-2 px-3.5 text-base text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring" />
           <p id="profile-email-hint" className="text-sm text-muted-foreground">
-            This is how you sign in, so it can't be changed here.
+            This is how you sign in.{" "}
+            <Link to="/account/security" className="font-medium text-primary underline-offset-4 hover:underline">
+              Add or change it in Sign-in &amp; security
+            </Link>
+            .
           </p>
         </div>
         <div className="flex flex-wrap gap-3">

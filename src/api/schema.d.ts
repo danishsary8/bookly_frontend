@@ -1181,6 +1181,103 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add or change your email (step 1, code to the new address)
+         * @description The password is required when the account has one. Nothing changes until the code comes back (step 2). Refused when another account (also a closed one) uses the address, or it is already yours. At most 5 codes an hour per account, plus the otp-send limit and Turnstile.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: email */
+                        email: string;
+                        password?: string;
+                        turnstile_token?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Code sent; email is the address it went to */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                422: components["responses"]["Validation"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/email/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm the new email with its code (step 2)
+         * @description Saves the address as verified, cancels codes sent to the old address, signs out other devices, and tells the old address (if it was proven) about the change.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Saved (customer in the body) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Wrong or expired code, or the address was taken meanwhile */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/connections/{provider}": {
         parameters: {
             query?: never;
@@ -1219,13 +1316,6 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description The token could not be verified */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
                 /** @description Used by another Bookly account, or another account of this provider is connected */
                 409: {
                     headers: {
@@ -1233,7 +1323,13 @@ export interface paths {
                     };
                     content?: never;
                 };
-                422: components["responses"]["Validation"];
+                /** @description Wrong password, or the token could not be verified (422, not 401, so the session stays) */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
         };
         /**

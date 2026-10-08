@@ -74,6 +74,10 @@ export const phoneSchema = z.object({ phone: cambodianPhone });
 
 export const verifyEmailSchema = z.object({ code });
 
+/** Account → Sign-in & security: a new email, and the password when the account has one. */
+export const changeEmailSchema = (hasPassword: boolean) =>
+  z.object({ email, password: hasPassword ? z.string().min(1, "Enter your password.") : z.string() });
+
 export const forgotPasswordSchema = z.object({ email });
 
 export const resetPasswordSchema = z
@@ -93,6 +97,7 @@ export type RegisterValues = z.infer<typeof registerSchema>;
 export type VerifyEmailValues = z.infer<typeof verifyEmailSchema>;
 export type FacebookDetailsValues = z.infer<typeof facebookDetailsSchema>;
 export type PhoneValues = z.infer<typeof phoneSchema>;
+export type ChangeEmailValues = z.infer<ReturnType<typeof changeEmailSchema>>;
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 

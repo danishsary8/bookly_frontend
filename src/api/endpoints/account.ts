@@ -34,6 +34,15 @@ export const accountApi = {
   /** Closes the account (password, or a fresh Google/Facebook token for accounts without one). */
   closeAccount: (input: { confirm: "DELETE"; password?: string; provider?: "google" | "facebook"; access_token?: string }) =>
     api.delete<MessageResponse & { erase_at?: string }>("/me", { data: input }),
+  /** Emails a code to a new address; nothing changes until it comes back (password needed when the account has one). */
+  sendEmailCode: (input: { email: string; password?: string; turnstile_token?: string }) =>
+    api.post<MessageResponse & { email?: string }>("/me/email", input),
+  /** Saves the new address as verified (other devices are signed out) and refreshes the stored profile. */
+  confirmEmail: async (code: string) => {
+    const response = await api.post<MessageResponse & { customer?: Customer }>("/me/email/verify", { code });
+    if (response.customer) updateSessionUser("customer", response.customer);
+    return response;
+  },
   /** Connects Google/Facebook with a fresh token from its popup (plus the password when the account has one). */
   connect: async (provider: "google" | "facebook", input: { access_token: string; password?: string }) => {
     const response = await api.post<MessageResponse & { customer?: Customer }>(`/me/connections/${provider}`, input);

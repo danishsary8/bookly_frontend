@@ -12,6 +12,7 @@ import { TextField } from "@/components/form/Field";
 import { OtpInput } from "@/components/form/OtpInput";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EmailChanger } from "@/features/account/EmailChanger";
 import { Row } from "@/features/account/SecurityRow";
 import { SocialConnection } from "@/features/account/SocialConnection";
 import { phoneSchema, verifyEmailSchema, type PhoneValues, type VerifyEmailValues } from "@/features/auth/schemas";
@@ -22,7 +23,7 @@ import { toast } from "@/stores/toast";
 
 /*
  * Account → Sign-in & security: every way into this account at a glance (email, phone, Google, Facebook,
- * password) and what each one still needs. Google and Facebook connect and disconnect here (SocialConnection). The phone is verified here with a Telegram code; a new number
+ * password) and what each one still needs. Google and Facebook connect and disconnect here (SocialConnection); the email is added or changed with a code to the new address (EmailChanger). The phone is verified here with a Telegram code; a new number
  * replaces the old one only once its code comes back.
  */
 
@@ -41,6 +42,7 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
   const navigate = useNavigate();
   const telegramCodes = useTelegramCodes();
   const [editingPhone, setEditingPhone] = useState(false);
+  const [editingEmail, setEditingEmail] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
   const verifiedPhone = customer?.phone_verified ? customer.phone : null;
 
@@ -72,13 +74,22 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
           value={customer?.email ?? <span className="text-muted-foreground">Not added</span>}
           status={customer?.email ? customer.email_verified ? <Verified /> : <NotVerified /> : null}
           action={
-            customer?.email && !customer.email_verified ? (
-              <Button variant="outline" size="sm" onClick={() => void verifyEmail()} loading={sendingEmail}>
-                Verify
-              </Button>
-            ) : null
+            editingEmail ? null : (
+              <div className="flex flex-wrap gap-2">
+                {customer?.email && !customer.email_verified ? (
+                  <Button variant="outline" size="sm" onClick={() => void verifyEmail()} loading={sendingEmail}>
+                    Verify
+                  </Button>
+                ) : null}
+                <Button variant="outline" size="sm" onClick={() => setEditingEmail(true)}>
+                  {customer?.email ? "Change" : "Add"}
+                </Button>
+              </div>
+            )
           }
-        />
+        >
+          {editingEmail ? <EmailChanger current={customer?.email ?? null} hasPassword={customer?.has_password !== false} onDone={() => setEditingEmail(false)} /> : null}
+        </Row>
         <Row
           icon={<Phone className="size-5" aria-hidden="true" />}
           label="Phone"
