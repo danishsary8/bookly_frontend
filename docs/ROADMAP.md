@@ -11,7 +11,8 @@ every day, then growth, then looks.
 - [x] Owner's rule (2026-10-07): new **Facebook** sign-ups give a phone number; email optional (`/sign-up/facebook`).
 - [x] AUTH_PLAN PR 6: library-card sign-up/verify screens with the gold "Member" stamp, "Send it by email instead", account **Sign-in & security** (verify/change phone, connected Google/Facebook, password).
 - [x] Self-service **delete my account** (`feature/delete-account`): password or Google/Facebook to confirm, type DELETE, open orders block it, details erased after 30 days.
-- [ ] Owner: Telegram Gateway account, $5 balance, `TELEGRAM_GATEWAY_TOKEN` on Render (steps in NEXT_STEP.md).
+- [x] Owner: Telegram Gateway account and `TELEGRAM_GATEWAY_TOKEN` on Render; codes work since 2026-10-08 (fixes: `gatewayapi.telegram.org` address, IP restriction lifted, clear alerts).
+- [ ] Owner: Telegram Gateway balance (about $5); until then codes only reach the owner's own number.
 - [x] Connect / disconnect Google and Facebook from Sign-in & security (block removing the last way in: "Add a password first") (`feature/connect-social`, both repos).
 - [x] Add or change the email from the account (code to the new address), so phone-only Facebook customers can add one (`feature/change-email`, both repos; new migration for the code kinds).
 - [x] Sign in with phone number + Telegram code (today phone-only accounts sign in with Facebook only) (`feature/phone-sign-in`, both repos).
@@ -19,13 +20,8 @@ every day, then growth, then looks.
 - [x] Owner's fixes (2026-10-08): phone sign-in says plainly when a number has no account or Telegram can't reach it (no more code page for a code that never comes); no cap on Telegram codes per number (a missing code is often our side; the cap stays available as `PHONE_CODES_PER_HOUR` / `PHONE_CODES_PER_DAY`); sign-up with Telegram needs no email (`fix/phone-sign-in-messages`, `fix/phone-code-limits` (backend), `feature/phone-only-sign-up`).
 
 ## Phase 2 · Reliability (before real customers)
-- [ ] Move the API from Render to **Railway** (owner's free credit): no sleeping, so no 30–50 s first load. Add a scheduler (unfinished sign-up clean-up, `customers:erase-closed`, low-stock checks) and a **queue worker** so emails and Telegram sends never slow a request. Keep Render until Railway passes a full check, then switch the website's API address.
-  - [x] Plan written: backend `docs/RAILWAY_PLAN.md` (branch `docs/railway-plan`). Railway blocks SMTP on Free/Trial/Hobby → Brevo HTTP API; a database queue would keep Neon awake past its free 100 compute-hours → Redis for queue + cache; web + one `jobs` container; keep Neon; Hobby ≈ $5/month all-in. **Waiting for the owner's 5 decisions.**
-  - [ ] Code: `feature/brevo-api-mail`, `feature/railway-jobs` (jobs role + Redis), `chore/railway-config` (IaC + DEPLOYMENT.md).
-  - [ ] Owner: Railway Hobby, GitHub access, Brevo API key, shared variables, `railway config apply`, domain, Wait for CI, usage limit.
-  - [ ] Full check on Railway, switch `VITE_API_BASE_URL` on Vercel, watch a day, suspend Render after a week.
 - [ ] Database: confirm Neon backups / point-in-time restore, and do one restore drill.
-- [ ] Uptime check on the API and website (free monitor) with Telegram alerts.
+- [ ] Uptime check on the API and website (free monitor) with Telegram alerts. A ping every few minutes also keeps the Render API from sleeping.
 - [ ] Telegram Gateway balance: alert the owner on Telegram when it runs low (there is no per-number cap now, so a bot could drain it; turn on `PHONE_CODES_PER_HOUR` if that happens).
 - [ ] Sentry source maps (owner adds `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` on Vercel) and a backend release tag, so every alert shows real file names.
 - [ ] Preview deployments may call the API (CORS for `bookly-frontend-*.vercel.app`).
@@ -61,10 +57,13 @@ every day, then growth, then looks.
 ## Phase 6 · Confidence
 - [ ] End-to-end tests in CI for the money paths: sign-up → verify → cart → checkout → admin ships → return.
 - [ ] Security review of both repos (OWASP list, file uploads, staff routes, secrets).
-- [ ] Load test the busiest pages on the new host.
+- [ ] Load test the busiest pages.
 
 ## Phase 7 · Redesign (last)
 - [ ] Full frontend redesign, starting from the landing page, then every page; keep all tests passing.
+
+## Removed by the owner
+- Moving the API from Render to Railway (removed 2026-10-08; the research stays in the backend's `docs/RAILWAY_PLAN.md`).
 
 ## Never
 - No payment-provider work without the owner's keys and OK. Never edit old migrations. No secrets in chat.
