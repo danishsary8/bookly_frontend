@@ -17,7 +17,7 @@ import { registerSchema, type RegisterValues } from "@/features/auth/schemas";
 import { useAfterSignIn } from "@/features/auth/useAfterSignIn";
 import { applyApiErrors, withNext } from "@/lib/forms";
 import { useTurnstile } from "@/features/auth/turnstile";
-import { useTelegramCodes } from "@/features/auth/verification";
+import { useTelegramBot } from "@/features/auth/verification";
 
 const FIELDS = ["name", "email", "phone", "password", "password_confirmation", "verify_by"] as const;
 
@@ -33,9 +33,9 @@ export default function RegisterPage() {
     defaultValues: { name: "", email: "", phone: "", password: "", password_confirmation: "", verify_by: "email" },
   });
   const { errors, isSubmitting } = formState;
-  const [password, name, email, phone, channel] = useWatch({ control, name: ["password", "name", "email", "phone", "verify_by"] });
-  const telegramCodes = useTelegramCodes();
-  const byTelegram = telegramCodes && channel === "telegram";
+  const [password, name, email, channel] = useWatch({ control, name: ["password", "name", "email", "verify_by"] });
+  const telegram = useTelegramBot();
+  const byTelegram = telegram && channel === "telegram";
   const turnstile = useTurnstile("register");
 
   const submit = async (values: RegisterValues) => {
@@ -46,11 +46,11 @@ export default function RegisterPage() {
         ...(values.email ? { email: values.email } : {}),
         password: values.password,
         password_confirmation: values.password_confirmation,
-        ...(values.phone ? { phone: values.phone } : {}),
+        ...(values.phone && !byTelegram ? { phone: values.phone } : {}),
         verify_by: byTelegram ? "telegram" : "email",
         turnstile_token: await turnstile.getToken(),
       });
-      // New accounts are unverified, so this continues to the code page (which keeps `next`).
+      // New accounts are unverified, so this continues to the code page or Telegram (which keep `next`).
       afterSignIn(response.customer, next, undefined, { justRegistered: true, verifyBy: response.verify_by ?? "email" });
     } catch (error) {
       const message = applyApiErrors(error, setError, FIELDS);
@@ -68,7 +68,7 @@ export default function RegisterPage() {
       eyebrow="New to Bookly"
       title="Create your account"
       lead="Save books, check out faster and track every order."
-      panel={<LibraryCard name={name} channel={byTelegram ? "telegram" : "email"} destination={byTelegram ? phone : email} />}
+      panel={<LibraryCard name={name} channel={byTelegram ? "telegram" : "email"} destination={byTelegram ? null : email} />}
       footer={
         <p>
           Already have an account?{" "}
@@ -94,18 +94,20 @@ export default function RegisterPage() {
           error={errors.email?.message}
           {...register("email")}
         />
-        {telegramCodes ? <ChannelPicker value={byTelegram ? "telegram" : "email"} field={register("verify_by")} /> : null}
-        <TextField
-          label={byTelegram ? "Phone number with Telegram" : "Phone"}
-          optional={!byTelegram}
-          type="tel"
-          autoComplete="tel"
-          inputMode="tel"
-          placeholder="012 345 678"
-          hint={byTelegram ? "Cambodian numbers (+855). Your code arrives in Telegram's Verification Codes chat." : "For delivery questions only."}
-          error={errors.phone?.message}
-          {...register("phone")}
-        />
+        {telegram ? <ChannelPicker value={byTelegram ? "telegram" : "email"} field={register("verify_by")} /> : null}
+        {byTelegram ? null : (
+          <TextField
+            label="Phone"
+            optional
+            type="tel"
+            autoComplete="tel"
+            inputMode="tel"
+            placeholder="012 345 678"
+            hint="For delivery questions only."
+            error={errors.phone?.message}
+            {...register("phone")}
+          />
+        )}
 
         <div className="grid gap-3">
           <PasswordField label="Password" autoComplete="new-password" aria-describedby="password-rules" error={errors.password?.message} {...register("password")} />

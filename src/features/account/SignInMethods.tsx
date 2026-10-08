@@ -1,6 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { BadgeCheck, CircleAlert, KeyRound, Mail, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -8,23 +6,22 @@ import { accountKeys } from "@/api/endpoints/account";
 import { authApi } from "@/api/endpoints/auth";
 import { ApiError } from "@/api/errors";
 import type { Customer } from "@/api/types";
-import { TextField } from "@/components/form/Field";
-import { OtpInput } from "@/components/form/OtpInput";
+import { FormAlert } from "@/components/form/FormAlert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmailChanger } from "@/features/account/EmailChanger";
 import { Row } from "@/features/account/SecurityRow";
 import { SocialConnection } from "@/features/account/SocialConnection";
-import { phoneSchema, verifyEmailSchema, type PhoneValues, type VerifyEmailValues } from "@/features/auth/schemas";
-import { useTurnstile } from "@/features/auth/turnstile";
-import { rememberChannel, useTelegramCodes, verifyPath } from "@/features/auth/verification";
-import { applyApiErrors } from "@/lib/forms";
+import { useTelegramLink } from "@/features/auth/telegram";
+import { TelegramWait } from "@/features/auth/TelegramWait";
+import { rememberChannel, useTelegramBot, verifyPath } from "@/features/auth/verification";
 import { toast } from "@/stores/toast";
 
 /*
  * Account → Sign-in & security: every way into this account at a glance (email, phone, Google, Facebook,
- * password) and what each one still needs. Google and Facebook connect and disconnect here (SocialConnection); the email is added or changed with a code to the new address (EmailChanger). The phone is verified here with a Telegram code; a new number
- * replaces the old one only once its code comes back.
+ * password) and what each one still needs. Google and Facebook connect and disconnect here (SocialConnection);
+ * the email is added or changed with a code to the new address (EmailChanger). The phone is confirmed (or
+ * changed) by sharing it in the Bookly Telegram bot (PhoneInTelegram); the old number stays until then.
  */
 
 const Verified = ({ children = "Verified" }: { children?: ReactNode }) => (
@@ -40,7 +37,7 @@ const NotVerified = () => (
 
 export function SignInMethods({ customer }: { customer: Customer | undefined }) {
   const navigate = useNavigate();
-  const telegramCodes = useTelegramCodes();
+  const telegram = useTelegramBot();
   const [editingPhone, setEditingPhone] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -49,7 +46,7 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
   const verifyEmail = async () => {
     setSendingEmail(true);
     try {
-      await authApi.resendVerification(undefined, "email");
+      await authApi.resendVerification();
       rememberChannel("email");
       navigate(verifyPath("email", "/account/security"), { state: { justRegistered: true } });
     } catch (error) {
@@ -96,19 +93,21 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
           value={verifiedPhone ?? customer?.phone ?? <span className="text-muted-foreground">Not added</span>}
           status={verifiedPhone ? <Verified>Verified with Telegram</Verified> : customer?.phone ? <NotVerified /> : null}
           action={
-            telegramCodes && !editingPhone ? (
+            telegram && !editingPhone ? (
               <Button variant="outline" size="sm" onClick={() => setEditingPhone(true)}>
-                {verifiedPhone ? "Change" : customer?.phone ? "Verify" : "Add"}
+                {verifiedPhone ? "Change" : "Confirm"}
               </Button>
             ) : null
           }
         >
           {editingPhone ? (
-            <PhoneVerifier initial={verifiedPhone ? "" : (customer?.phone ?? "")} onDone={() => setEditingPhone(false)} />
-          ) : telegramCodes && verifiedPhone ? (
-            <p className="text-sm text-muted-foreground">You can also sign in with this number and a Telegram code.</p>
-          ) : !telegramCodes && !verifiedPhone ? (
-            <p className="text-sm text-muted-foreground">Checking phone numbers with a Telegram code is coming soon.</p>
+            <PhoneInTelegram onDone={() => setEditingPhone(false)} />
+          ) : telegram && verifiedPhone ? (
+            <p className="text-sm text-muted-foreground">You can also sign in with Continue with Telegram.</p>
+          ) : telegram ? (
+            <p className="text-sm text-muted-foreground">Confirm it with one tap in our Telegram bot: it shares the number of your Telegram account.</p>
+          ) : !verifiedPhone ? (
+            <p className="text-sm text-muted-foreground">Confirming phone numbers in Telegram is coming soon.</p>
           ) : null}
         </Row>
         <SocialConnection provider="google" customer={customer} />
@@ -128,89 +127,45 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
   );
 }
 
-/** Two steps in place: the number (Telegram code sent), then the code. */
-function PhoneVerifier({ initial, onDone }: { initial: string; onDone: () => void }) {
+/**
+ * Confirm or change the number in place: the bot link is made straight away, so "Open Telegram" opens the
+ * bot in one tap; the row updates by itself once the number is shared.
+ */
+function PhoneInTelegram({ onDone }: { onDone: () => void }) {
   const queryClient = useQueryClient();
-  const turnstile = useTurnstile("verify_phone");
-  const [sentTo, setSentTo] = useState<string | null>(null);
-  const codeRef = useRef<HTMLDivElement>(null);
-  const phoneForm = useForm<PhoneValues>({ resolver: zodResolver(phoneSchema), defaultValues: { phone: initial } });
-  const codeForm = useForm<VerifyEmailValues>({ resolver: zodResolver(verifyEmailSchema), defaultValues: { code: "" } });
+  const { state, start } = useTelegramLink("phone", (customer) => {
+    void queryClient.invalidateQueries({ queryKey: accountKeys.all });
+    toast.success({ title: "Phone number confirmed", description: `${customer.phone ?? "Your number"} is now on your account.` });
+    onDone();
+  });
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    void start();
+  }, [start]);
 
-  const send = async (values: PhoneValues) => {
-    try {
-      const response = await authApi.sendPhoneCode(values.phone, await turnstile.getToken());
-      setSentTo(response.phone ?? values.phone);
-      toast.success({ title: "Code sent", description: "Check the Verification Codes chat in Telegram." });
-    } catch (error) {
-      const message = applyApiErrors(error, phoneForm.setError, ["phone"]);
-      if (message) phoneForm.setError("phone", { type: "server", message });
-    } finally {
-      turnstile.reset();
-    }
-  };
-
-  const verify = async (values: VerifyEmailValues) => {
-    try {
-      await authApi.verifyPhone(values.code);
-      await queryClient.invalidateQueries({ queryKey: accountKeys.me() });
-      toast.success({ title: "Phone number verified", description: "You can use it for deliveries and to prove it's you." });
-      onDone();
-    } catch (error) {
-      const message = applyApiErrors(error, codeForm.setError, ["code"]);
-      if (message) {
-        codeForm.setError("code", { type: "server", message });
-        requestAnimationFrame(() => codeRef.current?.querySelector("input")?.focus());
-      }
-    }
-  };
-
-  if (sentTo) {
+  if (state.phase === "failed") {
     return (
-      <form onSubmit={(event) => void codeForm.handleSubmit(verify)(event)} noValidate className="grid gap-4 rounded-lg bg-surface-2 p-4">
-        <p className="text-[15px]">
-          Enter the code Telegram sent to <strong className="font-semibold">{sentTo}</strong>.
-        </p>
-        <div ref={codeRef}>
-          <Controller
-            control={codeForm.control}
-            name="code"
-            render={({ field, fieldState }) => <OtpInput value={field.value} onChange={field.onChange} label="Telegram code" error={fieldState.error?.message} autoFocus />}
-          />
-        </div>
+      <div className="grid gap-3 rounded-lg bg-surface-2 p-4">
+        <FormAlert title={state.message} />
         <div className="flex flex-wrap gap-3">
-          <Button type="submit" loading={codeForm.formState.isSubmitting}>
-            Verify number
+          <Button type="button" onClick={() => void start()}>
+            Try again
           </Button>
-          <Button type="button" variant="ghost" onClick={() => setSentTo(null)}>
-            Use another number
+          <Button type="button" variant="ghost" onClick={onDone}>
+            Cancel
           </Button>
         </div>
-      </form>
+      </div>
     );
   }
-
-  return (
-    <form onSubmit={(event) => void phoneForm.handleSubmit(send)(event)} noValidate className="grid gap-4 rounded-lg bg-surface-2 p-4">
-      <TextField
-        label="Phone number with Telegram"
-        type="tel"
-        autoComplete="tel"
-        inputMode="tel"
-        placeholder="012 345 678"
-        hint="Cambodian numbers (+855). We'll send a 6-digit code to its Telegram."
-        error={phoneForm.formState.errors.phone?.message}
-        {...phoneForm.register("phone")}
-      />
-      {turnstile.widget}
-      <div className="flex flex-wrap gap-3">
-        <Button type="submit" loading={phoneForm.formState.isSubmitting}>
-          Send code
-        </Button>
-        <Button type="button" variant="ghost" onClick={onDone}>
-          Cancel
-        </Button>
-      </div>
-    </form>
-  );
+  if (state.phase !== "waiting") {
+    return (
+      <p role="status" className="text-sm text-muted-foreground">
+        Getting Telegram ready…
+      </p>
+    );
+  }
+  return <TelegramWait url={state.link.url} onCancel={onDone} className="bg-surface-2" />;
 }

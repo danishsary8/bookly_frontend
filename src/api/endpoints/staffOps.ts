@@ -61,7 +61,7 @@ export interface StaffCustomer {
   /** Null for Facebook customers who signed up with a phone number only. */
   email: string | null;
   phone: string | null;
-  /** The number proven with a Telegram code (+85512345678), if any. */
+  /** The number proven in the Telegram bot (+85512345678), if any. */
   phone_number?: string | null;
   phone_verified?: boolean;
   email_verified: boolean;

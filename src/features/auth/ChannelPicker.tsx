@@ -4,18 +4,26 @@ import type { VerifyChannel } from "@/api/endpoints/auth";
 import { cn } from "@/lib/utils";
 
 /*
- * "Where should we send your code?" on sign-up: the same radio cards as payment at checkout.
- * Telegram codes go to the phone number's Telegram app (Telegram's own "Verification Codes" chat).
+ * "How should we confirm your account?" on sign-up (and Facebook sign-up): the same radio cards as payment at
+ * checkout. Email sends a 6-digit code; Telegram opens the Bookly bot, where one tap shares the phone number.
  */
 const OPTIONS: { value: VerifyChannel; label: string; detail: string; Icon: typeof Mail }[] = [
-  { value: "email", label: "Email", detail: "Arrives in a minute or two.", Icon: Mail },
-  { value: "telegram", label: "Telegram", detail: "To your phone's Telegram app, usually in seconds.", Icon: Send },
+  { value: "email", label: "Email", detail: "We email you a 6-digit code.", Icon: Mail },
+  { value: "telegram", label: "Telegram", detail: "One tap in our Telegram bot shares your phone number. No code to type.", Icon: Send },
 ];
 
-export function ChannelPicker({ value, field }: { value: VerifyChannel; field: UseFormRegisterReturn<"verify_by"> }) {
+export function ChannelPicker({
+  value,
+  field,
+  legend = "How should we confirm your account?",
+}: {
+  value: VerifyChannel;
+  field: UseFormRegisterReturn<"verify_by">;
+  legend?: string;
+}) {
   return (
     <fieldset className="grid gap-2">
-      <legend className="mb-2 text-[15px] font-semibold text-foreground">Where should we send your code?</legend>
+      <legend className="mb-2 text-[15px] font-semibold text-foreground">{legend}</legend>
       <div className="grid gap-3 sm:grid-cols-2">
         {OPTIONS.map(({ value: option, label, detail, Icon }) => (
           <label

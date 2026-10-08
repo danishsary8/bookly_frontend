@@ -6,19 +6,24 @@ import { ApiError } from "@/api/errors";
 import { FormAlert } from "@/components/form/FormAlert";
 import { cn } from "@/lib/utils";
 import { anySocialEnabled, isReady, prepare, requestToken, SocialCancelled, socialEnabled, type Provider } from "./social";
+import { openTelegram, useTelegramLink } from "./telegram";
+import { TelegramWait } from "./TelegramWait";
 import { useAfterSignIn } from "./useAfterSignIn";
 
 /*
  * "Continue with Google / Facebook". A provider shows once its id is configured (src/features/auth/social.ts);
  * with neither configured the buttons stay visible but disabled, marked "coming soon".
  * Pages put the buttons above the email form when they work, below it while they don't.
+ * `telegram` (sign-in page, while the API's bot is on) adds "Continue with Telegram": the bot asks the
+ * customer to share their phone number, and the account that proved that number is signed in.
  */
 
 /** What /sign-up/facebook needs from the first sign-in attempt (kept in memory only, never stored). */
 export interface FacebookSignUpState {
   accessToken: string;
   profile: { name: string | null; email: string | null };
-  telegramCodes: boolean;
+  /** Whether the API's Telegram bot is on (the customer can confirm their phone there). */
+  telegram: boolean;
   next: string | null;
 }
 
@@ -43,6 +48,16 @@ const ICONS: Record<Provider, ReactNode> = {
   ),
 };
 
+const TELEGRAM_ICON = (
+  <svg viewBox="0 0 24 24" className="size-[18px]" aria-hidden="true">
+    <circle cx="12" cy="12" r="12" fill="#229ED9" />
+    <path
+      fill="#FFFFFF"
+      d="M5.4 11.8 17 7.3c.5-.2 1 .1.8.9l-2 9.4c-.1.7-.5.8-1.1.5l-3-2.2-1.4 1.4c-.2.2-.3.3-.6.3l.2-3.1 5.6-5c.2-.2 0-.3-.4-.1l-6.9 4.3-3-.9c-.6-.2-.7-.6.2-1Z"
+    />
+  </svg>
+);
+
 const buttonClass =
   "inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-input bg-card px-4 text-[15px] font-semibold text-foreground transition-[background-color,border-color] duration-150";
 
@@ -56,9 +71,13 @@ function Divider({ children }: { children: string }) {
   );
 }
 
-export function SocialButtons({ next = null }: { next?: string | null }) {
+export function SocialButtons({ next = null, telegram = false }: { next?: string | null; telegram?: boolean }) {
   const enabled = (["google", "facebook"] as const).filter(socialEnabled);
   const afterSignIn = useAfterSignIn();
+  const telegramLink = useTelegramLink("login", (customer) => {
+    const firstName = customer.name?.split(" ")[0];
+    afterSignIn(customer, next, firstName ? `Welcome back, ${firstName}` : "Welcome back");
+  });
   const navigate = useNavigate();
   const [busy, setBusy] = useState<Provider | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +98,7 @@ export function SocialButtons({ next = null }: { next?: string | null }) {
     for (const provider of key ? (key.split(",") as Provider[]) : []) void load(provider);
   }, [key]);
 
-  if (!anySocialEnabled()) {
+  if (!anySocialEnabled() && !telegram) {
     return (
       <div className="grid gap-3">
         <Divider>or</Divider>
@@ -98,8 +117,17 @@ export function SocialButtons({ next = null }: { next?: string | null }) {
     );
   }
 
+  const startTelegram = async () => {
+    setError(null);
+    const link = await telegramLink.start();
+    if (link) openTelegram(link.url);
+  };
+  const telegramState = telegramLink.state;
+  const telegramError = telegramState.phase === "failed" ? telegramState.message : null;
+
   const start = (provider: Provider) => {
     setError(null);
+    telegramLink.cancel();
     if (!isReady(provider)) {
       setError(
         failed[provider]
@@ -127,7 +155,7 @@ export function SocialButtons({ next = null }: { next?: string | null }) {
           const state: FacebookSignUpState = {
             accessToken,
             profile: (apiError.data.profile as FacebookSignUpState["profile"]) ?? { name: null, email: null },
-            telegramCodes: apiError.data.telegram_codes === true,
+            telegram: apiError.data.telegram === true,
             next,
           };
           navigate("/sign-up/facebook", { state });
@@ -144,7 +172,7 @@ export function SocialButtons({ next = null }: { next?: string | null }) {
 
   return (
     <div className="grid gap-4">
-      {error ? <FormAlert title={error} /> : null}
+      {error || telegramError ? <FormAlert title={error ?? telegramError ?? undefined} /> : null}
       <div className="grid gap-3">
         {enabled.map((p) => (
           <button
@@ -162,6 +190,29 @@ export function SocialButtons({ next = null }: { next?: string | null }) {
             Continue with {NAMES[p]}
           </button>
         ))}
+        {telegram ? (
+          telegramState.phase === "waiting" || telegramState.phase === "done" ? (
+            telegramState.phase === "waiting" ? <TelegramWait url={telegramState.link.url} onCancel={telegramLink.cancel} /> : null
+          ) : (
+            <button
+              type="button"
+              onClick={() => void startTelegram()}
+              disabled={busy !== null || telegramState.phase === "starting"}
+              aria-busy={telegramState.phase === "starting" || undefined}
+              className={cn(
+                buttonClass,
+                "outline-none hover:border-foreground/40 hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-70",
+              )}
+            >
+              {telegramState.phase === "starting" ? (
+                <Loader2 className="size-[18px] animate-spin motion-reduce:animate-none" aria-hidden="true" />
+              ) : (
+                TELEGRAM_ICON
+              )}
+              Continue with Telegram
+            </button>
+          )
+        ) : null}
       </div>
       <Divider>or use your email</Divider>
     </div>

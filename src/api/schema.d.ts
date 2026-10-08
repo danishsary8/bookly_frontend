@@ -79,6 +79,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/telegram/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Updates for the Bookly Telegram bot (called by Telegram only)
+         * @description Telegram posts each message for the bot here, with the X-Telegram-Bot-Api-Secret-Token header set by `php artisan telegram:webhook` (made from APP_KEY and the bot token). "/start <code>" answers with a "Share my phone number" button; the shared contact (only the sender's own: contact.user_id = from.id, +855 only) signs in or saves the number. Replies are a sendMessage call in the response body. 404 without the right header or while the bot is off.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A sendMessage call for Telegram to run */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Nothing to answer (not a private chat) */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Wrong secret, or the bot is off */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/books": {
         parameters: {
             query?: never;
@@ -511,8 +562,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Create an account; a 6-digit code goes to the email, or to the phone's Telegram (verify_by)
-         * @description verify_by=telegram needs a Cambodian phone and GET /auth/options telegram_codes=true; the email is then optional (phone-only accounts sign in with POST /auth/phone-login). If Telegram cannot deliver, nothing is created and the phone field explains why. A phone-only sign-up that was never verified is taken over by signing up again with the same number. If the email belongs to a sign-up that was never verified, that account is taken over (new name and password, its old sessions and codes cancelled). Sign-ups still unverified after UNVERIFIED_CUSTOMER_HOURS (48) are deleted. A verified, deactivated or deleted account keeps its email (422).
+         * Create an account; confirm it with an email code, or with your phone number in the Telegram bot (verify_by)
+         * @description verify_by=telegram needs GET /auth/options telegram=true (else 422 on verify_by); the email is then optional and no code is sent: the website continues with POST /auth/telegram/phone, and the number shared in the bot verifies the account (it then signs in with Continue with Telegram). If the email belongs to a sign-up that was never verified, that account is taken over (new name and password, its old sessions and codes cancelled). Sign-ups still unverified after UNVERIFIED_CUSTOMER_HOURS (48) are deleted. A verified, deactivated or deleted account keeps its email (422).
          */
         post: {
             parameters: {
@@ -533,7 +584,7 @@ export interface paths {
                         /** @description Letters and numbers */
                         password: string;
                         password_confirmation: string;
-                        /** @description Required with verify_by=telegram (+855 only) */
+                        /** @description Contact number for email sign-ups; ignored with verify_by=telegram (the bot gives the proven number) */
                         phone?: string;
                         /**
                          * @default email
@@ -546,7 +597,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Account + token + verify_by. Shopping routes return 403 until the code is entered. */
+                /** @description Account + token + verify_by. Shopping routes return 403 until the account is confirmed. */
                 201: {
                     headers: {
                         [name: string]: unknown;
@@ -576,7 +627,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** What sign-up can offer: telegram_codes is true once TELEGRAM_GATEWAY_TOKEN is set */
+        /** What sign-up and sign-in can offer: telegram is true once TELEGRAM_BOT_TOKEN is set */
         get: {
             parameters: {
                 query?: never;
@@ -593,7 +644,7 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            telegram_codes?: boolean;
+                            telegram?: boolean;
                         };
                     };
                 };
@@ -684,7 +735,7 @@ export interface paths {
         put?: never;
         /**
          * Log in with a Google or Facebook access token
-         * @description Signs in the account already linked to this Google/Facebook id, or creates one. An email that already has a verified (or closed) account is refused with 409 and told how to sign in instead; an unfinished sign-up with that email becomes the social account (its password and sessions are removed). A new Facebook account needs a Cambodian phone number and its email is optional: without phone the answer is 422 with needs=phone and profile {name, email}; call again with the same access_token, phone, optional email and turnstile_token. The response then says where the code went (verify_by: telegram, email, or null when Facebook confirmed the email).
+         * @description Signs in the account already linked to this Google/Facebook id, or creates one. An email that already has a verified (or closed) account is refused with 409 and told how to sign in instead; an unfinished sign-up with that email becomes the social account (its password and sessions are removed). A new Facebook account confirms a phone number in the Telegram bot, or gives an email: without verify_by the answer is 422 with needs=phone, profile {name, email} and telegram (bot on); call again with the same access_token, verify_by (telegram or email), the email (optional with telegram) and turnstile_token. verify_by in the response says what is next: telegram (POST /auth/telegram/phone), email (a code was sent) or null (Facebook confirmed the email).
          */
         post: {
             parameters: {
@@ -699,9 +750,12 @@ export interface paths {
                 content: {
                     "application/json": {
                         access_token: string;
-                        /** @description Facebook sign-up only */
-                        phone?: string;
-                        /** @description Facebook sign-up only, optional */
+                        /**
+                         * @description Facebook sign-up only
+                         * @enum {string}
+                         */
+                        verify_by?: "telegram" | "email";
+                        /** @description Facebook sign-up only; required with verify_by=email */
                         email?: string;
                         turnstile_token?: string;
                     };
@@ -736,7 +790,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description needs=phone (Facebook sign-up), or the phone/email is invalid, taken or cannot get a code */
+                /** @description needs=phone (Facebook sign-up), the email is missing or taken, or Telegram is off */
                 422: {
                     headers: {
                         [name: string]: unknown;
@@ -841,7 +895,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Send a new verification code by email or Telegram (3 per 10 min per visitor; optional cap per phone number with PHONE_CODES_PER_HOUR / PHONE_CODES_PER_DAY, off by default) */
+        /** Send a new email verification code (3 per 10 min per visitor; 422 without an email) */
         post: {
             parameters: {
                 query?: never;
@@ -852,11 +906,6 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
-                        /**
-                         * @default email
-                         * @enum {string}
-                         */
-                        channel?: "email" | "telegram";
                         turnstile_token?: string;
                     };
                 };
@@ -870,95 +919,6 @@ export interface paths {
                     content?: never;
                 };
                 422: components["responses"]["Validation"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/phone": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Add or change the phone number: sends a Telegram code; the number is saved once verified */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        phone: string;
-                        turnstile_token?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Code sent */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                422: components["responses"]["Validation"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/verify-phone": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Verify the phone number with the Telegram code */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        code?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Verified (customer in the body) */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Wrong or expired code, or the number is taken */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
             };
         };
         delete?: never;
@@ -1008,7 +968,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/phone-login": {
+    "/auth/telegram": {
         parameters: {
             query?: never;
             header?: never;
@@ -1018,8 +978,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Sign in with a phone number, step 1 (Telegram code)
-         * @description Sends a sign-in code to the Telegram of the active account that proved this +855 number. 422 on phone when no account has this verified number, when Telegram cannot deliver to it, or when the gateway fails on our side (each with its own message); 403 for a deactivated account; 503 while Telegram codes are off.
+         * Continue with Telegram (sign in), step 1
+         * @description Makes a one-time link (10 minutes). Open `url` (t.me/<bot>?start=<code>), tap "Share my phone number" in the bot, then poll POST /auth/telegram/status with `key`. Signs in the active account that proved that +855 number. 10 links per 10 minutes per visitor.
          */
         post: {
             parameters: {
@@ -1028,31 +988,23 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        phone: string;
-                        turnstile_token?: string;
-                    };
-                };
-            };
+            requestBody?: never;
             responses: {
-                /** @description Code sent; phone is the number it went to */
-                200: {
+                /** @description url, key (keep it private), expires_at */
+                201: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Deactivated account */
-                403: {
+                /** @description Too many links */
+                429: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                422: components["responses"]["Validation"];
-                /** @description Telegram codes are off */
+                /** @description The bot is off */
                 503: {
                     headers: {
                         [name: string]: unknown;
@@ -1067,7 +1019,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/phone-login/verify": {
+    "/auth/telegram/phone": {
         parameters: {
             query?: never;
             header?: never;
@@ -1077,9 +1029,51 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Sign in with a phone number, step 2 (the code)
-         * @description Five wrong codes throw the code away. Signs in like POST /auth/login.
+         * Confirm or change your phone number with Telegram
+         * @description Same as POST /auth/telegram, for the signed-in customer: the number shared in the bot becomes the account's verified number (and contact number), which also verifies a new account. Refused in the bot and in the status when another account (also a closed one) has the number.
          */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description url, key, expires_at */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["Unauthorized"];
+                /** @description The bot is off */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/telegram/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** How a Telegram link went (the website asks every few seconds) */
         post: {
             parameters: {
                 query?: never;
@@ -1090,21 +1084,20 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        phone: string;
-                        code: string;
+                        key: string;
                     };
                 };
             };
             responses: {
-                /** @description Signed in: customer, token, expires_at */
+                /** @description status pending | failed (message says why: no account with this number, number on another account, not +855, deactivated) | done (customer; plus token and expires_at for a sign-in, handed out once) */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Wrong or expired code */
-                422: {
+                /** @description Unknown key, or the link expired */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -4715,8 +4708,8 @@ export interface components {
                 google?: boolean;
                 facebook?: boolean;
             };
-            /** @description Ways this account can sign in today (password counts only with an email; phone only while Telegram codes are on). The last one cannot be removed. */
-            sign_in_methods?: ("password" | "google" | "facebook" | "phone")[];
+            /** @description Ways this account can sign in today (password counts only with an email; telegram means a verified number, while the Telegram bot is on). The last one cannot be removed. */
+            sign_in_methods?: ("password" | "google" | "facebook" | "telegram")[];
             /** Format: date-time */
             created_at?: string;
         };
