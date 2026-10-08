@@ -18,6 +18,13 @@ describe("auth schemas", () => {
     expect(firstError(registerSchema.safeParse({ ...base, password: "abcdefgh", password_confirmation: "abcdefgh" }))).toEqual({ path: "password", message: "Include at least one number." });
   });
 
+  it("needs an email for email codes, but not when the code goes to Telegram", () => {
+    const base = { name: "A", password: "reading1", password_confirmation: "reading1" };
+    expect(firstError(registerSchema.safeParse({ ...base, email: "", phone: "", verify_by: "email" }))).toEqual({ path: "email", message: "Enter your email address." });
+    expect(registerSchema.safeParse({ ...base, email: "", phone: "012 345 678", verify_by: "telegram" }).success).toBe(true);
+    expect(firstError(registerSchema.safeParse({ ...base, email: "nope", phone: "012 345 678", verify_by: "telegram" }))?.path).toBe("email");
+  });
+
   it("requires matching confirmation", () => {
     expect(firstError(registerSchema.safeParse({ name: "A", email: "a@b.co", phone: "", password: "reading1", password_confirmation: "reading2", verify_by: "email" }))).toEqual({
       path: "password_confirmation",

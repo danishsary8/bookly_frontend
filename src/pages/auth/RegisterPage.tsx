@@ -43,7 +43,7 @@ export default function RegisterPage() {
     try {
       const response = await authApi.register({
         name: values.name,
-        email: values.email,
+        ...(values.email ? { email: values.email } : {}),
         password: values.password,
         password_confirmation: values.password_confirmation,
         ...(values.phone ? { phone: values.phone } : {}),
@@ -85,11 +85,12 @@ export default function RegisterPage() {
         <TextField label="Full name" autoComplete="name" error={errors.name?.message} {...register("name")} />
         <TextField
           label="Email"
+          optional={byTelegram}
           type="email"
           autoComplete="email"
           inputMode="email"
           placeholder="name@example.com"
-          hint={byTelegram ? "For receipts and order updates." : "We'll send a 6-digit code to confirm it."}
+          hint={byTelegram ? "For receipts and order updates. You can add it later." : "We'll send a 6-digit code to confirm it."}
           error={errors.email?.message}
           {...register("email")}
         />

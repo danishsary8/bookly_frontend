@@ -4,7 +4,8 @@ import type { Customer, LoginResponse, MessageResponse } from "../types";
 
 export interface RegisterInput {
   name: string;
-  email: string;
+  /** Optional when `verify_by` is "telegram": the phone proves the account. */
+  email?: string;
   password: string;
   password_confirmation: string;
   phone?: string;
