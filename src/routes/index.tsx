@@ -11,6 +11,7 @@ import { RequireAdminRole, RequireStaff, RequireStaffSetup, StaffGuestOnly } fro
 const Home = lazy(() => import("../pages/HomePage"));
 const CartPage = lazy(() => import("../pages/cart/CartPage"));
 const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
+const PhoneLoginPage = lazy(() => import("../pages/auth/PhoneLoginPage"));
 const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
 const FacebookSignUpPage = lazy(() => import("../pages/auth/FacebookSignUpPage"));
 const VerifyEmailPage = lazy(() => import("../pages/auth/VerifyEmailPage"));
@@ -129,6 +130,7 @@ const AppRoutes = () => {
 
         <Route element={<GuestOnly />}>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/login/phone" element={<PhoneLoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/sign-up/facebook" element={<FacebookSignUpPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
