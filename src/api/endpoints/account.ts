@@ -34,6 +34,18 @@ export const accountApi = {
   /** Closes the account (password, or a fresh Google/Facebook token for accounts without one). */
   closeAccount: (input: { confirm: "DELETE"; password?: string; provider?: "google" | "facebook"; access_token?: string }) =>
     api.delete<MessageResponse & { erase_at?: string }>("/me", { data: input }),
+  /** Connects Google/Facebook with a fresh token from its popup (plus the password when the account has one). */
+  connect: async (provider: "google" | "facebook", input: { access_token: string; password?: string }) => {
+    const response = await api.post<MessageResponse & { customer?: Customer }>(`/me/connections/${provider}`, input);
+    if (response.customer) updateSessionUser("customer", response.customer);
+    return response;
+  },
+  /** Refused (422, reason last_way_in) when it's the only way left to sign in. */
+  disconnect: async (provider: "google" | "facebook") => {
+    const response = await api.delete<MessageResponse & { customer?: Customer }>(`/me/connections/${provider}`);
+    if (response.customer) updateSessionUser("customer", response.customer);
+    return response;
+  },
 
   addresses: () => api.get<Resource<Address[]>>("/addresses").then((r) => r.data),
   createAddress: (input: AddressPayload) => api.post<Resource<Address>>("/addresses", input).then((r) => r.data),

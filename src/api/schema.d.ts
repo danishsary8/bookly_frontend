@@ -1089,7 +1089,40 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Close your own account
+         * @description Confirm with the password, or (accounts without one) a fresh Google/Facebook access token for the linked account, plus confirm=DELETE. Refused while an order is on its way or a return is open. Signs out everywhere, removes reviews, wishlist and cart, and hides the account; personal details are erased after CLOSED_ACCOUNT_DAYS (30) by customers:erase-closed. Orders and returns are kept.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        confirm: "DELETE";
+                        password?: string;
+                        /** @enum {string} */
+                        provider?: "google" | "facebook";
+                        access_token?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Closed; erase_at says when the details are erased */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                422: components["responses"]["Validation"];
+            };
+        };
         options?: never;
         head?: never;
         /** Update name or phone */
@@ -1143,6 +1176,97 @@ export interface paths {
         };
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/connections/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Connect Google or Facebook to your account
+         * @description A fresh access token from the provider (checked as issued to our app; the profile is read from the provider) plus the password when the account has one. The provider account must not be linked to another Bookly account. A verified email gets a notice.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    provider: components["parameters"]["Provider"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        access_token: string;
+                        password?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Connected (customer in the body) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description The token could not be verified */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Used by another Bookly account, or another account of this provider is connected */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                422: components["responses"]["Validation"];
+            };
+        };
+        /**
+         * Disconnect Google or Facebook
+         * @description Refused with reason=last_way_in when it is the only way left to sign in ("Add a password first, so you can still sign in."). A verified email gets a notice.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    provider: components["parameters"]["Provider"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Disconnected (customer in the body) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description It is the last way in */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -4336,6 +4460,8 @@ export interface components {
                 google?: boolean;
                 facebook?: boolean;
             };
+            /** @description Ways this account can sign in today (password counts only with an email). The last one cannot be removed. */
+            sign_in_methods?: ("password" | "google" | "facebook")[];
             /** Format: date-time */
             created_at?: string;
         };
@@ -4575,6 +4701,7 @@ export interface components {
     };
     parameters: {
         Id: number;
+        Provider: "google" | "facebook";
         PerPage: number;
         Period: "today" | "7d" | "30d" | "custom";
         From: string;
@@ -4618,6 +4745,7 @@ export type ResponseForbidden = components['responses']['Forbidden'];
 export type ResponseNotFound = components['responses']['NotFound'];
 export type ResponseNoContent = components['responses']['NoContent'];
 export type ParameterId = components['parameters']['Id'];
+export type ParameterProvider = components['parameters']['Provider'];
 export type ParameterPerPage = components['parameters']['PerPage'];
 export type ParameterPeriod = components['parameters']['Period'];
 export type ParameterFrom = components['parameters']['From'];
