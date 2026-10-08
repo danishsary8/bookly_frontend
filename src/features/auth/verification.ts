@@ -3,7 +3,7 @@ import { authApi, type VerifyChannel } from "@/api/endpoints/auth";
 import type { Customer } from "@/api/types";
 
 /*
- * Accounts are verified by their email or their phone (a Telegram code). Sessions saved before phones
+ * Accounts are verified by their email or their phone (shared in the Telegram bot). Sessions saved before phones
  * existed only know `email_verified`, so both are read.
  */
 export const isVerified = (user: Customer | null | undefined): boolean =>
@@ -11,7 +11,7 @@ export const isVerified = (user: Customer | null | undefined): boolean =>
 
 export const needsVerifying = (user: Customer | null | undefined): boolean => Boolean(user) && !isVerified(user);
 
-/** Remembers where the last code went, so /verify-email reopens on the right channel (e.g. from a guard). */
+/** Remembers how the account is being confirmed, so /verify-email reopens on the right channel (e.g. from a guard). */
 const KEY = "bookly:verify-via";
 
 export function rememberChannel(channel: VerifyChannel) {
@@ -38,8 +38,8 @@ export function verifyPath(channel: VerifyChannel, next: string | null, extra: R
   return `/verify-email?${params.toString()}`;
 }
 
-/** Whether the API can send Telegram codes right now (cached; off if the API can't be asked). */
-export function useTelegramCodes(): boolean {
+/** Whether the Bookly Telegram bot is on right now (cached; off if the API can't be asked). */
+export function useTelegramBot(): boolean {
   const options = useQuery({ queryKey: ["auth", "options"], queryFn: authApi.options, staleTime: 10 * 60_000, retry: false });
-  return options.data?.telegram_codes === true;
+  return options.data?.telegram === true;
 }

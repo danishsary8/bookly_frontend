@@ -4,27 +4,40 @@ import type { Customer, LoginResponse, MessageResponse } from "../types";
 
 export interface RegisterInput {
   name: string;
-  /** Optional when `verify_by` is "telegram": the phone proves the account. */
+  /** Optional when `verify_by` is "telegram": the phone number proves the account. */
   email?: string;
   password: string;
   password_confirmation: string;
+  /** A contact number (email sign-ups only; with Telegram the bot gives the proven number). */
   phone?: string;
-  /** Where the 6-digit code goes; "telegram" needs `phone` (Cambodian numbers). */
+  /** How the account is confirmed: a 6-digit email code, or the phone number shared in the Telegram bot. */
   verify_by?: VerifyChannel;
   turnstile_token?: string;
 }
 
 export type VerifyChannel = "email" | "telegram";
 
-/** Where the API sent the account's first code; null when nothing needs verifying. */
+/** How the new account is confirmed next; null when nothing needs confirming. */
 export type SignUpResponse = LoginResponse & { message?: string; verify_by?: VerifyChannel | null };
 
-/** A new Facebook customer's second step: their phone number, and an email if they want one. */
+/** A new Facebook customer's second step: confirm a phone number in Telegram, or give an email. */
 export interface FacebookDetails {
-  phone: string;
+  verify_by: VerifyChannel;
   email?: string;
   turnstile_token?: string;
 }
+
+/** A one-time link to the Bookly Telegram bot: open `url`; `key` (private to this browser) reads the result. */
+export interface TelegramLink {
+  url: string;
+  key: string;
+  expires_at: string;
+}
+
+export type TelegramStatus =
+  | { status: "pending"; expires_at?: string }
+  | { status: "failed"; message: string }
+  | ({ status: "done"; customer: Customer } & Partial<LoginResponse>);
 
 /** The Cloudflare Turnstile token, sent only when there is one (the check is off until it's configured). */
 const withToken = (turnstileToken?: string) => (turnstileToken ? { turnstile_token: turnstileToken } : {});
@@ -36,8 +49,8 @@ const startSession = <T extends LoginResponse>(response: T): T => {
 
 export const authApi = {
   register: (input: RegisterInput) => api.post<SignUpResponse>("/auth/register", input).then(startSession),
-  /** What sign-up can offer right now (Telegram codes switch on with the API's gateway token). */
-  options: () => api.get<{ telegram_codes: boolean }>("/auth/options"),
+  /** What sign-up and sign-in can offer right now (Telegram switches on with the API's bot token). */
+  options: () => api.get<{ telegram: boolean }>("/auth/options"),
   login: (email: string, password: string, turnstileToken?: string) =>
     api.post<LoginResponse>("/auth/login", { email, password, ...withToken(turnstileToken) }).then(startSession),
   /** Signs in (or up) with a Google / Facebook access token; the API checks it with the provider. */
@@ -57,22 +70,23 @@ export const authApi = {
     if (response.customer) updateSessionUser("customer", response.customer);
     return response;
   },
-  resendVerification: (turnstileToken?: string, channel: VerifyChannel = "email") =>
-    api.post<MessageResponse>("/auth/resend-verification", { channel, ...withToken(turnstileToken) }),
-  /** Sends a Telegram code to a new number; the account keeps its old number until the code comes back. */
-  sendPhoneCode: (phone: string, turnstileToken?: string) =>
-    api.post<MessageResponse & { phone?: string }>("/auth/phone", { phone, ...withToken(turnstileToken) }),
-  /** Saves the number as verified and refreshes the stored profile. */
-  verifyPhone: async (code: string) => {
-    const response = await api.post<MessageResponse & { customer?: Customer }>("/auth/verify-phone", { code });
-    if (response.customer) updateSessionUser("customer", response.customer);
-    return response;
+  /** A new email code. */
+  resendVerification: (turnstileToken?: string) => api.post<MessageResponse>("/auth/resend-verification", withToken(turnstileToken)),
+  telegram: {
+    /** "Continue with Telegram" on the sign-in page. */
+    signIn: () => api.post<TelegramLink>("/auth/telegram"),
+    /** A signed-in customer confirms (or changes) their number. */
+    confirmPhone: () => api.post<TelegramLink>("/auth/telegram/phone"),
+    /** How it went: a sign-in starts the session; a confirmed number refreshes the stored profile. */
+    status: async (key: string) => {
+      const response = await api.post<TelegramStatus>("/auth/telegram/status", { key });
+      if (response.status === "done") {
+        if (response.token) startSession(response as LoginResponse);
+        else updateSessionUser("customer", response.customer);
+      }
+      return response;
+    },
   },
-  /** Sign in with a phone number, step 1: the API answers the same whether or not the number has an account. */
-  phoneLogin: (phone: string, turnstileToken?: string) =>
-    api.post<MessageResponse & { phone?: string }>("/auth/phone-login", { phone, ...withToken(turnstileToken) }),
-  /** Step 2: the Telegram code signs in like a password. */
-  phoneLoginVerify: (phone: string, code: string) => api.post<LoginResponse>("/auth/phone-login/verify", { phone, code }).then(startSession),
   forgotPassword: (email: string, turnstileToken?: string) => api.post<MessageResponse>("/auth/forgot-password", { email, ...withToken(turnstileToken) }),
   resetPassword: (input: { email: string; code: string; password: string; password_confirmation: string }) =>
     api.post<MessageResponse>("/auth/reset-password", input),
