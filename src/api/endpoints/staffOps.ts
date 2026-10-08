@@ -75,10 +75,15 @@ export interface StaffCustomer {
   created_at: string;
   /** Unfinished sign-ups only: when the account is deleted unless the customer enters their code. */
   removal_at: string | null;
+  /** Closed by the customer: when, and when their details are erased (until then an admin can reopen it). */
+  closed_at?: string | null;
+  erase_at?: string | null;
 }
 
-/** The customer list also counts both tabs (same search and active filters). */
-export type StaffCustomerPage = Paginated<StaffCustomer> & { meta: Paginated<StaffCustomer>["meta"] & { counts?: { verified: number; unverified: number } } };
+/** The customer list also counts every tab (same search; active applies to open accounts). */
+export type StaffCustomerPage = Paginated<StaffCustomer> & {
+  meta: Paginated<StaffCustomer>["meta"] & { counts?: { verified: number; unverified: number; closed?: number } };
+};
 
 export type StaffMember = StaffUser & { is_active: boolean; updated_at: string };
 
@@ -107,7 +112,7 @@ export type OrderFilters = { status?: OrderStatus; q?: string; from?: string; to
 export type ReturnFilters = { status?: string; q?: string; page?: number; per_page?: number };
 export type ReviewFilters = { visible?: boolean | null; q?: string; max_rating?: number; page?: number; per_page?: number };
 export type CouponFilters = { q?: string; active?: boolean | null; page?: number; per_page?: number };
-export type CustomerFilters = { q?: string; active?: boolean | null; verified?: boolean | null; page?: number; per_page?: number };
+export type CustomerFilters = { q?: string; active?: boolean | null; verified?: boolean | null; closed?: boolean; page?: number; per_page?: number };
 export type MemberFilters = { q?: string; role?: StaffRole; active?: boolean | null; page?: number; per_page?: number };
 export type AuditFilters = { staff_user_id?: number; action?: string; entity_type?: string; entity_id?: number; from?: string; to?: string; page?: number; per_page?: number };
 
@@ -152,7 +157,9 @@ export const opsApi = {
   deleteCoupon: (id: number) => api.delete(`/staff/coupons/${id}`),
 
   customers: (f: CustomerFilters = {}) =>
-    api.get<StaffCustomerPage>("/staff/customers", { params: toQueryParams({ ...f, active: bool(f.active), verified: bool(f.verified) }) }),
+    api.get<StaffCustomerPage>("/staff/customers", { params: toQueryParams({ ...f, active: bool(f.active), verified: bool(f.verified), closed: f.closed ? 1 : undefined }) }),
+  /** Admins: reopen an account the customer closed, within its 30 days (audit-logged; the customer is emailed). */
+  reopenCustomer: (id: number) => api.post<Resource<StaffCustomer>>(`/staff/customers/${id}/reopen`, {}).then((r) => r.data),
   customer: (id: number) => api.get<Resource<StaffCustomer>>(`/staff/customers/${id}`).then((r) => r.data),
   /** Admins: delete an unfinished sign-up now (frees its email). Verified customers are refused. */
   deleteCustomer: (id: number) => api.delete(`/staff/customers/${id}`),
