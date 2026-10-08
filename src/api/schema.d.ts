@@ -512,7 +512,7 @@ export interface paths {
         put?: never;
         /**
          * Create an account; a 6-digit code goes to the email, or to the phone's Telegram (verify_by)
-         * @description verify_by=telegram needs a Cambodian phone and GET /auth/options telegram_codes=true; if Telegram cannot deliver, nothing is created and the phone field explains why. If the email belongs to a sign-up that was never verified, that account is taken over (new name and password, its old sessions and codes cancelled). Sign-ups still unverified after UNVERIFIED_CUSTOMER_HOURS (48) are deleted. A verified, deactivated or deleted account keeps its email (422).
+         * @description verify_by=telegram needs a Cambodian phone and GET /auth/options telegram_codes=true; the email is then optional (phone-only accounts sign in with POST /auth/phone-login). If Telegram cannot deliver, nothing is created and the phone field explains why. A phone-only sign-up that was never verified is taken over by signing up again with the same number. If the email belongs to a sign-up that was never verified, that account is taken over (new name and password, its old sessions and codes cancelled). Sign-ups still unverified after UNVERIFIED_CUSTOMER_HOURS (48) are deleted. A verified, deactivated or deleted account keeps its email (422).
          */
         post: {
             parameters: {
@@ -525,8 +525,11 @@ export interface paths {
                 content: {
                     "application/json": {
                         name: string;
-                        /** Format: email */
-                        email: string;
+                        /**
+                         * Format: email
+                         * @description Required unless verify_by=telegram
+                         */
+                        email?: string;
                         /** @description Letters and numbers */
                         password: string;
                         password_confirmation: string;
@@ -838,7 +841,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Send a new verification code by email or Telegram (3 per 10 min; Telegram also 3/hour and 10/day per number) */
+        /** Send a new verification code by email or Telegram (3 per 10 min per visitor; optional cap per phone number with PHONE_CODES_PER_HOUR / PHONE_CODES_PER_DAY, off by default) */
         post: {
             parameters: {
                 query?: never;
@@ -1016,7 +1019,7 @@ export interface paths {
         put?: never;
         /**
          * Sign in with a phone number, step 1 (Telegram code)
-         * @description Sends a sign-in code to the Telegram of an active account that proved this +855 number. Answers the same for every number (known or not), and counts against the number's limits (3 an hour, 10 a day) either way, so it cannot be used to find customers. 503 while Telegram codes are off.
+         * @description Sends a sign-in code to the Telegram of the active account that proved this +855 number. 422 on phone when no account has this verified number, when Telegram cannot deliver to it, or when the gateway fails on our side (each with its own message); 403 for a deactivated account; 503 while Telegram codes are off.
          */
         post: {
             parameters: {
@@ -1034,8 +1037,15 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Same answer for every number */
+                /** @description Code sent; phone is the number it went to */
                 200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Deactivated account */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3818,8 +3828,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Customers (q, active, verified)
-         * @description meta.counts {verified, unverified} counts both tabs with the same q/active filters. Each unverified, active customer has removal_at: when the unfinished sign-up is deleted.
+         * Customers (q, active, verified, closed)
+         * @description meta.counts {verified, unverified, closed} counts every tab with the same q filter (active applies to open accounts). Each unverified, active customer has removal_at: when the unfinished sign-up is deleted. closed=1 lists accounts the customers closed in the last CLOSED_ACCOUNT_DAYS (30), newest first, with closed_at and erase_at (when the details are erased).
          */
         get: {
             parameters: {
@@ -3854,7 +3864,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Customer with stats and recent orders */
+        /** Customer with stats and recent orders (closed accounts too: closed_at, erase_at) */
         get: {
             parameters: {
                 query?: never;
@@ -3905,6 +3915,52 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/customers/{id}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * (admin) Reopen an account the customer closed, within its 30 days
+         * @description Audit-logged as customer.reopened; the customer gets an email (when they have one) and signs in as before. Reviews, wishlist and cart removed at closing are not restored.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Reopened customer */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description The account is open, or was closed more than 30 days ago */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
