@@ -59,7 +59,7 @@ describe("Sign in with a phone number", () => {
     options(true);
     const post = vi.spyOn(api, "post").mockImplementation(async (url: string) =>
       url === "/auth/phone-login"
-        ? { message: "If this number has a Bookly account, we sent a code to its Telegram.", phone: "+855 12 345 678" }
+        ? { message: "We sent a 6-digit code to the Telegram of this number.", phone: "+855 12 345 678" }
         : { token: "tok", expires_at: null, customer },
     );
     app("/login/phone?next=%2Fcart");
@@ -100,7 +100,27 @@ describe("Sign in with a phone number", () => {
     expect(screen.getByRole("heading", { name: "Sign in with your phone" })).toBeInTheDocument();
   });
 
-  it("shows the API's limit message on the number", async () => {
+  it("says on the number when it has no account, and stays on the first step", async () => {
+    const user = userEvent.setup();
+    options(true);
+    vi.spyOn(api, "post").mockRejectedValue(
+      new ApiError({
+        kind: "validation",
+        status: 422,
+        message: "The given data was invalid.",
+        fieldErrors: { phone: ["We couldn't find a Bookly account with this verified number. Check the number, or sign in with your email."] },
+      }),
+    );
+    app("/login/phone");
+
+    await user.type(screen.getByLabelText("Phone number", { exact: false }), "096 111 2222");
+    await user.click(screen.getByRole("button", { name: "Send code" }));
+    expect(await screen.findByText(/couldn't find a Bookly account with this verified number/)).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Check Telegram" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Create an account" })).toHaveAttribute("href", "/register");
+  });
+
+  it("shows the API's message on the number", async () => {
     const user = userEvent.setup();
     options(true);
     vi.spyOn(api, "post").mockRejectedValue(
