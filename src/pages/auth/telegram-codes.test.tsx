@@ -56,7 +56,7 @@ describe("Telegram codes", () => {
     await user.click(await screen.findByRole("radio", { name: /Telegram/ }));
     await user.type(screen.getByLabelText("Full name"), "Sok Dara");
     expect(document.querySelector(".library-card")).toHaveTextContent("Sok Dara");
-    await user.type(screen.getByLabelText("Email"), "dara@example.com");
+    await user.type(screen.getByRole("textbox", { name: /^Email/ }), "dara@example.com");
     await user.click(screen.getByRole("button", { name: "Create account" }));
     expect(await screen.findByText("Enter your phone number.")).toBeInTheDocument();
 
@@ -69,6 +69,43 @@ describe("Telegram codes", () => {
     await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/verify-email?via=telegram"));
     expect(post).toHaveBeenCalledWith("/auth/register", expect.objectContaining({ verify_by: "telegram", phone: "012 345 678" }));
     expect(screen.getByRole("heading", { level: 1, name: "Check Telegram" })).toBeInTheDocument();
+  });
+
+  it("signs up with only a phone number when the code goes to Telegram", async () => {
+    const user = userEvent.setup();
+    telegramOn();
+    const post = vi.spyOn(api, "post").mockResolvedValue({ token: "tok", expires_at: null, verify_by: "telegram", customer: { ...pending, email: null } });
+    app("/register");
+
+    await user.click(await screen.findByRole("radio", { name: /Telegram/ }));
+    expect(screen.getByText("(optional)", { selector: "label span" })).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Full name"), "Sok Dara");
+    await user.type(screen.getByLabelText(/Phone number with Telegram/), "012 345 678");
+    await user.type(screen.getByLabelText("Password", { selector: "input" }), "reading123");
+    await user.type(screen.getByLabelText("Confirm password", { selector: "input" }), "reading123");
+    await user.click(screen.getByRole("button", { name: "Create account" }));
+
+    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/verify-email?via=telegram"));
+    const body = post.mock.calls[0][1] as Record<string, unknown>;
+    expect(body).not.toHaveProperty("email");
+    expect(body).toMatchObject({ verify_by: "telegram", phone: "012 345 678" });
+    // No email on the account, so the code page doesn't offer "Send it by email instead".
+    expect(screen.queryByRole("button", { name: "Send it by email instead" })).not.toBeInTheDocument();
+  });
+
+  it("still needs the email when the code goes by email", async () => {
+    const user = userEvent.setup();
+    telegramOn();
+    const post = vi.spyOn(api, "post");
+    app("/register");
+
+    await user.type(await screen.findByLabelText("Full name"), "Sok Dara");
+    await user.type(screen.getByLabelText("Password", { selector: "input" }), "reading123");
+    await user.type(screen.getByLabelText("Confirm password", { selector: "input" }), "reading123");
+    await user.click(screen.getByRole("button", { name: "Create account" }));
+
+    expect(await screen.findByText("Enter your email address.")).toBeInTheDocument();
+    expect(post).not.toHaveBeenCalled();
   });
 
   it("hides the choice while the API can't send Telegram codes", async () => {

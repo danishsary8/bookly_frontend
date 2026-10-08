@@ -7,7 +7,7 @@ import { toast } from "@/stores/toast";
 
 /*
  * "Didn't get it? Resend code" with a cooldown. The API allows 3 codes per
- * 10 minutes (and 3 Telegram codes an hour per number); a 429 starts the cooldown from its Retry-After instead. Customer pages pass
+ * 10 minutes per visitor; a 429 starts the cooldown from its Retry-After instead. Customer pages pass
  * `turnstileAction` so the request carries a Cloudflare Turnstile token (staff pages don't).
  */
 const COOLDOWN_S = 60;

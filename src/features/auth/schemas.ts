@@ -43,10 +43,11 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Enter your password."),
 });
 
+// Owner (2026-10-08): with a Telegram code the phone proves the account, so the email is optional then.
 export const registerSchema = z
   .object({
     name: z.string().trim().min(1, "Enter your name.").max(150, "Keep your name under 150 characters."),
-    email,
+    email: optionalEmail,
     phone: z
       .string()
       .trim()
@@ -61,7 +62,10 @@ export const registerSchema = z
     message: "The passwords don't match.",
   })
   .superRefine((data, ctx) => {
-    if (data.verify_by !== "telegram") return;
+    if (data.verify_by !== "telegram") {
+      if (data.email === "") ctx.addIssue({ code: "custom", path: ["email"], message: "Enter your email address." });
+      return;
+    }
     const phone = cambodianPhone.safeParse(data.phone);
     if (!phone.success) ctx.addIssue({ code: "custom", path: ["phone"], message: phone.error.issues[0].message });
   });
