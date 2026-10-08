@@ -48,7 +48,7 @@ export function AccountLayout() {
         <span className="h-px w-12 bg-current" aria-hidden="true" />
         Your account
       </p>
-      <p className="mt-2 text-lg text-muted-foreground">{firstName ? `Signed in as ${session?.user?.email}` : " "}</p>
+      <p className="mt-2 text-lg text-muted-foreground">{firstName ? `Signed in as ${session?.user?.email ?? session?.user?.phone ?? firstName}` : " "}</p>
 
       <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12">
         <nav aria-label="Account" className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
