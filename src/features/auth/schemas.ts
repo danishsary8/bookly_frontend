@@ -43,7 +43,7 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Enter your password."),
 });
 
-// Owner (2026-10-08): with a Telegram code the phone proves the account, so the email is optional then.
+// Owner (2026-10-08): with Telegram the phone number (shared in the bot) proves the account, so the email is optional then.
 export const registerSchema = z
   .object({
     name: z.string().trim().min(1, "Enter your name.").max(150, "Keep your name under 150 characters."),
@@ -62,19 +62,15 @@ export const registerSchema = z
     message: "The passwords don't match.",
   })
   .superRefine((data, ctx) => {
-    if (data.verify_by !== "telegram") {
-      if (data.email === "") ctx.addIssue({ code: "custom", path: ["email"], message: "Enter your email address." });
-      return;
-    }
-    const phone = cambodianPhone.safeParse(data.phone);
-    if (!phone.success) ctx.addIssue({ code: "custom", path: ["phone"], message: phone.error.issues[0].message });
+    if (data.verify_by !== "telegram" && data.email === "") ctx.addIssue({ code: "custom", path: ["email"], message: "Enter your email address." });
   });
 
-/** A new Facebook customer's details (owner's rule: phone required, email optional). */
-export const facebookDetailsSchema = z.object({ phone: cambodianPhone, email: optionalEmail });
-
-/** Account → Sign-in & security: a number to verify with Telegram. */
-export const phoneSchema = z.object({ phone: cambodianPhone });
+/** A new Facebook customer (owner's rule): confirm a phone number in Telegram, or give an email. */
+export const facebookDetailsSchema = z
+  .object({ verify_by: z.enum(["email", "telegram"]), email: optionalEmail })
+  .superRefine((data, ctx) => {
+    if (data.verify_by === "email" && data.email === "") ctx.addIssue({ code: "custom", path: ["email"], message: "Enter your email address." });
+  });
 
 export const verifyEmailSchema = z.object({ code });
 
@@ -100,7 +96,6 @@ export type LoginValues = z.infer<typeof loginSchema>;
 export type RegisterValues = z.infer<typeof registerSchema>;
 export type VerifyEmailValues = z.infer<typeof verifyEmailSchema>;
 export type FacebookDetailsValues = z.infer<typeof facebookDetailsSchema>;
-export type PhoneValues = z.infer<typeof phoneSchema>;
 export type ChangeEmailValues = z.infer<ReturnType<typeof changeEmailSchema>>;
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;

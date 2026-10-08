@@ -7,10 +7,10 @@ import { toast } from "@/stores/toast";
 import { needsVerifying, rememberChannel, rememberedChannel, verifyPath } from "./verification";
 
 /**
- * Where to go once a customer has a session: unverified accounts go to the code page first (the API
- * blocks cart, wishlist and checkout until then), on the channel the code went to. A Facebook customer
- * whose email is already confirmed but whose phone got a Telegram code sees the code page once too,
- * with "Skip for now". Everyone else goes back to `next` or Home. Account data cached for a previous
+ * Where to go once a customer has a session: unverified accounts go to the verify page first (the API
+ * blocks cart, wishlist and checkout until then): the email code, or confirming the phone in Telegram.
+ * A Facebook customer whose email is already confirmed but who chose Telegram sees the Telegram step once
+ * too, with "Skip for now". Everyone else goes back to `next` or Home. Account data cached for a previous
  * visitor is dropped.
  */
 export function useAfterSignIn() {

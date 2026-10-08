@@ -5,15 +5,16 @@ import { cn } from "@/lib/utils";
 
 /*
  * The sign-up signature (docs/AUTH_PLAN.md): a Bookly library card on the lapis panel, filled in as the
- * customer signs up. It writes their name as they type it, says where the code went, and gets a gold
- * "Member" stamp pressed onto it when the code is right. Decorative: the form says everything too, so
+ * customer signs up. It writes their name as they type it, says how the account is confirmed (an email
+ * code, or the phone number shared in the Telegram bot), and gets a gold "Member" stamp pressed onto it
+ * once that's done. Decorative: the form says everything too, so
  * the card is hidden from assistive tech.
  */
 
 export interface CardDetails {
   name?: string | null;
   channel?: VerifyChannel | null;
-  /** The email address or phone number the code went to (or will go to). */
+  /** The email address the code went to (or will go to), or the phone number Telegram shared. */
   destination?: string | null;
   /** "Code sent to" once sent; "Code goes to" while signing up. */
   sent?: boolean;
@@ -45,8 +46,12 @@ function Stamp({ visible }: { visible: boolean }) {
   );
 }
 
+/** Telegram sends no code: the card says "Confirm with" and waits for the bot instead. */
+const byTelegram = (channel?: VerifyChannel | null) => channel === "telegram";
+
 export function LibraryCard({ name, channel, destination, sent = false, cardNumber, stamped = false }: CardDetails) {
   const via = channel ? CHANNEL[channel] : null;
+  const telegram = byTelegram(channel);
   return (
     <div aria-hidden="true" className="relative mx-auto w-full max-w-md select-none">
       <div className="bookplate-frame library-card relative px-7 pb-9 pt-7">
@@ -63,7 +68,7 @@ export function LibraryCard({ name, channel, destination, sent = false, cardNumb
         </p>
         <dl className="mt-6 divide-y divide-gold/25 border-y border-gold/25 text-[15px]">
           <div className="flex items-center justify-between gap-4 py-2.5">
-            <dt className="text-on-lapis-muted">{sent ? "Code sent to" : "Code goes to"}</dt>
+            <dt className="text-on-lapis-muted">{telegram ? "Confirm with" : sent ? "Code sent to" : "Code goes to"}</dt>
             <dd className="flex min-w-0 items-center gap-2 text-on-lapis">
               {via ? <via.Icon className="size-4 shrink-0 text-gold" /> : null}
               <span className="truncate">{via ? via.label : "—"}</span>
@@ -71,17 +76,21 @@ export function LibraryCard({ name, channel, destination, sent = false, cardNumb
           </div>
           <div className="flex items-center justify-between gap-4 py-2.5">
             <dt className="text-on-lapis-muted">{channel === "telegram" ? "Number" : "Address"}</dt>
-            <dd className="min-w-0 truncate text-on-lapis tabular-nums">{destination?.trim() || "—"}</dd>
+            <dd className="min-w-0 truncate text-on-lapis tabular-nums">{destination?.trim() || (telegram ? "From Telegram" : "—")}</dd>
           </div>
           <div className="flex items-center justify-between gap-4 py-2.5">
             <dt className="text-on-lapis-muted">Status</dt>
-            <dd className={stamped ? "font-semibold text-gold" : "text-on-lapis"}>{stamped ? "Member" : sent ? "Waiting for your code" : "Signing up"}</dd>
+            <dd className={stamped ? "font-semibold text-gold" : "text-on-lapis"}>{stamped ? "Member" : sent ? (telegram ? "Waiting for Telegram" : "Waiting for your code") : "Signing up"}</dd>
           </div>
         </dl>
         <Stamp visible={stamped} />
       </div>
       <p className="mt-6 max-w-sm text-[15px] leading-6 text-on-lapis-muted">
-        {stamped ? "Welcome to the library. Your card is ready." : "Every reader gets a card. Yours is stamped when you enter your code."}
+        {stamped
+          ? "Welcome to the library. Your card is ready."
+          : telegram
+            ? "Every reader gets a card. Yours is stamped when you share your number in Telegram."
+            : "Every reader gets a card. Yours is stamped when you enter your code."}
       </p>
     </div>
   );
@@ -97,7 +106,7 @@ export function LibraryStrip({ name, channel, destination, stamped = false }: Ca
         <p className="truncate font-display text-lg leading-tight text-on-lapis">{name?.trim() || "Bookly reader"}</p>
         <p className="truncate text-sm text-on-lapis-muted">
           {via ? `${via.label} · ` : ""}
-          {destination || "—"}
+          {destination || (byTelegram(channel) ? "From Telegram" : "—")}
         </p>
       </div>
       {stamped ? <span className="rounded-full border border-gold px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-gold">Member</span> : null}

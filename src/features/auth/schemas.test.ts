@@ -40,19 +40,16 @@ describe("auth schemas", () => {
     });
   });
 
-  it("needs a Cambodian number when the code goes to Telegram, and only then", () => {
-    const base = { name: "A", email: "a@b.co", password: "reading1", password_confirmation: "reading1" };
-    expect(registerSchema.safeParse({ ...base, phone: "", verify_by: "email" }).success).toBe(true);
-    expect(firstError(registerSchema.safeParse({ ...base, phone: "", verify_by: "telegram" }))).toEqual({ path: "phone", message: "Enter your phone number." });
-    expect(firstError(registerSchema.safeParse({ ...base, phone: "+1 202 555 0143", verify_by: "telegram" }))?.path).toBe("phone");
-    for (const phone of ["012 345 678", "+855 12 345 678", "855971234567", "097-123-4567"]) {
-      expect(registerSchema.safeParse({ ...base, phone, verify_by: "telegram" }).success, phone).toBe(true);
-    }
+  it("needs no phone number with Telegram: the bot gives the proven one", () => {
+    const base = { name: "A", email: "", phone: "", password: "reading1", password_confirmation: "reading1" };
+    expect(registerSchema.safeParse({ ...base, verify_by: "telegram" }).success).toBe(true);
+    expect(firstError(registerSchema.safeParse({ ...base, verify_by: "email" }))).toEqual({ path: "email", message: "Enter your email address." });
+    expect(registerSchema.safeParse({ ...base, email: "a@b.co", phone: "012 345 678", verify_by: "email" }).success).toBe(true);
   });
 
-  it("asks new Facebook customers for a phone; the email is optional", () => {
-    expect(facebookDetailsSchema.safeParse({ phone: "012 345 678", email: "" }).success).toBe(true);
-    expect(firstError(facebookDetailsSchema.safeParse({ phone: "", email: "" }))?.path).toBe("phone");
-    expect(firstError(facebookDetailsSchema.safeParse({ phone: "012 345 678", email: "nope" }))?.path).toBe("email");
+  it("lets new Facebook customers confirm in Telegram, or needs their email", () => {
+    expect(facebookDetailsSchema.safeParse({ verify_by: "telegram", email: "" }).success).toBe(true);
+    expect(firstError(facebookDetailsSchema.safeParse({ verify_by: "email", email: "" }))?.path).toBe("email");
+    expect(firstError(facebookDetailsSchema.safeParse({ verify_by: "telegram", email: "nope" }))?.path).toBe("email");
   });
 });
