@@ -16,9 +16,9 @@ import { useAfterSignIn } from "@/features/auth/useAfterSignIn";
 import { applyApiErrors, withNext } from "@/lib/forms";
 
 /*
- * /login/phone: sign in with a verified phone number and a Telegram code. Step 1 sends the code (the API
- * answers the same for every number, so the page never says whether a number has an account); step 2
- * signs in like a password and goes back to ?next=.
+ * /login/phone: sign in with a verified phone number and a Telegram code. Step 1 sends the code; the API
+ * says on the number when it has no account or Telegram can't reach it, so nobody waits for a code that
+ * never comes. Step 2 signs in like a password and goes back to ?next=.
  */
 export default function PhoneLoginPage() {
   const [params] = useSearchParams();
@@ -66,12 +66,20 @@ export default function PhoneLoginPage() {
   };
 
   const footer = (
-    <p>
-      Prefer your email?{" "}
-      <Link to={withNext("/login", next)} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
-        Sign in with email
-      </Link>
-    </p>
+    <>
+      <p>
+        Prefer your email?{" "}
+        <Link to={withNext("/login", next)} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
+          Sign in with email
+        </Link>
+      </p>
+      <p>
+        New to Bookly?{" "}
+        <Link to={withNext("/register", next)} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
+          Create an account
+        </Link>
+      </p>
+    </>
   );
 
   if (phone) {
@@ -81,7 +89,7 @@ export default function PhoneLoginPage() {
         title="Check Telegram"
         lead={
           <p>
-            If <strong className="font-semibold text-foreground">{phone}</strong> has a Bookly account, we sent it a 6-digit code. Open Telegram and look for the{" "}
+            We sent a 6-digit code to the Telegram account of <strong className="font-semibold text-foreground">{phone}</strong>. Open Telegram and look for the{" "}
             <strong className="font-semibold text-foreground">Verification Codes</strong> chat.
           </p>
         }
