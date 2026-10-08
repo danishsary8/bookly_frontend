@@ -12,7 +12,8 @@ every day, then growth, then looks.
 - [x] AUTH_PLAN PR 6: library-card sign-up/verify screens with the gold "Member" stamp, "Send it by email instead", account **Sign-in & security** (verify/change phone, connected Google/Facebook, password).
 - [x] Self-service **delete my account** (`feature/delete-account`): password or Google/Facebook to confirm, type DELETE, open orders block it, details erased after 30 days.
 - [x] Owner: Telegram Gateway account and `TELEGRAM_GATEWAY_TOKEN` on Render; codes work since 2026-10-08 (fixes: `gatewayapi.telegram.org` address, IP restriction lifted, clear alerts).
-- [ ] Owner: Telegram Gateway balance (about $5); until then codes only reach the owner's own number.
+- [x] **Free Telegram bot instead of the paid Gateway** (owner 2026-10-08: the Gateway costs ~$0.01 a code and only reached the owner's own number with a $0 balance). Phone numbers are proven by tapping "Share my phone number" in our own Bookly bot: sign-up with Telegram (no number to type), **Continue with Telegram** on the sign-in page, Facebook sign-up (Telegram or an email), confirm/change the number in Sign-in & security. The Gateway code, `/login/phone` and the typed codes are removed (`feature/telegram-bot` → `feature/phone-by-telegram-bot` (backend), `feature/telegram-bot-sign-in`).
+- [ ] Owner: create the Bookly bot in @BotFather and add `TELEGRAM_BOT_TOKEN` on Render (backend `docs/DEPLOYMENT.md` → "Telegram bot (free)"); delete `TELEGRAM_GATEWAY_TOKEN` there.
 - [x] Connect / disconnect Google and Facebook from Sign-in & security (block removing the last way in: "Add a password first") (`feature/connect-social`, both repos).
 - [x] Add or change the email from the account (code to the new address), so phone-only Facebook customers can add one (`feature/change-email`, both repos; new migration for the code kinds).
 - [x] Sign in with phone number + Telegram code (today phone-only accounts sign in with Facebook only) (`feature/phone-sign-in`, both repos).
@@ -22,9 +23,9 @@ every day, then growth, then looks.
 ## Phase 2 · Reliability (before real customers)
 - [ ] Database: confirm Neon backups / point-in-time restore, and do one restore drill.
 - [ ] Uptime check on the API and website (free monitor) with Telegram alerts. A ping every few minutes also keeps the Render API from sleeping.
-- [ ] Telegram Gateway balance: alert the owner on Telegram when it runs low (there is no per-number cap now, so a bot could drain it; turn on `PHONE_CODES_PER_HOUR` if that happens).
 - [ ] Sentry source maps (owner adds `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` on Vercel) and a backend release tag, so every alert shows real file names.
 - [ ] Preview deployments may call the API (CORS for `bookly-frontend-*.vercel.app`).
+- [ ] Telegram bot health: the API's start log says whether `telegram:webhook` worked; add the bot to the uptime check (Telegram's `getWebhookInfo` shows the last delivery error).
 - [ ] Chores: unit tests stub `GET /auth/options` once (quiet test output); Vitest 5 (`@vitest/mocker` advisory), dependency updates in both repos, re-check rate limits on every public endpoint.
 
 ## Phase 3 · Admin dashboard, production grade (real data)
@@ -36,10 +37,10 @@ every day, then growth, then looks.
 - [ ] Coupons and returns: usage reports, refund records.
 - [ ] Staff: granular permissions per role, active sessions with "sign out everywhere", login history.
 - [ ] **Strict delete security** (owner's rule) for anything that deletes: admin only; re-enter password **and** a 2FA code; type the item's name to confirm; soft delete into a **Trash** with 30-day restore; full audit entry with before/after values; a Telegram message to the owner on every delete.
-- [ ] Telegram notice to the owner **and staff** (a staff Telegram group, owner 2026-10-08) for each new order, with the order details and a link to it in the admin; also for low stock.
+- [ ] Telegram notice to the owner **and staff** (a staff Telegram group, owner 2026-10-08) for each new order, with the order details and a link to it in the admin; also for low stock. The Bookly bot can post there (add it to the group).
 
 ## Phase 4 · Shop completeness
-- [ ] **Order updates in Telegram for customers** (owner 2026-10-08): receipt, order details and every status change in Telegram, as well as (or instead of) email. Telegram Gateway only sends codes, so this needs our own Bookly bot: the customer taps "Get order updates in Telegram" once (a `t.me/<bot>?start=<one-time link>`) to connect their chat to the account, and can turn it off in their account.
+- [ ] **Order updates in Telegram for customers** (owner 2026-10-08): receipt, order details and every status change in Telegram, as well as (or instead of) email. Reuses the Bookly bot (Phase 1): the customer taps "Get order updates in Telegram" once (a `t.me/<bot>?start=<one-time link>`, same as phone confirmation) to connect their chat to the account (needs a small migration for the chat id, ask first), and can turn it off in their account.
 - [ ] Customer emails for every order change (confirmed, shipped with tracking note, delivered, cancelled, refund), not only "order placed".
 - [ ] **Khmer language** (Khmer / English switch) on the storefront and emails.
 - [ ] Delivery: fees per province, estimated delivery date, free-delivery threshold.
@@ -63,6 +64,7 @@ every day, then growth, then looks.
 - [ ] Full frontend redesign, starting from the landing page, then every page; keep all tests passing.
 
 ## Removed by the owner
+- Paid Telegram Gateway codes and the "Gateway balance alert" item (removed 2026-10-08; replaced by the free Bookly bot).
 - Moving the API from Render to Railway (removed 2026-10-08; the research stays in the backend's `docs/RAILWAY_PLAN.md`).
 
 ## Never
