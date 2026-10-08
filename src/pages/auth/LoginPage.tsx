@@ -12,7 +12,7 @@ import { SocialButtons } from "@/features/auth/SocialButtons";
 import { anySocialEnabled } from "@/features/auth/social";
 import { loginSchema, type LoginValues } from "@/features/auth/schemas";
 import { useAfterSignIn } from "@/features/auth/useAfterSignIn";
-import { useTelegramCodes } from "@/features/auth/verification";
+import { useTelegramBot } from "@/features/auth/verification";
 import { applyApiErrors, withNext } from "@/lib/forms";
 import { useTurnstile } from "@/features/auth/turnstile";
 
@@ -33,7 +33,9 @@ export default function LoginPage() {
   const { errors, isSubmitting } = formState;
   const email = useWatch({ control, name: "email" });
   const turnstile = useTurnstile("login");
-  const telegramCodes = useTelegramCodes();
+  const telegram = useTelegramBot();
+  // The buttons go above the email form whenever at least one of them works.
+  const buttonsOnTop = anySocialEnabled() || telegram;
 
   const submit = async (values: LoginValues) => {
     setFormError(null);
@@ -75,7 +77,7 @@ export default function LoginPage() {
       <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid gap-5">
         {state?.notice && !formError ? <FormAlert tone="success">{state.notice}</FormAlert> : null}
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
-        {anySocialEnabled() ? <SocialButtons next={next} /> : null}
+        {buttonsOnTop ? <SocialButtons next={next} telegram={telegram} /> : null}
 
         <TextField label="Email" type="email" autoComplete="email" inputMode="email" placeholder="name@example.com" error={errors.email?.message} {...register("email")} />
 
@@ -98,16 +100,7 @@ export default function LoginPage() {
           </Button>
         </CtaGlare>
 
-        {telegramCodes ? (
-          <p className="-mt-1 text-center text-sm text-muted-foreground">
-            Verified your phone?{" "}
-            <Link to={withNext("/login/phone", next)} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
-              Sign in with a Telegram code
-            </Link>
-          </p>
-        ) : null}
-
-        {anySocialEnabled() ? null : <SocialButtons next={next} />}
+        {buttonsOnTop ? null : <SocialButtons next={next} />}
       </form>
     </AuthPage>
   );
