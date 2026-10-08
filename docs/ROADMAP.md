@@ -13,7 +13,7 @@ every day, then growth, then looks.
 - [x] Self-service **delete my account** (`feature/delete-account`): password or Google/Facebook to confirm, type DELETE, open orders block it, details erased after 30 days.
 - [x] Owner: Telegram Gateway account and `TELEGRAM_GATEWAY_TOKEN` on Render; codes work since 2026-10-08 (fixes: `gatewayapi.telegram.org` address, IP restriction lifted, clear alerts).
 - [x] **Free Telegram bot instead of the paid Gateway** (owner 2026-10-08: the Gateway costs ~$0.01 a code and only reached the owner's own number with a $0 balance). Phone numbers are proven by tapping "Share my phone number" in our own Bookly bot: sign-up with Telegram (no number to type), **Continue with Telegram** on the sign-in page, Facebook sign-up (Telegram or an email), confirm/change the number in Sign-in & security. The Gateway code, `/login/phone` and the typed codes are removed (`feature/telegram-bot` → `feature/phone-by-telegram-bot` (backend), `feature/telegram-bot-sign-in`).
-- [ ] Owner: create the Bookly bot in @BotFather and add `TELEGRAM_BOT_TOKEN` on Render (backend `docs/DEPLOYMENT.md` → "Telegram bot (free)"); delete `TELEGRAM_GATEWAY_TOKEN` there.
+- [x] Owner: Bookly bot created and `TELEGRAM_BOT_TOKEN` on Render; works live since 2026-10-08 after `fix/telegram-webhook-check` (backend: the API now checks Telegram delivers the bot's messages and fixes the address itself).
 - [x] Connect / disconnect Google and Facebook from Sign-in & security (block removing the last way in: "Add a password first") (`feature/connect-social`, both repos).
 - [x] Add or change the email from the account (code to the new address), so phone-only Facebook customers can add one (`feature/change-email`, both repos; new migration for the code kinds).
 - [x] Sign in with phone number + Telegram code (today phone-only accounts sign in with Facebook only) (`feature/phone-sign-in`, both repos).
@@ -25,7 +25,7 @@ every day, then growth, then looks.
 - [ ] Uptime check on the API and website (free monitor) with Telegram alerts. A ping every few minutes also keeps the Render API from sleeping.
 - [ ] Sentry source maps (owner adds `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` on Vercel) and a backend release tag, so every alert shows real file names.
 - [ ] Preview deployments may call the API (CORS for `bookly-frontend-*.vercel.app`).
-- [ ] Telegram bot health: the API's start log says whether `telegram:webhook` worked; add the bot to the uptime check (Telegram's `getWebhookInfo` shows the last delivery error).
+- [ ] Telegram bot health: delivery errors already reach Sentry when someone taps a Telegram button (`fix/telegram-webhook-check`); left: check it on a schedule too (with the uptime monitor), so a broken bot is noticed before a customer tries.
 - [ ] Chores: unit tests stub `GET /auth/options` once (quiet test output); Vitest 5 (`@vitest/mocker` advisory), dependency updates in both repos, re-check rate limits on every public endpoint.
 
 ## Phase 3 · Admin dashboard, production grade (real data)
@@ -40,7 +40,7 @@ every day, then growth, then looks.
 - [ ] Telegram notice to the owner **and staff** (a staff Telegram group, owner 2026-10-08) for each new order, with the order details and a link to it in the admin; also for low stock. The Bookly bot can post there (add it to the group).
 
 ## Phase 4 · Shop completeness
-- [ ] **Order updates in Telegram for customers** (owner 2026-10-08): receipt, order details and every status change in Telegram, as well as (or instead of) email. Reuses the Bookly bot (Phase 1): the customer taps "Get order updates in Telegram" once (a `t.me/<bot>?start=<one-time link>`, same as phone confirmation) to connect their chat to the account (needs a small migration for the chat id, ask first), and can turn it off in their account.
+- [ ] **Order updates in Telegram for customers** (owner 2026-10-08): receipt, order details and every status change in Telegram, as well as (or instead of) email. Reuses the Bookly bot (Phase 1): the customer taps "Get order updates in Telegram" once (a `t.me/<bot>?start=<one-time link>`, same as phone confirmation) to connect their chat to the account (needs a small migration for the chat id, ask first), and can turn it off in their account. Discussed 2026-10-08, decisions still open: (1) messages: order confirmation at checkout + **receipt when the order is delivered** (cash on delivery; with card/KHQR later, when the payment succeeds); (2) customers who confirmed their phone in the bot get updates automatically (chat id saved then) or everyone opts in with a button; (3) a failed Telegram message never blocks an order; "View order" button; a blocked bot turns updates off; built like the order email so the staff group alert (Phase 3) reuses it. Owner: later, after Phase 2.
 - [ ] Customer emails for every order change (confirmed, shipped with tracking note, delivered, cancelled, refund), not only "order placed".
 - [ ] **Khmer language** (Khmer / English switch) on the storefront and emails.
 - [ ] Delivery: fees per province, estimated delivery date, free-delivery threshold.
