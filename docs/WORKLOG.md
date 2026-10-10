@@ -337,3 +337,9 @@ Owner's choices: no typing (one tap), "Continue with Telegram" on sign-in, Faceb
 ## Quiet unit tests (2026-10-10; branch `chore/quiet-tests`)
 - Shared test setup installs a local Axios adapter before each test: `GET /auth/options` defaults to `{ telegram: false }`; other unstubbed API requests reject immediately with their method/path and stubbing guidance. Existing method spies and client-test adapters still override it. Checked: lint (0 errors, existing 5 warnings), `tsc -b`, build, 260 tests passed / 3 skipped; combined test output piped through `grep -c ENOTFOUND` returned 0. A temporary three-test probe verified defaults, spy overrides/restoration and rejection of GET/POST/PUT/PATCH/DELETE (removed to preserve the test count). Initial run had a password-reset timing failure and dashboard requests during cleanup flagged by an extra failure hook; focused rerun passed, the hook was removed, final suite passed with the request guard retained. Existing React act/build warnings and npm's 11 dependency vulnerabilities left unchanged. No browser pass: only test setup changed.
 
+## Restore drill & Sentry source-map check (2026-10-10; branch `docs/restore-drill-done`)
+- [x] Database restore drill passed: downloaded the nightly backup artifact, decrypted with gpg, restored into a new Neon branch with `pg_restore`. Row counts matched production (12 customers, 13 orders; temporary `cache` table 214 vs 212 due to minute-by-minute updates). The test branch and unencrypted dump were deleted.
+- [x] Sentry source maps: Vercel build log confirms successful upload ("Successfully uploaded source maps to Sentry"); Sentry Settings > Source Map Uploads lists 358 files for each of the last three releases. Stack-trace verification with a test error remains open.
+- Docs only; build/tests not run.
+
+
