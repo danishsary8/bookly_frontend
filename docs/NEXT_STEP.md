@@ -1,20 +1,30 @@
-# Next step: Phase 2 (reliability)
+# Next step: finish Phase 2, then Phase 3 (admin dashboard)
 
-Phase 1 (sign-in) is built. The paid Telegram Gateway is replaced by the free Bookly Telegram bot (2026-10-08):
-phone numbers are proven with one tap on "Share my phone number"; "Continue with Telegram" signs in.
-Railway was removed from the plan by the owner. **Everything still to do, in order, is in `docs/ROADMAP.md`.**
+State on 2026-10-10: Phase 1 (sign-in) is done and live, including the free Bookly Telegram bot. In Phase 2 these are done:
+nightly encrypted database backup (first run green), uptime monitors (email alerts), `/health` also reports the Telegram bot,
+preview-deployment CORS, Sentry release tag, quiet unit tests. **Everything still to do, in order, is in `docs/ROADMAP.md`.**
 
-## Owner
-1. Merge, in order: backend `docs/shelve-railway` → `feature/telegram-bot` → `feature/phone-by-telegram-bot`,
-   then frontend `docs/remove-railway` → `feature/telegram-bot-sign-in`.
-2. Create the bot: Telegram → @BotFather → /newbot → name `Bookly` → a username ending in `bot` → copy the token.
-3. Render → bookly API → Environment → add `TELEGRAM_BOT_TOKEN` (the token), delete `TELEGRAM_GATEWAY_TOKEN` →
-   Save, rebuild and deploy. The deploy log should say "Telegram bot @… now sends its messages to …".
-4. Test on the live site: Register → Telegram → Open Telegram → Start → Share my phone number.
+## Still open in Phase 2, in this order
+1. **Restore drill** (owner, ~10 min): download a nightly backup artifact (GitHub → Actions → Nightly database backup → a run →
+   Artifacts), `gpg -d`, `pg_restore` into a NEW Neon branch, compare row counts with production, delete the branch. Steps: backend
+   `docs/DEPLOYMENT.md` → "Nightly database backup". The owner keeps the passphrase in two places.
+2. **Sentry source maps** (owner, ~2 min): the 3 Vercel keys are added; confirm the newest Production build log says source maps were
+   uploaded, and that a Sentry error shows real file names.
+3. Free Telegram alerts for uptime and backup failures through the Bookly bot (UptimeRobot's Telegram is paid): plan first, ask the owner.
+4. Chores: bump GitHub Actions that target Node 20 (e.g. `actions/upload-artifact`), dependency updates, rate-limit review.
+Then **Phase 3** (admin dashboard, delete security, staff Telegram group). Customer Telegram receipts are Phase 4 (decisions open, see ROADMAP).
 
-## Next session: ROADMAP Phase 2 in order
-Neon backups + one restore drill, uptime monitor with Telegram alerts (also keeps the Render API awake),
-Telegram bot health, Sentry source maps, preview-deployment CORS, chores.
+## How the three of us work (project manager + coding agent + owner)
+- Claude is the project manager and reviewer: reads the real diffs on GitHub, writes the next prompt, never merges.
+- A coding agent writes ONE small task per fresh chat. Codex is deactivated; the owner uses **Antigravity (Local, folder
+  `bookly_backend_v2` or `bookly_frontend`, planning mode, terminal asks first)**. Model: Claude Opus 4.6 (Thinking), or Sonnet 4.6, when
+  credits are out Gemini 3.8 Flash only for finishing/checking. Mark every prompt **[default]** or **[strong]** (strong for money, sign-in, security, data).
+- One task at a time, never both repos at once. Before each task: `git checkout main && git pull origin main` (backend also `composer install`,
+  frontend `npm ci`). Check the folder name before pasting a prompt. Prompts start with the briefing + hard rules (see the previous session's
+  briefing: only that task, no migrations/secrets/merge/PR, commit as danishsary, no AI names, tests + lint before push, WORKLOG entry,
+  push the branch, print `=== NOTE FOR CLAUDE ===`).
+- The owner pastes the note; Claude checks the branch (diff + CI) before telling the owner to merge. Owner steps are click-by-click, one
+  short step at a time; secrets are never pasted in chat.
 
 ## Local testing
 Demo staff `admin@bookly.test` / `staff@bookly.test` (2FA on); customer `demo@bookly.test`. API:
@@ -26,9 +36,10 @@ play Telegram by posting `{"message":{"chat":{"id":1,"type":"private"},"from":{"
 
 ## Paste this into the next session
 ```
-Project: Bookly (online bookshop, Cambodia; my portfolio/CV project, production grade). Frontend: React 19 + TS + Vite + Tailwind 4, repo danishsary8/bookly_frontend, live https://bookly-frontend-five.vercel.app. Backend: Laravel API v2, repo danishsary8/bookly_backend_v2, live https://bookly-api-zasc.onrender.com/api/v1 (Render free + Neon Postgres; email via Brevo SMTP; Sentry → Telegram alerts; free Bookly Telegram bot for phone sign-in/confirmation).
-Read first: both CLAUDE.md files, frontend README.md, docs/ROADMAP.md, docs/NEXT_STEP.md, docs/WORKLOG.md, design-system/bookly/MASTER.md; backend docs/WORKLOG.md, docs/API.md, docs/DEPLOYMENT.md.
-Status: ROADMAP Phase 1 (sign-in) is done; the paid Telegram Gateway was replaced by our free Bookly Telegram bot ("Share my phone number"). Railway is removed from the plan (we stay on Render).
-Task: first check the live Telegram bot works (sign-up, Continue with Telegram); then ROADMAP Phase 2 in order: Neon backups + restore drill, uptime monitor with Telegram alerts (also keeps Render awake), Telegram bot health, Sentry source maps, preview CORS, chores. Stop and give me click-by-click steps whenever my accounts are needed.
-Rules: important things first, follow ROADMAP order, tick items, never drop one unless I say so, add new gaps to the right phase. If unclear, ask me first (question tool with a recommended option). Small commits, human-style messages, no AI/tool names in git, commit as "danishsary" <187593185+danishsary8@users.noreply.github.com>, no Co-Authored-By or session trailers. One branch per piece of work (stack when needed); I merge — give me compare links, backend first. Never edit old migrations; ask before new ones. Don't change existing feature code beyond the plan without asking. No payment-provider work. Never ask me to paste secrets. Verify before every push: frontend lint, npx tsc -b, npx vitest run, build, Playwright browser pass (Chromium at /opt/pw-browsers/chromium); backend php artisan test + vendor/bin/pint. Check CI with the GitHub tools and fix failures. Update docs/WORKLOG.md, docs/ROADMAP.md, docs/NEXT_STEP.md. Keep answers short and step by step; end with "what was done / what's next" and the next session's prompt in chat.
+Project: Bookly (online bookshop, Cambodia; my portfolio/CV project, production grade). Frontend: React 19 + TS + Vite + Tailwind 4, repo danishsary8/bookly_frontend, live https://bookly-frontend-five.vercel.app. Backend: Laravel API v2, repo danishsary8/bookly_backend_v2, live https://bookly-api-zasc.onrender.com/api/v1 (Render free + Neon Postgres; email via Brevo SMTP; Sentry; free Bookly Telegram bot for phone sign-up/sign-in; nightly encrypted DB backup via GitHub Actions; UptimeRobot monitors).
+Read first: both CLAUDE.md files, frontend README.md, docs/ROADMAP.md, docs/NEXT_STEP.md (it explains how we work), docs/WORKLOG.md, design-system/bookly/MASTER.md; backend docs/WORKLOG.md, docs/API.md, docs/DEPLOYMENT.md.
+Status: Phase 1 done. Phase 2 mostly done (backups, uptime, bot health in /health, preview CORS, Sentry release tag, quiet tests). Open: restore drill, confirm Sentry source maps, free Telegram alerts for uptime/backup failures, chores. Then Phase 3 (admin dashboard). Customer Telegram receipts are Phase 4 (decisions open).
+Your role: project manager + context/prompt engineer. I (owner) use Antigravity (Local) as the coding agent, one task per fresh chat, never both repos at once. For each task: check the real branch diff and CI on GitHub before telling me to merge; write the prompt for the agent (mark [default] or [strong]); give my own steps click by click, one short step at a time; ask me with the question tool (recommended option first) when something is unclear. I paste the agent's "NOTE FOR CLAUDE" blocks to you.
+Rules: important things first, follow ROADMAP order, tick items, never drop one unless I say so, add new gaps to the right phase. Small commits, human-style messages, no AI/tool names in git, commit as "danishsary" <187593185+danishsary8@users.noreply.github.com>, no Co-Authored-By or session trailers. One branch per piece of work; I merge — give me compare links, backend first. Never edit old migrations; ask before new ones. Don't change existing feature code beyond the plan without asking. No payment-provider work. Never ask me to paste secrets. Verify before every push: frontend lint, npx tsc -b, npx vitest run, build, Playwright browser pass (Chromium at /opt/pw-browsers/chromium); backend php artisan test + vendor/bin/pint. Update docs/WORKLOG.md, docs/ROADMAP.md, docs/NEXT_STEP.md. Short, step-by-step answers (I'm a student learning API development); end with "what was done / what's next" and the next prompt in chat.
+Task: start with the restore drill and the Sentry source-map check (guide me), then continue the roadmap in order.
 ```
