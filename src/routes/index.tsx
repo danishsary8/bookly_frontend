@@ -69,6 +69,7 @@ const CategoryPage = lazy(() => import("../pages/catalog/CategoryPage"));
 const PublisherPage = lazy(() => import("../pages/catalog/PublisherPage"));
 // Development-only reference page for the UI kit; not part of production builds.
 const UiKit = import.meta.env.DEV ? lazy(() => import("../pages/dev/UiKit")) : null;
+const SentryTestPage = lazy(() => import("../pages/dev/SentryTestPage"));
 
 const AppRoutes = () => {
   // Prefetch the book page while idle so the cover morph never waits on a lazy chunk.
@@ -106,6 +107,7 @@ const AppRoutes = () => {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
+          <Route path="/sentry-test" element={<SentryTestPage />} />
           {UiKit ? <Route path="/ui-kit" element={<UiKit />} /> : null}
           <Route path="*" element={<NotFound />} />
           <Route element={<RequireVerified />}>

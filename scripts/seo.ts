@@ -11,7 +11,7 @@ import type { Plugin } from "vite";
  */
 
 const STATIC_PAGES = ["/", "/books", "/authors", "/series", "/shipping", "/returns-policy", "/faq", "/about", "/contact", "/privacy", "/terms"];
-const PRIVATE = ["/admin", "/account", "/checkout", "/cart", "/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/search", "/ui-kit"];
+const PRIVATE = ["/admin", "/account", "/checkout", "/cart", "/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/search", "/ui-kit", "/sentry-test"];
 
 type Row = { id: number; slug?: string | null };
 
