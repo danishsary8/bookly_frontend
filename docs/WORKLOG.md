@@ -347,3 +347,8 @@ Owner's choices: no typing (one tap), "Continue with Telegram" on sign-in, Faceb
 - [x] Uptime monitor alerts: owner decided UptimeRobot email alerts are sufficient; removed Telegram uptime alert item from Phase 2.
 - [x] Backend `docs/DEPLOYMENT.md` restore steps chore ticked; added chores for missed-backup check, Telegram alert error reason in logs, and restoring backend NEXT_STEP.md pointer.
 - Docs only; build/tests not run.
+
+## Sentry source maps verified & backup alert reason chore (2026-10-10; branch `docs/sentry-and-alert-done`)
+- [x] Sentry source maps verified: Vercel preview build on branch `tmp/sentry-test-error` (deleted) threw test error `triggerSentryTestError` which resolved to exact file and line (`src/pages/dev/SentryTestPage.tsx:5:9`) in Sentry; Vercel source map variables apply to Production and Preview.
+- [x] Backend backup alert error reason (branch `chore/backup-alert-reason`, merged): printed Telegram description on failure in logs; manual `test_alert` verified green; backend `docs/NEXT_STEP.md` pointer to frontend docs restored.
+- Docs only; build/tests not run.
