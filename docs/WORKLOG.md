@@ -342,4 +342,8 @@ Owner's choices: no typing (one tap), "Continue with Telegram" on sign-in, Faceb
 - [x] Sentry source maps: Vercel build log confirms successful upload ("Successfully uploaded source maps to Sentry"); Sentry Settings > Source Map Uploads lists 358 files for each of the last three releases. Stack-trace verification with a test error remains open.
 - Docs only; build/tests not run.
 
-
+## Backup failure alert & uptime alerts update (2026-10-10; branch `docs/backup-alert-done`)
+- [x] Backup failure alert (backend `feature/backup-failure-alert`, merged): GitHub Actions nightly backup workflow notifies the owner via Telegram private chat using a separate free bot (Bookly Alerts) on failure or missing BACKUP_DATABASE_URL; manual test alert verified green.
+- [x] Uptime monitor alerts: owner decided UptimeRobot email alerts are sufficient; removed Telegram uptime alert item from Phase 2.
+- [x] Backend `docs/DEPLOYMENT.md` restore steps chore ticked; added chores for missed-backup check, Telegram alert error reason in logs, and restoring backend NEXT_STEP.md pointer.
+- Docs only; build/tests not run.
