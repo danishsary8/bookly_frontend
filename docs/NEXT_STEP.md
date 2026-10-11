@@ -3,11 +3,11 @@
 State on 2026-10-11: Phase 1 (sign-in) is done and live, including the free Bookly Telegram bot. In Phase 2 these are done:
 nightly encrypted database backup (first run green, restore drill passed, backup failure alert via Bookly Alerts bot, alert error reason in logs), uptime monitors (email alerts), `/health` also reports the Telegram bot,
 preview-deployment CORS, Sentry release tag and verified source maps, quiet unit tests, backend `docs/DEPLOYMENT.md` restore steps fix, backend `docs/NEXT_STEP.md` pointer restored,
-backend Tests workflow on `chore/**` and `docs/**` pushes, backend `docs/NEXT_STEP.md` cleanup, Node 24 GitHub Actions bumps (backend `actions/upload-artifact` v7.0.2 in `chore/ci-node24-and-docs`; frontend `actions/setup-node` pinned to v7.1.0 in `chore/deps-and-setup-node`), frontend dependency updates within semver ranges. **Everything still to do, in order, is in `docs/ROADMAP.md`.**
+backend Tests workflow on `chore/**` and `docs/**` pushes, backend `docs/NEXT_STEP.md` cleanup, Node 24 GitHub Actions bumps (backend `actions/upload-artifact` v7.0.2 in `chore/ci-node24-and-docs`; frontend `actions/setup-node` pinned to v7.1.0 in `chore/deps-and-setup-node`), frontend dependency updates deferred to preserve npm ci sync with main lockfile. **Everything still to do, in order, is in `docs/ROADMAP.md`.**
 
 ## Still open in Phase 2, in this order
 1. **Chores**:
-   - Backend dependency updates.
+   - Frontend and backend dependency updates.
    - Rate-limit review on public endpoints.
    - Major upgrades to decide (see `docs/ROADMAP.md`, including Vitest 5 for `@vitest/mocker`).
 2. **Missed-backup check**: postponed by the owner on 2026-10-10 (options discussed: free outside check-in service such as Healthchecks.io, or a second GitHub workflow checking artifact age).

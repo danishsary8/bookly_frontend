@@ -360,3 +360,6 @@ Owner's choices: no typing (one tap), "Continue with Telegram" on sign-in, Faceb
 - [x] Verification: `npm run lint` passed (0 errors, 5 existing warnings), `npx tsc -b` passed (0 errors), `npx vitest run` passed (37 files passed, 1 skipped; 260 tests passed, 3 skipped), `npm run build` passed.
 - [x] Runtime pass: Playwright headless Chromium against local Vite dev server with `VITE_API_BASE_URL=https://bookly-api-zasc.onrender.com/api/v1` exercised `/`, `/books`, `/books/20`, `/cart`, `/login`. 0 console errors, 0 failed requests.
 - [x] Docs: updated `docs/ROADMAP.md` (ticked backend Tests workflow chore and backend NEXT_STEP cleanup done in backend `chore/ci-node24-and-docs`, updated Node 24 chore text, ticked frontend dependency updates, added unticked major upgrades list), `docs/NEXT_STEP.md`, and added dated worklog entry.
+- Lockfile desync: earlier commit e1bc3d0 broke CI npm ci due to generator npm version mismatch and hoisting conflicts.
+- Cause: running npm update (even with npm 10.9.9) produced a ~2,443-line diff with 13 downgrades (notably ajv 8.20.0 -> 6.15.0).
+- Fix: restored package-lock.json exactly from main and deferred dependency bumps so npm ci remains fully synchronized with CI.
