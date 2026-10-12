@@ -5,15 +5,30 @@ nightly encrypted database backup (first run green, restore drill passed, backup
 preview-deployment CORS, Sentry release tag and verified source maps, quiet unit tests, backend `docs/DEPLOYMENT.md` restore steps fix, backend `docs/NEXT_STEP.md` pointer restored,
 backend dependency updates (13 packages updated inside constraints, 0 majors, platform pinned to 8.3.0), and rate-limit review (docs/RATE_LIMITS.md audit). **Everything still to do, in order, is in `docs/ROADMAP.md`.**
 
+Also done on 2026-10-12 (all merged except the last one): backend housekeeping now runs from the 5-minute uptime ping
+(`RUN_MAINTENANCE_ON_REQUEST=true` on Render), customer emails for every order change and return step, owner Telegram
+alert for each new order and low stock (Bookly Alerts bot; live test received), frontend CI `actions/setup-node` pinned to
+the v7.1.0 commit (branch `chore/setup-node-v7`, CI green, waiting for the owner to merge).
+
+## Owner to-do (left on 2026-10-12, do these first)
+1. Merge the frontend branch `chore/setup-node-v7`:
+   https://github.com/danishsary8/bookly_frontend/compare/main...chore/setup-node-v7 → Create pull request → Merge.
+2. Delete the old branches nobody needs any more (GitHub → repo → Branches → trash icon):
+   frontend `chore/pin-setup-node` and `chore/deps-and-setup-node`; frontend `tmp/sentry-test-error` if it still exists.
+3. Open `https://bookly-api-zasc.onrender.com/api/v1/health`. `telegram_bot` should be `ok`. If it still says
+   "webhook not set": Render → Manual Deploy → Deploy latest commit, check again after 3 minutes; still bad → copy the
+   Render log lines containing "telegram" (never the token) to the next session.
+4. Optional check that housekeeping runs: nothing to do; the next session can confirm it from the Render logs.
+5. Then tell the next session which work comes next (Phase 3 dashboard numbers is next in order).
+
 ## Still open in Phase 2, in this order
 1. **Apply the rate-limit changes from backend docs/RATE_LIMITS.md**: top gaps: checkout and order cancel can flood stock, `/auth/telegram/status` polling, `/books` search cost, coupon check brute force, staff dashboard queries; owner approves the limits first; needs the open questions answered.
-2. **Investigate why the Telegram webhook showed 'not set' on 2026-10-11**: the API repaired it itself when a sign-in started; watch `/health`; if it recurs, search the Render logs for 'webhook was'.
+2. **Investigate why the Telegram webhook showed 'not set' on 2026-10-11 (seen again on 2026-10-12 after a redeploy)**: the API repaired it itself when a sign-in started; watch `/health`; if it recurs, search the Render logs for 'webhook was'.
 3. **Frontend dependency updates**: a plain `npm update` rewrote the whole lockfile and broke `npm ci` in CI; do updates with the CI's npm (10.9.9) and verify with `npm ci`, or one package at a time; majors still to decide are listed in 'Major upgrades to decide'.
 4. **Raise the minimum PHP to 8.4**: production already runs 8.4, to allow Symfony 8 / PHPUnit 13; then remove config.platform.php 8.3.0.
 5. **Remaining chores**:
    - Run the Tests workflow on pushes to `chore/**` and `docs/**` branches too (backend `.github/workflows/tests.yml` only runs on `main`, `feature/**`, `fix/**` and pull requests).
    - Backend `docs/NEXT_STEP.md` still lists the finished alert-bot steps (create bot, add secrets) as to-do; clean it up.
-   - Bump GitHub Actions that target Node 20 (e.g. `actions/upload-artifact`) to Node 24 versions.
    - Vitest 5 (`@vitest/mocker` advisory).
 6. **Missed-backup check**: postponed by the owner on 2026-10-10 (options discussed: free outside check-in service such as Healthchecks.io, or a second GitHub workflow checking artifact age).
 Then **Phase 3** (admin dashboard, delete security, staff Telegram group). Customer Telegram receipts are Phase 4 (decisions open, see ROADMAP).
