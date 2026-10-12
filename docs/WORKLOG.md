@@ -352,3 +352,7 @@ Owner's choices: no typing (one tap), "Continue with Telegram" on sign-in, Faceb
 - [x] Sentry source maps verified: Vercel preview build on branch `tmp/sentry-test-error` (deleted) threw test error `triggerSentryTestError` which resolved to exact file and line (`src/pages/dev/SentryTestPage.tsx:5:9`) in Sentry; Vercel source map variables apply to Production and Preview.
 - [x] Backend backup alert error reason (branch `chore/backup-alert-reason`, merged): printed Telegram description on failure in logs; manual `test_alert` verified green; backend `docs/NEXT_STEP.md` pointer to frontend docs restored.
 - Docs only; build/tests not run.
+
+## Pin actions/setup-node to v7.1.0 (2026-10-12; branch `chore/pin-setup-node`)
+- [x] Pinned `actions/setup-node` in `.github/workflows/ci.yml` from `@v5` to `@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0` (Node 24 runtime verified from `action.yml` primary source; SHA verified via `git ls-remote --tags`).
+- [x] Updated `docs/ROADMAP.md` Phase 2 chores to reflect completed Node 24 bumps across both repositories.
