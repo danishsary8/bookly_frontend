@@ -352,3 +352,9 @@ Owner's choices: no typing (one tap), "Continue with Telegram" on sign-in, Faceb
 - [x] Sentry source maps verified: Vercel preview build on branch `tmp/sentry-test-error` (deleted) threw test error `triggerSentryTestError` which resolved to exact file and line (`src/pages/dev/SentryTestPage.tsx:5:9`) in Sentry; Vercel source map variables apply to Production and Preview.
 - [x] Backend backup alert error reason (branch `chore/backup-alert-reason`, merged): printed Telegram description on failure in logs; manual `test_alert` verified green; backend `docs/NEXT_STEP.md` pointer to frontend docs restored.
 - Docs only; build/tests not run.
+
+## Phase 2 chores & Phase 3 dashboard decisions (2026-10-12; branch `docs/phase2-done-phase3-decisions`)
+- [x] Phase 2 updates: ticked completed chores (backend dependency updates in `chore/backend-safe-updates` with 13 packages updated inside constraints and PHP platform pinned to 8.3.0; rate-limit review in `docs/rate-limit-audit` and `docs/RATE_LIMITS.md`). Added unticked Phase 2 tasks: apply rate-limit changes from backend audit, investigate Telegram webhook 'not set' recurrence, frontend dependency updates (via CI npm 10.9.9), and raising minimum PHP to 8.4. Missed-backup check retained unticked.
+- [x] Phase 3 updates: added dashboard plan decisions (`docs/ADMIN_DASHBOARD_PLAN.md`): delivered date cash basis, refunds deducted on refund date keeping shipping fee, USD with KHR, admin-only money numbers, enhancing existing staff dashboard.
+- [x] Next steps & process: updated `docs/NEXT_STEP.md` status, open Phase 2 items, next session paste block for Phase 3 dashboard numbers, and added unattended run guidelines.
+- Docs only; build/tests not run.
