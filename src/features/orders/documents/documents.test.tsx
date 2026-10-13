@@ -81,6 +81,14 @@ describe("invoice", () => {
     expect(sheet).not.toHaveTextContent("៛");
   });
 
+  it("stamps a returned order and asks for nothing", () => {
+    render(<InvoiceSheet doc={doc({ status: "returned", payment_status: "refunded", amount_to_collect_usd: "0.00", refunded_usd: "29.40" })} />);
+    const sheet = screen.getByRole("article");
+    expect(within(sheet).getByText("Returned · refunded")).toBeInTheDocument();
+    expect(sheet).toHaveTextContent("Refunded−$29.40");
+    expect(sheet).not.toHaveTextContent("Collect on delivery");
+  });
+
   it("stamps a cancelled order", () => {
     render(<InvoiceSheet doc={doc({ status: "cancelled", amount_to_collect_usd: "0.00" })} />);
     expect(within(screen.getByRole("article")).getByText("Cancelled")).toBeInTheDocument();

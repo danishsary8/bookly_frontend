@@ -1,64 +1,67 @@
-# Next step: finish Phase 2, then Phase 3 (admin dashboard)
+# Next step
 
-State on 2026-10-12: Phase 1 (sign-in) is done and live, including the free Bookly Telegram bot. In Phase 2 these are done:
-nightly encrypted database backup (first run green, restore drill passed, backup failure alert via Bookly Alerts bot, alert error reason in logs), uptime monitors (email alerts), `/health` also reports the Telegram bot,
-preview-deployment CORS, Sentry release tag and verified source maps, quiet unit tests, backend `docs/DEPLOYMENT.md` restore steps fix, backend `docs/NEXT_STEP.md` pointer restored,
-backend dependency updates (13 packages updated inside constraints, 0 majors, platform pinned to 8.3.0), and rate-limit review (docs/RATE_LIMITS.md audit). **Everything still to do, in order, is in `docs/ROADMAP.md`.**
+**Everything still to do, in order, is in `docs/ROADMAP.md`** (including the "Known limits and small follow-ups" items).
 
-Also done on 2026-10-12 (all merged except the last one): backend housekeeping now runs from the 5-minute uptime ping
-(`RUN_MAINTENANCE_ON_REQUEST=true` on Render), customer emails for every order change and return step, owner Telegram
-alert for each new order and low stock (Bookly Alerts bot; live test received), frontend CI `actions/setup-node` pinned to
-the v7.1.0 commit (branch `chore/setup-node-v7`, CI green, waiting for the owner to merge).
+## State on 2026-10-13
+- Phase 1 (sign-in) is done and live, including the free Bookly Telegram bot.
+- Phase 2 is mostly done: nightly encrypted backup + restore drill + failure alert, uptime monitors, `/health` with the
+  Telegram bot, preview CORS, Sentry source maps, quiet tests, backend dependency updates, rate limits (owner's "looser"
+  set) + password security email, Telegram webhook self-repair.
+- Merged on 2026-10-12/13: customer emails for every order and return step, owner Telegram alerts (new order, low stock,
+  1-2 star review), welcome email, dashboard numbers with KHR/comparison/top categories, better search (author, series,
+  category, as you type; old backend PR #10 closed), invoice and packing slip (print one or up to 50 at once; customers
+  print their own invoice).
 
-## Done since 2026-10-12
-Merged: order and return emails, owner Telegram alert, setup-node pin, Telegram webhook self-repair (address from `APP_URL`), dashboard numbers (backend) and dashboard comparison/KHR/top categories (frontend). `.env.production` now points at the live Render API (it pointed at the old wasmer API; Vercel's own setting hid the problem).
-Also merged on 2026-10-13: rate limits (owner's "looser" set, coupon lock after 5 unknown codes, webhook exempt with its secret) + password changed/reset security email; welcome email on first verification; owner Telegram alert for 1-2 star reviews; plans/audits docs.
+## Now: waiting for the owner's merge
+Backend + frontend `fix/returned-order-documents`: a fully returned order's invoice no longer says "Collect on delivery"
+(its payment is `refunded`); the invoice shows a "Returned · refunded" stamp. Same branch (frontend) adds the known
+limits checklist to the roadmap and refreshes this file.
 
-## Now (2026-10-13): invoice and packing slip, waiting for the owner's merge
-Better search is merged (backend + frontend `feature/catalog-name-search`; PR #10 closed).
-Backend + frontend `feature/order-documents`: printable invoice and packing slip (one A4 page per order), print up to 50 at once from the orders list, customers print their own invoice. Owner decisions 2026-10-13: print page (no PDF library), order number = invoice number (no migration), USD + KHR at the rate in force when the order was placed; included: print many at once and the customer invoice (QR code not wanted for now).
-
-## Next: the owner picks one from this backlog
-Admin orders: bulk status changes · dashboard custom date range · staff Telegram group for new orders · data retention (old carts/audit log/cache; owner chooses the windows) · exchange-rate refresh · missed-backup check · Khmer language · delivery fees per province · SEO/pre-render · custom domain + shop email (SPF/DKIM/DMARC) · E2E tests · security review · redesign last.
+## Next: the owner picks one
+Recommended order: (1) bulk status changes on the orders list (finishes the orders item), (2) order lines keep the book
+title/format at purchase time (needs a migration, ask first), (3) dashboard custom date range, (4) staff Telegram group.
+Other backlog: data retention · exchange-rate refresh · missed-backup check · Khmer language · delivery fees per
+province · SEO/pre-render · custom domain + shop email · E2E tests · security review · redesign last.
 
 ## Still open in Phase 2, in this order
-1. **Frontend dependency updates**: a plain `npm update` rewrote the whole lockfile and broke `npm ci` in CI; do updates with the CI's npm (10.9.9) and verify with `npm ci`, or one package at a time; majors still to decide are listed in 'Major upgrades to decide'.
-2. **Raise the minimum PHP to 8.4**: production already runs 8.4, to allow Symfony 8 / PHPUnit 13; then remove config.platform.php 8.3.0.
-3. **Remaining chores**:
-   - Run the Tests workflow on pushes to `chore/**` and `docs/**` branches too (backend `.github/workflows/tests.yml` only runs on `main`, `feature/**`, `fix/**` and pull requests).
-   - Vitest 5 (`@vitest/mocker` advisory).
-4. **Missed-backup check**: postponed by the owner on 2026-10-10 (options discussed: free outside check-in service such as Healthchecks.io, or a second GitHub workflow checking artifact age).
-Then **Phase 3** (admin dashboard, delete security, staff Telegram group). Customer Telegram receipts are Phase 4 (decisions open, see ROADMAP).
+1. **Frontend dependency updates**: a plain `npm update` rewrote the whole lockfile and broke `npm ci` in CI; update with the CI's npm (10.9.9) and verify with `npm ci`, or one package at a time.
+2. **Raise the minimum PHP to 8.4** (production runs 8.4) to allow Symfony 8 / PHPUnit 13; then remove `config.platform.php` 8.3.0.
+3. **Chores**: run the backend Tests workflow on `chore/**` and `docs/**` pushes too; Vitest 5 (`@vitest/mocker` advisory).
+4. **Missed-backup check** (postponed 2026-10-10): an outside check-in service such as Healthchecks.io, or a workflow checking the newest artifact's age.
 
-## Unattended runs (what worked)
-Long runs use one branch per stage, a clean `main` start, a database guard (tests must never reach Neon), a private run log in `.git/RUN_LOG.md`, a hard rule 'STOP on any major version', and the reviewer (Claude) re-verifies every claim (versions with ls-remote/lock diffs, CI on the exact PHP/Node versions, doc claims against code). Lessons learned: the first backend dependency run wrongly reported 'no majors', and the frontend lockfile broke CI.
-
-## How the three of us work (project manager + coding agent + owner)
-- Claude is the project manager and reviewer: reads the real diffs on GitHub, writes the next prompt, never merges.
-- A coding agent writes ONE small task per fresh chat. Codex is deactivated; the owner uses **Antigravity (Local, folder
-  `bookly_backend_v2` or `bookly_frontend`, planning mode, terminal asks first)**. Model: Claude Opus 4.6 (Thinking), or Sonnet 4.6, when
-  credits are out Gemini 3.8 Flash only for finishing/checking. Mark every prompt **[default]** or **[strong]** (strong for money, sign-in, security, data).
-- One task at a time, never both repos at once. Before each task: `git checkout main && git pull origin main` (backend also `composer install`,
-  frontend `npm ci`). Check the folder name before pasting a prompt. Prompts start with the briefing + hard rules (see the previous session's
-  briefing: only that task, no migrations/secrets/merge/PR, commit as danishsary, no AI names, tests + lint before push, WORKLOG entry,
-  push the branch, print `=== NOTE FOR CLAUDE ===`).
-- The owner pastes the note; Claude checks the branch (diff + CI) before telling the owner to merge. Owner steps are click-by-click, one
-  short step at a time; secrets are never pasted in chat.
+## How we work
+- The assistant is planner, reviewer and hands-on builder: reads the docs first, asks the owner before any design
+  decision (options with a recommendation first), builds one task per branch in each repo, verifies, pushes, checks CI,
+  then gives compare links (backend first). The owner merges.
+- Before each task: `git fetch origin` and branch from fresh `origin/main`. Human-style branch names and commit messages,
+  author `danishsary <187593185+danishsary8@users.noreply.github.com>`, no tool names anywhere, no co-author trailers.
+- Verify before every push: backend `php artisan test` + `vendor/bin/pint --test` (local throwaway Postgres only);
+  frontend `npm run lint`, `npm run typecheck`, `npx vitest run`, `npm run build`, and a real browser pass (Playwright,
+  Chromium at `/opt/pw-browsers/chromium`) for UI changes. New tests must fail without the change. Say "not yet
+  verified" for anything not checked.
+- Log every finished task in `docs/WORKLOG.md` (both repos as relevant), tick `docs/ROADMAP.md`, update this file.
 
 ## Local testing
-Demo staff `admin@bookly.test` / `staff@bookly.test` (2FA on); customer `demo@bookly.test`. API:
-`QUEUE_CONNECTION=sync php artisan serve --port=8000`; website: `VITE_API_BASE_URL=http://localhost:8000/api/v1 npx vite`.
-Telegram bot without a real one: start the API with `TELEGRAM_BOT_TOKEN=123:fake TELEGRAM_BOT_USERNAME=BooklyBot`, then
-play Telegram by posting `{"message":{"chat":{"id":1,"type":"private"},"from":{"id":1},"text":"/start <code>"}}` and then
-`…"contact":{"phone_number":"85512345678","user_id":1}` to `/api/v1/telegram/webhook` with the header
-`X-Telegram-Bot-Api-Secret-Token` (= `app(App\Services\Telegram\TelegramBot::class)->webhookSecret()` in tinker). E2E: README → Testing.
+- Postgres 16 often stops between turns: `service postgresql start`. DBs `bookshop_v2_test` (tests) and `bookshop_v2`
+  (local runs), user/password `bookshop`/`bookshop`; a fresh container needs the role and both DBs created first.
+- Backend: `COMPOSER_DISCARD_CHANGES=true composer install --no-interaction`; demo data: `php artisan migrate:fresh --seed`
+  then `php artisan db:seed --class=DemoSeeder` (20 books, 13 orders in every status, USD→KHR 4100).
+- Demo staff `admin@bookly.test` / `staff@bookly.test` and customer `demo@bookly.test`. The demo staff come **without**
+  2FA, and the staff area requires it: for a local browser check set `two_factor_enabled` (and a secret) on the local DB.
+- API: `QUEUE_CONNECTION=sync php artisan serve --port=8000`; website: `VITE_API_BASE_URL=http://localhost:8000/api/v1 npx vite`.
+  Sign in a browser check by putting `{token, expiresAt: null, user}` in localStorage `bookly.session.staff` /
+  `bookly.session.customer` (token from tinker `createToken`, user from `/staff/auth/me` or `/me`).
+- Stop servers by PID only (never kill by a command-line pattern: it can hit the shell that runs it).
+- Telegram bot without a real one: start the API with `TELEGRAM_BOT_TOKEN=123:fake TELEGRAM_BOT_USERNAME=BooklyBot`, then
+  post `{"message":{"chat":{"id":1,"type":"private"},"from":{"id":1},"text":"/start <code>"}}` and then
+  `…"contact":{"phone_number":"85512345678","user_id":1}` to `/api/v1/telegram/webhook` with the header
+  `X-Telegram-Bot-Api-Secret-Token` (= `app(App\Services\Telegram\TelegramBot::class)->webhookSecret()` in tinker).
+- The live API can't be reached from the sandbox; ask the owner for a screenshot of `/api/v1/health` after a deploy.
 
 ## Paste this into the next session
 ```
-Project: Bookly (online bookshop, Cambodia; my portfolio/CV project, production grade). Frontend: React 19 + TS + Vite + Tailwind 4, repo danishsary8/bookly_frontend, live https://bookly-frontend-five.vercel.app. Backend: Laravel API v2, repo danishsary8/bookly_backend_v2, live https://bookly-api-zasc.onrender.com/api/v1 (Render free + Neon Postgres; email via Brevo SMTP; Sentry; free Bookly Telegram bot for phone sign-up/sign-in; nightly encrypted DB backup via GitHub Actions; UptimeRobot monitors).
-Read first: both CLAUDE.md files, frontend README.md, docs/ROADMAP.md, docs/NEXT_STEP.md (it explains how we work), docs/WORKLOG.md, design-system/bookly/MASTER.md; backend docs/WORKLOG.md, docs/API.md, docs/DEPLOYMENT.md.
-Status: Phase 1 done. Phase 2 mostly done (backups, restore drill, backup failure alert, alert error reason in logs, uptime email alerts, bot health in /health, preview CORS, Sentry release tag & source maps verified, quiet tests, DEPLOYMENT.md restore steps fix, backend NEXT_STEP pointer restored, backend dependency updates, rate-limit review). Open: apply rate-limit changes from backend docs/RATE_LIMITS.md, investigate Telegram webhook 'not set' recurrence, frontend dependency updates (via CI npm 10.9.9), raise minimum PHP to 8.4, remaining chores (Tests workflow on chore/** and docs/** pushes, backend NEXT_STEP cleanup, Node 24 GitHub Actions bumps, Vitest 5), postponed missed-backup check. Then Phase 3 (admin dashboard). Customer Telegram receipts are Phase 4 (decisions open).
-Your role: project manager + context/prompt engineer. I (owner) use Antigravity (Local) as the coding agent, one task per fresh chat, never both repos at once. For each task: check the real branch diff and CI on GitHub before telling me to merge; write the prompt for the agent (mark [default] or [strong]); give my own steps click by click, one short step at a time; ask me with the question tool (recommended option first) when something is unclear. I paste the agent's "NOTE FOR CLAUDE" blocks to you.
-Rules: important things first, follow ROADMAP order, tick items, never drop one unless I say so, add new gaps to the right phase. Small commits, human-style messages, no AI/tool names in git, commit as "danishsary" <187593185+danishsary8@users.noreply.github.com>, no Co-Authored-By or session trailers. One branch per piece of work; I merge — give me compare links, backend first. Never edit old migrations; ask before new ones. Don't change existing feature code beyond the plan without asking. No payment-provider work. Never ask me to paste secrets. Verify before every push: frontend lint, npx tsc -b, npx vitest run, build, Playwright browser pass (Chromium at /opt/pw-browsers/chromium); backend php artisan test + vendor/bin/pint. Update docs/WORKLOG.md, docs/ROADMAP.md, docs/NEXT_STEP.md. Short, step-by-step answers (I'm a student learning API development); end with "what was done / what's next" and the next prompt in chat.
-Task: start with the first Phase 3 slice, the dashboard numbers, following backend docs/ADMIN_DASHBOARD_PLAN.md (backend task first, then the frontend page); first ask me to approve the rate-limit changes if I want them done earlier.
+You are the planner, reviewer and hands-on builder for my Bookly project (I'm the owner, a student learning API development). Repos (attached): backend danishsary8/bookly_backend_v2 (Laravel 13, PHP 8.3+, PostgreSQL/Neon, REST /api/v1, live https://bookly-api-zasc.onrender.com), frontend danishsary8/bookly_frontend (React 19 + Vite + TypeScript + Tailwind 4, live on Vercel).
+Read first, in order: the instruction file at each repo root; backend docs/PROJECT_CONTEXT.md, docs/WORKLOG.md (last ~15 entries), docs/API.md as needed; frontend docs/ROADMAP.md, docs/NEXT_STEP.md (state, how we work, local testing), docs/WORKLOG.md (last ~10 entries), design-system/bookly/MASTER.md. Then give me a SHORT status (max 10 lines) and wait for my task.
+How to talk to me: short, simple, step by step; options with a recommendation first (question tool); ask before any design decision. End replies with "What was done / Your steps / What's next"; my steps as exact clicks with full links (compare links backend first). Task checklist for multi-step work. At ~70% context write a handoff into the docs and give me a short prompt for a fresh chat.
+Hard rules: never push to main, merge or open PRs unless I ask; one branch per task, human-style names and messages; commit as danishsary <187593185+danishsary8@users.noreply.github.com> with git -c; no AI/tool names anywhere, no co-author or session trailers. Never ask for or store secrets. Never edit old migrations; ask before a new one. No payment-provider work. Don't change features beyond the task without asking. Backend tests only on local throwaway Postgres. Verify before every push (backend tests + pint; frontend lint, typecheck, vitest, build, Playwright browser check for UI); prove new tests fail without the change; check CI green before saying ready; say "not yet verified" otherwise. Log every task in docs/WORKLOG.md and keep ROADMAP/NEXT_STEP current, including small limitations as checklist items.
 ```
