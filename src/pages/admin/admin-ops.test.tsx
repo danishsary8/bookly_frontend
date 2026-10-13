@@ -144,7 +144,7 @@ describe("orders", () => {
     app("/admin/orders");
     await userEvent.click(await screen.findByRole("checkbox", { name: "Select order ORD-9" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "Select order ORD-7" }));
-    const bar = screen.getByRole("region", { name: "Print selected orders" });
+    const bar = screen.getByRole("region", { name: "Selected orders" });
     expect(bar).toHaveTextContent("2 selected");
     expect(within(bar).getByRole("link", { name: "Print packing slips" })).toHaveAttribute("href", "/admin/print?doc=packing-slip&ids=9,7&autoprint=1");
     expect(within(bar).getByRole("link", { name: "Print invoices" })).toHaveAttribute("href", "/admin/print?doc=invoice&ids=9,7&autoprint=1");
@@ -154,7 +154,56 @@ describe("orders", () => {
     expect(bar).toHaveTextContent("3 selected");
     expect(within(bar).getByRole("link", { name: "Print packing slips" })).toHaveAttribute("href", "/admin/print?doc=packing-slip&ids=9,7,8&autoprint=1");
     await userEvent.click(within(bar).getByRole("button", { name: "Clear" }));
-    expect(screen.queryByRole("region", { name: "Print selected orders" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Selected orders" })).not.toBeInTheDocument();
+  });
+
+  it("changes the status of the ticked orders together and unticks them", async () => {
+    signIn(staff);
+    const other = { ...order, id: 8, order_number: "ORD-8" } as StaffOrder;
+    vi.spyOn(opsApi, "orders").mockResolvedValue(page([order, other]));
+    const bulk = vi.spyOn(opsApi, "bulkOrderStatus").mockResolvedValue({
+      status: "shipped",
+      updated: [
+        { id: 8, order_number: "ORD-8", status: "shipped" },
+        { id: 7, order_number: "ORD-7", status: "shipped" },
+      ],
+      failed: [],
+    });
+    app("/admin/orders");
+    await userEvent.click(await screen.findByRole("checkbox", { name: "Select order ORD-8" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select order ORD-7" }));
+    await userEvent.click(within(screen.getByRole("region", { name: "Selected orders" })).getByRole("button", { name: "Change status" }));
+    const dialog = screen.getByRole("dialog", { name: "Change status: 2 orders" });
+    expect(within(dialog).getAllByRole("radio").map((r) => r.getAttribute("aria-label"))).toEqual(["Start processing", "Mark as shipped", "Mark as delivered"]);
+    await userEvent.click(within(dialog).getByRole("radio", { name: "Mark as shipped" }));
+    await userEvent.type(within(dialog).getByLabelText(/Note for each timeline/), "Via J&T");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Mark as shipped: 2 orders" }));
+    await waitFor(() => expect(bulk).toHaveBeenCalledWith([8, 7], "shipped", "Via J&T"));
+    expect(await screen.findByText("2 orders updated")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.queryByRole("region", { name: "Selected orders" })).not.toBeInTheDocument();
+  });
+
+  it("lists the orders that could not move and keeps them ticked", async () => {
+    signIn(staff);
+    const other = { ...order, id: 8, order_number: "ORD-8", status: "pending" } as StaffOrder;
+    vi.spyOn(opsApi, "orders").mockResolvedValue(page([order, other]));
+    vi.spyOn(opsApi, "bulkOrderStatus").mockResolvedValue({
+      status: "shipped",
+      updated: [{ id: 7, order_number: "ORD-7", status: "shipped" }],
+      failed: [{ id: 8, order_number: "ORD-8", reason: "An order cannot move from pending to shipped." }],
+    });
+    app("/admin/orders");
+    await userEvent.click(await screen.findByRole("checkbox", { name: "Select every order on this page" }));
+    await userEvent.click(screen.getByRole("button", { name: "Change status" }));
+    await userEvent.click(within(screen.getByRole("dialog")).getByRole("radio", { name: "Mark as shipped" }));
+    await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Mark as shipped: 2 orders" }));
+    const result = await screen.findByRole("dialog", { name: "1 order updated" });
+    expect(within(result).getByRole("list", { name: "Not changed" })).toHaveTextContent("ORD-8An order cannot move from pending to shipped.");
+    await userEvent.click(within(result).getByRole("button", { name: "Done" }));
+    expect(screen.getByRole("region", { name: "Selected orders" })).toHaveTextContent("1 selected");
+    expect(screen.getByRole("checkbox", { name: "Select order ORD-8" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Select order ORD-7" })).not.toBeChecked();
   });
 
   it("shows the CSV export to admins only", async () => {

@@ -13,13 +13,13 @@
   print their own invoice).
 
 ## Now: waiting for the owner's merge
-Backend + frontend `fix/returned-order-documents`: a fully returned order's invoice no longer says "Collect on delivery"
-(its payment is `refunded`); the invoice shows a "Returned · refunded" stamp. Same branch (frontend) adds the known
-limits checklist to the roadmap and refreshes this file.
+Backend + frontend `feature/bulk-order-status`: change the status of up to 50 ticked orders at once (processing, shipped,
+delivered; cancel stays one at a time), each order on its own with the usual email; the ones that cannot move are listed
+with the reason and stay ticked. (Merged before: `fix/returned-order-documents`.)
 
 ## Next: the owner picks one
-Recommended order: (1) bulk status changes on the orders list (finishes the orders item), (2) order lines keep the book
-title/format at purchase time (needs a migration, ask first), (3) dashboard custom date range, (4) staff Telegram group.
+Recommended order: (1) order lines keep the book
+title/format at purchase time (needs a migration, ask first), (2) dashboard custom date range, (3) staff Telegram group, (4) delivery notes on orders.
 Other backlog: data retention · exchange-rate refresh · missed-backup check · Khmer language · delivery fees per
 province · SEO/pre-render · custom domain + shop email · E2E tests · security review · redesign last.
 
