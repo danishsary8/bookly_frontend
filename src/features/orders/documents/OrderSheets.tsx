@@ -170,7 +170,7 @@ export function InvoiceSheet({ doc }: { doc: Doc }) {
             <span className="block">{paymentLabel[doc.payment_method ?? ""] ?? doc.payment_method}</span>
             {isPaid(doc) && doc.delivered_at ? <span className="block text-sm text-muted-foreground">Paid on delivery, {sheetDate(doc.delivered_at)}</span> : null}
           </Block>
-          {cancelled ? <Stamp>Cancelled</Stamp> : isPaid(doc) ? <Stamp>Paid</Stamp> : <CollectLine doc={doc} />}
+          {cancelled ? <Stamp>Cancelled</Stamp> : doc.status === "returned" ? <Stamp>Returned · refunded</Stamp> : isPaid(doc) ? <Stamp>Paid</Stamp> : <CollectLine doc={doc} />}
         </div>
         <div className="grid min-w-64 justify-items-end gap-1">
         <dl className="grid w-full grid-cols-[1fr_auto] gap-y-1 tabular-nums [&>dd]:pl-6">

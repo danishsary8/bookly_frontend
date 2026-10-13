@@ -44,12 +44,14 @@ every day, then growth, then looks.
 - [x] Show Telegram's reason in the backup alert step: `curl --fail` hides the reply, so a failure only says 'error 400'. Print Telegram's `description` (it is not secret) so the cause (e.g. 'chat not found') is visible in the log (backend chore/backup-alert-reason, merged; the test_alert run was green afterwards).
 - [x] Backend docs/NEXT_STEP.md lost its one-line pointer to the frontend `docs/ROADMAP.md` and `docs/NEXT_STEP.md`; put it back (same backend branch).
 
+- [ ] Small chores found 2026-10-13: clear the 5 old frontend lint warnings (`Carousel.tsx`, `form/Field.tsx`, `ui/badge.tsx`, `ui/button.tsx`, `ThemeContext.tsx` (an unused eslint-disable)); the demo seeder creates staff without 2FA although the staff area needs it (seed them with 2FA, or keep the note in NEXT_STEP → Local testing); the generated `src/api/schema.d.ts` had drifted from the API spec (regenerated in `feature/order-documents`): regenerate it in every task that changes `openapi.yaml`.
+
 ## Phase 3 · Admin dashboard, production grade (real data)
 - [ ] Dashboard: revenue, orders and average order for today / 7 / 30 days / custom range, compared with the period before; orders by status; top books and categories; low stock; new verified customers; charts.
   - Done 2026-10-13: backend `feature/dashboard-numbers` (merged) adds KHR, previous-period comparison and top categories; frontend `feature/dashboard-comparison` shows them (KHR under USD, green/red change arrows, "New" when the period before had nothing, Top categories panel). Still open in this item: a custom date range picker on the page and caching/indexes if it gets slow.
   - Plan written: backend docs/ADMIN_DASHBOARD_PLAN.md (branch docs/admin-dashboard-plan). Owner decisions 2026-10-12: revenue counts when an order is delivered (cash basis); refunds are subtracted on the refund date and the shipping fee is kept; money is shown as USD with KHR beside it; money numbers are admin only. Note: a first dashboard already exists (GET /staff/dashboard/summary and /sales, DashboardService); the work is to enhance it (previous-period comparison, KHR, charts).
 - [ ] Orders: full workflow (confirm → packed → shipped → delivered / cancelled) with a timeline, print **invoice and packing slip**, delivery notes, bulk status changes, filters and CSV export.
-  - Done 2026-10-13 (backend + frontend `feature/order-documents`): printable **invoice and packing slip** (A4, browser print / Save as PDF; order number = invoice number; USD + KHR at the order-date rate), print many at once from the orders list (tick up to 50), customers print their own invoice from My orders. Still open in this item: bulk status changes, delivery notes, a "packed" step.
+  - Done 2026-10-13 (backend + frontend `feature/order-documents`): printable **invoice and packing slip** (A4, browser print / Save as PDF; order number = invoice number; USD + KHR at the order-date rate), print many at once from the orders list (tick up to 50), customers print their own invoice from My orders. Fix 2026-10-13 (`fix/returned-order-documents`, both repos): a fully returned order no longer says "Collect on delivery"; it shows a "Returned · refunded" stamp. Still open in this item: bulk status changes, delivery notes, a "packed" step (a new order status needs a migration: ask first).
 - [ ] Stock: stock history per book (who changed what), low-stock threshold per book, restock entries, "out of stock" handling.
 - [ ] Books: CSV import/export, bulk price/stock/category edits, image upload checks, drafts and scheduled publishing.
 - [ ] Customers: notes, tags, lifetime value, order history, deactivate/reactivate, resend verification.
@@ -58,6 +60,15 @@ every day, then growth, then looks.
 - [ ] **Strict delete security** (owner's rule) for anything that deletes: admin only; re-enter password **and** a 2FA code; type the item's name to confirm; soft delete into a **Trash** with 30-day restore; full audit entry with before/after values; a Telegram message to the owner on every delete.
 - [ ] Telegram notice to the owner **and staff** (a staff Telegram group, owner 2026-10-08) for each new order, with the order details and a link to it in the admin; also for low stock. The Bookly bot can post there (add it to the group). The Bookly Alerts bot (Phase 2) can be reused for the staff group.
   - Owner part done 2026-10-12 (backend `feature/new-order-telegram-alert`): new order and low stock go to the owner via the Bookly Alerts bot. Still open: the staff group.
+
+- [ ] Invoice and packing slip: known limits (2026-10-13)
+  - [ ] Order lines keep only the price at purchase time, not the title/format/SKU: renaming a book or changing a SKU changes its old invoices. Fix: snapshot columns on `order_items` (new migration: ask first).
+  - [ ] The heading says "Invoice" even when the order is paid; option: say "Receipt" once paid (owner to decide).
+  - [ ] Riel is shown only for the total (and the amount to collect), not per line; no riel at all when no exchange rate existed when the order was placed.
+  - [ ] Shop details on the sheets come from `src/content/shop.ts` (temporary personal email, "Phnom Penh, Cambodia" without a street address); update with the shop email and domain (Phase 5).
+  - [ ] Batch print reads the exchange rate once per order (at most 50 small queries); cache it per batch if printing gets slow.
+  - [ ] Not tested yet: a real printer (only Chromium's Save as PDF), Safari and Firefox print; print one slip and one invoice on the shop's printer.
+  - [ ] Packing slips can be printed for delivered or returned orders too (harmless; hide the button there if staff find it confusing).
 
 ## Phase 4 · Shop completeness
 - [x] **Better search** (2026-10-13, backend + frontend `feature/catalog-name-search`; replaces backend PR #10): find books by title, description, author, series or category name, every word as a prefix, results while typing ("conan doy", "austen emma"); author names bold in the suggestions. One migration, indexes only.
@@ -70,6 +81,13 @@ every day, then growth, then looks.
 - [ ] "Tell me when it's back" for out-of-stock books; recently viewed; "customers also bought".
 - [ ] Newsletter sign-up (with unsubscribe) for new arrivals.
 
+- [ ] Search: known limits (2026-10-13)
+  - [ ] ISBN and SKU are not searchable in the shop search (customers may type an ISBN).
+  - [ ] Half-typed words match unstemmed only in titles; in descriptions and names a half-typed word can briefly match nothing ("runni" vs "run").
+  - [ ] Khmer text has no spaces, so it matches only from the start of a phrase (handle with the Khmer language item).
+  - [ ] The search limit is 60/min per IP for visitors who are not signed in; many phones behind one mobile-network IP share it: watch 429s in Sentry.
+  - [ ] Not browser-checked: search in dark mode and the mobile-menu search field (same component).
+
 ## Phase 5 · Found on Google, fast, legal
 - [ ] Pre-rendered HTML for public pages (phone performance above 90, link previews per book).
 - [ ] Custom domain + shop email (SPF, DKIM, DMARC so codes don't land in spam); update Google, Facebook, Turnstile and CORS to the new domain.
@@ -81,6 +99,8 @@ every day, then growth, then looks.
 - [ ] End-to-end tests in CI for the money paths: sign-up → verify → cart → checkout → admin ships → return.
 - [ ] Security review of both repos (OWASP list, file uploads, staff routes, secrets).
 - [ ] Load test the busiest pages.
+
+- [ ] Checks never done in a real browser so far (unit tests only): dashboard Today/30 days switch on real data and dark mode; the real Telegram app and Facebook sign-in (needs real accounts).
 
 ## Phase 7 · Redesign (last)
 - [ ] Full frontend redesign, starting from the landing page, then every page; keep all tests passing.
