@@ -73,7 +73,8 @@ describe("invoice", () => {
 
   it("stamps a paid order and shows refunds; no riel line without a rate", () => {
     render(<InvoiceSheet doc={doc({ status: "delivered", payment_status: "succeeded", delivered_at: "2026-10-05T03:00:00Z", amount_to_collect_usd: "0.00", refunded_usd: "8.00", khr: null })} />);
-    const sheet = screen.getByRole("article");
+    const sheet = screen.getByRole("article", { name: "Receipt ORD-7" });
+    expect(within(sheet).getByRole("heading", { name: "Receipt" })).toBeInTheDocument();
     expect(sheet).toHaveTextContent("Paid on delivery, 5 Oct 2026");
     expect(within(sheet).getByText("Paid")).toBeInTheDocument();
     expect(sheet).toHaveTextContent("Refunded−$8.00");
@@ -85,6 +86,7 @@ describe("invoice", () => {
     render(<InvoiceSheet doc={doc({ status: "returned", payment_status: "refunded", amount_to_collect_usd: "0.00", refunded_usd: "29.40" })} />);
     const sheet = screen.getByRole("article");
     expect(within(sheet).getByText("Returned · refunded")).toBeInTheDocument();
+    expect(within(sheet).getByRole("heading", { name: "Invoice" })).toBeInTheDocument(); // the stamp says what happened
     expect(sheet).toHaveTextContent("Refunded−$29.40");
     expect(sheet).not.toHaveTextContent("Collect on delivery");
   });

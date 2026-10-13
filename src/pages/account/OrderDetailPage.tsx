@@ -90,7 +90,7 @@ export default function OrderDetailPage() {
           <div className="flex flex-wrap gap-3">
             {o.status !== "cancelled" ? (
               <Link to={`/account/orders/${o.id}/invoice?autoprint=1`} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline" })}>
-                <FileText aria-hidden="true" /> Print invoice
+                <FileText aria-hidden="true" /> {o.payment_status === "succeeded" && o.status === "delivered" ? "Print receipt" : "Print invoice"}
               </Link>
             ) : null}
             {o.can_cancel ? (

@@ -6,6 +6,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { InvoiceSheet } from "@/features/orders/documents/OrderSheets";
 import { PrintFrame } from "@/features/orders/documents/PrintFrame";
+import { invoiceTitle } from "@/features/orders/documents/invoiceTitle";
 
 /* /account/orders/:id/invoice: the customer's own invoice, ready to print or save as PDF. */
 export default function InvoicePrintPage() {
@@ -16,7 +17,7 @@ export default function InvoicePrintPage() {
   const error = invoice.isError ? ApiError.from(invoice.error) : null;
 
   return (
-    <PrintFrame title={doc ? `Invoice ${doc.order_number}` : "Invoice"} backTo={valid ? `/account/orders/${id}` : "/account/orders"} backLabel="Back to the order" ready={!!doc}>
+    <PrintFrame title={doc ? `${invoiceTitle(doc)} ${doc.order_number}` : "Invoice"} backTo={valid ? `/account/orders/${id}` : "/account/orders"} backLabel="Back to the order" ready={!!doc}>
       {!valid || error?.kind === "not_found" ? (
         <p className="paper-sheet paper">We couldn't find this order.</p>
       ) : error?.kind === "validation" ? (

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { OrderDocument } from "@/api/types";
 import { contact, policy, shop } from "@/content/shop";
 import { formatLabel } from "@/lib/catalog";
+import { invoiceTitle } from "./invoiceTitle";
 import { cn } from "@/lib/utils";
 import { formatKhr, formatUsd } from "@/stores/currency";
 
@@ -124,8 +125,8 @@ export function InvoiceSheet({ doc }: { doc: Doc }) {
   const cancelled = doc.status === "cancelled";
 
   return (
-    <Sheet label={`Invoice ${doc.order_number}`}>
-      <Heading title="Invoice" doc={doc} />
+    <Sheet label={`${invoiceTitle(doc)} ${doc.order_number}`}>
+      <Heading title={invoiceTitle(doc)} doc={doc} />
 
       <div className="grid grid-cols-2 gap-6">
         <Block title="Billed to">

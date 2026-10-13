@@ -156,6 +156,7 @@ describe("OrderDetailPage", () => {
     expect(await screen.findByRole("link", { name: /Request a return/ })).toHaveAttribute("href", "/account/orders/8/return");
     expect(screen.getAllByRole("link", { name: "Review this book" })[0]).toHaveAttribute("href", "/books/6#your-review");
     expect(screen.getByText("Total paid")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Print receipt" })).toHaveAttribute("href", "/account/orders/8/invoice?autoprint=1");
   });
 
   it("explains why a delivered order can't be returned", async () => {
