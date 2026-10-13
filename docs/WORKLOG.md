@@ -358,3 +358,5 @@ Owner's choices: no typing (one tap), "Continue with Telegram" on sign-in, Faceb
 - [x] Phase 3 updates: added dashboard plan decisions (`docs/ADMIN_DASHBOARD_PLAN.md`): delivered date cash basis, refunds deducted on refund date keeping shipping fee, USD with KHR, admin-only money numbers, enhancing existing staff dashboard.
 - [x] Next steps & process: updated `docs/NEXT_STEP.md` status, open Phase 2 items, next session paste block for Phase 3 dashboard numbers, and added unattended run guidelines.
 - Docs only; build/tests not run.
+
+- [x] CI setup-node pin (2026-10-12, branch `chore/setup-node-v7`): `.github/workflows/ci.yml` now uses `actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0` (was the floating tag `@v5`). Checked with `git ls-remote` (the v7.1.0 tag points at that commit) and its `action.yml` (`runs.using: node24`). Fresh branch from main replacing the conflicting `chore/pin-setup-node`; `chore/deps-and-setup-node` stays unmerged (its lockfile rewrite broke `npm ci`). ROADMAP chores line updated. Verified locally: `npx -y npm@10.9.9 ci`, lint, typecheck, tests, build.
