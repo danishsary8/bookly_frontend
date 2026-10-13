@@ -12,14 +12,28 @@
   category, as you type; old backend PR #10 closed), invoice and packing slip (print one or up to 50 at once; customers
   print their own invoice).
 
-## Now: waiting for the owner's merge
-Backend `feature/order-line-snapshot` (+ this docs branch): order lines keep the title, format, SKU, ISBN and authors they
-were bought with (new migration `2026_10_13_200001_add_book_details_to_order_items`, approved; fills old lines once).
-Merged before: bulk order status, returned-order invoice fix.
+## Now: waiting for the owner's merge (built 2026-10-13 while the owner was away)
+| Branch | Repo | What |
+| --- | --- | --- |
+| `feature/staff-order-alerts` | backend | New orders + low stock to a staff Telegram group (`OPS_STAFF_CHAT_ID`), lines + Open link (`SHOP_URL`) |
+| `feature/dashboard-date-range` | frontend | Dashboard Custom From/To days |
+| `feature/receipt-heading` | frontend | "Receipt" once paid |
+| `docs/away-batch` | frontend | These docs |
+Defaults chosen without the owner (change any): staff group gets new orders + low stock, not reviews; up to 10 book lines
+per alert; the Open link only when `SHOP_URL` is set; custom range max 366 days (the API's limit), end day not after
+today; "Receipt" only when paid and not returned/cancelled.
+
+## Delivery notes: plan, waiting for the owner's answers (needs a migration)
+Goal: the customer can write a note at checkout ("call before delivery", "leave at the guard") that staff see on the
+order, the packing slip and the alert. Plan: one migration adding a nullable `orders.delivery_note` (text, max 300),
+`note` field on `POST /checkout` (and preview), shown on the admin order page, packing slip ("Note from the customer"),
+invoice (no), new-order Telegram alert (yes), customer order page (yes, read-only). Questions: (1) OK to add the column?
+(2) 300 characters enough? (3) Editable by the customer after ordering (while pending) or fixed at checkout?
+(4) Should staff also have a private note per order (not seen by the customer) in the same migration?
 
 ## Next: the owner picks one
-Recommended order: (1) dashboard custom date range, (2) staff Telegram group for new orders, (3) delivery notes on
-orders, (4) "Receipt" heading on the invoice once paid.
+Recommended order: (1) delivery notes (answer the four questions above), (2) Phase 2 chores: frontend dependency
+updates with npm 10.9.9 and the 5 old lint warnings, (3) missed-backup check, (4) Khmer language.
 Other backlog: data retention · exchange-rate refresh · missed-backup check · Khmer language · delivery fees per
 province · SEO/pre-render · custom domain + shop email · E2E tests · security review · redesign last.
 
