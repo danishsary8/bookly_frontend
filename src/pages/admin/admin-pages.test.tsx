@@ -202,6 +202,51 @@ describe("dashboard", () => {
     await waitFor(() => expect(summaryCall).toHaveBeenLastCalledWith("7d"));
   });
 
+  it("shows KHR beside USD, the change against the period before, and top categories", async () => {
+    signIn(admin);
+    vi.spyOn(staffApi, "summary").mockResolvedValue({
+      ...summary,
+      revenue: { ...summary.revenue, net_khr: "207050", gross_khr: "227550", refunds_khr: "20500" },
+      average_order_value_khr: "75850",
+      best_sellers: [{ ...summary.best_sellers[0], sales_khr: "90118" }],
+      top_categories: [{ category_id: 1, name: "Mystery", copies_sold: 2, sales_usd: "21.98", sales_khr: "90118" }],
+      comparison: {
+        period: { from: "2026-08-05", to: "2026-09-03", timezone: "Asia/Phnom_Penh" },
+        revenue: { gross_usd: "44.40", refunds_usd: "0.00", net_usd: "44.40" },
+        delivered_orders: 2,
+        average_order_value_usd: "22.20",
+        orders_placed: 5,
+        new_customers: 0,
+        change_percent: { gross_revenue: 25, refunds: 100, net_revenue: 13.74, delivered_orders: 50, average_order_value: -16.67, orders_placed: -20, new_customers: 100 },
+      },
+    });
+    vi.spyOn(staffApi, "sales").mockResolvedValue(days);
+    app("/admin");
+
+    expect(await screen.findByText("$50.50")).toBeInTheDocument();
+    const hero = screen.getByRole("region", { name: "Net revenue" });
+    expect(hero).toHaveTextContent("≈ 207,050");
+    expect(hero).toHaveTextContent("up 13.7% vs 5 Aug – 3 Sept");
+    expect(screen.getByText("Orders placed").parentElement).toHaveTextContent("down 20% vs 5 Aug – 3 Sept");
+    expect(screen.getByText("Average order").parentElement).toHaveTextContent("≈ 75,850");
+    expect(screen.getByText("New customers").parentElement).toHaveTextContent("New vs 5 Aug – 3 Sept");
+    const categories = screen.getByRole("region", { name: "Top categories" });
+    expect(within(categories).getByRole("rowheader", { name: "Mystery" })).toBeInTheDocument();
+    expect(categories).toHaveTextContent("≈ 90,118");
+  });
+
+  it("still works with an API that has no comparison or KHR yet", async () => {
+    signIn(admin);
+    vi.spyOn(staffApi, "summary").mockResolvedValue(summary);
+    vi.spyOn(staffApi, "sales").mockResolvedValue(days);
+    app("/admin");
+
+    expect(await screen.findByText("$50.50")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Net revenue" })).not.toHaveTextContent("≈");
+    expect(screen.queryByText(/vs /)).not.toBeInTheDocument();
+    expect(within(screen.getByRole("region", { name: "Top categories" })).getByText("No categorised sales in this period yet.")).toBeInTheDocument();
+  });
+
   it("reads each day with the arrow keys, and has a table", () => {
     renderWithProviders(<SalesChart days={days} />);
     const chart = screen.getByRole("group", { name: /Net revenue by day/ });
