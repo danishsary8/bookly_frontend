@@ -46,6 +46,7 @@ every day, then growth, then looks.
 
 ## Phase 3 · Admin dashboard, production grade (real data)
 - [ ] Dashboard: revenue, orders and average order for today / 7 / 30 days / custom range, compared with the period before; orders by status; top books and categories; low stock; new verified customers; charts.
+  - Done 2026-10-13: backend `feature/dashboard-numbers` (merged) adds KHR, previous-period comparison and top categories; frontend `feature/dashboard-comparison` shows them (KHR under USD, green/red change arrows, "New" when the period before had nothing, Top categories panel). Still open in this item: a custom date range picker on the page and caching/indexes if it gets slow.
   - Plan written: backend docs/ADMIN_DASHBOARD_PLAN.md (branch docs/admin-dashboard-plan). Owner decisions 2026-10-12: revenue counts when an order is delivered (cash basis); refunds are subtracted on the refund date and the shipping fee is kept; money is shown as USD with KHR beside it; money numbers are admin only. Note: a first dashboard already exists (GET /staff/dashboard/summary and /sales, DashboardService); the work is to enhance it (previous-period comparison, KHR, charts).
 - [ ] Orders: full workflow (confirm → packed → shipped → delivered / cancelled) with a timeline, print **invoice and packing slip**, delivery notes, bulk status changes, filters and CSV export.
 - [ ] Stock: stock history per book (who changed what), low-stock threshold per book, restock entries, "out of stock" handling.

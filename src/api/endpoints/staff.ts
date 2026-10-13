@@ -100,17 +100,44 @@ export interface VariantInput {
 
 export type DashboardPeriod = "today" | "7d" | "30d";
 
-export interface DashboardSummary {
+/** Money pair from the dashboard: KHR is whole riel at the current rate, null until a rate is set. */
+type Khr = string | null;
+
+export interface DashboardRevenue {
+  gross_usd: string;
+  refunds_usd: string;
+  net_usd: string;
+  gross_khr?: Khr;
+  refunds_khr?: Khr;
+  net_khr?: Khr;
+}
+
+/** The same numbers for the period of equal length just before, and the change in percent (API since 2026-10-13). */
+export interface DashboardComparison {
   period: { from: string; to: string; timezone: string };
-  revenue: { gross_usd: string; refunds_usd: string; net_usd: string };
+  revenue: DashboardRevenue;
   delivered_orders: number;
   average_order_value_usd: string;
+  average_order_value_khr?: Khr;
+  orders_placed: number;
+  new_customers: number;
+  change_percent: Record<"gross_revenue" | "refunds" | "net_revenue" | "delivered_orders" | "average_order_value" | "orders_placed" | "new_customers", number>;
+}
+
+export interface DashboardSummary {
+  period: { from: string; to: string; timezone: string };
+  revenue: DashboardRevenue;
+  delivered_orders: number;
+  average_order_value_usd: string;
+  average_order_value_khr?: Khr;
   orders_placed: number;
   orders_by_status: Record<string, number>;
   new_customers: number;
-  best_sellers: Array<{ book_id: number; title: string; copies_sold: number; sales_usd: string }>;
+  best_sellers: Array<{ book_id: number; title: string; copies_sold: number; sales_usd: string; sales_khr?: Khr }>;
+  top_categories?: Array<{ category_id: number; name: string; copies_sold: number; sales_usd: string; sales_khr?: Khr }>;
   open_returns: number;
   low_stock: Array<{ book_variant_id: number; book_id: number; title: string; format: BookFormat; sku: string; stock_quantity: number; low_stock_threshold: number }>;
+  comparison?: DashboardComparison;
 }
 
 export interface DailySales {
@@ -119,6 +146,7 @@ export interface DailySales {
   gross_revenue_usd: string;
   refunds_usd: string;
   net_revenue_usd: string;
+  net_revenue_khr?: Khr;
 }
 
 export interface StaffNotification {
