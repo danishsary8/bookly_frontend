@@ -21,6 +21,11 @@ describe("ApiError.from", () => {
     expect(ApiError.from(httpError(403, { message: "This action is unauthorized." })).kind).toBe("forbidden");
   });
 
+  it("says long waits in minutes", () => {
+    expect(ApiError.from(httpError(429, {}, { "retry-after": "900" })).message).toBe("Too many attempts. Please wait 15 minutes and try again.");
+    expect(ApiError.from(httpError(429, {}, { "retry-after": "42" })).message).toBe("Too many attempts. Please wait 42 seconds and try again.");
+  });
+
   it("reads Retry-After on 429 and the request id on any error", () => {
     const error = ApiError.from(httpError(429, { message: "Too Many Attempts." }, { "retry-after": "42", "x-request-id": "abc-123" }));
     expect(error.kind).toBe("rate_limited");
