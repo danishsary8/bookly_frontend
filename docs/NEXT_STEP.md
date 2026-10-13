@@ -12,20 +12,21 @@ the v7.1.0 commit (branch `chore/setup-node-v7`, CI green, waiting for the owner
 
 ## Done since 2026-10-12
 Merged: order and return emails, owner Telegram alert, setup-node pin, Telegram webhook self-repair (address from `APP_URL`), dashboard numbers (backend) and dashboard comparison/KHR/top categories (frontend). `.env.production` now points at the live Render API (it pointed at the old wasmer API; Vercel's own setting hid the problem).
+Also merged on 2026-10-13: rate limits (owner's "looser" set, coupon lock after 5 unknown codes, webhook exempt with its secret) + password changed/reset security email; welcome email on first verification; owner Telegram alert for 1-2 star reviews; plans/audits docs.
 
-## Next (owner chose 2026-10-13): security
-Rate limits from backend `docs/RATE_LIMITS.md` (owner approves the numbers first) + a security email when a password is changed.
+## Now (2026-10-13): better search, waiting for the owner's merge
+Backend `feature/catalog-name-search` (rebuilt fresh from main; replaces PR #10, which the owner can close) + frontend `feature/catalog-name-search` (author names bold in the live search suggestions). Customers find books by title, description, author, series or category name, every word as a prefix, while typing. One new migration, indexes only (owner approved 2026-10-13).
+
+## Next: the owner picks one from this backlog
+Admin orders: printable invoice/packing slip + bulk status · dashboard custom date range · staff Telegram group for new orders · data retention (old carts/audit log/cache; owner chooses the windows) · exchange-rate refresh · missed-backup check · Khmer language · delivery fees per province · SEO/pre-render · custom domain + shop email (SPF/DKIM/DMARC) · E2E tests · security review · redesign last.
 
 ## Still open in Phase 2, in this order
-1. **Apply the rate-limit changes from backend docs/RATE_LIMITS.md**: top gaps: checkout and order cancel can flood stock, `/auth/telegram/status` polling, `/books` search cost, coupon check brute force, staff dashboard queries; owner approves the limits first; needs the open questions answered.
-2. **Investigate why the Telegram webhook showed 'not set' on 2026-10-11 (seen again on 2026-10-12 after a redeploy)**: the API repaired it itself when a sign-in started; watch `/health`; if it recurs, search the Render logs for 'webhook was'.
-3. **Frontend dependency updates**: a plain `npm update` rewrote the whole lockfile and broke `npm ci` in CI; do updates with the CI's npm (10.9.9) and verify with `npm ci`, or one package at a time; majors still to decide are listed in 'Major upgrades to decide'.
-4. **Raise the minimum PHP to 8.4**: production already runs 8.4, to allow Symfony 8 / PHPUnit 13; then remove config.platform.php 8.3.0.
-5. **Remaining chores**:
+1. **Frontend dependency updates**: a plain `npm update` rewrote the whole lockfile and broke `npm ci` in CI; do updates with the CI's npm (10.9.9) and verify with `npm ci`, or one package at a time; majors still to decide are listed in 'Major upgrades to decide'.
+2. **Raise the minimum PHP to 8.4**: production already runs 8.4, to allow Symfony 8 / PHPUnit 13; then remove config.platform.php 8.3.0.
+3. **Remaining chores**:
    - Run the Tests workflow on pushes to `chore/**` and `docs/**` branches too (backend `.github/workflows/tests.yml` only runs on `main`, `feature/**`, `fix/**` and pull requests).
-   - Backend `docs/NEXT_STEP.md` still lists the finished alert-bot steps (create bot, add secrets) as to-do; clean it up.
    - Vitest 5 (`@vitest/mocker` advisory).
-6. **Missed-backup check**: postponed by the owner on 2026-10-10 (options discussed: free outside check-in service such as Healthchecks.io, or a second GitHub workflow checking artifact age).
+4. **Missed-backup check**: postponed by the owner on 2026-10-10 (options discussed: free outside check-in service such as Healthchecks.io, or a second GitHub workflow checking artifact age).
 Then **Phase 3** (admin dashboard, delete security, staff Telegram group). Customer Telegram receipts are Phase 4 (decisions open, see ROADMAP).
 
 ## Unattended runs (what worked)

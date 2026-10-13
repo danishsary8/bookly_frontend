@@ -70,6 +70,16 @@ describe("LiveSearch", () => {
     expect(screen.getByTestId("where")).toHaveTextContent("/books/7");
   });
 
+  it("bolds the matched words in the author line too", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(catalogApi, "books").mockResolvedValue(page([{ ...book(3, "Emma"), authors: [{ id: 2, name: "Jane Austen" }] }]));
+    renderWithProviders(<LiveSearch id="s" />);
+
+    await user.type(screen.getByRole("combobox", { name: "Search books" }), "aust");
+    const option = await screen.findByRole("option", { name: /Emma/ });
+    expect(option.querySelector("mark")).toHaveTextContent(/^Aust$/);
+  });
+
   it("goes to the results page on Enter without a highlighted option", async () => {
     const user = userEvent.setup();
     vi.spyOn(catalogApi, "books").mockResolvedValue(page([]));
