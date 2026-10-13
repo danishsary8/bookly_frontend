@@ -1,24 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState, type FormEvent } from "react";
 import { AlertTriangle, ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
-import { staffQueries, type DashboardPeriod } from "@/api/endpoints/staff";
+import { staffQueries, type DashboardPeriod, type DashboardRange } from "@/api/endpoints/staff";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import type { OrderStatus } from "@/api/types";
 import { ErrorState, InlineError } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { SalesChart } from "@/features/admin/SalesChart";
+import { rangeFromParams, rangeProblem, rangeToParams, shopToday } from "@/features/admin/dashboardRange";
+import { Button } from "@/components/ui/button";
 import { useStaff } from "@/features/admin/staffSession";
 import { formatLabel } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { formatKhr, formatUsd } from "@/stores/currency";
 
-const PERIODS: Array<{ value: DashboardPeriod; label: string }> = [
+const PERIODS: Array<{ value: DashboardPeriod | "custom"; label: string }> = [
   { value: "today", label: "Today" },
   { value: "7d", label: "7 days" },
   { value: "30d", label: "30 days" },
+  { value: "custom", label: "Custom" },
 ];
-const isPeriod = (v: string | null): v is DashboardPeriod => PERIODS.some((p) => p.value === v);
 const range = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 const day = (date: string) => range.format(new Date(`${date}T00:00:00Z`));
 
@@ -85,8 +88,44 @@ function Panel({ id, title, action, children, className }: { id: string; title: 
   );
 }
 
+/** Phnom Penh days From–To; Apply puts them in the URL (at most 366 days, the API's limit). */
+function CustomRange({ range, shown, onApply }: { range: DashboardRange; shown?: { from: string; to: string }; onApply: (from: string, to: string) => void }) {
+  const today = shopToday();
+  // Start from the days on screen, so "Custom" then Apply changes nothing until a day is changed.
+  const [from, setFrom] = useState(range.period === "custom" ? range.from : (shown?.from ?? ""));
+  const [to, setTo] = useState(range.period === "custom" ? range.to : (shown?.to ?? today));
+  const [error, setError] = useState<string | null>(null);
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    const problem = rangeProblem(from, to);
+    setError(problem);
+    if (!problem) onApply(from, to);
+  };
+  const field = "h-11 rounded-md border border-input bg-card px-3 text-base font-normal outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  return (
+    <form onSubmit={submit} noValidate aria-label="Custom period" className="flex flex-wrap items-end gap-2">
+      <label className="grid gap-1 text-sm font-semibold">
+        From
+        <input type="date" value={from} max={to || today} onChange={(e) => setFrom(e.target.value)} className={field} aria-invalid={!!error} />
+      </label>
+      <label className="grid gap-1 text-sm font-semibold">
+        To
+        <input type="date" value={to} min={from || undefined} max={today} onChange={(e) => setTo(e.target.value)} className={field} aria-invalid={!!error} />
+      </label>
+      <Button type="submit" variant="outline">
+        Apply
+      </Button>
+      {error ? (
+        <p role="alert" className="basis-full text-sm font-semibold text-destructive">
+          {error}
+        </p>
+      ) : null}
+    </form>
+  );
+}
+
 /*
- * /admin: how the shop is doing over today / 7 / 30 days (Phnom Penh days, from
+ * /admin: how the shop is doing over today / 7 / 30 days or chosen days (Phnom Penh days, from
  * the API). Revenue counts delivered orders, less refunds. Net revenue is the one
  * hero figure; the rest are supporting tiles, the daily chart, best sellers, low
  * stock and today's order mix.
@@ -94,10 +133,12 @@ function Panel({ id, title, action, children, className }: { id: string; title: 
 export default function DashboardPage() {
   const session = useStaff();
   const [params, setParams] = useSearchParams();
-  const raw = params.get("period");
-  const period: DashboardPeriod = isPeriod(raw) ? raw : "30d";
-  const summary = useQuery(staffQueries.summary(period));
-  const sales = useQuery(staffQueries.sales(period));
+  const range = rangeFromParams(params);
+  // "Custom" shows the day fields; the numbers keep the last applied range until Apply.
+  const [picking, setPicking] = useState(range.period === "custom");
+  const active = picking ? "custom" : range.period;
+  const summary = useQuery(staffQueries.summary(range));
+  const sales = useQuery(staffQueries.sales(range));
   const s = summary.data;
   const firstName = session?.user.name.split(" ")[0];
   const c = s?.comparison;
@@ -108,22 +149,29 @@ export default function DashboardPage() {
       title="Dashboard"
       lead={s ? `${day(s.period.from)}${s.period.from !== s.period.to ? ` to ${day(s.period.to)}` : ""} · Phnom Penh time` : `Hello${firstName ? `, ${firstName}` : ""}`}
       actions={
-        <div role="radiogroup" aria-label="Period" className="inline-flex rounded-md border border-border bg-card p-1">
-          {PERIODS.map((p) => (
-            <button
-              key={p.value}
-              type="button"
-              role="radio"
-              aria-checked={period === p.value}
-              onClick={() => setParams(p.value === "30d" ? {} : { period: p.value }, { replace: true })}
-              className={cn(
-                "min-h-9 rounded-[4px] px-3 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
-                period === p.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {p.label}
-            </button>
-          ))}
+        <div className="grid justify-items-end gap-3">
+          <div role="radiogroup" aria-label="Period" className="inline-flex rounded-md border border-border bg-card p-1">
+            {PERIODS.map((p) => (
+              <button
+                key={p.value}
+                type="button"
+                role="radio"
+                aria-checked={active === p.value}
+                onClick={() => {
+                  if (p.value === "custom") return setPicking(true);
+                  setPicking(false);
+                  setParams(rangeToParams({ period: p.value }), { replace: true });
+                }}
+                className={cn(
+                  "min-h-9 rounded-[4px] px-3 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                  active === p.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          {picking ? <CustomRange range={range} shown={s?.period} onApply={(from, to) => setParams(rangeToParams({ period: "custom", from, to }), { replace: true })} /> : null}
         </div>
       }
     >

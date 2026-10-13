@@ -99,6 +99,8 @@ export interface VariantInput {
 }
 
 export type DashboardPeriod = "today" | "7d" | "30d";
+/** A preset period, or Phnom Penh days `from`–`to` (YYYY-MM-DD, at most 366 days; the API checks it too). */
+export type DashboardRange = { period: DashboardPeriod } | { period: "custom"; from: string; to: string };
 
 /** Money pair from the dashboard: KHR is whole riel at the current rate, null until a rate is set. */
 type Khr = string | null;
@@ -172,8 +174,8 @@ type LookupInputOf<K extends LookupKind> = K extends "authors" ? AuthorInput : K
 
 export const staffKeys = {
   me: () => ["staff", "me"] as const,
-  dashboard: (period: DashboardPeriod) => ["staff", "dashboard", period] as const,
-  sales: (period: DashboardPeriod) => ["staff", "sales", period] as const,
+  dashboard: (range: DashboardRange) => ["staff", "dashboard", range] as const,
+  sales: (range: DashboardRange) => ["staff", "sales", range] as const,
   books: (params: object) => ["staff", "books", toQueryParams(params)] as const,
   book: (id: number) => ["staff", "book", id] as const,
   notifications: () => ["staff", "notifications"] as const,
@@ -192,8 +194,8 @@ export const staffAuthApi = {
 };
 
 export const staffApi = {
-  summary: (period: DashboardPeriod) => api.get<Resource<DashboardSummary>>("/staff/dashboard/summary", { params: { period } }).then((r) => r.data),
-  sales: (period: DashboardPeriod) => api.get<Resource<DailySales[]>>("/staff/dashboard/sales", { params: { period } }).then((r) => r.data),
+  summary: (range: DashboardRange) => api.get<Resource<DashboardSummary>>("/staff/dashboard/summary", { params: range }).then((r) => r.data),
+  sales: (range: DashboardRange) => api.get<Resource<DailySales[]>>("/staff/dashboard/sales", { params: range }).then((r) => r.data),
 
   notifications: (params: { unread?: boolean; per_page?: number } = {}) =>
     api.get<NotificationsPage>("/staff/notifications", { params: toQueryParams(params) }),
@@ -220,8 +222,8 @@ export const staffApi = {
 
 export const staffQueries = {
   me: () => queryOptions({ queryKey: staffKeys.me(), queryFn: staffAuthApi.me }),
-  summary: (period: DashboardPeriod) => queryOptions({ queryKey: staffKeys.dashboard(period), queryFn: () => staffApi.summary(period), placeholderData: keepPreviousData }),
-  sales: (period: DashboardPeriod) => queryOptions({ queryKey: staffKeys.sales(period), queryFn: () => staffApi.sales(period), placeholderData: keepPreviousData }),
+  summary: (range: DashboardRange) => queryOptions({ queryKey: staffKeys.dashboard(range), queryFn: () => staffApi.summary(range), placeholderData: keepPreviousData }),
+  sales: (range: DashboardRange) => queryOptions({ queryKey: staffKeys.sales(range), queryFn: () => staffApi.sales(range), placeholderData: keepPreviousData }),
   notifications: () =>
     queryOptions({ queryKey: staffKeys.notifications(), queryFn: () => staffApi.notifications({ per_page: 10 }), refetchInterval: 60_000 }),
   books: (params: Parameters<typeof staffApi.books>[0] = {}) =>

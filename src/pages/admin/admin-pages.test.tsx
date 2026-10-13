@@ -199,7 +199,39 @@ describe("dashboard", () => {
     expect(within(screen.getByRole("region", { name: "Low stock" })).getByText("Out of stock")).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "7 days" }));
     expect(screen.getByTestId("where")).toHaveTextContent("/admin?period=7d");
-    await waitFor(() => expect(summaryCall).toHaveBeenLastCalledWith("7d"));
+    await waitFor(() => expect(summaryCall).toHaveBeenLastCalledWith({ period: "7d" }));
+  });
+
+  it("shows chosen days with Custom, checks them, and keeps them in the URL", async () => {
+    signIn(admin);
+    const summaryCall = vi.spyOn(staffApi, "summary").mockResolvedValue(summary);
+    const salesCall = vi.spyOn(staffApi, "sales").mockResolvedValue(days);
+    const user = userEvent.setup();
+    app("/admin");
+    expect(await screen.findByText("$50.50")).toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "Custom" }));
+    const form = screen.getByRole("form", { name: "Custom period" });
+    expect(within(form).getByLabelText("From")).toHaveValue("2026-09-04"); // starts from the days on screen
+
+    await user.clear(within(form).getByLabelText("From"));
+    await user.type(within(form).getByLabelText("From"), "2026-09-20");
+    await user.clear(within(form).getByLabelText("To"));
+    await user.type(within(form).getByLabelText("To"), "2026-09-10");
+    await user.click(within(form).getByRole("button", { name: "Apply" }));
+    expect(within(form).getByRole("alert")).toHaveTextContent("The end day must be on or after the start day.");
+    expect(screen.getByTestId("where")).toHaveTextContent(/^\/admin$/);
+
+    await user.clear(within(form).getByLabelText("To"));
+    await user.type(within(form).getByLabelText("To"), "2026-09-30");
+    await user.click(within(form).getByRole("button", { name: "Apply" }));
+    expect(screen.getByTestId("where")).toHaveTextContent("/admin?period=custom&from=2026-09-20&to=2026-09-30");
+    const range = { period: "custom", from: "2026-09-20", to: "2026-09-30" };
+    await waitFor(() => expect(summaryCall).toHaveBeenLastCalledWith(range));
+    expect(salesCall).toHaveBeenLastCalledWith(range);
+
+    await user.click(screen.getByRole("radio", { name: "Today" }));
+    expect(screen.getByTestId("where")).toHaveTextContent("/admin?period=today");
+    expect(screen.queryByRole("form", { name: "Custom period" })).not.toBeInTheDocument();
   });
 
   it("shows KHR beside USD, the change against the period before, and top categories", async () => {
