@@ -1,7 +1,7 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { api } from "../client";
 import { toQueryParams } from "./catalog";
-import type { OrderStatus, Order, OwnReview, Paginated, Resource, ReturnableItems, ReturnRequest } from "../types";
+import type { OrderStatus, Order, OrderDocument, OwnReview, Paginated, Resource, ReturnableItems, ReturnRequest } from "../types";
 
 export interface ReturnLineInput {
   order_item_id: number;
@@ -27,6 +27,7 @@ export const ordersApi = {
   orders: (params: { status?: OrderStatus; page?: number; per_page?: number } = {}) =>
     api.get<Paginated<Order>>("/orders", { params: toQueryParams(params) }),
   order: (id: number) => api.get<Resource<Order>>(`/orders/${id}`).then((r) => r.data),
+  invoice: (id: number) => api.get<Resource<OrderDocument>>(`/orders/${id}/invoice`).then((r) => r.data),
   cancel: (id: number, reason?: string) => api.post<Resource<Order>>(`/orders/${id}/cancel`, reason ? { reason } : {}).then((r) => r.data),
 
   returnable: (orderId: number) => api.get<Resource<ReturnableItems>>(`/orders/${orderId}/returnable-items`).then((r) => r.data),
@@ -48,6 +49,7 @@ export const orderQueries = {
   orders: (params: Parameters<typeof ordersApi.orders>[0] = {}) =>
     queryOptions({ queryKey: orderKeys.orders(params), queryFn: () => ordersApi.orders(params), placeholderData: keepPreviousData }),
   order: (id: number) => queryOptions({ queryKey: orderKeys.order(id), queryFn: () => ordersApi.order(id) }),
+  invoice: (id: number) => queryOptions({ queryKey: [...orderKeys.order(id), "invoice"] as const, queryFn: () => ordersApi.invoice(id) }),
   returnable: (orderId: number) => queryOptions({ queryKey: orderKeys.returnable(orderId), queryFn: () => ordersApi.returnable(orderId) }),
   returns: (params: Parameters<typeof ordersApi.returns>[0] = {}) =>
     queryOptions({ queryKey: orderKeys.returns(params), queryFn: () => ordersApi.returns(params) }),

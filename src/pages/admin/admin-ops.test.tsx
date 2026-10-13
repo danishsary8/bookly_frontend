@@ -121,6 +121,42 @@ describe("orders", () => {
     await waitFor(() => expect(set).toHaveBeenCalledWith(7, "shipped", "Via J&T"));
   });
 
+  it("opens the packing slip and invoice in a new tab, but no packing slip for a cancelled order", async () => {
+    signIn(staff);
+    vi.spyOn(opsApi, "order").mockResolvedValueOnce(order).mockResolvedValueOnce({ ...order, id: 8, status: "cancelled", allowed_next_statuses: [] } as StaffOrder);
+    const first = app("/admin/orders/7");
+    const slip = await screen.findByRole("link", { name: "Packing slip" });
+    expect(slip).toHaveAttribute("href", "/admin/print?doc=packing-slip&ids=7&autoprint=1");
+    expect(slip).toHaveAttribute("target", "_blank");
+    expect(screen.getByRole("link", { name: "Invoice" })).toHaveAttribute("href", "/admin/print?doc=invoice&ids=7&autoprint=1");
+    first.unmount();
+
+    app("/admin/orders/8");
+    expect(await screen.findByRole("link", { name: "Invoice" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Packing slip" })).not.toBeInTheDocument();
+  });
+
+  it("prints the ticked orders together, in the order they were ticked", async () => {
+    signIn(staff);
+    const other = { ...order, id: 8, order_number: "ORD-8" } as StaffOrder;
+    const third = { ...order, id: 9, order_number: "ORD-9" } as StaffOrder;
+    vi.spyOn(opsApi, "orders").mockResolvedValue(page([order, other, third]));
+    app("/admin/orders");
+    await userEvent.click(await screen.findByRole("checkbox", { name: "Select order ORD-9" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select order ORD-7" }));
+    const bar = screen.getByRole("region", { name: "Print selected orders" });
+    expect(bar).toHaveTextContent("2 selected");
+    expect(within(bar).getByRole("link", { name: "Print packing slips" })).toHaveAttribute("href", "/admin/print?doc=packing-slip&ids=9,7&autoprint=1");
+    expect(within(bar).getByRole("link", { name: "Print invoices" })).toHaveAttribute("href", "/admin/print?doc=invoice&ids=9,7&autoprint=1");
+    expect(screen.getByRole("checkbox", { name: "Select every order on this page" })).toHaveAttribute("data-state", "indeterminate");
+
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select every order on this page" }));
+    expect(bar).toHaveTextContent("3 selected");
+    expect(within(bar).getByRole("link", { name: "Print packing slips" })).toHaveAttribute("href", "/admin/print?doc=packing-slip&ids=9,7,8&autoprint=1");
+    await userEvent.click(within(bar).getByRole("button", { name: "Clear" }));
+    expect(screen.queryByRole("region", { name: "Print selected orders" })).not.toBeInTheDocument();
+  });
+
   it("shows the CSV export to admins only", async () => {
     signIn(staff);
     vi.spyOn(opsApi, "orders").mockResolvedValue(page([order]));

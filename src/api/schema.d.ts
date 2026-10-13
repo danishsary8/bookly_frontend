@@ -45,7 +45,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Database and queue health for uptime monitors */
+        /**
+         * Database, queue and Telegram bot health for uptime monitors
+         * @description Includes checks.telegram_bot: off without a bot token; otherwise getWebhookInfo is cached for 10 minutes, including failures. Status is ok when the webhook URL matches this request's API address (HTTPS in production) and no delivery error is dated within the last 30 minutes. Otherwise degraded with error: Telegram delivery message (token redacted), webhook not set, or Telegram unreachable. A degraded queue or bot makes overall status degraded; HTTP stays 200. Database down keeps the existing 503 response.
+         */
         get: {
             parameters: {
                 query?: never;
@@ -55,7 +58,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description status ok or degraded (queue jobs waiting > 10 min) */
+                /** @description status ok or degraded (queue jobs waiting > 10 min or Telegram bot degraded); checks include database, queue and telegram_bot */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -141,7 +144,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    /** @description Full-text search */
+                    /** @description Search as you type: every word must match the title, description, an author, the series or a category name; words match as prefixes */
                     q?: string;
                     category_id?: number;
                     author_id?: number;
@@ -2139,6 +2142,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/orders/{id}/invoice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Print data for your invoice (not for a cancelled order) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Invoice data */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["OrderDocument"];
+                        };
+                    };
+                };
+                404: components["responses"]["NotFound"];
+                /** @description Cancelled order */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/orders/{id}/returnable-items": {
         parameters: {
             query?: never;
@@ -3450,6 +3501,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff/orders/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Print data for invoices and packing slips, in the order asked (up to 50; unknown ids are left out) */
+        get: {
+            parameters: {
+                query: {
+                    "ids[]": number[];
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description One document per order */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["OrderDocument"][];
+                        };
+                    };
+                };
+                422: components["responses"]["Validation"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/staff/orders/{id}": {
         parameters: {
             query?: never;
@@ -4467,13 +4559,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** (admin) Revenue (cash basis), orders, best sellers, low stock */
+        /** (admin) Revenue (cash basis, USD + KHR), orders, best sellers, top categories, low stock, comparison with the previous period */
         get: {
             parameters: {
                 query?: {
                     period?: components["parameters"]["Period"];
                     from?: components["parameters"]["From"];
                     to?: components["parameters"]["To"];
+                    /** @description Also return the previous period of the same length and the change in percent (default true) */
+                    compare?: boolean;
                 };
                 header?: never;
                 path?: never;
@@ -4854,6 +4948,58 @@ export interface components {
                 created_at?: string;
             }[];
         };
+        /** @description What an invoice or packing slip prints. KHR uses the rate in force when the order was placed (null when no rate was set then), so a reprint never changes. */
+        OrderDocument: {
+            id?: number;
+            /** @example ORD-20261003-7K2QX */
+            order_number?: string;
+            /** @enum {string} */
+            status?: "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled" | "returned";
+            /** Format: date-time */
+            placed_at?: string;
+            /** Format: date-time */
+            delivered_at?: string | null;
+            /** @enum {string} */
+            payment_method?: "card" | "cod" | "khqr";
+            /** @enum {string|null} */
+            payment_status?: "pending" | "succeeded" | "failed" | "refunded" | null;
+            customer?: {
+                name?: string;
+                email?: string | null;
+                phone?: string | null;
+            };
+            shipping_address?: components["schemas"]["AddressInput"];
+            items?: {
+                id?: number;
+                title?: string;
+                authors?: string[];
+                /** @enum {string} */
+                format?: "hardcover" | "paperback" | "ebook" | "audiobook";
+                is_digital?: boolean;
+                sku?: string;
+                isbn?: string | null;
+                quantity?: number;
+                unit_price_usd?: components["schemas"]["Money"];
+                subtotal_usd?: components["schemas"]["Money"];
+            }[];
+            subtotal_usd?: components["schemas"]["Money"];
+            discount_usd?: components["schemas"]["Money"];
+            coupon_code?: string | null;
+            shipping_fee_usd?: components["schemas"]["Money"];
+            tax_usd?: components["schemas"]["Money"];
+            total_usd?: components["schemas"]["Money"];
+            refunded_usd?: components["schemas"]["Money"];
+            /** @description What the courier collects: the total for an unpaid cash-on-delivery order, else 0.00 */
+            amount_to_collect_usd?: components["schemas"]["Money"];
+            khr?: {
+                /** @example 4100.000000 */
+                rate?: string;
+                /** Format: date-time */
+                rate_effective_at?: string;
+                total?: components["schemas"]["Riel"];
+                amount_to_collect?: components["schemas"]["Riel"];
+            } | null;
+        };
         Return: {
             id?: number;
             order_id?: number;
@@ -4984,6 +5130,7 @@ export type SchemaAddressInput = components['schemas']['AddressInput'];
 export type SchemaCartIssue = components['schemas']['CartIssue'];
 export type SchemaCart = components['schemas']['Cart'];
 export type SchemaOrder = components['schemas']['Order'];
+export type SchemaOrderDocument = components['schemas']['OrderDocument'];
 export type SchemaReturn = components['schemas']['Return'];
 export type SchemaReview = components['schemas']['Review'];
 export type SchemaOwnReview = components['schemas']['OwnReview'];

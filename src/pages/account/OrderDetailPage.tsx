@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Banknote, RotateCcw, Star, XCircle } from "lucide-react";
+import { ArrowLeft, Banknote, FileText, RotateCcw, Star, XCircle } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { orderQueries } from "@/api/endpoints/orders";
 import { ApiError } from "@/api/errors";
@@ -87,11 +87,18 @@ export default function OrderDetailPage() {
               {o.placed_at ? <span>Placed {orderDate(o.placed_at)}</span> : null}
             </p>
           </div>
-          {o.can_cancel ? (
-            <Button variant="outline" onClick={() => setCancelOpen(true)}>
-              <XCircle aria-hidden="true" /> Cancel order
-            </Button>
-          ) : null}
+          <div className="flex flex-wrap gap-3">
+            {o.status !== "cancelled" ? (
+              <Link to={`/account/orders/${o.id}/invoice?autoprint=1`} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline" })}>
+                <FileText aria-hidden="true" /> Print invoice
+              </Link>
+            ) : null}
+            {o.can_cancel ? (
+              <Button variant="outline" onClick={() => setCancelOpen(true)}>
+                <XCircle aria-hidden="true" /> Cancel order
+              </Button>
+            ) : null}
+          </div>
         </div>
         {delivered ? <ReturnEntry order={o} /> : null}
       </div>

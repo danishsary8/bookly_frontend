@@ -29,6 +29,7 @@ const WishlistPage = lazy(() => import("../pages/account/WishlistPage"));
 const OrdersPage = lazy(() => import("../pages/account/OrdersPage"));
 const OrderDetailPage = lazy(() => import("../pages/account/OrderDetailPage"));
 const ReturnRequestPage = lazy(() => import("../pages/account/ReturnRequestPage"));
+const InvoicePrintPage = lazy(() => import("../pages/account/InvoicePrintPage"));
 const ReturnsPage = lazy(() => import("../pages/account/ReturnsPage"));
 const ReturnDetailPage = lazy(() => import("../pages/account/ReturnDetailPage"));
 const ReviewsPage = lazy(() => import("../pages/account/ReviewsPage"));
@@ -42,6 +43,7 @@ const BookEditPage = lazy(() => import("../pages/admin/BookEditPage"));
 const LookupPage = lazy(() => import("../pages/admin/LookupPage"));
 const OrdersAdminPage = lazy(() => import("../pages/admin/OrdersAdminPage"));
 const OrderAdminPage = lazy(() => import("../pages/admin/OrderAdminPage"));
+const OrderDocumentsPrintPage = lazy(() => import("../pages/admin/OrderDocumentsPrintPage"));
 const ReturnsAdminPage = lazy(() => import("../pages/admin/ReturnsAdminPage"));
 const ReturnAdminPage = lazy(() => import("../pages/admin/ReturnAdminPage"));
 const ReviewsAdminPage = lazy(() => import("../pages/admin/ReviewsAdminPage"));
@@ -136,6 +138,9 @@ const AppRoutes = () => {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Route>
+        <Route element={<RequireVerified />}>
+          <Route path="/account/orders/:id/invoice" element={<InvoicePrintPage />} />
+        </Route>
         <Route element={<RequireCustomer />}>
           <Route path="/verify-email" element={<VerifyEmailPage />} />
         </Route>
@@ -148,6 +153,8 @@ const AppRoutes = () => {
           <Route path="/admin/two-factor" element={<StaffTwoFactorSetupPage />} />
         </Route>
         <Route element={<RequireStaff />}>
+          {/* Printable sheets sit outside the admin frame so only the paper prints. */}
+          <Route path="/admin/print" element={<OrderDocumentsPrintPage />} />
           <Route path="/admin" element={<AdminShell />}>
             <Route index element={<DashboardPage />} />
             <Route path="books" element={<AdminBooksPage />} />

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download, Package } from "lucide-react";
+import { Download, FileText, Package, Printer, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { opsApi, opsQueries } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
@@ -8,7 +8,8 @@ import type { OrderStatus } from "@/api/types";
 import { TextField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Pagination } from "@/components/ui/pagination";
 import { AdminPage } from "@/features/admin/AdminPage";
@@ -16,6 +17,7 @@ import { ListState, SearchBox, Segmented, TableCard, td, th, thead } from "@/fea
 import { useStaff } from "@/features/admin/staffSession";
 import { useListParams } from "@/features/admin/useListParams";
 import { orderDateTime } from "@/features/orders/format";
+import { MAX_PRINT, staffPrintPath } from "@/features/orders/documents/printLinks";
 import { rangeSummary } from "@/lib/pagination";
 import { formatUsd } from "@/stores/currency";
 import { toast } from "@/stores/toast";
@@ -91,9 +93,32 @@ function ExportDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
   );
 }
 
+/** Ticked orders and what to print for them; the ticks stay while paging or filtering. */
+function PrintBar({ ids, onClear }: { ids: number[]; onClear: () => void }) {
+  return (
+    <div role="region" aria-label="Print selected orders" className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-lapis-tint px-4 py-3">
+      <p className="font-semibold tabular-nums">
+        {ids.length} selected{ids.length >= MAX_PRINT ? ` (the most for one print)` : ""}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <a href={staffPrintPath("packing-slip", ids)} target="_blank" rel="noopener" className={buttonVariants({ size: "sm" })}>
+          <Printer aria-hidden="true" /> Print packing slips
+        </a>
+        <a href={staffPrintPath("invoice", ids)} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline", size: "sm" })}>
+          <FileText aria-hidden="true" /> Print invoices
+        </a>
+        <Button variant="ghost" size="sm" onClick={onClear}>
+          <X aria-hidden="true" /> Clear
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 /*
  * /admin/orders: every order, newest first; search by order number or customer,
  * filter by status and by the day it was placed. All filters live in the URL.
+ * Tick orders to print their packing slips or invoices together (up to 50).
  */
 export default function OrdersAdminPage() {
   const session = useStaff();
@@ -106,8 +131,16 @@ export default function OrdersAdminPage() {
   const to = get("to");
   const orders = useQuery(opsQueries.orders({ status, q: q || undefined, from: from || undefined, to: to || undefined, page, per_page: 20 }));
   const [exporting, setExporting] = useState(false);
+  const [selected, setSelected] = useState<number[]>([]);
   const meta = orders.data?.meta;
   const list = orders.data?.data ?? [];
+  const pageIds = list.map((o) => o.id!);
+  const onPage = pageIds.filter((id) => selected.includes(id)).length;
+  const full = selected.length >= MAX_PRINT;
+  const toggle = (id: number, on: boolean) =>
+    setSelected((current) => (on ? (current.includes(id) || current.length >= MAX_PRINT ? current : [...current, id]) : current.filter((x) => x !== id)));
+  const togglePage = (on: boolean) =>
+    setSelected((current) => (on ? [...current, ...pageIds.filter((id) => !current.includes(id))].slice(0, MAX_PRINT) : current.filter((id) => !pageIds.includes(id))));
 
   return (
     <AdminPage
@@ -141,15 +174,26 @@ export default function OrdersAdminPage() {
           </div>
         </div>
         <Segmented label="Status" value={status ?? "all"} options={STATUSES} onChange={(v) => set({ status: v === "all" ? undefined : v })} />
+        {selected.length ? <PrintBar ids={selected} onClear={() => setSelected([])} /> : null}
       </div>
 
       <ListState
         query={orders}
         empty={{ when: list.length === 0, icon: Package, title: "No orders match", description: q || status || from || to ? "Try another search, status or date." : "Orders will show up here as customers place them." }}
       >
-        <TableCard stale={orders.isPlaceholderData} minWidth={760}>
+        <TableCard stale={orders.isPlaceholderData} minWidth={800}>
           <thead className={thead}>
             <tr>
+              <th scope="col" className={`${th} w-12`}>
+                <label className="-m-3 grid size-11 cursor-pointer place-items-center">
+                  <span className="sr-only">Select every order on this page</span>
+                  <Checkbox
+                    checked={onPage === 0 ? false : onPage === pageIds.length ? true : "indeterminate"}
+                    onCheckedChange={(state) => togglePage(state === true)}
+                    disabled={pageIds.length === 0}
+                  />
+                </label>
+              </th>
               <th scope="col" className={th}>Order</th>
               <th scope="col" className={th}>Customer</th>
               <th scope="col" className={th}>Status</th>
@@ -159,7 +203,17 @@ export default function OrdersAdminPage() {
           </thead>
           <tbody className="divide-y divide-border">
             {list.map((o) => (
-              <tr key={o.id} className="hover:bg-surface-2/60">
+              <tr key={o.id} className={selected.includes(o.id!) ? "bg-lapis-tint/60" : "hover:bg-surface-2/60"}>
+                <td className={`${td} w-12`}>
+                  <label className="-m-3 grid size-11 cursor-pointer place-items-center">
+                    <span className="sr-only">Select order {o.order_number}</span>
+                    <Checkbox
+                      checked={selected.includes(o.id!)}
+                      onCheckedChange={(state) => toggle(o.id!, state === true)}
+                      disabled={full && !selected.includes(o.id!)}
+                    />
+                  </label>
+                </td>
                 <th scope="row" className={`${td} font-normal`}>
                   <Link to={`/admin/orders/${o.id}`} className="font-semibold tabular-nums underline-offset-4 hover:text-primary hover:underline">
                     {o.order_number}

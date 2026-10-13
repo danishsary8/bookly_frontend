@@ -973,3 +973,76 @@
 :is(h1, h2, main)[tabindex="-1"]:focus {
   outline: none;
 }
+
+/* ---------- Printable sheets: invoices and packing slips (pages/print.md) ---------- */
+/* Paper keeps Daylight ink in both themes, so a sheet looks and prints the same at night. */
+.paper,
+.dark .paper {
+  --background: #FFFFFF;
+  --foreground: #0E1335;
+  --card: #FFFFFF;
+  --muted-foreground: #4C5378;
+  --border: #D9DDEC;
+  --primary: #14207A;
+  --surface-2: #ECEEF7;
+  color: var(--foreground);
+  background-color: var(--card);
+}
+
+/* One A4 column on screen; narrower screens squeeze the sheet instead of scrolling the page. */
+.print-sheets {
+  grid-template-columns: minmax(0, 210mm);
+}
+
+.paper-sheet {
+  width: 100%;
+  min-height: 297mm;
+  padding: 16mm 15mm;
+  border: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .paper-sheet {
+    min-height: 0;
+    padding: 20px 16px;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  html,
+  body,
+  .print-canvas {
+    background: #FFFFFF !important;
+  }
+
+  .print-hide {
+    display: none !important;
+  }
+
+  .print-sheets {
+    display: block;
+    padding: 0;
+  }
+
+  .paper-sheet {
+    width: 210mm;
+    min-height: 0;
+    border: 0;
+    break-after: page;
+    break-inside: avoid-page;
+  }
+
+  .paper-sheet:last-child {
+    break-after: auto;
+  }
+
+  .paper-sheet tr {
+    break-inside: avoid;
+  }
+}

@@ -140,6 +140,7 @@ describe("OrderDetailPage", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "Order ORD-7" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Timeline" })).toHaveTextContent("Order placed.");
     expect(screen.queryByRole("link", { name: "Review this book" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Print invoice" })).toHaveAttribute("href", "/account/orders/7/invoice?autoprint=1");
     await user.click(screen.getByRole("button", { name: "Cancel order" }));
     const dialog = screen.getByRole("dialog");
     await user.type(within(dialog).getByLabelText(/Reason/), "Wrong edition");
@@ -147,6 +148,7 @@ describe("OrderDetailPage", () => {
     expect(cancel).toHaveBeenCalledWith(7, "Wrong edition");
     expect(await screen.findByText("Order ORD-7 cancelled")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Cancel order" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Print invoice" })).not.toBeInTheDocument();
   });
 
   it("offers a return and reviews once delivered", async () => {
