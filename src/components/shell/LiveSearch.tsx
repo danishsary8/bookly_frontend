@@ -239,12 +239,11 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
                 <CoverThumb src={book.cover_image_url} className="h-12 w-8" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[15px] text-foreground">
-                    {highlightParts(book.title ?? "", term).map((part, i) =>
-                      part.match ? <mark key={i} className="bg-transparent font-semibold text-foreground">{part.text}</mark> : <span key={i}>{part.text}</span>,
-                    )}
+                    <Highlighted text={book.title ?? ""} term={term} />
                   </span>
                   <span className="block truncate text-sm text-muted-foreground">
-                    {(book.authors ?? []).map((a) => a.name).join(", ") || "Unknown author"}
+                    {/* Search also matches author names, so bold them too: "austen" shows why Emma is listed. */}
+                    <Highlighted text={(book.authors ?? []).map((a) => a.name).join(", ") || "Unknown author"} term={term} />
                   </span>
                 </span>
                 <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
@@ -278,5 +277,17 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
         {expanded && !waiting && enabled && results.isSuccess ? `${books.length} suggestions` : ""}
       </p>
     </div>
+  );
+}
+
+function Highlighted({ text, term }: { text: string; term: string }) {
+  return highlightParts(text, term).map((part, i) =>
+    part.match ? (
+      <mark key={i} className="bg-transparent font-semibold text-foreground">
+        {part.text}
+      </mark>
+    ) : (
+      <span key={i}>{part.text}</span>
+    ),
   );
 }
