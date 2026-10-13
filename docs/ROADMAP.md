@@ -62,7 +62,7 @@ every day, then growth, then looks.
   - Owner part done 2026-10-12 (backend `feature/new-order-telegram-alert`): new order and low stock go to the owner via the Bookly Alerts bot. Still open: the staff group.
 
 - [ ] Invoice and packing slip: known limits (2026-10-13)
-  - [ ] Order lines keep only the price at purchase time, not the title/format/SKU: renaming a book or changing a SKU changes its old invoices. Fix: snapshot columns on `order_items` (new migration: ask first).
+  - [x] Order lines keep only the price at purchase time, not the title/format/SKU: renaming a book or changing a SKU changes its old invoices. **Done 2026-10-13** (backend `feature/order-line-snapshot`, owner-approved migration): lines store title, format, SKU, ISBN and authors at checkout; old lines were filled once from the books.
   - [ ] The heading says "Invoice" even when the order is paid; option: say "Receipt" once paid (owner to decide).
   - [ ] Riel is shown only for the total (and the amount to collect), not per line; no riel at all when no exchange rate existed when the order was placed.
   - [ ] Shop details on the sheets come from `src/content/shop.ts` (temporary personal email, "Phnom Penh, Cambodia" without a street address); update with the shop email and domain (Phase 5).

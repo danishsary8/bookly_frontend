@@ -13,13 +13,13 @@
   print their own invoice).
 
 ## Now: waiting for the owner's merge
-Backend + frontend `feature/bulk-order-status`: change the status of up to 50 ticked orders at once (processing, shipped,
-delivered; cancel stays one at a time), each order on its own with the usual email; the ones that cannot move are listed
-with the reason and stay ticked. (Merged before: `fix/returned-order-documents`.)
+Backend `feature/order-line-snapshot` (+ this docs branch): order lines keep the title, format, SKU, ISBN and authors they
+were bought with (new migration `2026_10_13_200001_add_book_details_to_order_items`, approved; fills old lines once).
+Merged before: bulk order status, returned-order invoice fix.
 
 ## Next: the owner picks one
-Recommended order: (1) order lines keep the book
-title/format at purchase time (needs a migration, ask first), (2) dashboard custom date range, (3) staff Telegram group, (4) delivery notes on orders.
+Recommended order: (1) dashboard custom date range, (2) staff Telegram group for new orders, (3) delivery notes on
+orders, (4) "Receipt" heading on the invoice once paid.
 Other backlog: data retention · exchange-rate refresh · missed-backup check · Khmer language · delivery fees per
 province · SEO/pre-render · custom domain + shop email · E2E tests · security review · redesign last.
 
