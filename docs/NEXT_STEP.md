@@ -18,8 +18,8 @@ were bought with (new migration `2026_10_13_200001_add_book_details_to_order_ite
 Merged before: bulk order status, returned-order invoice fix.
 
 ## Next: the owner picks one
-Recommended order: (1) order lines keep the book
-title/format at purchase time (needs a migration, ask first), (2) dashboard custom date range, (3) staff Telegram group, (4) delivery notes on orders.
+Recommended order: (1) dashboard custom date range, (2) staff Telegram group for new orders, (3) delivery notes on
+orders, (4) "Receipt" heading on the invoice once paid.
 Other backlog: data retention · exchange-rate refresh · missed-backup check · Khmer language · delivery fees per
 province · SEO/pre-render · custom domain + shop email · E2E tests · security review · redesign last.
 
