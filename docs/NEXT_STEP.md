@@ -10,16 +10,11 @@ Also done on 2026-10-12 (all merged except the last one): backend housekeeping n
 alert for each new order and low stock (Bookly Alerts bot; live test received), frontend CI `actions/setup-node` pinned to
 the v7.1.0 commit (branch `chore/setup-node-v7`, CI green, waiting for the owner to merge).
 
-## Owner to-do (left on 2026-10-12, do these first)
-1. Merge the frontend branch `chore/setup-node-v7`:
-   https://github.com/danishsary8/bookly_frontend/compare/main...chore/setup-node-v7 → Create pull request → Merge.
-2. Delete the old branches nobody needs any more (GitHub → repo → Branches → trash icon):
-   frontend `chore/pin-setup-node` and `chore/deps-and-setup-node`; frontend `tmp/sentry-test-error` if it still exists.
-3. Open `https://bookly-api-zasc.onrender.com/api/v1/health`. `telegram_bot` should be `ok`. If it still says
-   "webhook not set": Render → Manual Deploy → Deploy latest commit, check again after 3 minutes; still bad → copy the
-   Render log lines containing "telegram" (never the token) to the next session.
-4. Optional check that housekeeping runs: nothing to do; the next session can confirm it from the Render logs.
-5. Then tell the next session which work comes next (Phase 3 dashboard numbers is next in order).
+## Done since 2026-10-12
+Merged: order and return emails, owner Telegram alert, setup-node pin, Telegram webhook self-repair (address from `APP_URL`), dashboard numbers (backend) and dashboard comparison/KHR/top categories (frontend). `.env.production` now points at the live Render API (it pointed at the old wasmer API; Vercel's own setting hid the problem).
+
+## Next (owner chose 2026-10-13): security
+Rate limits from backend `docs/RATE_LIMITS.md` (owner approves the numbers first) + a security email when a password is changed.
 
 ## Still open in Phase 2, in this order
 1. **Apply the rate-limit changes from backend docs/RATE_LIMITS.md**: top gaps: checkout and order cancel can flood stock, `/auth/telegram/status` polling, `/books` search cost, coupon check brute force, staff dashboard queries; owner approves the limits first; needs the open questions answered.

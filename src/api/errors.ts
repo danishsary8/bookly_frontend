@@ -17,6 +17,13 @@ export type ApiErrorKind =
 const SERVER_MESSAGE = "Something went wrong on our side. Please try again in a moment.";
 const NETWORK_MESSAGE = "Can't reach the Bookly server. Check your connection and try again.";
 
+/** "42 seconds", "1 minute", "15 minutes": coupon lock-outs answer with Retry-After 900. */
+const waitText = (seconds: number): string => {
+  if (seconds < 120) return `${seconds} ${seconds === 1 ? "second" : "seconds"}`;
+  const minutes = Math.ceil(seconds / 60);
+  return `${minutes} minutes`;
+};
+
 export class ApiError extends Error {
   readonly kind: ApiErrorKind;
   readonly status: number | null;
@@ -99,7 +106,7 @@ export class ApiError extends Error {
       return new ApiError({
         kind: "rate_limited",
         status,
-        message: retryAfter ? `Too many attempts. Please wait ${retryAfter} seconds and try again.` : "Too many attempts. Please wait a moment and try again.",
+        message: retryAfter ? `Too many attempts. Please wait ${waitText(retryAfter)} and try again.` : "Too many attempts. Please wait a moment and try again.",
         retryAfter,
         requestId,
       });
