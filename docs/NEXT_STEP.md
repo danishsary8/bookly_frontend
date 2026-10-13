@@ -14,11 +14,12 @@ the v7.1.0 commit (branch `chore/setup-node-v7`, CI green, waiting for the owner
 Merged: order and return emails, owner Telegram alert, setup-node pin, Telegram webhook self-repair (address from `APP_URL`), dashboard numbers (backend) and dashboard comparison/KHR/top categories (frontend). `.env.production` now points at the live Render API (it pointed at the old wasmer API; Vercel's own setting hid the problem).
 Also merged on 2026-10-13: rate limits (owner's "looser" set, coupon lock after 5 unknown codes, webhook exempt with its secret) + password changed/reset security email; welcome email on first verification; owner Telegram alert for 1-2 star reviews; plans/audits docs.
 
-## Now (2026-10-13): better search, waiting for the owner's merge
-Backend `feature/catalog-name-search` (rebuilt fresh from main; replaces PR #10, which the owner can close) + frontend `feature/catalog-name-search` (author names bold in the live search suggestions). Customers find books by title, description, author, series or category name, every word as a prefix, while typing. One new migration, indexes only (owner approved 2026-10-13).
+## Now (2026-10-13): invoice and packing slip, waiting for the owner's merge
+Better search is merged (backend + frontend `feature/catalog-name-search`; PR #10 closed).
+Backend + frontend `feature/order-documents`: printable invoice and packing slip (one A4 page per order), print up to 50 at once from the orders list, customers print their own invoice. Owner decisions 2026-10-13: print page (no PDF library), order number = invoice number (no migration), USD + KHR at the rate in force when the order was placed; included: print many at once and the customer invoice (QR code not wanted for now).
 
 ## Next: the owner picks one from this backlog
-Admin orders: printable invoice/packing slip + bulk status · dashboard custom date range · staff Telegram group for new orders · data retention (old carts/audit log/cache; owner chooses the windows) · exchange-rate refresh · missed-backup check · Khmer language · delivery fees per province · SEO/pre-render · custom domain + shop email (SPF/DKIM/DMARC) · E2E tests · security review · redesign last.
+Admin orders: bulk status changes · dashboard custom date range · staff Telegram group for new orders · data retention (old carts/audit log/cache; owner chooses the windows) · exchange-rate refresh · missed-backup check · Khmer language · delivery fees per province · SEO/pre-render · custom domain + shop email (SPF/DKIM/DMARC) · E2E tests · security review · redesign last.
 
 ## Still open in Phase 2, in this order
 1. **Frontend dependency updates**: a plain `npm update` rewrote the whole lockfile and broke `npm ci` in CI; do updates with the CI's npm (10.9.9) and verify with `npm ci`, or one package at a time; majors still to decide are listed in 'Major upgrades to decide'.

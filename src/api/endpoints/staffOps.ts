@@ -1,7 +1,7 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { api } from "../client";
 import { toQueryParams } from "./catalog";
-import type { Order, OrderStatus, Paginated, Resource, ReturnRequest } from "../types";
+import type { Order, OrderDocument, OrderStatus, Paginated, Resource, ReturnRequest } from "../types";
 import type { StaffRole, StaffUser } from "./staff";
 
 /*
@@ -139,6 +139,8 @@ export const opsApi = {
   setOrderStatus: (id: number, status: OrderStatus, note?: string) =>
     api.post<Resource<StaffOrder>>(`/staff/orders/${id}/status`, { status, ...(note ? { note } : {}) }).then((r) => r.data),
   /** CSV of every order placed between the two days (Phnom Penh), at most 366 days. */
+  /** Print data for invoices and packing slips, in the order asked (the API takes up to 50; unknown ids are left out). */
+  orderDocuments: (ids: number[]) => api.get<{ data: OrderDocument[] }>("/staff/orders/documents", { params: { ids } }).then((r) => r.data),
   exportOrders: (from: string, to: string) => api.get<Blob>("/staff/orders/export", { params: { from, to }, responseType: "blob" }),
 
   returns: (f: ReturnFilters = {}) => api.get<Paginated<StaffReturn>>("/staff/returns", { params: toQueryParams(f) }),
@@ -184,6 +186,7 @@ export const opsApi = {
 export const opsQueries = {
   orders: (f: OrderFilters) => queryOptions({ queryKey: opsKeys.orders(f), queryFn: () => opsApi.orders(f), placeholderData: keepPreviousData }),
   order: (id: number) => queryOptions({ queryKey: opsKeys.order(id), queryFn: () => opsApi.order(id) }),
+  orderDocuments: (ids: number[]) => queryOptions({ queryKey: ["staff", "orders", "documents", ids] as const, queryFn: () => opsApi.orderDocuments(ids) }),
   returns: (f: ReturnFilters) => queryOptions({ queryKey: opsKeys.returns(f), queryFn: () => opsApi.returns(f), placeholderData: keepPreviousData }),
   return: (id: number) => queryOptions({ queryKey: opsKeys.return(id), queryFn: () => opsApi.return(id) }),
   reviews: (f: ReviewFilters) => queryOptions({ queryKey: opsKeys.reviews(f), queryFn: () => opsApi.reviews(f), placeholderData: keepPreviousData }),

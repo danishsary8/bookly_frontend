@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Ban, CheckCircle2, Mail, PackageCheck, Phone, Truck } from "lucide-react";
+import { ArrowLeft, Ban, CheckCircle2, FileText, Mail, PackageCheck, Phone, Printer, Truck } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { opsApi, opsKeys, opsQueries, type StaffOrder } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
@@ -9,7 +9,7 @@ import { NotFoundState } from "@/components/catalog/NotFoundState";
 import { TextAreaField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
@@ -17,6 +17,7 @@ import { AdminPage } from "@/features/admin/AdminPage";
 import { DeliveryAddressCard, OrderItemsCard } from "@/features/orders/OrderSummary";
 import { OrderTimeline } from "@/features/orders/OrderTimeline";
 import { orderDateTime } from "@/features/orders/format";
+import { staffPrintPath } from "@/features/orders/documents/printLinks";
 import { toast } from "@/stores/toast";
 
 /** What each staff step is called on its button, what it does, and the toast after it. */
@@ -136,6 +137,15 @@ export default function OrderAdminPage() {
               <Ban aria-hidden="true" /> Cancel order
             </Button>
           ) : null}
+          {/* Open in a new tab: the sheet prints from there and this page stays as it was. */}
+          {o.status !== "cancelled" ? (
+            <Link to={staffPrintPath("packing-slip", [o.id!])} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline" })}>
+              <Printer aria-hidden="true" /> Packing slip
+            </Link>
+          ) : null}
+          <Link to={staffPrintPath("invoice", [o.id!])} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline" })}>
+            <FileText aria-hidden="true" /> Invoice
+          </Link>
         </>
       }
     >
