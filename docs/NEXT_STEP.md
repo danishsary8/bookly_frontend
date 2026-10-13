@@ -13,9 +13,9 @@
   print their own invoice).
 
 ## Now: waiting for the owner's merge
-Backend + frontend `feature/bulk-order-status`: change the status of up to 50 ticked orders at once (processing, shipped,
-delivered; cancel stays one at a time), each order on its own with the usual email; the ones that cannot move are listed
-with the reason and stay ticked. (Merged before: `fix/returned-order-documents`.)
+Backend `feature/order-line-snapshot` (+ this docs branch): order lines keep the title, format, SKU, ISBN and authors they
+were bought with (new migration `2026_10_13_200001_add_book_details_to_order_items`, approved; fills old lines once).
+Merged before: bulk order status, returned-order invoice fix.
 
 ## Next: the owner picks one
 Recommended order: (1) order lines keep the book
