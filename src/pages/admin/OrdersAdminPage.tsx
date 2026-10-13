@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download, FileText, Package, Printer, X } from "lucide-react";
+import { Download, FileText, ListChecks, Package, Printer, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { opsApi, opsQueries } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Pagination } from "@/components/ui/pagination";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { BulkStatusDialog } from "@/features/admin/orders/BulkStatusDialog";
 import { ListState, SearchBox, Segmented, TableCard, td, th, thead } from "@/features/admin/listKit";
 import { useStaff } from "@/features/admin/staffSession";
 import { useListParams } from "@/features/admin/useListParams";
@@ -93,15 +94,18 @@ function ExportDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
   );
 }
 
-/** Ticked orders and what to print for them; the ticks stay while paging or filtering. */
-function PrintBar({ ids, onClear }: { ids: number[]; onClear: () => void }) {
+/** Ticked orders and what to do with them (print, change status); the ticks stay while paging or filtering. */
+function SelectionBar({ ids, onStatus, onClear }: { ids: number[]; onStatus: () => void; onClear: () => void }) {
   return (
-    <div role="region" aria-label="Print selected orders" className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-lapis-tint px-4 py-3">
+    <div role="region" aria-label="Selected orders" className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-lapis-tint px-4 py-3">
       <p className="font-semibold tabular-nums">
-        {ids.length} selected{ids.length >= MAX_PRINT ? ` (the most for one print)` : ""}
+        {ids.length} selected{ids.length >= MAX_PRINT ? ` (the most at once)` : ""}
       </p>
       <div className="flex flex-wrap gap-2">
-        <a href={staffPrintPath("packing-slip", ids)} target="_blank" rel="noopener" className={buttonVariants({ size: "sm" })}>
+        <Button size="sm" onClick={onStatus}>
+          <ListChecks aria-hidden="true" /> Change status
+        </Button>
+        <a href={staffPrintPath("packing-slip", ids)} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline", size: "sm" })}>
           <Printer aria-hidden="true" /> Print packing slips
         </a>
         <a href={staffPrintPath("invoice", ids)} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline", size: "sm" })}>
@@ -118,7 +122,7 @@ function PrintBar({ ids, onClear }: { ids: number[]; onClear: () => void }) {
 /*
  * /admin/orders: every order, newest first; search by order number or customer,
  * filter by status and by the day it was placed. All filters live in the URL.
- * Tick orders to print their packing slips or invoices together (up to 50).
+ * Tick orders to change their status or print their packing slips or invoices together (up to 50).
  */
 export default function OrdersAdminPage() {
   const session = useStaff();
@@ -132,6 +136,7 @@ export default function OrdersAdminPage() {
   const orders = useQuery(opsQueries.orders({ status, q: q || undefined, from: from || undefined, to: to || undefined, page, per_page: 20 }));
   const [exporting, setExporting] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
+  const [changing, setChanging] = useState(false);
   const meta = orders.data?.meta;
   const list = orders.data?.data ?? [];
   const pageIds = list.map((o) => o.id!);
@@ -174,7 +179,7 @@ export default function OrdersAdminPage() {
           </div>
         </div>
         <Segmented label="Status" value={status ?? "all"} options={STATUSES} onChange={(v) => set({ status: v === "all" ? undefined : v })} />
-        {selected.length ? <PrintBar ids={selected} onClear={() => setSelected([])} /> : null}
+        {selected.length ? <SelectionBar ids={selected} onStatus={() => setChanging(true)} onClear={() => setSelected([])} /> : null}
       </div>
 
       <ListState
@@ -239,6 +244,12 @@ export default function OrdersAdminPage() {
       </ListState>
       <Pagination page={meta?.current_page ?? 1} lastPage={meta?.last_page ?? 1} hrefFor={hrefFor} />
       {isAdmin ? <ExportDialog open={exporting} onOpenChange={setExporting} /> : null}
+      <BulkStatusDialog
+        ids={selected}
+        open={changing}
+        onOpenChange={setChanging}
+        onDone={(result) => setSelected((current) => current.filter((id) => !result.updated.some((u) => u.id === id)))}
+      />
     </AdminPage>
   );
 }

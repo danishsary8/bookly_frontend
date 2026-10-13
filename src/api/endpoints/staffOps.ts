@@ -19,6 +19,14 @@ export type StaffOrder = Omit<Order, "status_history"> & {
   allowed_next_statuses: OrderStatus[];
 };
 
+/** POST /staff/orders/bulk-status: each order changes on its own; the ones that could not move come back with the reason. */
+export type BulkStatusTarget = "processing" | "shipped" | "delivered";
+export interface BulkStatusResult {
+  status: BulkStatusTarget;
+  updated: Array<{ id: number; order_number: string; status: OrderStatus }>;
+  failed: Array<{ id: number; order_number: string | null; reason: string }>;
+}
+
 export type StaffReturn = ReturnRequest & { customer?: Person; handled_by?: { id: number; name: string } | null };
 
 export interface StaffReview {
@@ -139,6 +147,8 @@ export const opsApi = {
   setOrderStatus: (id: number, status: OrderStatus, note?: string) =>
     api.post<Resource<StaffOrder>>(`/staff/orders/${id}/status`, { status, ...(note ? { note } : {}) }).then((r) => r.data),
   /** CSV of every order placed between the two days (Phnom Penh), at most 366 days. */
+  bulkOrderStatus: (ids: number[], status: BulkStatusTarget, note?: string) =>
+    api.post<{ data: BulkStatusResult }>("/staff/orders/bulk-status", { ids, status, ...(note ? { note } : {}) }).then((r) => r.data),
   /** Print data for invoices and packing slips, in the order asked (the API takes up to 50; unknown ids are left out). */
   orderDocuments: (ids: number[]) => api.get<{ data: OrderDocument[] }>("/staff/orders/documents", { params: { ids } }).then((r) => r.data),
   exportOrders: (from: string, to: string) => api.get<Blob>("/staff/orders/export", { params: { from, to }, responseType: "blob" }),

@@ -3501,6 +3501,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff/orders/bulk-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** One status for up to 50 orders: processing, shipped or delivered (cancel stays one at a time). Each order changes on its own; the ones that cannot move are listed with the reason */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ids: number[];
+                        /** @enum {string} */
+                        status: "processing" | "shipped" | "delivered";
+                        /** @description Added to each order timeline; the customer sees it */
+                        note?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description What changed and what did not */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                status?: string;
+                                updated?: {
+                                    id?: number;
+                                    order_number?: string;
+                                    status?: string;
+                                }[];
+                                failed?: {
+                                    id?: number;
+                                    order_number?: string | null;
+                                    reason?: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                422: components["responses"]["Validation"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/staff/orders/documents": {
         parameters: {
             query?: never;
