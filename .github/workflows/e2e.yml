@@ -87,10 +87,18 @@ jobs:
           echo "E2E_STAFF_TOTP_SECRET=$SECRET" >> $GITHUB_ENV
           echo "E2E_STAFF_PASSWORD=Password123!" >> $GITHUB_ENV
 
-      - name: Start Laravel API server
+      - name: Install frontend dependencies
         run: |
+          npm ci --no-audit --no-fund
+          npx playwright install chromium --with-deps
+
+      - name: Start servers and run Playwright tests
+        run: |
+          # Start Laravel API server
           cd backend
-          nohup php artisan serve --host=127.0.0.1 --port=8000 > /tmp/artisan.log 2>&1 &
+          php artisan serve --host=127.0.0.1 --port=8000 > /tmp/artisan.log 2>&1 &
+          cd ..
+
           for i in $(seq 1 30); do
             if curl -fs http://127.0.0.1:8000/api/v1/ping >/dev/null; then
               echo "Laravel API is responding."
@@ -104,21 +112,13 @@ jobs:
             exit 1
           fi
 
-      - name: Generate staff session payload
-        run: |
+          # Generate staff session payload
           TOKEN="${STAFF_BEARER_TOKEN}"
           USER_JSON=$(curl -fsS -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8000/api/v1/staff/auth/me | jq -c '.data')
-          SESSION_JSON=$(jq -n --arg token "$TOKEN" --argjson user "$USER_JSON" '{token: $token, expiresAt: null, user: $user}')
-          echo "E2E_STAFF_SESSION=$SESSION_JSON" >> $GITHUB_ENV
+          export E2E_STAFF_SESSION=$(jq -n --arg token "$TOKEN" --argjson user "$USER_JSON" '{token: $token, expiresAt: null, user: $user}')
 
-      - name: Install frontend dependencies
-        run: |
-          npm ci --no-audit --no-fund
-          npx playwright install chromium --with-deps
-
-      - name: Start Vite frontend server
-        run: |
-          VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1 nohup npm run dev -- --host 127.0.0.1 --port 5173 > /tmp/vite.log 2>&1 &
+          # Start Vite frontend server
+          VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1 npm run dev -- --host 127.0.0.1 --port 5173 > /tmp/vite.log 2>&1 &
           for i in $(seq 1 30); do
             if curl -fs http://127.0.0.1:5173 >/dev/null; then
               echo "Vite server is responding."
@@ -132,12 +132,11 @@ jobs:
             exit 1
           fi
 
-      - name: Run Playwright tests
-        run: npx playwright test e2e/smoke.spec.ts
+          # Run Playwright tests
+          npx playwright test e2e/smoke.spec.ts
         env:
           E2E_BASE_URL: http://127.0.0.1:5173
           E2E_API_URL: http://127.0.0.1:8000/api/v1
-          E2E_STAFF_SESSION: ${{ env.E2E_STAFF_SESSION }}
           E2E_STAFF_EMAIL: admin@bookly.test
           E2E_STAFF_PASSWORD: ${{ env.E2E_STAFF_PASSWORD }}
           E2E_STAFF_TOTP_SECRET: ${{ env.E2E_STAFF_TOTP_SECRET }}
