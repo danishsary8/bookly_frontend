@@ -30,8 +30,6 @@ async function noAxeViolations(page: Page) {
   expect(violations.map((v) => `${v.id}: ${v.help} — ${v.nodes.map((n) => n.html.slice(0, 160)).join(" | ")}`)).toEqual([]);
 }
 
-test.describe.configure({ mode: "serial" });
-
 let orderNumber = "";
 
 test("keyboard: skip link, cart drawer focus and Escape", async ({ page }) => {
