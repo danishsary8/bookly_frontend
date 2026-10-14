@@ -449,6 +449,68 @@ describe("customer", () => {
     await userEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Deactivate" }));
     await waitFor(() => expect(toggle).toHaveBeenCalledWith(4, false));
   });
+
+  it("danger zone: only admins can close a customer account, showing dialog with validation and error", async () => {
+    // 1. Staff does not see danger zone or close button
+    signIn(staff);
+    vi.spyOn(opsApi, "customer").mockResolvedValue(customer);
+    const first = app("/admin/customers/4");
+    expect(await screen.findByRole("heading", { level: 1, name: "Sokha Chan" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Danger zone" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Close account" })).not.toBeInTheDocument();
+    first.unmount();
+
+    // 2. Admin sees danger zone and can open dialog
+    signIn(admin);
+    vi.spyOn(opsApi, "customer").mockResolvedValue(customer);
+    const closeApi = vi.spyOn(opsApi, "closeCustomer");
+    app("/admin/customers/4");
+    expect(await screen.findByRole("heading", { name: "Danger zone" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Close account" }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Close Sokha Chan's account?" })).toBeInTheDocument();
+    expect(dialog).toHaveTextContent("reopened for 30 days");
+    expect(dialog).toHaveTextContent("personal details (name, email, phone, addresses) are erased");
+
+    // 3. API Error handling
+    closeApi.mockRejectedValueOnce(
+      validation({ password: ["That password is incorrect."] }),
+    );
+    await userEvent.type(within(dialog).getByLabelText("Your password"), "WrongPassword");
+    await userEvent.type(within(dialog).getByLabelText("6-digit authenticator code"), "123456");
+    await userEvent.type(within(dialog).getByLabelText(/Type sokha@example.com to confirm/), "sokha@example.com");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Close account" }));
+
+    expect(await within(dialog).findByText("That password is incorrect.")).toBeInTheDocument();
+
+    // 4. Successful close
+    const closedCustomer: StaffCustomer = {
+      ...customer,
+      closed_at: "2026-10-14T10:00:00Z",
+      erase_at: "2026-11-13T10:00:00Z",
+    };
+    closeApi.mockResolvedValueOnce(closedCustomer);
+
+    await userEvent.clear(within(dialog).getByLabelText("Your password"));
+    await userEvent.type(within(dialog).getByLabelText("Your password"), "CorrectPassword");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Close account" }));
+
+    await waitFor(() =>
+      expect(closeApi).toHaveBeenCalledWith(4, {
+        password: "CorrectPassword",
+        code: "123456",
+        confirm: "sokha@example.com",
+      }),
+    );
+
+    // Toast shown
+    expect(await screen.findByText("Sokha Chan's account was closed")).toBeInTheDocument();
+
+    // Closed banner and reopen button appear, Danger zone disappears
+    expect(await screen.findByRole("button", { name: "Reopen account" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Danger zone" })).not.toBeInTheDocument();
+  });
 });
 
 describe("staff members", () => {
