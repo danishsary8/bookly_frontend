@@ -24,11 +24,10 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
-import { formatLabel } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { addRecentlyViewed, useRecentlyViewed } from "@/stores/recentlyViewed";
-import { useT } from "@/i18n";
+import { formatName, useT } from "@/i18n";
 
 /*
  * /books/:id. Layout (MASTER 5/7 split): cover panel | title, authors, rating,
@@ -40,12 +39,12 @@ import { useT } from "@/i18n";
  */
 
 const MAX_QTY = 10;
-const dateFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" });
 const DIGITAL = new Set(["ebook", "audiobook"]);
 
 function DetailSkeleton() {
+  const { dict } = useT();
   return (
-    <SkeletonGroup label="Loading book…" className="grid gap-10 lg:grid-cols-12 lg:gap-16">
+    <SkeletonGroup label={dict.book.loading} className="grid gap-10 lg:grid-cols-12 lg:gap-16">
       <div className="rounded-xl bg-surface-2 p-8 lg:col-span-5">
         <Skeleton className="mx-auto aspect-[2/3] w-full max-w-[300px]" />
       </div>
@@ -72,6 +71,7 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
 function Purchase({ book }: { book: BookDetail }) {
   const currency = useCurrency();
   const { dict } = useT();
+  const b = dict.book;
   const cart = useAddToCart();
   const wishlist = useWishlist();
   const variants = book.variants ?? [];
@@ -120,19 +120,19 @@ function Purchase({ book }: { book: BookDetail }) {
           {variant ? formatMoney(variant.price_usd, variant.price_khr, currency) : formatMoney(book.price_from_usd, book.price_from_khr, currency)}
         </p>
         <p className={cn("text-sm", buyable ? "text-success" : "text-destructive")}>
-          {!variant ? "Not available" : !buyable ? dict.bookDetail.outOfStock : digital ? "Available now as a download" : dict.bookDetail.inStock}
+          {!variant ? b.notAvailable : !buyable ? dict.bookDetail.outOfStock : digital ? b.download : dict.bookDetail.inStock}
         </p>
       </div>
 
       <div ref={mainButton} className="flex flex-wrap items-center gap-3">
-        {!digital && buyable ? <QuantityStepper value={quantity} onChange={setQuantity} max={MAX_QTY} label={`Quantity for ${book.title}`} /> : null}
+        {!digital && buyable ? <QuantityStepper value={quantity} onChange={setQuantity} max={MAX_QTY} label={b.quantityFor(book.title ?? "")} /> : null}
         <CtaGlare className="min-w-[12rem] flex-1 sm:flex-none">
           <Button variant="cta" size="lg" className="w-full" onClick={add} disabled={!buyable} loading={adding}>
             {!adding ? <ShoppingBag aria-hidden="true" /> : null}
-            {adding ? "Adding…" : dict.bookDetail.addToCart}
+            {adding ? b.adding : dict.bookDetail.addToCart}
           </Button>
         </CtaGlare>
-        <Button variant="outline" size="icon-lg" onClick={() => wishlist.toggle(book)} aria-pressed={saved} aria-label={`Save ${book.title} to your wishlist`} className={cn(saved && "text-accent-text")}>
+        <Button variant="outline" size="icon-lg" onClick={() => wishlist.toggle(book)} aria-pressed={saved} aria-label={b.saveToWishlist(book.title ?? "")} className={cn(saved && "text-accent-text")}>
           <Heart className={cn(saved && "fill-current")} aria-hidden="true" />
         </Button>
       </div>
@@ -141,22 +141,22 @@ function Purchase({ book }: { book: BookDetail }) {
         <li className="flex items-start gap-2.5">
           <Wallet className="mt-0.5 size-[18px] shrink-0 text-primary" aria-hidden="true" />
           <span>
-            <span className="block font-semibold">Cash on delivery</span>
-            <span className="text-muted-foreground">Pay when it arrives</span>
+            <span className="block font-semibold">{b.cod}</span>
+            <span className="text-muted-foreground">{b.codLead}</span>
           </span>
         </li>
         <li className="flex items-start gap-2.5">
           <Truck className="mt-0.5 size-[18px] shrink-0 text-primary" aria-hidden="true" />
           <span>
-            <span className="block font-semibold">Delivery in Cambodia</span>
-            <span className="text-muted-foreground">Fee shown at checkout</span>
+            <span className="block font-semibold">{b.delivery}</span>
+            <span className="text-muted-foreground">{b.deliveryLead}</span>
           </span>
         </li>
         <li className="flex items-start gap-2.5">
           <RotateCcw className="mt-0.5 size-[18px] shrink-0 text-primary" aria-hidden="true" />
           <span>
-            <span className="block font-semibold">Easy returns</span>
-            <span className="text-muted-foreground">On printed books</span>
+            <span className="block font-semibold">{b.returns}</span>
+            <span className="text-muted-foreground">{b.returnsLead}</span>
           </span>
         </li>
       </ul>
@@ -173,11 +173,11 @@ function Purchase({ book }: { book: BookDetail }) {
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{book.title}</p>
             <p className="text-sm tabular-nums text-muted-foreground">
-              {variant ? `${formatLabel(variant.format)} · ${formatMoney(variant.price_usd, variant.price_khr, currency)}` : null}
+              {variant ? `${formatName(dict, variant.format)} · ${formatMoney(variant.price_usd, variant.price_khr, currency)}` : null}
             </p>
           </div>
           <Button variant="cta" onClick={add} disabled={!buyable} loading={adding} tabIndex={showBar ? 0 : -1}>
-            Add to cart
+            {dict.bookDetail.addToCart}
           </Button>
         </div>
       </div>
@@ -190,7 +190,8 @@ export default function BookDetailPage() {
   const bookId = Number(id);
   const valid = Number.isInteger(bookId) && bookId > 0;
   const location = useLocation();
-  const { dict } = useT();
+  const { dict, locale } = useT();
+  const b = dict.book;
   const preview = (location.state as BookPreviewState | null)?.preview;
   const { hash } = location;
   const query = useQuery({ ...catalogQueries.book(bookId), enabled: valid });
@@ -198,8 +199,8 @@ export default function BookDetailPage() {
   const shown: BookCard | undefined = book ?? (preview?.id === bookId ? preview : undefined);
   const showSkeleton = useSkeletonVisible(query.isPending && !shown);
   const recent = useRecentlyViewed();
-  useDocumentTitle(shown?.title ?? (query.isError ? "Book not found" : null), {
-    description: book ? book.description || `${book.title}${book.authors?.length ? ` by ${book.authors.map((a) => a.name).join(", ")}` : ""}. Order from Bookly, delivered across Cambodia.` : null,
+  useDocumentTitle(shown?.title ?? (query.isError ? b.notFoundDoc : null), {
+    description: book ? book.description || b.metaBy(book.title ?? "", (book.authors ?? []).map((a) => a.name).join(", ")) : null,
     image: shown?.cover_image_url,
     noindex: query.isError,
   });
@@ -219,11 +220,11 @@ export default function BookDetailPage() {
         <EmptyState
           icon={BookX}
           headingLevel="h1"
-          title="We couldn't find that book"
-          description="It may have been removed from the catalogue, or the link is mistyped."
+          title={b.notFound}
+          description={b.notFoundLead}
           action={
             <Link to="/books" className={buttonVariants()}>
-              Browse all books
+              {b.browseAll}
             </Link>
           }
         />
@@ -248,10 +249,10 @@ export default function BookDetailPage() {
     <div className="container-shell pb-24 pt-6 sm:pt-8">
       <Breadcrumb
         items={[
-          { label: "Home", to: "/" },
+          { label: b.home, to: "/" },
           { label: dict.catalog.title, to: "/books" },
           ...(category ? [{ label: category.name ?? "", to: `/categories/${category.slug}` }] : []),
-          { label: shown?.title ?? "Book" },
+          { label: shown?.title ?? b.book },
         ]}
       />
 
@@ -266,7 +267,7 @@ export default function BookDetailPage() {
           <div className="lg:col-span-5">
             <div className="rounded-xl bg-surface-2 px-8 py-10 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
               <MorphCover layoutId={coverLayoutId(bookId)} className="mx-auto w-full max-w-[300px] shadow-lift">
-                <BookCover src={shown.cover_image_url} title={shown.title} alt={`${shown.title} cover`} eager />
+                <BookCover src={shown.cover_image_url} title={shown.title} alt={b.cover(shown.title ?? "")} eager />
               </MorphCover>
             </div>
           </div>
@@ -287,7 +288,7 @@ export default function BookDetailPage() {
               </h1>
               {authors.length ? (
                 <p className="text-lg text-muted-foreground">
-                  by{" "}
+                  {b.by}{" "}
                   {authors.map((a, i) => (
                     <span key={a.id}>
                       {i > 0 ? ", " : null}
@@ -302,7 +303,7 @@ export default function BookDetailPage() {
                 <StarRating value={shown.rating_avg} count={shown.review_count} />
                 {book?.series ? (
                   <Link to={`/series/${book.series.id}`} className="text-sm font-semibold text-primary underline-offset-4 hover:underline">
-                    {book.series.order ? `Book ${book.series.order} in ` : "Part of "}
+                    {book.series.order ? b.bookInSeries(book.series.order) : b.partOf}
                     {book.series.name}
                   </Link>
                 ) : null}
@@ -316,7 +317,7 @@ export default function BookDetailPage() {
 
       {book ? (
         <Tabs defaultValue={hash === "#your-review" || hash === "#reviews" ? "reviews" : "description"} className="mt-16">
-          <TabsList aria-label="About this book">
+          <TabsList aria-label={b.about}>
             <TabsTrigger value="description">{dict.bookDetail.description}</TabsTrigger>
             <TabsTrigger value="details">{dict.bookDetail.details}</TabsTrigger>
             <TabsTrigger value="reviews">
@@ -324,28 +325,28 @@ export default function BookDetailPage() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="description">
-            <div className="max-w-prose whitespace-pre-line text-[17px] leading-8 text-foreground">{book.description || "No description yet."}</div>
+            <div className="max-w-prose whitespace-pre-line text-[17px] leading-8 text-foreground">{book.description || b.noDescription}</div>
           </TabsContent>
           <TabsContent value="details">
             <dl className="max-w-2xl text-[15px]">
-              <Detail label="Authors">{authors.map((a) => a.name).join(", ")}</Detail>
-              <Detail label="Publisher">
+              <Detail label={b.authors}>{authors.map((a) => a.name).join(", ")}</Detail>
+              <Detail label={b.publisher}>
                 {book.publisher ? (
                   <Link to={`/publishers/${book.publisher.id}`} className="underline-offset-4 hover:underline">
                     {book.publisher.name}
                   </Link>
                 ) : null}
               </Detail>
-              <Detail label="Published">{book.publish_date ? dateFormat.format(new Date(book.publish_date)) : null}</Detail>
-              <Detail label="Language">{book.language}</Detail>
-              <Detail label="Pages">{book.page_count ? book.page_count.toLocaleString("en-US") : null}</Detail>
-              <Detail label="Formats">{(book.variants ?? []).map((v) => formatLabel(v.format)).join(", ")}</Detail>
-              <Detail label="ISBN">
+              <Detail label={b.published}>{book.publish_date ? new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(new Date(book.publish_date)) : null}</Detail>
+              <Detail label={b.language}>{book.language}</Detail>
+              <Detail label={b.pages}>{book.page_count ? book.page_count.toLocaleString("en-US") : null}</Detail>
+              <Detail label={b.formats}>{(book.variants ?? []).map((v) => formatName(dict, v.format)).join(", ")}</Detail>
+              <Detail label={b.isbn}>
                 {(book.variants ?? []).filter((v) => v.isbn).length ? (
                   <ul>
                     {(book.variants ?? []).filter((v) => v.isbn).map((v) => (
                       <li key={v.id} className="tabular-nums">
-                        {v.isbn} <span className="text-muted-foreground">({formatLabel(v.format)})</span>
+                        {v.isbn} <span className="text-muted-foreground">({formatName(dict, v.format)})</span>
                       </li>
                     ))}
                   </ul>
@@ -364,20 +365,20 @@ export default function BookDetailPage() {
 
       <div className="mt-20 grid gap-16">
         {book?.series && otherInSeries.length ? (
-          <BookShelf id="series" eyebrow="The series" title={book.series.name ?? "In this series"} books={otherInSeries} seeAllHref={`/series/${book.series.id}`} seeAllLabel="Whole series" />
+          <BookShelf id="series" eyebrow={b.theSeries} title={book.series.name ?? b.inThisSeries} books={otherInSeries} seeAllHref={`/series/${book.series.id}`} seeAllLabel={b.wholeSeries} />
         ) : null}
         {firstAuthor ? (
           <BookShelf
             id="by-author"
-            eyebrow="Same author"
-            title={`More by ${firstAuthor.name}`}
+            eyebrow={b.sameAuthor}
+            title={b.moreBy(firstAuthor.name ?? "")}
             books={otherByAuthor}
             loading={byAuthor.isPending}
             seeAllHref={`/authors/${firstAuthor.id}`}
-            seeAllLabel="About the author"
+            seeAllLabel={b.aboutAuthor}
           />
         ) : null}
-        <BookShelf id="recent" eyebrow="Your history" title="Recently viewed" books={recentOthers} />
+        <BookShelf id="recent" eyebrow={b.yourHistory} title={b.recentlyViewed} books={recentOthers} />
       </div>
     </div>
   );

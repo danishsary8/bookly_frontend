@@ -14,6 +14,7 @@ import { useT } from "@/i18n";
  */
 export default function SearchPage() {
   const { dict } = useT();
+  const p = dict.pages;
   const [params, setParams] = useSearchParams();
   const q = params.get("q")?.trim() ?? "";
   const [draft, setDraft] = useState(q);
@@ -22,7 +23,7 @@ export default function SearchPage() {
     setLastQ(q);
     setDraft(q);
   }
-  useDocumentTitle(q ? `Search: ${q}` : dict.search.title, { noindex: true });
+  useDocumentTitle(q ? p.searchDoc(q) : dict.search.title, { noindex: true });
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -33,9 +34,9 @@ export default function SearchPage() {
   return (
     <div className="container-shell pb-16">
       <PageHeader
-        crumbs={[{ label: "Home", to: "/" }, { label: dict.search.title }]}
-        title={q ? <>Results for “{q}”</> : dict.search.title}
-        lead={q ? undefined : "Find a book by its title, author, series, category or ISBN."}
+        crumbs={[{ label: p.home, to: "/" }, { label: dict.search.title }]}
+        title={q ? p.resultsFor(q) : dict.search.title}
+        lead={q ? undefined : p.searchLead}
       />
 
       <form role="search" onSubmit={submit} className="mb-10 flex max-w-2xl gap-3">
@@ -61,15 +62,15 @@ export default function SearchPage() {
 
       {q ? (
         <CatalogBrowser
-          noun="results"
+          noun={dict.nouns.result}
           empty={
             <EmptyState
               icon={SearchX}
-              title={`No books match “${q}”`}
-              description="Try a shorter title, an author's surname, or check the spelling."
+              title={p.noMatch(q)}
+              description={p.noMatchLead}
               action={
                 <Link to="/books" className={buttonVariants()}>
-                  Browse all books
+                  {p.browseAll}
                 </Link>
               }
             />

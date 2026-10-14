@@ -13,12 +13,14 @@ import { Pagination } from "@/components/ui/pagination";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
-import { rangeSummary } from "@/lib/pagination";
+import { rangeText, useT } from "@/i18n";
 
 const PER_PAGE = 24;
 
 export default function AuthorsPage() {
-  useDocumentTitle("Authors", { description: "Find books by author at Bookly." });
+  const { dict } = useT();
+  const p = dict.pages;
+  useDocumentTitle(p.authors, { description: p.authorsMeta });
   const [params, setParams] = useSearchParams();
   const q = params.get("q")?.trim() ?? "";
   const page = Math.max(1, Number(params.get("page")) || 1);
@@ -40,12 +42,12 @@ export default function AuthorsPage() {
 
   return (
     <div className="container-shell pb-16">
-      <PageHeader crumbs={[{ label: "Home", to: "/" }, { label: "Authors" }]} eyebrow="Writers" title="Authors" lead="Browse the writers in our catalogue and every book we stock by them." />
+      <PageHeader crumbs={[{ label: p.home, to: "/" }, { label: p.authors }]} eyebrow={p.writers} title={p.authors} lead={p.authorsLead} />
 
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <form role="search" onSubmit={submit} className="flex w-full max-w-md gap-2">
           <label htmlFor="author-search" className="sr-only">
-            Search authors
+            {p.searchAuthors}
           </label>
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
@@ -54,16 +56,16 @@ export default function AuthorsPage() {
               type="search"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Search by name"
+              placeholder={p.searchByName}
               className="h-11 w-full rounded-md border border-input bg-card pl-10 pr-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
           <Button type="submit" variant="outline">
-            Search
+            {p.search}
           </Button>
         </form>
         <p className="text-[15px] text-muted-foreground" role="status">
-          {meta ? rangeSummary(meta.from, meta.to, meta.total ?? 0, "authors") : " "}
+          {meta ? rangeText(dict, meta.from, meta.to, meta.total ?? 0, p.authorsNoun(meta.total ?? 0)) : " "}
         </p>
       </div>
 
@@ -71,14 +73,14 @@ export default function AuthorsPage() {
         <ErrorState error={authors.error} onRetry={() => authors.refetch()} />
       ) : authors.isPending ? (
         showSkeleton ? (
-          <SkeletonGroup label="Loading authors…" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <SkeletonGroup label={p.loadingAuthors} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }, (_, i) => (
               <Skeleton key={i} className="h-24 rounded-xl" />
             ))}
           </SkeletonGroup>
         ) : null
       ) : authors.data.data.length === 0 ? (
-        <EmptyState icon={UserRoundSearch} title={`No authors match “${q}”`} description="Try a shorter name or just the surname." />
+        <EmptyState icon={UserRoundSearch} title={p.noAuthors(q)} description={p.noAuthorsLead} />
       ) : (
         <Stagger as="ul" key={`${q}-${page}`} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {authors.data.data.map((author, index) => (
@@ -91,7 +93,7 @@ export default function AuthorsPage() {
                 <span className="min-w-0">
                   <span className="block font-display text-xl leading-tight underline-offset-4 group-hover:underline">{author.name}</span>
                   <span className="mt-1 block text-sm text-muted-foreground">
-                    {author.books_count ?? 0} {author.books_count === 1 ? "book" : "books"}
+                    {p.bookCount(author.books_count ?? 0)}
                   </span>
                 </span>
               </Link>
