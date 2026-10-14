@@ -136,6 +136,55 @@ describe("orders", () => {
     expect(screen.queryByRole("link", { name: "Packing slip" })).not.toBeInTheDocument();
   });
 
+  it("shows the customer note when present", async () => {
+    signIn(staff);
+    vi.spyOn(opsApi, "order").mockResolvedValue({
+      ...order,
+      delivery_note: "Please handle with care",
+    } as unknown as StaffOrder);
+    app("/admin/orders/7");
+    expect(await screen.findByRole("heading", { name: "Customer note" })).toBeInTheDocument();
+    expect(screen.getByText("Please handle with care")).toBeInTheDocument();
+  });
+
+  it("edits, saves, cancels, and handles errors on staff note", async () => {
+    signIn(staff);
+    vi.spyOn(opsApi, "order").mockResolvedValue({
+      ...order,
+      staff_note: "Initial internal note",
+    } as unknown as StaffOrder);
+    const setNote = vi.spyOn(opsApi, "setStaffNote").mockResolvedValue({
+      ...order,
+      staff_note: "Updated note",
+    } as unknown as StaffOrder);
+
+    app("/admin/orders/7");
+    expect(await screen.findByText("Initial internal note")).toBeInTheDocument();
+
+    // Cancel edit
+    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    const input = screen.getByLabelText("Internal note");
+    await userEvent.clear(input);
+    await userEvent.type(input, "Discarded note");
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.getByText("Initial internal note")).toBeInTheDocument();
+
+    // Error handling
+    setNote.mockRejectedValueOnce(validation({ staff_note: ["Staff note must not exceed 1000 characters."] }));
+    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findByText("Staff note must not exceed 1000 characters.")).toBeInTheDocument();
+
+    // Successful save
+    setNote.mockResolvedValueOnce({ ...order, staff_note: "Updated note" } as unknown as StaffOrder);
+    await userEvent.clear(screen.getByLabelText("Internal note"));
+    await userEvent.type(screen.getByLabelText("Internal note"), "Updated note");
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(setNote).toHaveBeenCalledWith(7, "Updated note"));
+    expect(await screen.findByText("Staff note saved")).toBeInTheDocument();
+    expect(screen.getByText("Updated note")).toBeInTheDocument();
+  });
+
   it("prints the ticked orders together, in the order they were ticked", async () => {
     signIn(staff);
     const other = { ...order, id: 8, order_number: "ORD-8" } as StaffOrder;

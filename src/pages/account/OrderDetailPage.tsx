@@ -122,6 +122,12 @@ export default function OrderDetailPage() {
         </div>
         <div className="grid content-start gap-6">
           <DeliveryAddressCard address={o.shipping_address} title="Delivery address" />
+          {o.delivery_note ? (
+            <section aria-labelledby="delivery-note" className="grid gap-2 rounded-xl border border-border bg-card p-5 sm:p-6">
+              <h2 id="delivery-note" className="font-display text-[1.563rem] leading-tight">Delivery note</h2>
+              <p className="text-muted-foreground whitespace-pre-wrap">{o.delivery_note}</p>
+            </section>
+          ) : null}
           <section aria-labelledby="order-payment" className="grid gap-2 rounded-xl border border-border bg-card p-5 sm:p-6">
             <h2 id="order-payment" className="flex items-center gap-2 font-display text-[1.563rem] leading-tight">
               <Banknote className="size-5 text-primary" aria-hidden="true" /> Payment

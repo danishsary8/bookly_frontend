@@ -236,6 +236,12 @@ export function PackingSlipSheet({ doc }: { doc: Doc }) {
         </div>
       </div>
 
+      {doc.delivery_note ? (
+        <Block title="Note from the customer">
+          <p className="text-sm font-medium whitespace-pre-wrap">{doc.delivery_note}</p>
+        </Block>
+      ) : null}
+
       {physical.length ? (
         <table className="w-full border-collapse text-left">
           <thead>

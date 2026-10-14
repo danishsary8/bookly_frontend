@@ -118,6 +118,20 @@ describe("packing slip", () => {
     expect(sheet).toHaveTextContent("Nothing to pack: this order has digital books only.");
     expect(sheet).toHaveTextContent("Paid: collect nothing");
   });
+
+  it("shows the note from the customer when present on packing slip, but invoice does not show it", () => {
+    const withNote = doc({ delivery_note: "Leave package with security at gate" });
+    const { unmount } = render(<PackingSlipSheet doc={withNote} />);
+    const slip = screen.getByRole("article", { name: "Packing slip ORD-7" });
+    expect(within(slip).getByRole("heading", { name: "Note from the customer" })).toBeInTheDocument();
+    expect(slip).toHaveTextContent("Leave package with security at gate");
+    unmount();
+
+    render(<InvoiceSheet doc={withNote} />);
+    const invoice = screen.getByRole("article", { name: "Invoice ORD-7" });
+    expect(within(invoice).queryByRole("heading", { name: "Note from the customer" })).not.toBeInTheDocument();
+    expect(invoice).not.toHaveTextContent("Leave package with security at gate");
+  });
 });
 
 describe("print pages", () => {

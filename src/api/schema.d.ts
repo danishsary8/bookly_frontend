@@ -1925,6 +1925,7 @@ export interface paths {
                     "application/json": {
                         coupon_code?: string;
                         address_id?: number;
+                        delivery_note?: string;
                     };
                 };
             };
@@ -1985,6 +1986,7 @@ export interface paths {
                         /** @enum {string} */
                         payment_method: "cod";
                         coupon_code?: string;
+                        delivery_note?: string;
                     };
                 };
             };
@@ -3682,6 +3684,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff/orders/{id}/staff-note": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update private staff note on an order */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        staff_note?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated order */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                422: components["responses"]["Validation"];
+            };
+        };
+        trace?: never;
+    };
     "/staff/returns": {
         parameters: {
             query?: never;
@@ -5002,6 +5047,7 @@ export interface components {
             coupon_code?: string | null;
             shipping_address?: components["schemas"]["AddressInput"];
             can_cancel?: boolean;
+            delivery_note?: string | null;
             status_history?: {
                 status?: string;
                 note?: string | null;
@@ -5020,6 +5066,7 @@ export interface components {
             placed_at?: string;
             /** Format: date-time */
             delivered_at?: string | null;
+            delivery_note?: string | null;
             /** @enum {string} */
             payment_method?: "card" | "cod" | "khqr";
             /** @enum {string|null} */
