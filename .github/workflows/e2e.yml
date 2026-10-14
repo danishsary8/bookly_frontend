@@ -80,9 +80,10 @@ jobs:
       - name: Seed test staff 2FA and prepare session token
         run: |
           cd backend
-          php artisan tinker --execute='$u = App\Models\StaffUser::where("email", "admin@bookly.test")->first(); $secret = app(App\Services\Auth\TotpService::class)->generateSecret(); $u->update(["two_factor_enabled" => true, "two_factor_secret" => $secret]); $t = $u->createToken("e2e", $u->tokenAbilities())->plainTextToken; file_put_contents("../token.txt", $t); file_put_contents("../secret.txt", $secret);'
-          TOKEN=$(cat ../token.txt)
-          SECRET=$(cat ../secret.txt)
+          php artisan tinker --execute='$u = App\Models\StaffUser::where("email", "admin@bookly.test")->first(); $secret = app(App\Services\Auth\TotpService::class)->generateSecret(); $u->update(["two_factor_enabled" => true, "two_factor_secret" => $secret]); $t = $u->createToken("e2e", $u->tokenAbilities())->plainTextToken; file_put_contents("token.txt", $t); file_put_contents("secret.txt", $secret);'
+          TOKEN=$(cat token.txt)
+          SECRET=$(cat secret.txt)
+          echo "STAFF_BEARER_TOKEN=$TOKEN" >> $GITHUB_ENV
           echo "E2E_STAFF_TOTP_SECRET=$SECRET" >> $GITHUB_ENV
           echo "E2E_STAFF_PASSWORD=Password123!" >> $GITHUB_ENV
 
@@ -105,7 +106,7 @@ jobs:
 
       - name: Generate staff session payload
         run: |
-          TOKEN=$(cat token.txt)
+          TOKEN="${STAFF_BEARER_TOKEN}"
           USER_JSON=$(curl -fsS -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8000/api/v1/staff/auth/me | jq -c '.data')
           SESSION_JSON=$(jq -n --arg token "$TOKEN" --argjson user "$USER_JSON" '{token: $token, expiresAt: null, user: $user}')
           echo "E2E_STAFF_SESSION=$SESSION_JSON" >> $GITHUB_ENV
