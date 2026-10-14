@@ -1,11 +1,12 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Languages } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { Breadcrumb, type Crumb } from "@/components/Breadcrumb";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { cn } from "@/lib/utils";
 import { Bookplate, type PlateFact } from "./Bookplate";
 import { proseClass } from "./prose";
+import { useT } from "@/i18n";
 
 export type ContentSection = { id: string; title: string; body: ReactNode };
 
@@ -27,9 +28,9 @@ function useActiveSection(ids: string[]) {
   return active;
 }
 
-function Contents({ sections, numbered, active, onPick }: { sections: ContentSection[]; numbered: boolean; active: string; onPick?: () => void }) {
+function Contents({ sections, numbered, active, onPick, lang }: { sections: ContentSection[]; numbered: boolean; active: string; onPick?: () => void; lang?: string }) {
   return (
-    <ol className="grid gap-0.5">
+    <ol lang={lang} className="grid gap-0.5">
       {sections.map((s, i) => (
         <li key={s.id}>
           <a
@@ -67,6 +68,7 @@ export function ContentPage({
   notice,
   sections,
   numbered = false,
+  englishOnly = false,
   after,
 }: {
   title: string;
@@ -82,6 +84,8 @@ export function ContentPage({
   notice?: ReactNode;
   sections: ContentSection[];
   numbered?: boolean;
+  /** The text exists only in English (legal and help pages): Khmer readers get a short note, and the text is marked lang="en". */
+  englishOnly?: boolean;
   /** Full-width content after the article (a shelf, a call to action). */
   after?: ReactNode;
 }) {
@@ -98,17 +102,27 @@ export function ContentPage({
   const [ids] = useState(() => sections.map((s) => s.id));
   const active = useActiveSection(ids);
   const [open, setOpen] = useState(false);
-  const crumbs: Crumb[] = [{ label: "Home", to: "/" }, { label: crumb ?? title }];
+  const { dict, lang } = useT();
+  const crumbs: Crumb[] = [{ label: dict.content.home, to: "/" }, { label: crumb ?? title }];
+  const textLang = englishOnly && lang !== "en" ? "en" : undefined;
 
   return (
     <div className="container-shell pb-20 pt-6 sm:pt-8">
       <Breadcrumb items={crumbs} />
-      <Bookplate eyebrow={eyebrow} title={title} lead={lead} facts={facts} className="mt-4">
-        {plate}
-      </Bookplate>
+      <div lang={textLang}>
+        <Bookplate eyebrow={eyebrow} title={title} lead={lead} facts={facts} className="mt-4">
+          {plate}
+        </Bookplate>
+      </div>
+      {textLang ? (
+        <p role="note" className="mt-6 flex items-start gap-2 rounded-lg bg-lapis-tint px-4 py-3 text-[15px] text-foreground">
+          <Languages className="mt-0.5 size-[18px] shrink-0 text-primary" aria-hidden="true" />
+          {dict.content.englishOnly}
+        </p>
+      ) : null}
 
       <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-10 lg:mt-16 lg:grid-cols-12 lg:gap-6">
-        <nav aria-label="On this page" className="lg:col-span-3">
+        <nav aria-label={dict.content.onThisPage} className="lg:col-span-3">
           <div className="rounded-xl border border-border bg-card lg:hidden">
             <button
               type="button"
@@ -117,22 +131,22 @@ export function ContentPage({
               onClick={() => setOpen((o) => !o)}
               className="flex min-h-12 w-full items-center justify-between gap-3 rounded-xl px-4 text-left font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              On this page
+              {dict.content.onThisPage}
               <ChevronDown className={cn("size-5 text-muted-foreground transition-transform duration-200", open && "rotate-180")} aria-hidden="true" />
             </button>
             {open ? (
               <div id="contents-mobile" className="border-t border-border p-2">
-                <Contents sections={sections} numbered={numbered} active={active} onPick={() => setOpen(false)} />
+                <Contents sections={sections} numbered={numbered} active={active} onPick={() => setOpen(false)} lang={textLang} />
               </div>
             ) : null}
           </div>
           <div className="hidden lg:sticky lg:top-[calc(var(--header-h)+2rem)] lg:block">
-            <p className="mb-3 px-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">On this page</p>
-            <Contents sections={sections} numbered={numbered} active={active} />
+            <p className="mb-3 px-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{dict.content.onThisPage}</p>
+            <Contents sections={sections} numbered={numbered} active={active} lang={textLang} />
           </div>
         </nav>
 
-        <article className="grid gap-14 lg:col-span-8 lg:col-start-5" aria-labelledby="page-title">
+        <article lang={textLang} className="grid gap-14 lg:col-span-8 lg:col-start-5" aria-labelledby="page-title">
           {notice}
           {sections.map((s, i) => (
             <section key={s.id} id={s.id} aria-labelledby={`${s.id}-title`} className="scroll-mt-[calc(var(--header-h)+1.5rem)]">

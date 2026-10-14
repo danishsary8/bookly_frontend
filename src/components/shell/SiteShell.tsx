@@ -42,6 +42,7 @@ function PageFallback() {
 
 export function SiteShell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
+  const { dict } = useT();
 
   // A link inside a drawer navigates; the drawer shouldn't stay open over the new page.
   useEffect(() => closeShellPanel(), [pathname]);
@@ -63,7 +64,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         href="#content"
         className="sr-only z-(--z-toast) rounded-md bg-primary px-4 py-3 font-semibold text-primary-foreground focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
       >
-        Skip to content
+        {dict.nav.skipToContent}
       </a>
       <SiteHeader />
       <OfflineBanner />

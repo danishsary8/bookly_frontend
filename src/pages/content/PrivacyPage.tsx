@@ -10,6 +10,7 @@ import { LegalNotice } from "@/features/content/LegalNotice";
 export default function PrivacyPage() {
   return (
     <ContentPage
+      englishOnly
       title="Privacy"
       documentTitle="Privacy policy"
       eyebrow="Legal"

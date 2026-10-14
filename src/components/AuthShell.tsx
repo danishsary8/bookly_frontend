@@ -125,6 +125,11 @@ interface AuthShellProps {
   panel?: ReactNode;
 }
 
+function BackToStore() {
+  const { dict } = useT();
+  return <>{dict.content.backToStore}</>;
+}
+
 export const AuthShell = ({ children, panel }: AuthShellProps) => (
   <div className="min-h-screen bg-background">
     <div className="mx-auto grid min-h-screen max-w-[1280px] lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-8 lg:p-6">
@@ -138,7 +143,7 @@ export const AuthShell = ({ children, panel }: AuthShellProps) => (
           <span className="lg:hidden"><Wordmark /></span>
           <Link to="/" className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-muted-foreground transition-colors duration-150 hover:text-foreground">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Back to store
+            <BackToStore />
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-center py-10">

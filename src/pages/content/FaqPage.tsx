@@ -203,6 +203,7 @@ const groups: Array<{ id: string; title: string; items: Faq[] }> = [
 export default function FaqPage() {
   return (
     <ContentPage
+      englishOnly
       title="Questions & answers"
       documentTitle="FAQ"
       crumb="FAQ"
