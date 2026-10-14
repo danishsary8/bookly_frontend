@@ -30,6 +30,8 @@ async function noAxeViolations(page: Page) {
   expect(violations.map((v) => `${v.id}: ${v.help} — ${v.nodes.map((n) => n.html.slice(0, 160)).join(" | ")}`)).toEqual([]);
 }
 
+test.describe.configure({ mode: "serial" });
+
 let orderNumber = "";
 
 test("keyboard: skip link, cart drawer focus and Escape", async ({ page }) => {
@@ -89,27 +91,63 @@ test("customer: book → cart → cash on delivery → order page", async ({ pag
   await noAxeViolations(page);
 });
 
-test("staff: sign in with an authenticator code and start processing the order", async ({ page }) => {
-  test.skip(!STAFF.password || !STAFF.secret, "Set E2E_STAFF_PASSWORD and E2E_STAFF_TOTP_SECRET");
+test("staff: process order to delivery and verify receipt document", async ({ page }) => {
+  test.skip(!process.env.E2E_STAFF_SESSION && (!STAFF.password || !STAFF.secret), "Set E2E_STAFF_SESSION or E2E_STAFF_PASSWORD and E2E_STAFF_TOTP_SECRET");
   test.skip(!orderNumber, "Needs the order from the customer test");
 
-  await page.goto("/admin/login");
-  await page.getByLabel("Work email").fill(STAFF.email);
-  await page.getByLabel("Password", { exact: true }).fill(STAFF.password!);
-  await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page.getByText("Authentication code")).toBeVisible();
-  // A code can be used once; if this window's code was just used, wait for the next one.
-  if (30_000 - (Date.now() % 30_000) < 3_000) await page.waitForTimeout(3_500);
-  await page.keyboard.type(totp(STAFF.secret!));
-  await page.getByRole("button", { name: "Verify and sign in" }).click();
-  await page.waitForURL(/\/admin$/);
+  if (process.env.E2E_STAFF_SESSION) {
+    await page.goto("/admin/login");
+    await page.evaluate((session) => {
+      window.localStorage.setItem("bookly.session.staff", session);
+    }, process.env.E2E_STAFF_SESSION);
+    await page.goto("/admin");
+    await page.waitForURL(/\/admin$/);
+  } else {
+    await page.goto("/admin/login");
+    await page.getByLabel("Work email").fill(STAFF.email);
+    await page.getByLabel("Password", { exact: true }).fill(STAFF.password!);
+    await page.getByRole("button", { name: "Continue" }).click();
+    await expect(page.getByText("Authentication code")).toBeVisible();
+    // A code can be used once; if this window's code was just used, wait for the next one.
+    if (30_000 - (Date.now() % 30_000) < 3_000) await page.waitForTimeout(3_500);
+    await page.keyboard.type(totp(STAFF.secret!));
+    await page.getByRole("button", { name: "Verify and sign in" }).click();
+    await page.waitForURL(/\/admin$/);
+  }
   await noAxeViolations(page);
 
   await page.goto(`/admin/orders?q=${orderNumber}`);
   await page.getByRole("link", { name: orderNumber }).click();
+
+  // 1. Move to processing
   await page.getByRole("button", { name: "Start processing" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Start processing" }).click();
+  const processingDialog = page.getByRole("dialog");
+  await processingDialog.getByRole("button", { name: "Start processing" }).click();
   await expect(page.getByText("Order is being processed")).toBeVisible();
   await expect(page.getByRole("button", { name: "Mark as shipped" })).toBeVisible();
+
+  // 2. Move to shipped
+  await page.getByRole("button", { name: "Mark as shipped" }).click();
+  const shippedDialog = page.getByRole("dialog");
+  await shippedDialog.getByRole("button", { name: "Mark as shipped" }).click();
+  await expect(page.getByText("Order marked as shipped")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Mark as delivered" })).toBeVisible();
+
+  // 3. Move to delivered (cash on delivery collected)
+  await page.getByRole("button", { name: "Mark as delivered" }).click();
+  const deliveredDialog = page.getByRole("dialog");
+  await deliveredDialog.getByRole("button", { name: "Mark as delivered" }).click();
+  await expect(page.getByText("Order marked as delivered")).toBeVisible();
+
+  // 4. Open printable invoice/receipt document
+  const invoiceLink = page.getByRole("link", { name: "Invoice" });
+  await expect(invoiceLink).toBeVisible();
+  const invoiceHref = await invoiceLink.getAttribute("href");
+  expect(invoiceHref).toBeTruthy();
+  await page.goto(invoiceHref!);
+
+  // Once delivered and paid: sheet title changes from Invoice to Receipt
+  await expect(page.getByRole("heading", { level: 2, name: "Receipt" })).toBeVisible();
+  await expect(page.getByText(orderNumber)).toBeVisible();
   await noAxeViolations(page);
 });
