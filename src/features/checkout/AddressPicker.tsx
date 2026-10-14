@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { AddressForm } from "@/features/account/AddressForm";
 import { MAX_ADDRESSES, formatAddressLines } from "@/features/account/address";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n";
 
 /*
  * Checkout step 1: pick one of the saved addresses (radio cards, default first)
@@ -19,6 +20,8 @@ export function AddressPicker({ addresses, value, onChange }: { addresses: Addre
   const queryClient = useQueryClient();
   const session = useSession<Customer>("customer");
   const [adding, setAdding] = useState(false);
+  const { dict } = useT();
+  const k = dict.checkoutPage;
   const defaults = { recipient_name: session?.user?.name ?? "", phone: session?.user?.phone ?? "" };
 
   const saved = async (address: Address) => {
@@ -30,15 +33,15 @@ export function AddressPicker({ addresses, value, onChange }: { addresses: Addre
   if (addresses.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card p-5 sm:p-6">
-        <p className="mb-4 text-muted-foreground">Add the address we should deliver to. It's saved to your account for next time.</p>
-        <AddressForm defaults={defaults} hideDefaultToggle onSaved={(a) => void saved(a)} submitLabel="Use this address" />
+        <p className="mb-4 text-muted-foreground">{k.addFirst}</p>
+        <AddressForm defaults={defaults} hideDefaultToggle onSaved={(a) => void saved(a)} submitLabel={k.useThis} />
       </div>
     );
   }
 
   return (
     <fieldset className="grid gap-3">
-      <legend className="sr-only">Delivery address</legend>
+      <legend className="sr-only">{k.deliveryAddress}</legend>
       <div className="grid gap-3 md:grid-cols-2">
         {addresses.map((address) => {
           const checked = address.id === value;
@@ -54,7 +57,7 @@ export function AddressPicker({ addresses, value, onChange }: { addresses: Addre
               <span className="grid gap-0.5 text-[15px] leading-6">
                 <span className="font-semibold">
                   {address.label || address.recipient_name}
-                  {address.is_default ? <span className="ml-2 text-xs font-bold uppercase tracking-[0.12em] text-primary">Default</span> : null}
+                  {address.is_default ? <span className="ml-2 text-xs font-bold uppercase tracking-[0.12em] text-primary">{k.default}</span> : null}
                 </span>
                 <span>{address.recipient_name}</span>
                 {formatAddressLines(address).map((line) => (
@@ -70,16 +73,16 @@ export function AddressPicker({ addresses, value, onChange }: { addresses: Addre
       </div>
       {addresses.length < MAX_ADDRESSES ? (
         <Button variant="outline" className="justify-self-start" onClick={() => setAdding(true)}>
-          <Plus aria-hidden="true" /> Add a new address
+          <Plus aria-hidden="true" /> {k.addNew}
         </Button>
       ) : null}
       <Dialog open={adding} onOpenChange={setAdding}>
         <DialogContent size="lg">
           <DialogHeader>
-            <DialogTitle>New address</DialogTitle>
-            <DialogDescription>It's saved to your account and used for this order.</DialogDescription>
+            <DialogTitle>{k.newAddress}</DialogTitle>
+            <DialogDescription>{k.newAddressLead}</DialogDescription>
           </DialogHeader>
-          <div className="mt-6">{adding ? <AddressForm defaults={defaults} onSaved={(a) => void saved(a)} onCancel={() => setAdding(false)} submitLabel="Use this address" /> : null}</div>
+          <div className="mt-6">{adding ? <AddressForm defaults={defaults} onSaved={(a) => void saved(a)} onCancel={() => setAdding(false)} submitLabel={k.useThis} /> : null}</div>
         </DialogContent>
       </Dialog>
     </fieldset>

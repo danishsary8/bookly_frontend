@@ -11,6 +11,8 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { DeliveryAddressCard, OrderItemsCard } from "@/features/orders/OrderSummary";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useT } from "@/i18n";
+import { Rich } from "@/i18n/Rich";
 
 /*
  * /checkout/success/:id: thank-you page. Shows the order straight from the
@@ -19,28 +21,28 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
  * the total also in riel.
  */
 
-const dateFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit" });
-
 const nextSteps = [
-  { Icon: PackageCheck, title: "We prepare your books", text: "Your order is confirmed by our team and packed." },
-  { Icon: Truck, title: "A courier delivers", text: "You'll get a call on the number you gave before delivery." },
-  { Icon: CheckCircle2, title: "Pay on arrival", text: "Pay the courier in cash when the books arrive." },
-];
+  { Icon: PackageCheck, title: "step1", text: "step1Text" },
+  { Icon: Truck, title: "step2", text: "step2Text" },
+  { Icon: CheckCircle2, title: "step3", text: "step3Text" },
+] as const;
 
 export default function OrderConfirmationPage() {
   const id = Number(useParams().id);
   const fromCheckout = (useLocation().state as { order?: Order } | null)?.order;
   const order = useQuery({ ...orderQueries.order(id), enabled: Number.isInteger(id) && id > 0, initialData: fromCheckout?.id === id ? fromCheckout : undefined });
-  useDocumentTitle(order.data ? `Order ${order.data.order_number}` : "Order confirmed");
+  const { dict, locale } = useT();
+  const k = dict.checkoutPage;
+  useDocumentTitle(order.data ? dict.orders.orderNumber(order.data.order_number ?? "") : k.orderConfirmed);
 
   if (!Number.isInteger(id) || id <= 0 || (order.isError && ApiError.from(order.error).kind === "not_found")) {
-    return <NotFoundState what="order" backTo="/account" backLabel="Go to your account" />;
+    return <NotFoundState what={dict.nouns.whatOrder} backTo="/account" backLabel={k.goToAccount} />;
   }
   if (order.isError) return <div className="container-shell py-16"><ErrorState error={order.error} onRetry={() => order.refetch()} headingLevel="h1" /></div>;
   if (!order.data) {
     return (
       <div className="container-shell py-12">
-        <SkeletonGroup label="Loading your order…" className="mx-auto grid max-w-3xl gap-4">
+        <SkeletonGroup label={k.loadingOrder} className="mx-auto grid max-w-3xl gap-4">
           <Skeleton className="h-16 w-2/3" />
           <Skeleton className="h-48 rounded-xl" />
         </SkeletonGroup>
@@ -57,31 +59,31 @@ export default function OrderConfirmationPage() {
           <span className="grid size-20 place-items-center rounded-full bg-success-tint text-success">
             <CheckCircle2 className="size-10" strokeWidth={1.75} aria-hidden="true" />
           </span>
-          <h1 className="font-display text-[2.441rem] leading-tight sm:text-[3.052rem]">Thank you for your order</h1>
+          <h1 className="font-display text-[2.441rem] leading-tight sm:text-[3.052rem]">{k.thankYou}</h1>
           <p className="max-w-xl text-lg text-muted-foreground">
-            Your order <strong className="font-semibold tabular-nums text-foreground">{o.order_number}</strong> is placed. Keep this number in case you need to contact us.
+            <Rich text={k.placedLead(o.order_number ?? "")} strong="font-semibold tabular-nums text-foreground" />
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
             <OrderStatusBadge status={o.status} />
-            {o.placed_at ? <span>Placed {dateFormat.format(new Date(o.placed_at))}</span> : null}
+            {o.placed_at ? <span>{k.placed(new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(o.placed_at)))}</span> : null}
           </div>
         </header>
 
-        <OrderItemsCard order={o} totalLabel="Total to pay on delivery" />
+        <OrderItemsCard order={o} totalLabel={k.totalOnDelivery} />
         <DeliveryAddressCard address={o.shipping_address} />
 
         <section aria-labelledby="whats-next">
           <h2 id="whats-next" className="font-display text-[1.563rem] leading-tight">
-            What happens next
+            {k.whatNext}
           </h2>
           <ol className="mt-4 grid gap-4 sm:grid-cols-3">
             {nextSteps.map(({ Icon, title, text }, i) => (
               <li key={title} className="grid gap-2 rounded-xl border border-border bg-card p-4">
                 <span className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                  <Icon className="size-[18px] text-primary" aria-hidden="true" /> Step {i + 1}
+                  <Icon className="size-[18px] text-primary" aria-hidden="true" /> {k.step(i + 1)}
                 </span>
-                <span className="font-semibold">{title}</span>
-                <span className="text-sm text-muted-foreground">{text}</span>
+                <span className="font-semibold">{k[title]}</span>
+                <span className="text-sm text-muted-foreground">{k[text]}</span>
               </li>
             ))}
           </ol>
@@ -89,10 +91,10 @@ export default function OrderConfirmationPage() {
 
         <div className="flex flex-wrap justify-center gap-3">
           <Link to="/books" className={buttonVariants()}>
-            Keep browsing
+            {k.keepBrowsing}
           </Link>
           <Link to={`/account/orders/${o.id}`} className={buttonVariants({ variant: "outline" })}>
-            View your order
+            {k.viewOrder}
           </Link>
         </div>
       </div>
