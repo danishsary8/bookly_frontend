@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { useControllableState } from "@/hooks/useControllableState"
 import { transitions } from "@/lib/motion"
 import { cn } from "@/lib/utils"
+import { useT } from "@/i18n"
 
 /*
  * MASTER §6.17. Radix gives focus trap, Esc, scrim click, return focus and
@@ -16,6 +17,18 @@ import { cn } from "@/lib/utils"
  */
 
 const OpenContext = React.createContext(false)
+
+function CloseButton() {
+  const { dict } = useT()
+  return (
+    <DialogPrimitive.Close
+      className="absolute right-2 top-2 grid size-11 place-items-center rounded-lg text-muted-foreground transition-colors duration-150 hover:bg-secondary hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      aria-label={dict.ui.close}
+    >
+      <X className="size-5" aria-hidden="true" />
+    </DialogPrimitive.Close>
+  )
+}
 
 type DialogProps = Omit<React.ComponentProps<typeof DialogPrimitive.Root>, "open" | "onOpenChange"> & {
   open?: boolean
@@ -75,14 +88,7 @@ function DialogContent({ className, children, size = "md", hideClose = false, on
                 exit={{ opacity: 0, scale: 0.98, transition: transitions.exit }}
               >
                 {children}
-                {hideClose ? null : (
-                  <DialogPrimitive.Close
-                    className="absolute right-2 top-2 grid size-11 place-items-center rounded-lg text-muted-foreground transition-colors duration-150 hover:bg-secondary hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label="Close"
-                  >
-                    <X className="size-5" aria-hidden="true" />
-                  </DialogPrimitive.Close>
-                )}
+                {hideClose ? null : <CloseButton />}
               </m.div>
             </DialogPrimitive.Content>
           </div>
@@ -134,11 +140,12 @@ function ConfirmDialog({
   title,
   description,
   confirmLabel,
-  cancelLabel = "Cancel",
+  cancelLabel,
   destructive = true,
   loading = false,
   onConfirm,
 }: ConfirmDialogProps) {
+  const { dict } = useT()
   return (
     <Dialog open={open} onOpenChange={(next) => !loading && onOpenChange(next)}>
       <DialogContent size="sm" hideClose role="alertdialog" {...(description ? {} : { "aria-describedby": undefined })}>
@@ -149,7 +156,7 @@ function ConfirmDialog({
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline" disabled={loading}>
-              {cancelLabel}
+              {cancelLabel ?? dict.ui.cancel}
             </Button>
           </DialogClose>
           <Button variant={destructive ? "destructive" : "default"} loading={loading} onClick={onConfirm}>

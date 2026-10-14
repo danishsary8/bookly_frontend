@@ -14,8 +14,8 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { orderDate } from "@/features/orders/format";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { formatLabel } from "@/lib/catalog";
 import { toast } from "@/stores/toast";
+import { formatName, useT } from "@/i18n";
 
 const MAX_REASON = 2000;
 const MAX_LINE_REASON = 255;
@@ -38,7 +38,9 @@ export default function ReturnRequestPage() {
   const [reason, setReason] = useState("");
   const [errors, setErrors] = useState<{ form?: string; items?: string; reason?: string }>({});
   const alertRef = useRef<HTMLDivElement>(null);
-  useDocumentTitle(order.data ? `Return from ${order.data.order_number}` : "Request a return");
+  const { dict, locale } = useT();
+  const t = dict.returns;
+  useDocumentTitle(order.data ? t.requestDocTitleFrom(order.data.order_number ?? "") : t.requestDocTitle);
 
   const lineFor = (itemId: number): Line => lines[itemId] ?? { selected: false, quantity: 1, reason: "" };
   const update = (itemId: number, patch: Partial<Line>) => setLines((all) => ({ ...all, [itemId]: { ...lineFor(itemId), ...patch } }));
@@ -48,7 +50,7 @@ export default function ReturnRequestPage() {
     onSuccess: (created) => {
       void queryClient.invalidateQueries({ queryKey: ["returns"] });
       void queryClient.invalidateQueries({ queryKey: orderKeys.returnable(id) });
-      toast.success({ title: "Return requested", description: "We'll check it and let you know. Keep the books in their packaging until then." });
+      toast.success({ title: t.requestedToast, description: t.requestedToastLead });
       navigate(`/account/returns/${created.id}`, { replace: true });
     },
     onError: (error) => {
@@ -63,7 +65,7 @@ export default function ReturnRequestPage() {
   });
 
   if (!valid || [order.error, returnable.error].some((e) => e && ApiError.from(e).kind === "not_found")) {
-    return <NotFoundState what="order" backTo="/account/orders" backLabel="See all your orders" />;
+    return <NotFoundState what={dict.nouns.whatOrder} backTo="/account/orders" backLabel={dict.orders.seeAll} />;
   }
   if (order.isError || returnable.isError) {
     const error = order.error ?? returnable.error;
@@ -71,7 +73,7 @@ export default function ReturnRequestPage() {
   }
   if (!order.data || !returnable.data) {
     return (
-      <SkeletonGroup label="Loading your order…" className="grid gap-4">
+      <SkeletonGroup label={dict.orders.loadingOne} className="grid gap-4">
         <Skeleton className="h-12 w-2/3" />
         <Skeleton className="h-56 rounded-xl" />
       </SkeletonGroup>
@@ -83,7 +85,7 @@ export default function ReturnRequestPage() {
   const items = r.items.filter((item) => item.returnable_quantity > 0);
   const back = (
     <Link to={`/account/orders/${id}`} className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline">
-      <ArrowLeft className="size-4" aria-hidden="true" /> Order {o.order_number}
+      <ArrowLeft className="size-4" aria-hidden="true" /> {dict.orders.orderNumber(o.order_number ?? "")}
     </Link>
   );
 
@@ -94,11 +96,11 @@ export default function ReturnRequestPage() {
         <EmptyState
           icon={RotateCcw}
           headingLevel="h1"
-          title="This order can't be returned"
-          description={r.reason_unavailable ?? "Returns aren't available for this order."}
+          title={t.cantReturn}
+          description={r.reason_unavailable ?? t.notAvailable}
           action={
             <Link to={`/account/orders/${id}`} className={buttonVariants({ variant: "outline" })}>
-              Back to the order
+              {t.backToOrder}
             </Link>
           }
           className="rounded-xl border border-dashed border-border"
@@ -111,8 +113,8 @@ export default function ReturnRequestPage() {
     event.preventDefault();
     const chosen = items.filter((item) => lineFor(item.order_item_id).selected);
     const next = {
-      items: chosen.length ? undefined : "Choose at least one book to return.",
-      reason: reason.trim() ? undefined : "Tell us why you're returning these books.",
+      items: chosen.length ? undefined : t.chooseOne,
+      reason: reason.trim() ? undefined : t.tellWhy,
     };
     setErrors(next);
     if (next.items || next.reason) return;
@@ -128,21 +130,21 @@ export default function ReturnRequestPage() {
     <div className="grid gap-6">
       {back}
       <div className="grid gap-1.5">
-        <h1 className="font-display text-[2.441rem] leading-[1.1]">Request a return</h1>
+        <h1 className="font-display text-[2.441rem] leading-[1.1]">{t.requestTitle}</h1>
         <p className="text-muted-foreground">
-          Physical books can be sent back {r.returnable_until ? `until ${orderDate(r.returnable_until)}` : "within the return window"}. Ebooks and audiobooks can't be returned.
+          {r.returnable_until ? t.windowUntil(orderDate(r.returnable_until, locale)) : t.windowOpen}
         </p>
       </div>
 
       <form onSubmit={onSubmit} noValidate className="grid gap-6">
         {errors.form ? (
-          <FormAlert ref={alertRef} title="The return wasn't requested">
+          <FormAlert ref={alertRef} title={t.notRequested}>
             {errors.form}
           </FormAlert>
         ) : null}
 
         <fieldset className="grid gap-3" aria-describedby={errors.items ? "return-items-error" : undefined}>
-          <legend className="mb-3 font-display text-[1.563rem] leading-tight">Which books?</legend>
+          <legend className="mb-3 font-display text-[1.563rem] leading-tight">{t.whichBooks}</legend>
           {items.map((item) => {
             const line = lineFor(item.order_item_id);
             const checkboxId = `return-item-${item.order_item_id}`;
@@ -158,15 +160,15 @@ export default function ReturnRequestPage() {
                   <span className="grid gap-0.5">
                     <span className="font-semibold">{item.title}</span>
                     <span className="text-sm text-muted-foreground">
-                      {formatLabel(item.format)} · bought {item.purchased_quantity}
-                      {item.returnable_quantity < item.purchased_quantity ? `, ${item.returnable_quantity} can still be returned` : ""}
+                      {formatName(dict, item.format)} · {t.bought(item.purchased_quantity)}
+                      {item.returnable_quantity < item.purchased_quantity ? t.canStill(item.returnable_quantity) : ""}
                     </span>
                   </span>
                 </label>
                 {line.selected ? (
                   <div className="grid gap-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:pl-8">
                     <SelectField
-                      label="Quantity"
+                      label={t.quantity}
                       value={line.quantity}
                       onChange={(event) => update(item.order_item_id, { quantity: Number(event.target.value) })}
                     >
@@ -177,11 +179,11 @@ export default function ReturnRequestPage() {
                       ))}
                     </SelectField>
                     <TextField
-                      label="What's wrong with it?"
+                      label={t.whatsWrong}
                       optional
                       maxLength={MAX_LINE_REASON}
                       value={line.reason}
-                      placeholder="e.g. damaged cover"
+                      placeholder={t.whatsWrongPlaceholder}
                       onChange={(event) => update(item.order_item_id, { reason: event.target.value })}
                     />
                   </div>
@@ -197,8 +199,8 @@ export default function ReturnRequestPage() {
         </fieldset>
 
         <TextAreaField
-          label="Why are you returning these books?"
-          hint={`The shop reads this before approving. Up to ${MAX_REASON} characters.`}
+          label={t.why}
+          hint={t.whyHint(MAX_REASON)}
           value={reason}
           maxLength={MAX_REASON}
           error={errors.reason}
@@ -207,13 +209,13 @@ export default function ReturnRequestPage() {
 
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" loading={submit.isPending}>
-            <RotateCcw aria-hidden="true" /> Request return
+            <RotateCcw aria-hidden="true" /> {t.submit}
           </Button>
           <Link to={`/account/orders/${id}`} className={buttonVariants({ variant: "ghost" })}>
-            Cancel
+            {dict.ui.cancel}
           </Link>
         </div>
-        <p className="text-sm text-muted-foreground">The refund is confirmed once the shop has received and checked the books.</p>
+        <p className="text-sm text-muted-foreground">{t.refundNote}</p>
       </form>
     </div>
   );

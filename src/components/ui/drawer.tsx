@@ -7,6 +7,7 @@ import { useReturnFocus } from "./useReturnFocus"
 import { useControllableState } from "@/hooks/useControllableState"
 import { transitions } from "@/lib/motion"
 import { cn } from "@/lib/utils"
+import { useT } from "@/i18n"
 
 /*
  * MASTER §6.18: side panel on a scrim, built on Radix Dialog (focus trap, Esc,
@@ -89,6 +90,7 @@ function DrawerContent({ className, children, side = "right", onCloseAutoFocus, 
 }
 
 function DrawerHeader({ className, children, ...props }: React.ComponentProps<"div">) {
+  const { dict } = useT()
   return (
     <div
       data-slot="drawer-header"
@@ -98,7 +100,7 @@ function DrawerHeader({ className, children, ...props }: React.ComponentProps<"d
       <div className="min-w-0">{children}</div>
       <DialogPrimitive.Close
         className="grid size-11 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors duration-150 hover:bg-secondary hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label="Close"
+        aria-label={dict.ui.close}
       >
         <X className="size-5" aria-hidden="true" />
       </DialogPrimitive.Close>

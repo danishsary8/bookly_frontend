@@ -31,6 +31,7 @@ import { useT } from "@/i18n";
 function Summary() {
   const currency = useCurrency();
   const { dict } = useT();
+  const c = dict.cartPage;
   const { cart } = useUsableCart();
   const coupon = useCoupon();
   const [check, setCheck] = useState<CouponCheck | null>(null);
@@ -43,26 +44,26 @@ function Summary() {
   return (
     <aside aria-labelledby="summary-title" className="grid gap-5 rounded-xl border border-border bg-card p-5 sm:p-6 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
       <h2 id="summary-title" className="font-display text-[1.563rem] leading-tight">
-        Order summary
+        {c.summary}
       </h2>
       <CouponField cartVersion={cartVersion} onChecked={setCheck} />
       <dl className="grid gap-2 border-t border-border pt-4 text-[15px]">
         <div className="flex justify-between gap-4">
-          <dt className="text-muted-foreground">Subtotal ({data.item_count} {data.item_count === 1 ? "item" : "items"})</dt>
+          <dt className="text-muted-foreground">{c.subtotalItems(data.item_count ?? 0)}</dt>
           <dd className="tabular-nums">{formatMoney(data.subtotal_usd, data.subtotal_khr, currency)}</dd>
         </div>
         {discount ? (
           <div className="flex justify-between gap-4 text-success">
-            <dt>Discount ({discount.code})</dt>
+            <dt>{c.discountCode(discount.code ?? "")}</dt>
             <dd className="tabular-nums">−{formatMoney(discount.discount_usd, discount.discount_khr, currency)}</dd>
           </div>
         ) : null}
         <div className="flex justify-between gap-4">
-          <dt className="text-muted-foreground">Shipping</dt>
-          <dd className="text-muted-foreground">At checkout</dd>
+          <dt className="text-muted-foreground">{c.shipping}</dt>
+          <dd className="text-muted-foreground">{c.atCheckout}</dd>
         </div>
         <div className="mt-2 flex items-baseline justify-between gap-4 border-t border-border pt-3">
-          <dt className="font-semibold">Total before shipping</dt>
+          <dt className="font-semibold">{c.totalBeforeShipping}</dt>
           <dd className="text-xl font-semibold tabular-nums">
             {discount
               ? formatMoney(discount.total_before_shipping_usd, discount.total_before_shipping_khr, currency)
@@ -73,7 +74,7 @@ function Summary() {
       {blocked ? (
         <p className="flex items-start gap-2 rounded-md bg-destructive-tint px-3 py-2 text-sm text-destructive" role="alert">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          Some items can't be ordered as they are. Change or remove the items marked in red to continue.
+          {c.blocked}
         </p>
       ) : null}
       <CtaGlare block>
@@ -87,7 +88,7 @@ function Summary() {
         </Link>
       </CtaGlare>
       <p className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Wallet className="size-4 shrink-0" aria-hidden="true" /> Pay cash on delivery. Card and Bakong KHQR are coming soon.
+        <Wallet className="size-4 shrink-0" aria-hidden="true" /> {c.payCash}
       </p>
     </aside>
   );
@@ -96,12 +97,13 @@ function Summary() {
 function CartContents() {
   const { cart } = useUsableCart();
   const { dict } = useT();
+  const c = dict.cartPage;
   const mutations = useCartMutations();
   const [confirmClear, setConfirmClear] = useState(false);
 
   if (cart.isPending) {
     return (
-      <SkeletonGroup label="Loading your cart…" className="grid gap-6">
+      <SkeletonGroup label={c.loading} className="grid gap-6">
         <SkeletonRow />
         <SkeletonRow />
         <SkeletonRow />
@@ -116,7 +118,7 @@ function CartContents() {
       <EmptyState
         icon={ShoppingBag}
         title={dict.cart.empty}
-        description="Books you add will wait here until you're ready to check out."
+        description={c.emptyLead}
         action={
           <Link to="/books" className={buttonVariants()}>
             {dict.cart.continueShopping}
@@ -131,13 +133,13 @@ function CartContents() {
       <section aria-labelledby="lines-title" className="lg:col-span-8">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 id="lines-title" className="font-display text-[1.563rem] leading-tight">
-            {cart.data.item_count} {cart.data.item_count === 1 ? "item" : "items"}
+            {c.items(cart.data.item_count ?? 0)}
           </h2>
           <Button variant="ghost" size="sm" onClick={() => setConfirmClear(true)} disabled={mutations.clearing} className="text-muted-foreground">
-            Empty cart
+            {c.emptyCart}
           </Button>
         </div>
-        <ul className="grid gap-6 rounded-xl border border-border bg-card p-5 sm:p-6 [&>li+li]:border-t [&>li+li]:border-border [&>li+li]:pt-6" aria-label="Items in your cart">
+        <ul className="grid gap-6 rounded-xl border border-border bg-card p-5 sm:p-6 [&>li+li]:border-t [&>li+li]:border-border [&>li+li]:pt-6" aria-label={c.cartItems}>
           {items.map((line) => (
             <CartLineItem key={line.id} line={line} busy={mutations.busyLineId === line.id} onQuantity={mutations.setQuantity} onRemove={mutations.remove} />
           ))}
@@ -149,9 +151,9 @@ function CartContents() {
       <ConfirmDialog
         open={confirmClear}
         onOpenChange={setConfirmClear}
-        title="Empty your cart?"
-        description="This removes every book from your cart."
-        confirmLabel="Empty cart"
+        title={c.emptyTitle}
+        description={c.emptyDialogLead}
+        confirmLabel={c.emptyCart}
         loading={mutations.clearing}
         onConfirm={() => {
           mutations.clear();
@@ -169,11 +171,11 @@ export default function CartPage() {
   const recent = useRecentlyViewed();
   return (
     <div className="container-shell pb-16">
-      <PageHeader crumbs={[{ label: "Home", to: "/" }, { label: dict.nav.cart }]} title={dict.cart.title} />
+      <PageHeader crumbs={[{ label: dict.cartPage.home, to: "/" }, { label: dict.nav.cart }]} title={dict.cart.title} />
       <CartGate headingLevel="h2">
         <CartContents />
       </CartGate>
-      <BookShelf id="cart-recent" eyebrow="Your history" title="Recently viewed" books={recent.slice(0, 8)} className="mt-20" />
+      <BookShelf id="cart-recent" eyebrow={dict.cartPage.yourHistory} title={dict.cartPage.recentlyViewed} books={recent.slice(0, 8)} className="mt-20" />
     </div>
   );
 }

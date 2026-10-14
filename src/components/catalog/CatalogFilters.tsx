@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { FORMATS, LANGUAGES, withFilter } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n";
 
 /*
  * Filter panel for the catalogue: sidebar at ≥ 1024px, inside a drawer below.
@@ -43,6 +44,8 @@ function Choice({ name, checked, onSelect, label, count }: { name: string; check
 }
 
 function PriceRange({ filters, onChange, idPrefix }: Props) {
+  const { dict } = useT();
+  const t = dict.browse;
   const [min, setMin] = useState(filters.min_price?.toString() ?? "");
   const [max, setMax] = useState(filters.max_price?.toString() ?? "");
   const [synced, setSynced] = useState({ min: filters.min_price, max: filters.max_price });
@@ -63,12 +66,12 @@ function PriceRange({ filters, onChange, idPrefix }: Props) {
 
   const field = "h-11 w-full rounded-md border border-input bg-card pl-6 pr-2 text-base tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring";
   return (
-    <form onSubmit={submit} className="grid gap-3" aria-label="Price range">
+    <form onSubmit={submit} className="grid gap-3" aria-label={t.priceRange}>
       <div className="grid grid-cols-2 gap-3">
         {(["min", "max"] as const).map((which) => (
           <div key={which} className="grid gap-1">
             <label htmlFor={`${idPrefix}-${which}`} className="text-sm font-medium">
-              {which === "min" ? "Min" : "Max"} (USD)
+              {which === "min" ? t.min : t.max}
             </label>
             <div className="relative">
               <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true">
@@ -79,7 +82,7 @@ function PriceRange({ filters, onChange, idPrefix }: Props) {
                 inputMode="decimal"
                 value={which === "min" ? min : max}
                 onChange={(e) => (which === "min" ? setMin(e.target.value) : setMax(e.target.value))}
-                placeholder={which === "min" ? "0" : "Any"}
+                placeholder={which === "min" ? "0" : t.any}
                 className={field}
               />
             </div>
@@ -87,7 +90,7 @@ function PriceRange({ filters, onChange, idPrefix }: Props) {
         ))}
       </div>
       <Button type="submit" variant="outline" size="sm">
-        Apply price
+        {t.applyPrice}
       </Button>
     </form>
   );
@@ -96,45 +99,47 @@ function PriceRange({ filters, onChange, idPrefix }: Props) {
 export function CatalogFilters({ filters, onChange, locked = {}, idPrefix }: Props) {
   const categories = useQuery(catalogQueries.categories());
   const publishers = useQuery(catalogQueries.publishers({ per_page: 100 }));
+  const { dict } = useT();
+  const t = dict.browse;
   const set = <K extends keyof BookFilters>(key: K, value: BookFilters[K] | undefined) => onChange(withFilter(filters, key, value));
 
   return (
     <div className="grid gap-5">
       <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 text-[15px] font-semibold">
-        In stock only
+        {t.inStockOnly}
         <Switch checked={filters.in_stock === true} onCheckedChange={(on) => set("in_stock", on || undefined)} />
       </label>
 
       {locked.category_id === undefined ? (
-        <Group legend="Category">
-          <Choice name={`${idPrefix}-category`} checked={filters.category_id === undefined} onSelect={() => set("category_id", undefined)} label="All categories" />
+        <Group legend={t.category}>
+          <Choice name={`${idPrefix}-category`} checked={filters.category_id === undefined} onSelect={() => set("category_id", undefined)} label={t.allCategories} />
           {(categories.data ?? []).map((c) => (
             <Choice key={c.id} name={`${idPrefix}-category`} checked={filters.category_id === c.id} onSelect={() => set("category_id", c.id)} label={c.name ?? ""} count={c.books_count} />
           ))}
         </Group>
       ) : null}
 
-      <Group legend="Format">
-        <Choice name={`${idPrefix}-format`} checked={filters.format === undefined} onSelect={() => set("format", undefined)} label="Any format" />
+      <Group legend={t.format}>
+        <Choice name={`${idPrefix}-format`} checked={filters.format === undefined} onSelect={() => set("format", undefined)} label={t.anyFormat} />
         {FORMATS.map((f) => (
-          <Choice key={f.value} name={`${idPrefix}-format`} checked={filters.format === f.value} onSelect={() => set("format", f.value)} label={f.label} />
+          <Choice key={f.value} name={`${idPrefix}-format`} checked={filters.format === f.value} onSelect={() => set("format", f.value)} label={dict.formats[f.value]} />
         ))}
       </Group>
 
-      <Group legend="Price">
+      <Group legend={t.price}>
         <PriceRange filters={filters} onChange={onChange} idPrefix={idPrefix} />
       </Group>
 
-      <Group legend="Language">
-        <Choice name={`${idPrefix}-language`} checked={filters.language === undefined} onSelect={() => set("language", undefined)} label="Any language" />
+      <Group legend={t.language}>
+        <Choice name={`${idPrefix}-language`} checked={filters.language === undefined} onSelect={() => set("language", undefined)} label={t.anyLanguage} />
         {LANGUAGES.map((l) => (
-          <Choice key={l} name={`${idPrefix}-language`} checked={filters.language === l} onSelect={() => set("language", l)} label={l} />
+          <Choice key={l} name={`${idPrefix}-language`} checked={filters.language === l} onSelect={() => set("language", l)} label={t.languages[l] ?? l} />
         ))}
       </Group>
 
       {locked.publisher_id === undefined && (publishers.data?.data.length ?? 0) > 0 ? (
-        <Group legend="Publisher">
-          <Choice name={`${idPrefix}-publisher`} checked={filters.publisher_id === undefined} onSelect={() => set("publisher_id", undefined)} label="Any publisher" />
+        <Group legend={t.publisher}>
+          <Choice name={`${idPrefix}-publisher`} checked={filters.publisher_id === undefined} onSelect={() => set("publisher_id", undefined)} label={t.anyPublisher} />
           {(publishers.data?.data ?? []).map((p) => (
             <Choice key={p.id} name={`${idPrefix}-publisher`} checked={filters.publisher_id === p.id} onSelect={() => set("publisher_id", p.id)} label={p.name ?? ""} count={p.books_count} />
           ))}

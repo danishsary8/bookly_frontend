@@ -7,6 +7,7 @@ import type { CouponCheck } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { getCoupon, setCoupon, useCoupon } from "./couponStore";
+import { getDict, useT } from "@/i18n";
 
 /*
  * Coupon entry on the cart page. "Apply" checks the code against the current cart
@@ -18,6 +19,8 @@ export function CouponField({ cartVersion, onChecked }: { cartVersion: string; o
   const saved = useCoupon();
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const { dict } = useT();
+  const c = dict.cartPage;
 
   const check = useMutation({
     mutationFn: (code: string) => cartApi.checkCoupon(code),
@@ -34,7 +37,7 @@ export function CouponField({ cartVersion, onChecked }: { cartVersion: string; o
         // checkout doesn't send it, keep the code in the field, and say why.
         setCoupon(null);
         setDraft(code);
-        setError(`${code} no longer applies: ${reason}`);
+        setError(getDict().cartPage.noLongerApplies(code, reason));
       } else {
         setError(reason);
       }
@@ -51,7 +54,7 @@ export function CouponField({ cartVersion, onChecked }: { cartVersion: string; o
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const code = draft.trim();
-    if (!code) return setError("Enter a coupon code.");
+    if (!code) return setError(c.enterCoupon);
     check.mutate(code);
   };
 
@@ -65,7 +68,7 @@ export function CouponField({ cartVersion, onChecked }: { cartVersion: string; o
   if (saved && check.isPending && !check.data) {
     return (
       <p className="flex items-center gap-2 rounded-lg bg-surface-2 px-3 py-2.5 text-sm text-muted-foreground" role="status">
-        <TicketPercent className="size-[18px]" aria-hidden="true" /> Checking {saved}…
+        <TicketPercent className="size-[18px]" aria-hidden="true" /> {c.checkingCoupon(saved)}
       </p>
     );
   }
@@ -76,10 +79,10 @@ export function CouponField({ cartVersion, onChecked }: { cartVersion: string; o
         <span className="flex items-center gap-2">
           <TicketPercent className="size-[18px]" aria-hidden="true" />
           <span>
-            <span className="font-bold uppercase tracking-wide">{check.data.code}</span> applied · −{formatMoney(check.data.discount_usd, check.data.discount_khr, currency)}
+            <span className="font-bold uppercase tracking-wide">{check.data.code}</span> {c.applied} · −{formatMoney(check.data.discount_usd, check.data.discount_khr, currency)}
           </span>
         </span>
-        <Button variant="ghost" size="icon-sm" onClick={remove} aria-label={`Remove coupon ${check.data.code}`} className="text-success hover:bg-card">
+        <Button variant="ghost" size="icon-sm" onClick={remove} aria-label={c.removeCoupon(check.data.code ?? "")} className="text-success hover:bg-card">
           <X aria-hidden="true" />
         </Button>
       </div>
@@ -89,7 +92,7 @@ export function CouponField({ cartVersion, onChecked }: { cartVersion: string; o
   return (
     <form onSubmit={submit} noValidate className="grid gap-1.5">
       <label htmlFor="coupon-code" className="text-sm font-semibold">
-        Coupon code
+        {c.couponCode}
       </label>
       <div className="flex gap-2">
         <input
@@ -102,11 +105,11 @@ export function CouponField({ cartVersion, onChecked }: { cartVersion: string; o
           maxLength={50}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? "coupon-error" : undefined}
-          placeholder="e.g. WELCOME10"
+          placeholder={c.couponPlaceholder}
           className="h-11 min-w-0 flex-1 rounded-md border border-input bg-card px-3 text-base uppercase tracking-wide outline-none placeholder:normal-case placeholder:tracking-normal focus-visible:ring-2 focus-visible:ring-ring aria-[invalid=true]:border-destructive"
         />
         <Button type="submit" variant="outline" loading={check.isPending}>
-          Apply
+          {c.apply}
         </Button>
       </div>
       {error ? (

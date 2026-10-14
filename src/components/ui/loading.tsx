@@ -1,7 +1,9 @@
 import React from "react";
 import { m } from "motion/react";
+import { useT } from "@/i18n";
 
-const Loading: React.FC<{ message?: string }> = ({ message = "Loading..." }) => {
+const Loading: React.FC<{ message?: string }> = ({ message }) => {
+  const { dict } = useT();
   return (
     <m.div
       initial={{ opacity: 0 }}
@@ -35,7 +37,7 @@ const Loading: React.FC<{ message?: string }> = ({ message = "Loading..." }) => 
         transition={{ delay: 0.2, duration: 0.3 }}
         className="mt-6 text-sm text-muted-foreground font-medium"
       >
-        {message}
+        {message ?? dict.ui.loadingPage}
         <m.span
           animate={{ opacity: [0, 1, 0] }}
           transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}

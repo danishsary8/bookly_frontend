@@ -1,7 +1,7 @@
 import type { BookVariant } from "@/api/types";
-import { formatLabel } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
+import { formatName, useT } from "@/i18n";
 
 /*
  * Format choice on the book page: a radio group of cards (format, price, stock),
@@ -12,10 +12,11 @@ import { formatMoney, useCurrency } from "@/stores/currency";
 const DIGITAL = new Set(["ebook", "audiobook"]);
 
 export function FormatPicker({ variants, value, onChange, name }: { variants: BookVariant[]; value: number | undefined; onChange: (id: number) => void; name: string }) {
+  const { dict } = useT();
   const currency = useCurrency();
   return (
     <fieldset>
-      <legend className="mb-3 text-sm font-semibold">Format</legend>
+      <legend className="mb-3 text-sm font-semibold">{dict.cards.format}</legend>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))]">
         {variants.map((v) => {
           const selected = v.id === value;
@@ -30,10 +31,10 @@ export function FormatPicker({ variants, value, onChange, name }: { variants: Bo
               )}
             >
               <input type="radio" name={name} value={v.id} checked={selected} disabled={!available} onChange={() => v.id && onChange(v.id)} className="sr-only" />
-              <span className={cn("text-[15px] font-semibold", selected && "text-primary")}>{formatLabel(v.format)}</span>
+              <span className={cn("text-[15px] font-semibold", selected && "text-primary")}>{formatName(dict, v.format)}</span>
               <span className="text-sm font-semibold tabular-nums">{formatMoney(v.price_usd, v.price_khr, currency)}</span>
               <span className={cn("text-xs", available ? "text-muted-foreground" : "text-destructive")}>
-                {!available ? "Out of stock" : DIGITAL.has(v.format ?? "") ? "Instant download" : "In stock"}
+                {!available ? dict.cards.outOfStock : DIGITAL.has(v.format ?? "") ? dict.cards.instant : dict.cards.inStock}
               </span>
             </label>
           );

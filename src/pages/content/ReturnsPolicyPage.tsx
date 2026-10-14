@@ -7,6 +7,7 @@ export default function ReturnsPolicyPage() {
   const days = policy.returnWindowDays;
   return (
     <ContentPage
+      englishOnly
       title="Returns policy"
       eyebrow="Help"
       lead={`Changed your mind or a book arrived damaged? Printed books can be sent back within ${days} days of delivery. You start the return from your account.`}

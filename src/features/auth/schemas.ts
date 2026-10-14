@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getDict, msg, type Translations } from "@/i18n";
 
 /*
  * Client-side rules for the customer auth forms. They mirror the API's validation
@@ -9,74 +10,74 @@ import { z } from "zod";
 const email = z
   .string()
   .trim()
-  .min(1, "Enter your email address.")
-  .max(190, "That email address is too long.")
-  .email("Enter an email address like name@example.com.");
+  .min(1, msg((d) => d.forms.enterEmail))
+  .max(190, msg((d) => d.forms.emailTooLong))
+  .email(msg((d) => d.forms.emailFormat));
 
 // API: Password::min(8)->letters()->numbers()
 export const newPassword = z
   .string()
-  .min(8, "Use at least 8 characters.")
-  .regex(/\p{L}/u, "Include at least one letter.")
-  .regex(/\p{N}/u, "Include at least one number.");
+  .min(8, msg((d) => d.forms.min8))
+  .regex(/\p{L}/u, msg((d) => d.forms.needLetter))
+  .regex(/\p{N}/u, msg((d) => d.forms.needNumber));
 
 const code = z
   .string()
-  .regex(/^\d{6}$/, "Enter the 6-digit code we sent you.");
+  .regex(/^\d{6}$/, msg((d) => d.forms.enterCode));
 
 // API: Cambodian numbers only (+855), e.g. "012 345 678" or "+855 12 345 678".
 const CAMBODIAN_PHONE = /^(\+?855|0)?[1-9]\d{6,8}$/;
 export const cambodianPhone = z
   .string()
   .trim()
-  .min(1, "Enter your phone number.")
-  .refine((v) => CAMBODIAN_PHONE.test(v.replace(/[\s()-]/g, "")), "Enter a Cambodian phone number, like 012 345 678.");
+  .min(1, msg((d) => d.forms.enterPhone))
+  .refine((v) => CAMBODIAN_PHONE.test(v.replace(/[\s()-]/g, "")), msg((d) => d.forms.cambodianPhone));
 
 export const optionalEmail = z
   .string()
   .trim()
-  .max(190, "That email address is too long.")
-  .refine((v) => v === "" || z.string().email().safeParse(v).success, "Enter an email address like name@example.com.");
+  .max(190, msg((d) => d.forms.emailTooLong))
+  .refine((v) => v === "" || z.string().email().safeParse(v).success, msg((d) => d.forms.emailFormat));
 
 export const loginSchema = z.object({
   email,
-  password: z.string().min(1, "Enter your password."),
+  password: z.string().min(1, msg((d) => d.forms.enterPassword)),
 });
 
 // Owner (2026-10-08): with Telegram the phone number (shared in the bot) proves the account, so the email is optional then.
 export const registerSchema = z
   .object({
-    name: z.string().trim().min(1, "Enter your name.").max(150, "Keep your name under 150 characters."),
+    name: z.string().trim().min(1, msg((d) => d.forms.enterName)).max(150, msg((d) => d.forms.nameTooLong)),
     email: optionalEmail,
     phone: z
       .string()
       .trim()
-      .max(30, "Keep the phone number under 30 characters.")
-      .regex(/^[+\d\s()-]*$/, "Use digits, spaces, +, - or brackets only."),
+      .max(30, msg((d) => d.forms.phoneTooLong))
+      .regex(/^[+\d\s()-]*$/, msg((d) => d.forms.phoneChars)),
     password: newPassword,
-    password_confirmation: z.string().min(1, "Type your password again."),
+    password_confirmation: z.string().min(1, msg((d) => d.forms.typePasswordAgain)),
     verify_by: z.enum(["email", "telegram"]),
   })
   .refine((data) => data.password === data.password_confirmation, {
     path: ["password_confirmation"],
-    message: "The passwords don't match.",
+    ...msg((d) => d.forms.passwordsDontMatch),
   })
   .superRefine((data, ctx) => {
-    if (data.verify_by !== "telegram" && data.email === "") ctx.addIssue({ code: "custom", path: ["email"], message: "Enter your email address." });
+    if (data.verify_by !== "telegram" && data.email === "") ctx.addIssue({ code: "custom", path: ["email"], message: getDict().forms.enterEmail });
   });
 
 /** A new Facebook customer (owner's rule): confirm a phone number in Telegram, or give an email. */
 export const facebookDetailsSchema = z
   .object({ verify_by: z.enum(["email", "telegram"]), email: optionalEmail })
   .superRefine((data, ctx) => {
-    if (data.verify_by === "email" && data.email === "") ctx.addIssue({ code: "custom", path: ["email"], message: "Enter your email address." });
+    if (data.verify_by === "email" && data.email === "") ctx.addIssue({ code: "custom", path: ["email"], message: getDict().forms.enterEmail });
   });
 
 export const verifyEmailSchema = z.object({ code });
 
 /** Account → Sign-in & security: a new email, and the password when the account has one. */
 export const changeEmailSchema = (hasPassword: boolean) =>
-  z.object({ email, password: hasPassword ? z.string().min(1, "Enter your password.") : z.string() });
+  z.object({ email, password: hasPassword ? z.string().min(1, msg((d) => d.forms.enterPassword)) : z.string() });
 
 export const forgotPasswordSchema = z.object({ email });
 
@@ -85,11 +86,11 @@ export const resetPasswordSchema = z
     email,
     code,
     password: newPassword,
-    password_confirmation: z.string().min(1, "Type your new password again."),
+    password_confirmation: z.string().min(1, msg((d) => d.forms.typeNewPasswordAgain)),
   })
   .refine((data) => data.password === data.password_confirmation, {
     path: ["password_confirmation"],
-    message: "The passwords don't match.",
+    ...msg((d) => d.forms.passwordsDontMatch),
   });
 
 export type LoginValues = z.infer<typeof loginSchema>;
@@ -102,7 +103,7 @@ export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
 /** Password checklist shown under "new password" fields, so the rules are visible before an error. */
 export const passwordRules = [
-  { label: "At least 8 characters", test: (v: string) => v.length >= 8 },
-  { label: "A letter", test: (v: string) => /\p{L}/u.test(v) },
-  { label: "A number", test: (v: string) => /\p{N}/u.test(v) },
+  { id: "length", label: (d: Translations) => d.forms.ruleLength, test: (v: string) => v.length >= 8 },
+  { id: "letter", label: (d: Translations) => d.forms.ruleLetter, test: (v: string) => /\p{L}/u.test(v) },
+  { id: "number", label: (d: Translations) => d.forms.ruleNumber, test: (v: string) => /\p{N}/u.test(v) },
 ];

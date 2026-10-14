@@ -15,6 +15,8 @@ import { facebookDetailsSchema, type FacebookDetailsValues } from "@/features/au
 import { useTurnstile } from "@/features/auth/turnstile";
 import { useAfterSignIn } from "@/features/auth/useAfterSignIn";
 import { applyApiErrors, withNext } from "@/lib/forms";
+import { useT } from "@/i18n";
+import { Rich } from "@/i18n/Rich";
 
 /*
  * /sign-up/facebook: a new Facebook customer's second step (owner's rule). Facebook has signed them in;
@@ -33,6 +35,8 @@ function FacebookDetailsForm({ accessToken, profile, telegram, next }: FacebookS
   const turnstile = useTurnstile("facebook_sign_up");
   const [formError, setFormError] = useState<string | null>(null);
   const alertRef = useRef<HTMLDivElement>(null);
+  const { dict } = useT();
+  const s = dict.signin;
   const { register, handleSubmit, setError, control, formState } = useForm<FacebookDetailsValues>({
     resolver: zodResolver(facebookDetailsSchema),
     defaultValues: { verify_by: telegram ? "telegram" : "email", email: profile.email ?? "" },
@@ -50,7 +54,7 @@ function FacebookDetailsForm({ accessToken, profile, telegram, next }: FacebookS
         ...(values.email ? { email: values.email } : {}),
         turnstile_token: await turnstile.getToken(),
       });
-      afterSignIn(response.customer, next, firstName ? `Welcome, ${firstName}` : "Welcome to Bookly", { verifyBy: response.verify_by ?? null, justRegistered: true });
+      afterSignIn(response.customer, next, firstName ? s.welcomeName(firstName) : s.welcome, { verifyBy: response.verify_by ?? null, justRegistered: true });
     } catch (error) {
       const message = applyApiErrors(error, setError, ["verify_by", "email"]);
       if (message) {
@@ -64,35 +68,31 @@ function FacebookDetailsForm({ accessToken, profile, telegram, next }: FacebookS
 
   return (
     <AuthPage
-      eyebrow="Almost a member"
-      title={telegram ? "Confirm your phone number" : "Add your email"}
+      eyebrow={s.almostMember}
+      title={telegram ? s.confirmPhone : s.addYourEmail}
       lead={
         <p>
           {profile.name ? (
-            <>
-              Facebook signed you in as <strong className="font-semibold text-foreground">{profile.name}</strong>.{" "}
-            </>
+            <Rich text={s.facebookAs(profile.name)} strong="font-semibold text-foreground" />
           ) : null}
-          {telegram
-            ? "Bookly needs a phone number for deliveries: share yours in our Telegram bot with one tap. No Telegram? Use your email instead."
-            : "Add your email so we can confirm your account and send your receipts."}
+          {telegram ? s.facebookTelegram : s.facebookEmail}
         </p>
       }
       panel={<LibraryCard name={profile.name} channel={byTelegram ? "telegram" : "email"} destination={byTelegram ? null : email} />}
       footer={
         <p>
-          Not you?{" "}
+          {s.notYou}{" "}
           <Link to={withNext("/login", next)} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
-            Sign in another way
+            {s.otherWay}
           </Link>
         </p>
       }
     >
       <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid gap-5">
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
-        {telegram ? <ChannelPicker value={byTelegram ? "telegram" : "email"} field={register("verify_by")} legend="How should we confirm your account?" /> : null}
+        {telegram ? <ChannelPicker value={byTelegram ? "telegram" : "email"} field={register("verify_by")} legend={s.howConfirm} /> : null}
         <TextField
-          label="Email"
+          label={dict.auth.email}
           optional={byTelegram}
           type="email"
           autoComplete="email"
@@ -100,10 +100,10 @@ function FacebookDetailsForm({ accessToken, profile, telegram, next }: FacebookS
           placeholder="name@example.com"
           hint={
             profile.email
-              ? "From Facebook. Keep it for receipts and order updates, or change it."
+              ? s.fromFacebook
               : byTelegram
-                ? "For receipts and order updates. You can add it later."
-                : "We'll send a 6-digit code to confirm it."
+                ? s.emailHintTelegram
+                : s.emailHintCode
           }
           error={errors.email?.message}
           {...register("email")}
@@ -111,7 +111,7 @@ function FacebookDetailsForm({ accessToken, profile, telegram, next }: FacebookS
         {turnstile.widget}
         <CtaGlare block>
           <Button type="submit" variant="cta" size="lg" className="w-full" loading={isSubmitting}>
-            {isSubmitting ? "Finishing…" : byTelegram ? "Continue to Telegram" : "Finish signing up"}
+            {isSubmitting ? s.finishing : byTelegram ? s.toTelegram : s.finish}
           </Button>
         </CtaGlare>
       </form>

@@ -1,6 +1,7 @@
 import { forwardRef, useId, useState, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
 import { AlertCircle, ChevronDown, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n";
 
 /*
  * MASTER §6.2 form field: visible label above, 48px control, 1px --input border,
@@ -26,25 +27,28 @@ interface FieldShellProps {
   className?: string;
 }
 
-export const FieldShell = ({ id, label, hint, error, optional, children, className }: FieldShellProps) => (
-  // content-start: when a neighbour in the same grid row has a hint/error, this field
-  // stretches to match; keep label + control at the top instead of spreading them apart.
-  <div className={cn("grid content-start gap-1.5", className)}>
-    <label htmlFor={id} className="text-sm font-semibold text-foreground">
-      {label}
-      {optional ? <span className="ml-1.5 font-medium text-muted-foreground">(optional)</span> : null}
-    </label>
-    {children}
-    {error ? (
-      <p id={`${id}-error`} className="flex items-start gap-1.5 text-sm text-destructive">
-        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-        <span>{error}</span>
-      </p>
-    ) : hint ? (
-      <p id={`${id}-hint`} className="text-sm text-muted-foreground">{hint}</p>
-    ) : null}
-  </div>
-);
+export const FieldShell = ({ id, label, hint, error, optional, children, className }: FieldShellProps) => {
+  const { dict } = useT();
+  return (
+    // content-start: when a neighbour in the same grid row has a hint/error, this field
+    // stretches to match; keep label + control at the top instead of spreading them apart.
+    <div className={cn("grid content-start gap-1.5", className)}>
+      <label htmlFor={id} className="text-sm font-semibold text-foreground">
+        {label}
+        {optional ? <span className="ml-1.5 font-medium text-muted-foreground">{dict.ui.optional}</span> : null}
+      </label>
+      {children}
+      {error ? (
+        <p id={`${id}-error`} className="flex items-start gap-1.5 text-sm text-destructive">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>{error}</span>
+        </p>
+      ) : hint ? (
+        <p id={`${id}-hint`} className="text-sm text-muted-foreground">{hint}</p>
+      ) : null}
+    </div>
+  );
+};
 
 /** The field's own error/hint id, plus any extra ids the caller passes (e.g. a password checklist). */
 const describedBy = (id: string, error?: string, hint?: ReactNode, extra?: string) =>
@@ -113,6 +117,7 @@ export const PasswordField = forwardRef<HTMLInputElement, Omit<TextFieldProps, "
     const autoId = useId();
     const fieldId = id ?? autoId;
     const [visible, setVisible] = useState(false);
+    const { dict } = useT();
     return (
       <FieldShell id={fieldId} label={label} hint={hint} error={error} optional={optional} className={containerClassName}>
         <div className="relative">
@@ -128,7 +133,7 @@ export const PasswordField = forwardRef<HTMLInputElement, Omit<TextFieldProps, "
           <button
             type="button"
             onClick={() => setVisible((v) => !v)}
-            aria-label={visible ? "Hide password" : "Show password"}
+            aria-label={visible ? dict.ui.hidePassword : dict.ui.showPassword}
             aria-pressed={visible}
             aria-controls={fieldId}
             className="absolute right-0.5 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-md text-muted-foreground transition-colors duration-150 hover:bg-secondary hover:text-foreground active:scale-95 motion-reduce:active:scale-100"

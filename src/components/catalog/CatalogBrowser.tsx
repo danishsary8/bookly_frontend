@@ -13,10 +13,10 @@ import { Pagination } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
 import { PER_PAGE, SORTS, activeFilterCount, clearFilters, effectiveSort, parseBookFilters, toSearchParams, withFilter } from "@/lib/catalog";
-import { rangeSummary } from "@/lib/pagination";
 import { ActiveFilters } from "./ActiveFilters";
 import { BookGrid } from "./BookGrid";
 import { CatalogFilters } from "./CatalogFilters";
+import { rangeText, useT } from "@/i18n";
 
 /*
  * The catalogue body shared by /books, /search, category and publisher pages:
@@ -27,13 +27,16 @@ import { CatalogFilters } from "./CatalogFilters";
 
 type Props = {
   locked?: Partial<BookFilters>;
-  /** Noun for the result count ("books", "results"). */
-  noun?: string;
+  /** Noun for the result count, from the dictionary (dict.nouns.book, dict.nouns.result). */
+  noun?: (n: number) => string;
   /** Replaces the default "no results" state. */
   empty?: ReactNode;
 };
 
-export function CatalogBrowser({ locked = {}, noun = "books", empty }: Props) {
+export function CatalogBrowser({ locked = {}, noun: nounFor, empty }: Props) {
+  const { dict } = useT();
+  const t = dict.browse;
+  const noun = nounFor ?? dict.nouns.book;
   const [searchParams, setSearchParams] = useSearchParams();
   const [filtersOpen, setFiltersOpen] = useState(false);
   const urlFilters = parseBookFilters(searchParams);
@@ -73,9 +76,9 @@ export function CatalogBrowser({ locked = {}, noun = "books", empty }: Props) {
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10">
-      <aside aria-label="Filters" className="hidden lg:block">
+      <aside aria-label={t.filters} className="hidden lg:block">
         <div className="sticky top-[calc(var(--header-h)+1.5rem)] max-h-[calc(100dvh-var(--header-h)-3rem)] overflow-y-auto pb-6 pr-2">
-          <h2 className="mb-5 font-display text-xl">Filter</h2>
+          <h2 className="mb-5 font-display text-xl">{t.filters}</h2>
           {filterPanel("side")}
         </div>
       </aside>
@@ -83,13 +86,13 @@ export function CatalogBrowser({ locked = {}, noun = "books", empty }: Props) {
       <div className="grid min-w-0 content-start gap-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-[15px] text-muted-foreground" role="status" aria-live="polite">
-            {meta ? rangeSummary(meta.from, meta.to, meta.total ?? 0, noun) : " "}
+            {meta ? rangeText(dict, meta.from, meta.to, meta.total ?? 0, noun(meta.total ?? 0)) : " "}
           </p>
           <div className="flex items-center gap-2">
             <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
               <DrawerTrigger asChild>
                 <Button variant="outline" size="sm" className="lg:hidden">
-                  <SlidersHorizontal aria-hidden="true" /> Filters
+                  <SlidersHorizontal aria-hidden="true" /> {t.filters}
                   {count > 0 ? (
                     <Badge tone="info" shape="solid" className="ml-0.5 h-5 px-1.5 tracking-normal">
                       {count}
@@ -99,21 +102,21 @@ export function CatalogBrowser({ locked = {}, noun = "books", empty }: Props) {
               </DrawerTrigger>
               <DrawerContent side="bottom" aria-describedby={undefined}>
                 <DrawerHeader>
-                  <DrawerTitle>Filters</DrawerTitle>
+                  <DrawerTitle>{t.filters}</DrawerTitle>
                 </DrawerHeader>
                 <DrawerBody>{filterPanel("sheet")}</DrawerBody>
                 <DrawerFooter className="grid grid-cols-2 gap-3">
                   <Button variant="outline" onClick={() => apply({ ...clearFilters(filters), ...locked })} disabled={count === 0}>
-                    Clear all
+                    {t.clearAll}
                   </Button>
                   <Button onClick={() => setFiltersOpen(false)}>
-                    {meta ? `Show ${meta.total ?? 0} ${noun}` : "Show results"}
+                    {meta ? t.showN(meta.total ?? 0, noun(meta.total ?? 0)) : t.showResults}
                   </Button>
                 </DrawerFooter>
               </DrawerContent>
             </Drawer>
             <span id="sort-label" className="sr-only text-sm font-medium text-muted-foreground sm:not-sr-only">
-              Sort by
+              {t.sortBy}
             </span>
             <Select value={sort} onValueChange={(value) => apply(withFilter(filters, "sort", value as BookSort))}>
               <SelectTrigger aria-labelledby="sort-label" className="h-11 w-[12rem] text-[15px]">
@@ -122,7 +125,7 @@ export function CatalogBrowser({ locked = {}, noun = "books", empty }: Props) {
               <SelectContent align="end">
                 {sorts.map((s) => (
                   <SelectItem key={s.value} value={s.value}>
-                    {s.label}
+                    {t.sorts[s.value]}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -145,11 +148,11 @@ export function CatalogBrowser({ locked = {}, noun = "books", empty }: Props) {
                 empty ?? (
                   <EmptyState
                     icon={SearchX}
-                    title={filters.q ? `No books match "${filters.q}"` : "No books match these filters"}
-                    description="Try a shorter title, an author's surname, or clear a filter."
+                    title={filters.q ? t.noMatchQuery(filters.q) : t.noMatchFilters}
+                    description={t.noMatchLead}
                     action={
                       count > 0 ? (
-                        <Button onClick={() => apply({ ...clearFilters(filters), ...locked })}>Clear filters</Button>
+                        <Button onClick={() => apply({ ...clearFilters(filters), ...locked })}>{t.clearFilters}</Button>
                       ) : undefined
                     }
                   />

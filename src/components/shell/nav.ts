@@ -3,55 +3,58 @@
  * links are built in Phase 3 onward.
  */
 
-export type NavLink = { label: string; to: string };
+import type { Translations } from "@/i18n";
+
+/** `label` and column titles are keys of the dictionary's `navLinks` section (shown in the visitor's language). */
+export type NavLink = { label: keyof Translations["navLinks"]; to: string };
 
 export const primaryNav: NavLink[] = [
-  { label: "Books", to: "/books" },
-  { label: "Authors", to: "/authors" },
-  { label: "Series", to: "/series" },
-  { label: "New arrivals", to: "/books?sort=newest" },
+  { label: "books", to: "/books" },
+  { label: "authors", to: "/authors" },
+  { label: "series", to: "/series" },
+  { label: "newArrivals", to: "/books?sort=newest" },
 ];
 
 export const accountNav: NavLink[] = [
-  { label: "Account", to: "/account" },
-  { label: "Orders", to: "/account/orders" },
-  { label: "Wishlist", to: "/account/wishlist" },
+  { label: "account", to: "/account" },
+  { label: "orders", to: "/account/orders" },
+  { label: "wishlist", to: "/account/wishlist" },
 ];
 
-export const footerNav: { title: string; links: NavLink[] }[] = [
+export const footerNav: { title: keyof Translations["navLinks"]; links: NavLink[] }[] = [
   {
-    title: "Shop",
+    title: "shop",
     links: [
-      { label: "All books", to: "/books" },
-      { label: "New arrivals", to: "/books?sort=newest" },
-      { label: "Best rated", to: "/books?sort=rating" },
-      { label: "Authors", to: "/authors" },
-      { label: "Series", to: "/series" },
+      { label: "allBooks", to: "/books" },
+      { label: "newArrivals", to: "/books?sort=newest" },
+      { label: "bestRated", to: "/books?sort=rating" },
+      { label: "authors", to: "/authors" },
+      { label: "series", to: "/series" },
     ],
   },
   {
-    title: "Your account",
+    title: "yourAccount",
     links: [
-      { label: "Sign in", to: "/login" },
-      { label: "Orders", to: "/account/orders" },
-      { label: "Wishlist", to: "/account/wishlist" },
-      { label: "Cart", to: "/cart" },
+      { label: "signIn", to: "/login" },
+      { label: "orders", to: "/account/orders" },
+      { label: "wishlist", to: "/account/wishlist" },
+      { label: "cart", to: "/cart" },
     ],
   },
   {
-    title: "Help",
+    title: "help",
     links: [
-      { label: "Shipping & delivery", to: "/shipping" },
-      { label: "Returns", to: "/returns-policy" },
-      { label: "FAQ", to: "/faq" },
-      { label: "Contact us", to: "/contact" },
+      { label: "shipping", to: "/shipping" },
+      { label: "returns", to: "/returns-policy" },
+      { label: "faq", to: "/faq" },
+      { label: "contact", to: "/contact" },
     ],
   },
 ];
 
 export const legalNav: NavLink[] = [
-  { label: "Privacy", to: "/privacy" },
-  { label: "Terms", to: "/terms" },
+  { label: "privacy", to: "/privacy" },
+  { label: "terms", to: "/terms" },
 ];
 
 /** Active when the path matches, ignoring the query string. "/books" is active on /books/12 too. */

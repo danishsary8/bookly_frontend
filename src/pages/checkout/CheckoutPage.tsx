@@ -20,10 +20,9 @@ import { useUsableCart } from "@/features/cart/useCart";
 import { AddressPicker } from "@/features/checkout/AddressPicker";
 import { PaymentOptions } from "@/features/checkout/PaymentOptions";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { formatLabel } from "@/lib/catalog";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { toast } from "@/stores/toast";
-import { useT } from "@/i18n";
+import { formatName, getDict, useT } from "@/i18n";
 
 /*
  * /checkout (verified customers): 1) delivery address, 2) payment (cash on
@@ -67,6 +66,7 @@ function Row({ label, amount, className, negative }: { label: ReactNode; amount:
 
 export default function CheckoutPage() {
   const { dict } = useT();
+  const k = dict.checkoutPage;
   useDocumentTitle(dict.checkout.title);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -97,7 +97,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (!couponError || !coupon) return;
     setCoupon(null);
-    toast.info({ title: `${coupon} was removed`, description: couponError });
+    toast.info({ title: getDict().checkoutPage.removedCoupon(coupon), description: couponError });
   }, [couponError, coupon]);
 
   const place = useMutation({
@@ -127,7 +127,7 @@ export default function CheckoutPage() {
       if (!lost) idempotencyKey.current = newIdempotencyKey();
       const message =
         apiError.field("cart") ?? apiError.field("address_id") ?? apiError.field("coupon_code") ?? apiError.field("payment_method") ?? apiError.message;
-      setFormError(lost ? "The connection dropped before we heard back. Try again: if your order did go through, you'll see it instead of a second one." : message);
+      setFormError(lost ? getDict().checkoutPage.connectionDropped : message);
       if (!lost) {
         // The API turned the order down (stock, price, coupon…): show the cart as it is now.
         void queryClient.invalidateQueries({ queryKey: cartKeys.cart() });
@@ -140,7 +140,7 @@ export default function CheckoutPage() {
   if (cart.isPending || addresses.isPending) {
     return (
       <div className="container-shell py-10">
-        <SkeletonGroup label="Loading checkout…" className="grid gap-6 lg:grid-cols-12">
+        <SkeletonGroup label={k.loading} className="grid gap-6 lg:grid-cols-12">
           <div className="grid gap-4 lg:col-span-8">
             <Skeleton className="h-10 w-64" />
             <Skeleton className="h-40 rounded-xl" />
@@ -164,19 +164,19 @@ export default function CheckoutPage() {
 
   return (
     <div className="container-shell pb-16">
-      <PageHeader crumbs={[{ label: "Home", to: "/" }, { label: dict.nav.cart, to: "/cart" }, { label: dict.checkout.title }]} title={dict.checkout.title} />
+      <PageHeader crumbs={[{ label: k.home, to: "/" }, { label: dict.nav.cart, to: "/cart" }, { label: dict.checkout.title }]} title={dict.checkout.title} />
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-12 lg:gap-12">
         <div className="grid content-start gap-10 lg:col-span-8">
-          <Step n={1} title={shipsSomething ? dict.checkout.deliveryAddress : "Contact address"}>
-            {!shipsSomething ? <p className="-mt-2 text-sm text-muted-foreground">Everything in this order is digital; we still need an address for your receipt.</p> : null}
+          <Step n={1} title={shipsSomething ? dict.checkout.deliveryAddress : k.contactAddress}>
+            {!shipsSomething ? <p className="-mt-2 text-sm text-muted-foreground">{k.digitalOnly}</p> : null}
             {addresses.isError ? <ErrorState error={addresses.error} onRetry={() => addresses.refetch()} headingLevel="h3" showHomeLink={false} /> : <AddressPicker addresses={list} value={addressId} onChange={setChosenAddress} />}
             <TextAreaField
-              label="Delivery note"
+              label={k.deliveryNote}
               optional
               hint={
                 <span className="flex items-center justify-between gap-2">
-                  <span>For the courier, e.g. call before delivery</span>
+                  <span>{k.deliveryNoteHint}</span>
                   <span className="tabular-nums">{deliveryNote.length}/300</span>
                 </span>
               }
@@ -194,21 +194,21 @@ export default function CheckoutPage() {
 
           <Step
             n={3}
-            title="Review your items"
+            title={k.review}
             aside={
               <Link to="/cart" className="inline-flex min-h-11 items-center text-[15px] font-semibold text-primary underline-offset-4 hover:underline">
-                Edit cart
+                {k.editCart}
               </Link>
             }
           >
-            <ul className="grid gap-4 rounded-xl border border-border bg-card p-5" aria-label="Items in this order">
+            <ul className="grid gap-4 rounded-xl border border-border bg-card p-5" aria-label={k.itemsInOrder}>
               {items.map((line) => (
                 <li key={line.id} className="flex items-center gap-4">
                   <CoverThumb src={line.cover_image_url} className="h-[72px] w-12" />
                   <div className="min-w-0 flex-1">
                     <p className="line-clamp-1 font-semibold">{line.book?.title}</p>
                     <p className="text-sm text-muted-foreground">
-                      {formatLabel(line.format)} · Qty {line.quantity}
+                      {k.line(formatName(dict, line.format), line.quantity ?? 0)}
                     </p>
                     {line.issues?.length ? <p className="text-sm text-destructive">{line.issues[0].message}</p> : null}
                   </div>
@@ -222,32 +222,32 @@ export default function CheckoutPage() {
         <aside aria-labelledby="checkout-summary" className="lg:col-span-4">
           <div className="grid gap-5 rounded-xl border border-border bg-card p-5 sm:p-6 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
             <h2 id="checkout-summary" className="font-display text-[1.563rem] leading-tight">
-              Order total
+              {k.orderTotal}
             </h2>
 
-            {formError ? <FormAlert ref={alertRef} title={unconfirmed ? "We couldn't confirm your order" : "Your order wasn't placed"}>{formError}</FormAlert> : null}
+            {formError ? <FormAlert ref={alertRef} title={unconfirmed ? k.unconfirmed : k.notPlaced}>{formError}</FormAlert> : null}
 
             {data?.coupon_code ? (
               <p className="flex items-center justify-between gap-2 rounded-lg bg-success-tint px-3 py-2 text-sm text-success">
                 <span className="flex items-center gap-2">
                   <TicketPercent className="size-4" aria-hidden="true" />
-                  <span className="font-bold uppercase tracking-wide">{data.coupon_code}</span> applied
+                  <span className="font-bold uppercase tracking-wide">{data.coupon_code}</span> {k.applied}
                 </span>
                 <button type="button" onClick={() => setCoupon(null)} className="font-semibold underline-offset-4 hover:underline">
-                  Remove
+                  {k.remove}
                 </button>
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Have a coupon?{" "}
+                {k.haveCoupon}{" "}
                 <Link to="/cart" className="font-semibold text-primary underline-offset-4 hover:underline">
-                  Add it in your cart
+                  {k.addInCart}
                 </Link>
               </p>
             )}
 
             {preview.isPending || (preview.isFetching && !data) ? (
-              <SkeletonGroup label="Working out your total…" className="grid gap-2">
+              <SkeletonGroup label={k.workingOut} className="grid gap-2">
                 <Skeleton className="h-5" />
                 <Skeleton className="h-5" />
                 <Skeleton className="h-8" />
@@ -257,23 +257,23 @@ export default function CheckoutPage() {
             ) : data ? (
               <>
               <dl className="grid gap-2 text-[15px]" aria-busy={preview.isFetching || undefined}>
-                <Row label={<span className="text-muted-foreground">Subtotal</span>} amount={data.subtotal} />
-                {Number(data.discount?.usd) > 0 ? <Row label="Discount" amount={data.discount} negative className="text-success" /> : null}
+                <Row label={<span className="text-muted-foreground">{k.subtotal}</span>} amount={data.subtotal} />
+                {Number(data.discount?.usd) > 0 ? <Row label={k.discount} amount={data.discount} negative className="text-success" /> : null}
                 {shipsSomething ? <Row
                     label={
                       <span className="text-muted-foreground">
-                        Delivery{data.delivery_area ? ` (${data.delivery_area === "phnom_penh" ? "Phnom Penh" : "provinces"})` : ""}
+                        {k.delivery}{data.delivery_area ? ` (${data.delivery_area === "phnom_penh" ? k.phnomPenh : k.provinces})` : ""}
                       </span>
                     }
                     amount={data.shipping_fee}
                   /> : null}
-                {Number(data.tax?.usd) > 0 ? <Row label={<span className="text-muted-foreground">Tax</span>} amount={data.tax} /> : null}
+                {Number(data.tax?.usd) > 0 ? <Row label={<span className="text-muted-foreground">{k.tax}</span>} amount={data.tax} /> : null}
                 <div className="mt-2 flex items-baseline justify-between gap-4 border-t border-border pt-3">
-                  <dt className="font-semibold">Total</dt>
+                  <dt className="font-semibold">{k.total}</dt>
                   <dd className="text-2xl font-semibold tabular-nums">{formatMoney(data.total?.usd, data.total?.khr, currency)}</dd>
                 </div>
               </dl>
-              <p className="text-sm text-muted-foreground">Pay the courier in cash when your order arrives.</p>
+              <p className="text-sm text-muted-foreground">{k.payCourier}</p>
               </>
             ) : null}
 
@@ -281,14 +281,14 @@ export default function CheckoutPage() {
               <p className="flex items-start gap-2 rounded-md bg-destructive-tint px-3 py-2 text-sm text-destructive" role="alert">
                 <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                 <span>
-                  Some items can't be ordered as they are.{" "}
+                  {k.cantOrder}{" "}
                   <Link to="/cart" className="font-semibold underline underline-offset-4">
-                    Review your cart
+                    {k.reviewCart}
                   </Link>
                 </span>
               </p>
             ) : !addressId ? (
-              <p className="text-sm text-muted-foreground">Add a delivery address to continue.</p>
+              <p className="text-sm text-muted-foreground">{k.addAddress}</p>
             ) : null}
 
             <CtaGlare block>
@@ -297,10 +297,10 @@ export default function CheckoutPage() {
               </Button>
             </CtaGlare>
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Lock className="size-4 shrink-0" aria-hidden="true" /> Nothing is charged now. You pay when the books arrive.
+              <Lock className="size-4 shrink-0" aria-hidden="true" /> {k.nothingCharged}
             </p>
             <Link to="/cart" className={buttonVariants({ variant: "link", className: "justify-self-center" })}>
-              Back to cart
+              {k.backToCart}
             </Link>
           </div>
         </aside>

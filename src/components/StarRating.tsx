@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { toNumber } from "@/lib/format";
+import { useT } from "@/i18n";
 
 /*
  * MASTER §6.4: five stars at 16px (cards) / 20px (detail), --star fill, outline
@@ -24,16 +25,17 @@ export const StarRating = ({ value, count, size = "sm", summary = true, compact 
   const rating = Math.max(0, Math.min(5, toNumber(value)));
   const reviews = Math.trunc(toNumber(count));
   const px = size === "lg" ? 20 : 16;
+  const { dict } = useT();
 
   if (summary && (!reviews || rating <= 0)) {
-    return <p className={cn("text-sm text-muted-foreground", className)}>No reviews yet</p>;
+    return <p className={cn("text-sm text-muted-foreground", className)}>{dict.ui.noReviewsYet}</p>;
   }
 
   const rounded = Math.round(rating * 2) / 2;
 
   return (
     <div className={cn("flex items-center gap-2 text-sm text-muted-foreground", className)}>
-      <span role="img" aria-label={`Rated ${rating.toFixed(1)} out of 5`} className="inline-flex gap-0.5">
+      <span role="img" aria-label={dict.ui.ratedOutOf5(rating.toFixed(1))} className="inline-flex gap-0.5">
         {Array.from({ length: 5 }, (_, i) => {
           const fill = rounded >= i + 1 ? 100 : rounded >= i + 0.5 ? 50 : 0;
           return (
@@ -51,11 +53,11 @@ export const StarRating = ({ value, count, size = "sm", summary = true, compact 
       {summary && compact ? <span className="whitespace-nowrap">
         <span className="font-semibold tabular-nums text-foreground">{rating.toFixed(1)}</span>{" "}
         <span className="tabular-nums" aria-hidden="true">({reviews})</span>
-        <span className="sr-only">from {reviews} {reviews === 1 ? "review" : "reviews"}</span>
+        <span className="sr-only">{dict.ui.fromReviews(reviews)}</span>
       </span> : summary ? <span>
         <span className="font-semibold tabular-nums text-foreground">{rating.toFixed(1)}</span>
         <span aria-hidden="true"> · </span>
-        <span className="tabular-nums">{reviews}</span> {reviews === 1 ? "review" : "reviews"}
+        <span className="tabular-nums">{reviews}</span> {dict.nouns.review(reviews)}
       </span> : null}
     </div>
   );

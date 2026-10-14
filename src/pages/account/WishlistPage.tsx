@@ -10,7 +10,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { AccountSection } from "@/features/account/AccountSection";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
-import { rangeSummary } from "@/lib/pagination";
+import { rangeText, useT } from "@/i18n";
 
 const PER_PAGE = 24;
 
@@ -19,7 +19,9 @@ const PER_PAGE = 24;
  * in the toast; the bag adds to cart). The page number lives in the URL.
  */
 export default function WishlistPage() {
-  useDocumentTitle("Wishlist");
+  const { dict } = useT();
+  const a = dict.account;
+  useDocumentTitle(a.wishlist);
   const [params] = useSearchParams();
   const page = Math.max(1, Number(params.get("page")) || 1);
   const wishlist = useQuery({ ...accountQueries.wishlist({ page, per_page: PER_PAGE }), placeholderData: (previous) => previous });
@@ -27,7 +29,7 @@ export default function WishlistPage() {
   const meta = wishlist.data?.meta;
 
   return (
-    <AccountSection title="Wishlist" lead={meta && meta.total ? rangeSummary(meta.from, meta.to, meta.total, meta.total === 1 ? "book" : "books") : "Books you've saved for later."}>
+    <AccountSection title={a.wishlist} lead={meta && meta.total ? rangeText(dict, meta.from, meta.to, meta.total, dict.nouns.book(meta.total)) : a.wishlistLead}>
       {wishlist.isError && !wishlist.data ? (
         <ErrorState error={wishlist.error} onRetry={() => wishlist.refetch()} headingLevel="h2" showHomeLink={false} />
       ) : (
@@ -42,11 +44,11 @@ export default function WishlistPage() {
             wishlist.isPending ? null : (
               <EmptyState
                 icon={Heart}
-                title="Nothing saved yet"
-                description="Tap the heart on any book to keep it here for later."
+                title={a.wishlistEmpty}
+                description={a.wishlistEmptyLead}
                 action={
                   <Link to="/books" className={buttonVariants()}>
-                    Discover books
+                    {a.discoverBooks}
                   </Link>
                 }
                 className="rounded-xl border border-dashed border-border"

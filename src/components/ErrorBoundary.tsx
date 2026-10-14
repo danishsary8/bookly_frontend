@@ -3,6 +3,7 @@ import { Component, type ErrorInfo, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { ApiError } from "@/api/errors";
 import { ErrorState } from "@/components/ui/error-state";
+import { getDict } from "@/i18n";
 
 /*
  * MASTER §6.22: a render crash inside one route shows the page-error state while
@@ -10,8 +11,8 @@ import { ErrorState } from "@/components/ui/error-state";
  * visitor can navigate away; "Try again" re-renders the same route.
  */
 
-const CRASH = new ApiError({ kind: "unexpected", message: "This page hit a problem while loading. Please try again." });
-const OFFLINE = new ApiError({ kind: "network", message: "You're offline." });
+const crash = () => new ApiError({ kind: "unexpected", message: getDict().shell.crashed });
+const offline = () => new ApiError({ kind: "network", message: getDict().shell.offline });
 
 // A lazily loaded page whose code can't be downloaded (offline, or a deploy replaced the files).
 const isLoadFailure = (error: Error) =>
@@ -43,7 +44,7 @@ class Boundary extends Component<Props, State> {
     if (this.state.error) {
       return (
         <ErrorState
-          error={isLoadFailure(this.state.error) && !navigator.onLine ? OFFLINE : CRASH}
+          error={isLoadFailure(this.state.error) && !navigator.onLine ? offline() : crash()}
           // React.lazy keeps a failed import, so only a reload fetches the page's code again.
           onRetry={() => (isLoadFailure(this.state.error!) ? window.location.reload() : this.setState({ error: null }))}
           className="py-24"

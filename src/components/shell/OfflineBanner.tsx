@@ -1,6 +1,7 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { WifiOff } from "lucide-react";
 import { toast } from "@/stores/toast";
+import { getDict, useT } from "@/i18n";
 
 const subscribe = (listener: () => void) => {
   window.addEventListener("online", listener);
@@ -25,12 +26,13 @@ function useOnline() {
 export function OfflineBanner() {
   const online = useOnline();
   const wasOffline = useRef(false);
+  const { dict } = useT();
 
   useEffect(() => {
     if (!online) wasOffline.current = true;
     else if (wasOffline.current) {
       wasOffline.current = false;
-      toast.success("Back online");
+      toast.success(getDict().shell.backOnline);
     }
   }, [online]);
 
@@ -40,7 +42,7 @@ export function OfflineBanner() {
       <p className="container-shell flex min-h-11 items-center gap-3 py-2 text-[15px] font-medium text-foreground">
         <WifiOff className="size-[18px] shrink-0 text-warning" aria-hidden="true" />
         <span>
-          You're offline. Pages you've opened still work; new pages and changes wait until you're back online.
+          {dict.shell.offlineBanner}
         </span>
       </p>
     </div>

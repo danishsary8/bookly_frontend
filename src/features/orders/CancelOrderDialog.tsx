@@ -8,6 +8,7 @@ import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/stores/toast";
+import { useT } from "@/i18n";
 
 const MAX_REASON = 500;
 
@@ -16,6 +17,8 @@ export function CancelOrderDialog({ order, open, onOpenChange }: { order: Order;
   const queryClient = useQueryClient();
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const { dict } = useT();
+  const t = dict.orderParts;
 
   const cancel = useMutation({
     mutationFn: () => ordersApi.cancel(order.id!, reason.trim() || undefined),
@@ -24,7 +27,7 @@ export function CancelOrderDialog({ order, open, onOpenChange }: { order: Order;
       void queryClient.invalidateQueries({ queryKey: ["orders"] });
       onOpenChange(false);
       setReason("");
-      toast.success({ title: `Order ${order.order_number} cancelled`, description: "Nothing is owed: it was cash on delivery." });
+      toast.success({ title: t.cancelled(order.order_number ?? ""), description: t.cancelledLead });
     },
     onError: (err) => {
       const apiError = ApiError.from(err);
@@ -52,14 +55,14 @@ export function CancelOrderDialog({ order, open, onOpenChange }: { order: Order;
       <DialogContent size="sm">
         <form onSubmit={submit} className="grid gap-5">
           <DialogHeader>
-            <DialogTitle>Cancel order {order.order_number}?</DialogTitle>
-            <DialogDescription>The books go back on the shelf and the order can't be restarted. You can still place a new one.</DialogDescription>
+            <DialogTitle>{t.cancelTitle(order.order_number ?? "")}</DialogTitle>
+            <DialogDescription>{t.cancelLead}</DialogDescription>
           </DialogHeader>
-          {error ? <FormAlert title="The order wasn't cancelled">{error}</FormAlert> : null}
+          {error ? <FormAlert title={t.notCancelled}>{error}</FormAlert> : null}
           <TextAreaField
-            label="Reason"
+            label={t.reason}
             optional
-            hint={`Helps us improve. Up to ${MAX_REASON} characters.`}
+            hint={t.reasonHint(MAX_REASON)}
             value={reason}
             maxLength={MAX_REASON}
             onChange={(event) => setReason(event.target.value)}
@@ -67,11 +70,11 @@ export function CancelOrderDialog({ order, open, onOpenChange }: { order: Order;
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline" disabled={cancel.isPending}>
-                Keep order
+                {t.keepOrder}
               </Button>
             </DialogClose>
             <Button type="submit" variant="destructive" loading={cancel.isPending}>
-              Cancel order
+              {t.cancelOrder}
             </Button>
           </DialogFooter>
         </form>

@@ -175,7 +175,7 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
       {shortcut ? (
         <>
           <span id={hintId} className="sr-only">
-            Press slash to search from anywhere.
+            {dict.shell.slashHint}
           </span>
           {query ? null : (
             <kbd
@@ -194,7 +194,7 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
             setQuery("");
             inputRef.current?.focus();
           }}
-          aria-label="Clear search"
+          aria-label={dict.shell.clearSearch}
           className="absolute right-0 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-md text-muted-foreground hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <X className="size-4" aria-hidden="true" />
@@ -203,10 +203,10 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
 
       {expanded ? (
         <div className="ui-pop absolute inset-x-0 top-[calc(100%+6px)] z-(--z-popover) min-w-[min(28rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-overlay" data-state="open">
-          <ul id={listboxId} role="listbox" aria-label="Search suggestions" className="max-h-[min(28rem,70dvh)] overflow-y-auto p-1.5">
+          <ul id={listboxId} role="listbox" aria-label={dict.shell.suggestions} className="max-h-[min(28rem,70dvh)] overflow-y-auto p-1.5">
             {showSkeleton ? (
               <li role="presentation" className="grid gap-3 p-2">
-                <span className="sr-only">Searching…</span>
+                <span className="sr-only">{dict.shell.searching}</span>
                 <SkeletonRow className="[&>div:first-child]:h-12 [&>div:first-child]:w-8" />
                 <SkeletonRow className="[&>div:first-child]:h-12 [&>div:first-child]:w-8" />
                 <SkeletonRow className="[&>div:first-child]:h-12 [&>div:first-child]:w-8" />
@@ -215,16 +215,16 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
 
             {!waiting && results.isError ? (
               <li role="presentation" className="px-3 py-3 text-sm text-muted-foreground">
-                Search isn't responding.{" "}
+                {dict.shell.searchDown}{" "}
                 <button type="button" onClick={() => results.refetch()} className="font-semibold text-primary underline-offset-4 hover:underline">
-                  Try again
+                  {dict.ui.tryAgain}
                 </button>
               </li>
             ) : null}
 
             {!waiting && !results.isError && enabled && results.isSuccess && books.length === 0 ? (
               <li role="presentation" className="px-3 py-3 text-sm text-muted-foreground">
-                No books match "{term}". Try a shorter title or an author's surname.
+                {dict.shell.noMatch(term)}
               </li>
             ) : null}
 
@@ -245,7 +245,7 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
                   </span>
                   <span className="block truncate text-sm text-muted-foreground">
                     {/* Search also matches author names, so bold them too: "austen" shows why Emma is listed. */}
-                    <Highlighted text={(book.authors ?? []).map((a) => a.name).join(", ") || "Unknown author"} term={term} />
+                    <Highlighted text={(book.authors ?? []).map((a) => a.name).join(", ") || dict.shell.unknownAuthor} term={term} />
                   </span>
                 </span>
                 <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
@@ -267,7 +267,7 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
                 )}
               >
                 <span className="truncate">
-                  See all {total > LIMIT ? `${total} ` : ""}results for "{query.trim()}"
+                  {dict.shell.seeAll(total > LIMIT ? total : null, query.trim())}
                 </span>
                 <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
               </li>

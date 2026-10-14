@@ -8,15 +8,18 @@ import { NotFoundState } from "@/components/catalog/NotFoundState";
 import { PageHeader } from "@/components/catalog/PageHeader";
 import { ErrorState } from "@/components/ui/error-state";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useT } from "@/i18n";
 
 export default function AuthorPage() {
   const id = Number(useParams().id);
   const valid = Number.isInteger(id) && id > 0;
   const author = useQuery({ ...catalogQueries.author(id), enabled: valid });
-  useDocumentTitle(author.data?.name, { description: author.data?.bio || (author.data ? `Books by ${author.data.name} at Bookly.` : null), image: author.data?.photo_url });
+  const { dict } = useT();
+  const p = dict.pages;
+  useDocumentTitle(author.data?.name, { description: author.data?.bio || (author.data ? p.authorMeta(author.data.name ?? "") : null), image: author.data?.photo_url });
 
   if (!valid || (author.isError && ApiError.from(author.error).kind === "not_found")) {
-    return <NotFoundState what="author" backTo="/authors" backLabel="All authors" />;
+    return <NotFoundState what={p.whatAuthor} backTo="/authors" backLabel={p.allAuthors} />;
   }
   if (author.isError) return <div className="container-shell py-16"><ErrorState error={author.error} onRetry={() => author.refetch()} headingLevel="h1" /></div>;
 
@@ -24,8 +27,8 @@ export default function AuthorPage() {
   return (
     <div className="container-shell pb-16">
       <PageHeader
-        crumbs={[{ label: "Home", to: "/" }, { label: "Authors", to: "/authors" }, { label: name ?? "Author" }]}
-        eyebrow="Author"
+        crumbs={[{ label: p.home, to: "/" }, { label: p.authors, to: "/authors" }, { label: name ?? p.author }]}
+        eyebrow={p.author}
         title={
           name ? (
             <span className="flex items-center gap-5">

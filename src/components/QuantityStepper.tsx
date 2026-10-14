@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n";
 
 /*
  * MASTER §6.7: one joined control, 44px tall, 44×44 buttons, a 56px numeric field
@@ -21,6 +22,7 @@ interface QuantityStepperProps {
 
 export const QuantityStepper = ({ value, onChange, min = 1, max = 99, label, showLabel = false, disabled, className }: QuantityStepperProps) => {
   const id = useId();
+  const { dict } = useT();
   const [draft, setDraft] = useState(String(value));
   const [syncedValue, setSyncedValue] = useState(value);
 
@@ -45,7 +47,7 @@ export const QuantityStepper = ({ value, onChange, min = 1, max = 99, label, sho
     <div className={cn("grid gap-1.5", className)}>
       <label htmlFor={id} className={showLabel ? "text-sm font-semibold text-foreground" : "sr-only"}>{label}</label>
       <div className="inline-flex h-11 w-max items-stretch overflow-hidden rounded-lg border border-input bg-card">
-        <button type="button" className={buttonClass} onClick={() => onChange(clamp(value - 1))} disabled={disabled || value <= min} aria-label="Decrease quantity" aria-controls={id}>
+        <button type="button" className={buttonClass} onClick={() => onChange(clamp(value - 1))} disabled={disabled || value <= min} aria-label={dict.ui.decreaseQuantity} aria-controls={id}>
           <Minus className="h-4 w-4" aria-hidden="true" />
         </button>
         <input
@@ -60,7 +62,7 @@ export const QuantityStepper = ({ value, onChange, min = 1, max = 99, label, sho
           onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); commit(); } }}
           className="w-14 border-x border-border bg-transparent text-center text-base font-semibold tabular-nums text-foreground outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
         />
-        <button type="button" className={buttonClass} onClick={() => onChange(clamp(value + 1))} disabled={disabled || value >= max} aria-label="Increase quantity" aria-controls={id}>
+        <button type="button" className={buttonClass} onClick={() => onChange(clamp(value + 1))} disabled={disabled || value >= max} aria-label={dict.ui.increaseQuantity} aria-controls={id}>
           <Plus className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>

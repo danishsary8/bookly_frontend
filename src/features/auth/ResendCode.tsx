@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useCooldown } from "@/hooks/useCooldown";
 import { useTurnstile } from "./turnstile";
 import { toast } from "@/stores/toast";
+import { useT } from "@/i18n";
 
 /*
  * "Didn't get it? Resend code" with a cooldown. The API allows 3 codes per
@@ -16,7 +17,7 @@ export function ResendCode({
   send,
   startCoolingDown = false,
   turnstileAction,
-  sentMessage = "Check your inbox (and spam folder). It may take a minute.",
+  sentMessage,
 }: {
   send: (turnstileToken?: string) => Promise<unknown>;
   startCoolingDown?: boolean;
@@ -25,6 +26,8 @@ export function ResendCode({
 }) {
   const cooldown = useCooldown(startCoolingDown ? COOLDOWN_S : 0);
   const [sending, setSending] = useState(false);
+  const { dict } = useT();
+  const s = dict.signin;
   const turnstile = useTurnstile(
     turnstileAction ?? "resend_code",
     Boolean(turnstileAction),
@@ -35,8 +38,8 @@ export function ResendCode({
     try {
       await send(await turnstile.getToken());
       toast.success({
-        title: "New code sent",
-        description: sentMessage,
+        title: s.newCodeSent,
+        description: sentMessage ?? s.checkInbox,
       });
       cooldown.start(COOLDOWN_S);
     } catch (error) {
@@ -44,7 +47,7 @@ export function ResendCode({
       if (apiError.kind === "rate_limited")
         cooldown.start(apiError.retryAfter ?? COOLDOWN_S);
       toast.error({
-        title: "Couldn't send a new code",
+        title: s.newCodeFailed,
         description: apiError.message,
       });
     } finally {
@@ -56,7 +59,7 @@ export function ResendCode({
   return (
     <>
       <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
-        Didn't get it?
+        {s.didntGet}
         <Button
           type="button"
           variant="link"
@@ -65,11 +68,7 @@ export function ResendCode({
           disabled={sending || cooldown.remaining > 0}
           aria-live="polite"
         >
-          {sending
-            ? "Sending…"
-            : cooldown.remaining > 0
-              ? `Resend code in ${cooldown.remaining}s`
-              : "Resend code"}
+          {sending ? dict.ui.sending : cooldown.remaining > 0 ? s.resendIn(cooldown.remaining) : s.resend}
         </Button>
       </p>
       {turnstile.widget}

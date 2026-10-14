@@ -5,6 +5,7 @@ import { SESSION_EXPIRED_EVENT } from "@/api/client";
 import type { SessionKind } from "@/api/session";
 import { withNext } from "@/lib/forms";
 import { toast } from "@/stores/toast";
+import { getDict } from "@/i18n";
 
 /*
  * Reacts when the API rejects a customer's or staff member's token (expired, revoked, signed out on
@@ -46,9 +47,9 @@ export function SessionWatcher() {
       if (repeat) return;
       shownAt = Date.now();
       toast.info({
-        title: "You've been signed out",
-        description: "Your session ended. Sign in again to see your cart and orders.",
-        action: { label: "Sign in", href: withNext("/login", here.current) },
+        title: getDict().signin.signedOut,
+        description: getDict().signin.signedOutLead,
+        action: { label: getDict().signin.signIn, href: withNext("/login", here.current) },
         duration: 10_000,
       });
     };

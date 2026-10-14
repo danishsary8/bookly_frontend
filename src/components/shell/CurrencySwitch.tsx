@@ -4,6 +4,7 @@ import { useId } from "react";
 import { transitions } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { setCurrency, useCurrency, type Currency } from "@/stores/currency";
+import { useT } from "@/i18n";
 
 /*
  * MASTER §6.21: USD / KHR segmented control. A radiogroup (arrow keys switch),
@@ -17,6 +18,7 @@ const options: { value: Currency; label: string; symbol: string; lang?: string }
 ];
 
 export function CurrencySwitch({ className }: { className?: string }) {
+  const { dict } = useT();
   const currency = useCurrency();
   const layoutId = `currency-${useId()}`;
 
@@ -24,7 +26,7 @@ export function CurrencySwitch({ className }: { className?: string }) {
     <RadioGroup.Root
       value={currency}
       onValueChange={(value) => setCurrency(value as Currency)}
-      aria-label="Currency"
+      aria-label={dict.shell.currency}
       orientation="horizontal"
       className={cn("inline-flex h-11 items-center rounded-lg border border-border bg-card p-1", className)}
     >

@@ -21,6 +21,8 @@ import { useTelegramLink } from "@/features/auth/telegram";
 import { isVerified, rememberChannel, rememberedChannel, verifyPath } from "@/features/auth/verification";
 import { applyApiErrors, safeNext } from "@/lib/forms";
 import { toast } from "@/stores/toast";
+import { useT } from "@/i18n";
+import { Rich } from "@/i18n/Rich";
 
 /*
  * /verify-email?via=email|telegram (signed-in customers): the last sign-up step. The API requires a verified
@@ -58,9 +60,11 @@ function TelegramConfirm() {
   const signOut = useSignOut();
   const [stamped, setStamped] = useState(false);
   const [switching, setSwitching] = useState(false);
+  const { dict } = useT();
+  const s = dict.signin;
   const telegram = useTelegramLink("phone", () => {
     setStamped(true);
-    toast.success({ title: "Phone number confirmed", description: "Welcome to the library: your cart and wishlist are ready." });
+    toast.success({ title: s.phoneConfirmed, description: s.libraryReady });
     window.setTimeout(() => navigate(safeNext(next), { replace: true }), STAMP_MS);
   });
   const { state, start } = telegram;
@@ -84,10 +88,10 @@ function TelegramConfirm() {
     try {
       await authApi.resendVerification();
       rememberChannel("email");
-      toast.success({ title: "Code sent by email", description: `Check ${user?.email ?? "your inbox"} (and the spam folder).` });
+      toast.success({ title: s.codeByEmail, description: s.checkEmail(user?.email ?? s.yourInbox) });
       navigate(verifyPath("email", next), { replace: true, state: { justRegistered: true } });
     } catch (error) {
-      toast.error({ title: "Couldn't send the email", description: ApiError.from(error).message });
+      toast.error({ title: s.emailFailed, description: ApiError.from(error).message });
     } finally {
       setSwitching(false);
     }
@@ -97,12 +101,11 @@ function TelegramConfirm() {
 
   return (
     <AuthPage
-      eyebrow={optional ? "One more thing" : "One last step"}
-      title="Confirm your phone number"
+      eyebrow={optional ? s.oneMoreThing : s.oneLastStep}
+      title={s.confirmPhone}
       lead={
         <p>
-          Open the Bookly bot in Telegram and tap <strong className="font-semibold text-foreground">Share my phone number</strong>. Telegram sends us your number,
-          so there's no code to type.
+          <Rich text={s.confirmPhoneLead} strong="font-semibold text-foreground" />
         </p>
       }
       panel={<LibraryCard {...card} />}
@@ -110,15 +113,15 @@ function TelegramConfirm() {
         optional ? (
           <p>
             <Link to={safeNext(next)} replace className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
-              Skip for now
-            </Link>{" "}
-            and confirm your number later in your account.
+              {s.skipForNow}
+            </Link>
+            {s.confirmLater}
           </p>
         ) : (
           <p>
-            Changed your mind?{" "}
+            {s.changedMind}{" "}
             <Button variant="link" className="min-h-11 px-0 text-sm" onClick={() => void signOut()}>
-              Sign out and start again
+              {s.signOutStartAgain}
             </Button>
           </p>
         )
@@ -130,7 +133,7 @@ function TelegramConfirm() {
           <div className="grid gap-4">
             <FormAlert title={state.message} />
             <Button type="button" variant="outline" onClick={() => void start()}>
-              <RotateCcw aria-hidden="true" /> Try again
+              <RotateCcw aria-hidden="true" /> {dict.ui.tryAgain}
             </Button>
           </div>
         ) : state.phase === "waiting" ? (
@@ -138,15 +141,15 @@ function TelegramConfirm() {
         ) : (
           <CtaGlare block>
             <Button type="button" variant="cta" size="lg" className="w-full" loading>
-              {stamped ? "Stamping your card…" : "Getting Telegram ready…"}
+              {stamped ? s.stamping : s.gettingTelegram}
             </Button>
           </CtaGlare>
         )}
         {user?.email && !user.email_verified && !optional ? (
           <p className="text-sm text-muted-foreground">
-            No Telegram?{" "}
+            {s.noTelegram}{" "}
             <Button type="button" variant="link" className="min-h-11 px-0 text-sm" onClick={() => void switchToEmail()} disabled={switching}>
-              {switching ? "Sending…" : "Get a code by email instead"}
+              {switching ? dict.ui.sending : s.emailInstead}
             </Button>
           </p>
         ) : null}
@@ -164,6 +167,8 @@ function EmailCode() {
   const codeRef = useRef<HTMLDivElement>(null);
   // The session updates (verified) a moment before the stamp shows; stay here for the stamp.
   const [checking, setChecking] = useState(false);
+  const { dict } = useT();
+  const s = dict.signin;
 
   const { control, handleSubmit, setError, formState } = useForm<VerifyEmailValues>({
     resolver: zodResolver(verifyEmailSchema),
@@ -180,7 +185,7 @@ function EmailCode() {
     try {
       await authApi.verifyEmail(values.code);
       setStamped(true);
-      toast.success({ title: "Email verified", description: "Welcome to the library: your cart and wishlist are ready." });
+      toast.success({ title: s.emailVerified, description: s.libraryReady });
       window.setTimeout(() => navigate(safeNext(next), { replace: true }), STAMP_MS);
     } catch (error) {
       setChecking(false);
@@ -197,20 +202,15 @@ function EmailCode() {
 
   return (
     <AuthPage
-      eyebrow="One last step"
-      title="Check your email"
-      lead={
-        <p>
-          We sent a 6-digit code to {destination ? <strong className="font-semibold text-foreground">{destination}</strong> : "your email address"}. Enter it below to finish
-          setting up your account.
-        </p>
-      }
+      eyebrow={s.oneLastStep}
+      title={s.checkYourEmail}
+      lead={<p>{destination ? <Rich text={s.sentCodeTo(destination)} strong="font-semibold text-foreground" /> : s.sentCodeToYou}</p>}
       panel={<LibraryCard {...card} />}
       footer={
         <p>
-          Wrong email address?{" "}
+          {s.wrongEmail}{" "}
           <Button variant="link" className="min-h-11 px-0 text-sm" onClick={() => void signOut()}>
-            Sign out and start again
+            {s.signOutStartAgain}
           </Button>
         </p>
       }
@@ -225,9 +225,9 @@ function EmailCode() {
               <OtpInput
                 value={field.value}
                 onChange={field.onChange}
-                label="Verification code"
+                label={s.verificationCode}
                 error={fieldState.error?.message}
-                hint="Codes expire after 15 minutes; ask for a new one if yours did."
+                hint={s.codeExpiry}
                 autoFocus
               />
             )}
@@ -235,9 +235,9 @@ function EmailCode() {
         </div>
         <CtaGlare block>
           <Button type="submit" variant="cta" size="lg" className="w-full" loading={formState.isSubmitting || stamped}>
-            {formState.isSubmitting ? "Checking…" : stamped ? "Stamping your card…" : (
+            {formState.isSubmitting ? s.checking : stamped ? s.stamping : (
               <>
-                <BadgeCheck aria-hidden="true" /> Verify and continue
+                <BadgeCheck aria-hidden="true" /> {s.verifyContinue}
               </>
             )}
           </Button>

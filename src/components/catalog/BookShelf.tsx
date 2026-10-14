@@ -9,6 +9,7 @@ import { SkeletonGroup } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { BookCard } from "./BookCard";
 import { useAddToCart, useWishlist } from "./useCatalogActions";
+import { useT } from "@/i18n";
 
 /*
  * A titled row of book cards that scrolls sideways (scroll-snap) with Prev/Next
@@ -33,7 +34,8 @@ type BookShelfProps = {
   className?: string;
 };
 
-export function BookShelf({ id, title, eyebrow, books, loading, error, onRetry, seeAllHref, seeAllLabel = "See all", empty = null, action, className }: BookShelfProps) {
+export function BookShelf({ id, title, eyebrow, books, loading, error, onRetry, seeAllHref, seeAllLabel, empty = null, action, className }: BookShelfProps) {
+  const { dict } = useT();
   const cart = useAddToCart();
   const wishlist = useWishlist();
   const scroller = useRef<HTMLUListElement>(null);
@@ -87,10 +89,10 @@ export function BookShelf({ id, title, eyebrow, books, loading, error, onRetry, 
           ) : null}
           {books && books.length > 2 ? (
             <div className="hidden gap-2 sm:flex">
-              <Button variant="outline" size="icon" onClick={() => scrollBy(-1)} disabled={edges.start} aria-label={`Scroll ${title} back`} tabIndex={-1}>
+              <Button variant="outline" size="icon" onClick={() => scrollBy(-1)} disabled={edges.start} aria-label={dict.cards.scrollBack(title)} tabIndex={-1}>
                 <ChevronLeft aria-hidden="true" />
               </Button>
-              <Button variant="outline" size="icon" onClick={() => scrollBy(1)} disabled={edges.end} aria-label={`Scroll ${title} forward`} tabIndex={-1}>
+              <Button variant="outline" size="icon" onClick={() => scrollBy(1)} disabled={edges.end} aria-label={dict.cards.scrollForward(title)} tabIndex={-1}>
                 <ChevronRight aria-hidden="true" />
               </Button>
             </div>
@@ -99,7 +101,7 @@ export function BookShelf({ id, title, eyebrow, books, loading, error, onRetry, 
       </div>
 
       {loading ? (
-        <SkeletonGroup label={`Loading ${title.toLowerCase()}…`} className="flex gap-3 overflow-hidden sm:gap-5">
+        <SkeletonGroup label={dict.cards.loadingShelf(title)} className="flex gap-3 overflow-hidden sm:gap-5">
           {Array.from({ length: 4 }, (_, i) => (
             <div key={i} className={item}>
               <BookCardSkeleton />

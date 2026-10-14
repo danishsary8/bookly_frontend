@@ -2,17 +2,19 @@ import type { Order, OrderStatus } from "@/api/types";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { cn } from "@/lib/utils";
 import { orderDateTime } from "./format";
+import { useT } from "@/i18n";
 
 /** Customer view: status, note, time. The staff view adds who made the change. */
 type History = Array<NonNullable<Order["status_history"]>[number] & { changed_by?: { name: string } | null }>;
 
 /** The order's status changes, oldest first, with the shop's notes; the latest is marked as current. */
 export function OrderTimeline({ history }: { history: History }) {
+  const { dict, locale } = useT();
   if (history.length === 0) return null;
   return (
     <section aria-labelledby="order-timeline" className="rounded-xl border border-border bg-card p-5 sm:p-6">
       <h2 id="order-timeline" className="font-display text-[1.563rem] leading-tight">
-        Timeline
+        {dict.orderParts.timeline}
       </h2>
       <ol className="mt-5 grid">
         {history.map((entry, i) => {
@@ -28,9 +30,9 @@ export function OrderTimeline({ history }: { history: History }) {
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <OrderStatusBadge status={entry.status as OrderStatus} />
                   <time dateTime={entry.created_at} className="text-sm text-muted-foreground">
-                    {orderDateTime(entry.created_at)}
+                    {orderDateTime(entry.created_at, locale)}
                   </time>
-                  {last ? <span className="sr-only">(current status)</span> : null}
+                  {last ? <span className="sr-only">{dict.orderParts.currentStatus}</span> : null}
                 </div>
                 {entry.note ? <p className="text-[15px] text-muted-foreground">{entry.note}</p> : null}
                 {entry.changed_by ? <p className="text-sm text-muted-foreground">by {entry.changed_by.name}</p> : null}

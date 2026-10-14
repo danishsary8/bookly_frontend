@@ -7,6 +7,7 @@ import { closeShellPanel, useShellPanel, type ShellPanel } from "@/stores/shell"
 import { OfflineBanner } from "./OfflineBanner";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
+import { useT } from "@/i18n";
 
 /*
  * The storefront frame: skip link, sticky header, the routed page (transition +
@@ -29,8 +30,9 @@ function useOpenedOnce(panel: ShellPanel, which: ShellPanel) {
 }
 
 function PageFallback() {
+  const { dict } = useT();
   return (
-    <SkeletonGroup label="Loading page…" className="container-shell grid gap-4 py-12">
+    <SkeletonGroup label={dict.shell.loadingPage} className="container-shell grid gap-4 py-12">
       <Skeleton className="h-3.5 w-48" />
       <Skeleton className="h-9 w-[40%]" />
       <Skeleton className="h-5 w-[70%]" />
@@ -40,6 +42,7 @@ function PageFallback() {
 
 export function SiteShell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
+  const { dict } = useT();
 
   // A link inside a drawer navigates; the drawer shouldn't stay open over the new page.
   useEffect(() => closeShellPanel(), [pathname]);
@@ -61,7 +64,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         href="#content"
         className="sr-only z-(--z-toast) rounded-md bg-primary px-4 py-3 font-semibold text-primary-foreground focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
       >
-        Skip to content
+        {dict.nav.skipToContent}
       </a>
       <SiteHeader />
       <OfflineBanner />

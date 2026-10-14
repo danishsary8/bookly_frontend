@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useReducedMotion } from "motion/react";
 import { ArrowLeft, BookOpen, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import Carousel from "./Carousel";
+import { useT } from "@/i18n";
 
 /*
  * Shared frame for Sign in / Create account / Forgot password / Reset password.
@@ -43,6 +44,8 @@ const QuotePanel = () => {
     if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false);
   };
 
+  const { dict } = useT();
+  const s = dict.signin;
   const controlClass =
     "inline-flex h-11 w-11 items-center justify-center rounded-lg border border-on-lapis-muted text-on-lapis transition-[background-color,transform] duration-150 hover:bg-on-lapis/10 active:scale-95 motion-reduce:active:scale-100";
 
@@ -50,7 +53,7 @@ const QuotePanel = () => {
     <div
       role="region"
       aria-roledescription="carousel"
-      aria-label="Words on reading"
+      aria-label={s.quotes}
       onKeyDown={onKeyDown}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -69,7 +72,7 @@ const QuotePanel = () => {
         onIndexChange={setIndex}
         className="min-h-[15rem] rounded-none border-0 bg-transparent"
         slides={QUOTES.map((quote) => (
-          <figure key={quote.author} className="flex h-full select-none flex-col justify-end">
+          <figure key={quote.author} lang="en" className="flex h-full select-none flex-col justify-end">
             <blockquote className="font-display text-[2rem] leading-[1.15] text-on-lapis xl:text-[2.45rem]">
               “{quote.text}”
             </blockquote>
@@ -80,7 +83,7 @@ const QuotePanel = () => {
       </div>
 
       <div className="mt-8 flex items-center gap-2">
-        <button type="button" onClick={() => step(-1)} className={controlClass} aria-label="Previous quote">
+        <button type="button" onClick={() => step(-1)} className={controlClass} aria-label={s.prevQuote}>
           <ChevronLeft className="h-5 w-5" aria-hidden="true" />
         </button>
         <div className="mx-2 flex items-center gap-2" aria-hidden="true">
@@ -88,25 +91,26 @@ const QuotePanel = () => {
             <span key={quote.author} className={`h-2 rounded-full transition-all duration-200 ${i === index ? "w-6 bg-gold" : "w-2 bg-on-lapis-muted/50"}`} />
           ))}
         </div>
-        <button type="button" onClick={() => step(1)} className={controlClass} aria-label="Next quote">
+        <button type="button" onClick={() => step(1)} className={controlClass} aria-label={s.nextQuote}>
           <ChevronRight className="h-5 w-5" aria-hidden="true" />
         </button>
         {!reduceMotion ? (
-          <button type="button" onClick={() => setPaused((p) => !p)} className={controlClass} aria-label={paused ? "Play quotes" : "Pause quotes"} aria-pressed={paused}>
+          <button type="button" onClick={() => setPaused((p) => !p)} className={controlClass} aria-label={paused ? s.playQuotes : s.pauseQuotes} aria-pressed={paused}>
             {paused ? <Play className="h-5 w-5" aria-hidden="true" /> : <Pause className="h-5 w-5" aria-hidden="true" />}
           </button>
         ) : null}
       </div>
       <p className="sr-only" aria-live={autoplay ? "off" : "polite"} aria-atomic="true">
-        Quote {index + 1} of {QUOTES.length}: {QUOTES[index].text}, {QUOTES[index].author}
+        {s.quoteN(index + 1, QUOTES.length)} <span lang="en">{QUOTES[index].text}, {QUOTES[index].author}</span>
       </p>
     </div>
   );
 };
 
 const Wordmark = ({ onLapis = false }: { onLapis?: boolean }) => {
+  const { dict } = useT();
   return (
-    <Link to="/" className="group inline-flex items-center gap-2.5 rounded-lg transition-opacity duration-150 hover:opacity-80" aria-label="Bookly home">
+    <Link to="/" className="group inline-flex items-center gap-2.5 rounded-lg transition-opacity duration-150 hover:opacity-80" aria-label={dict.signin.home}>
       <span className={`grid h-9 w-9 place-items-center rounded-md ${onLapis ? "bg-on-lapis text-lapis" : "bg-primary text-primary-foreground"}`}>
         <BookOpen className="h-[18px] w-[18px]" aria-hidden="true" />
       </span>
@@ -119,6 +123,11 @@ interface AuthShellProps {
   children: ReactNode;
   /** Replaces the quotes on the lapis panel (sign-up and verify show the library card). */
   panel?: ReactNode;
+}
+
+function BackToStore() {
+  const { dict } = useT();
+  return <>{dict.content.backToStore}</>;
 }
 
 export const AuthShell = ({ children, panel }: AuthShellProps) => (
@@ -134,7 +143,7 @@ export const AuthShell = ({ children, panel }: AuthShellProps) => (
           <span className="lg:hidden"><Wordmark /></span>
           <Link to="/" className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-muted-foreground transition-colors duration-150 hover:text-foreground">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Back to store
+            <BackToStore />
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-center py-10">

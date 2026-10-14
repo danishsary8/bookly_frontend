@@ -10,11 +10,13 @@ import { withNext } from "@/lib/forms";
 import { ReviewForm } from "./ReviewForm";
 import { useDeleteReview } from "./useDeleteReview";
 import { useReviewState } from "./useReviews";
+import { useT } from "@/i18n";
 
 export function HiddenReviewNote() {
+  const { dict } = useT();
   return (
     <p className="flex items-center gap-2 text-sm text-muted-foreground">
-      <EyeOff className="size-4" aria-hidden="true" /> Hidden by our team: only you can see it.
+      <EyeOff className="size-4" aria-hidden="true" /> {dict.reviews.hidden}
     </p>
   );
 }
@@ -30,6 +32,8 @@ export function YourReview({ bookId }: { bookId: number }) {
   const { ask, dialog } = useDeleteReview();
   const { pathname, hash } = useLocation();
   const ref = useRef<HTMLElement>(null);
+  const { dict, locale } = useT();
+  const t = dict.reviews;
 
   useEffect(() => {
     if (hash === "#your-review" && !state.loading) ref.current?.scrollIntoView({ block: "start" });
@@ -38,9 +42,9 @@ export function YourReview({ bookId }: { bookId: number }) {
   if (!state.signedIn) {
     return (
       <p className="text-[15px] text-muted-foreground">
-        Bought this book?{" "}
+        {t.boughtIt}{" "}
         <Link to={withNext("/login", `${pathname}#your-review`)} className="font-semibold text-primary underline-offset-4 hover:underline">
-          Sign in to review it
+          {t.signInToReview}
         </Link>
       </p>
     );
@@ -57,16 +61,16 @@ export function YourReview({ bookId }: { bookId: number }) {
         <div className="grid gap-3">
           <div className="flex flex-wrap items-center gap-3">
             <StarRating value={r.rating} summary={false} size="lg" />
-            <span className="text-sm text-muted-foreground">{orderDate(r.updated_at ?? r.created_at)}</span>
+            <span className="text-sm text-muted-foreground">{orderDate(r.updated_at ?? r.created_at, locale)}</span>
           </div>
-          {r.comment ? <p className="whitespace-pre-line">{r.comment}</p> : <p className="text-muted-foreground">No comment, just a rating.</p>}
+          {r.comment ? <p className="whitespace-pre-line">{r.comment}</p> : <p className="text-muted-foreground">{t.noComment}</p>}
           {r.is_visible === false ? <HiddenReviewNote /> : null}
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-              <PenLine aria-hidden="true" /> Edit
+              <PenLine aria-hidden="true" /> {dict.ui.edit}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => ask(r)}>
-              <Trash2 aria-hidden="true" /> Delete
+              <Trash2 aria-hidden="true" /> {dict.ui.delete}
             </Button>
           </div>
         </div>
@@ -76,17 +80,17 @@ export function YourReview({ bookId }: { bookId: number }) {
       return (
         <div className="flex flex-wrap items-center gap-3">
           <Button onClick={() => setEditing(true)}>
-            <PenLine aria-hidden="true" /> Write a review
+            <PenLine aria-hidden="true" /> {t.write}
           </Button>
-          <span className="text-sm text-muted-foreground">You've received this book: tell other readers what you thought.</span>
+          <span className="text-sm text-muted-foreground">{t.received}</span>
         </div>
       );
     }
     return (
       <p className="text-[15px] text-muted-foreground">
-        You can review this book once an order with it has been delivered.{" "}
+        {t.afterDelivery}{" "}
         <Link to="/account/reviews" className="font-semibold text-primary underline-offset-4 hover:underline">
-          Your reviews
+          {t.yourReviews}
         </Link>
       </p>
     );
@@ -95,7 +99,7 @@ export function YourReview({ bookId }: { bookId: number }) {
   return (
     <section id="your-review" ref={ref} aria-labelledby="your-review-title" className="scroll-mt-[calc(var(--header-h)+1rem)] grid gap-4 rounded-xl border border-border bg-card p-5 sm:p-6">
       <h3 id="your-review-title" className="font-display text-[1.563rem] leading-tight">
-        {editing && !state.review ? "Write a review" : "Your review"}
+        {editing && !state.review ? t.write : t.yourReview}
       </h3>
       {body()}
       {dialog}

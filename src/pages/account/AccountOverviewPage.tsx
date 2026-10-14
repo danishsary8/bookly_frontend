@@ -15,9 +15,11 @@ import { AccountSection } from "@/features/account/AccountSection";
 import { orderDate } from "@/features/orders/format";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { formatMoney, useCurrency } from "@/stores/currency";
+import { useT } from "@/i18n";
 
 function RecentOrder({ order }: { order: Order }) {
   const currency = useCurrency();
+  const { dict, locale } = useT();
   return (
     <li className="border-t border-border first:border-t-0">
       <Link
@@ -27,8 +29,8 @@ function RecentOrder({ order }: { order: Order }) {
         <span className="grid gap-0.5">
           <span className="font-semibold tabular-nums">{order.order_number}</span>
           <span className="text-sm text-muted-foreground">
-            {orderDate(order.placed_at)}
-            {order.item_count ? ` · ${order.item_count} ${order.item_count === 1 ? "item" : "items"}` : null}
+            {orderDate(order.placed_at, locale)}
+            {order.item_count ? ` · ${dict.orders.items(order.item_count)}` : null}
           </span>
         </span>
         <span className="flex items-center gap-4">
@@ -41,34 +43,36 @@ function RecentOrder({ order }: { order: Order }) {
 }
 
 export default function AccountOverviewPage() {
-  useDocumentTitle("Your account");
+  const { dict, locale } = useT();
+  const a = dict.account;
+  useDocumentTitle(a.docTitle);
   const session = useSession<Customer>("customer");
   const me = useQuery(accountQueries.me());
   const orders = useQuery(orderQueries.orders({ per_page: 3 }));
   const addresses = useQuery(accountQueries.addresses());
   const wishlist = useQuery(accountQueries.wishlist({ per_page: 1 }));
   const customer = me.data ?? session?.user;
-  const firstName = customer?.name?.split(" ")[0] ?? "there";
-  const memberSince = customer?.created_at ? new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" }).format(new Date(customer.created_at)) : null;
+  const firstName = customer?.name?.split(" ")[0] ?? a.there;
+  const memberSince = customer?.created_at ? new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(new Date(customer.created_at)) : null;
 
   const tiles = [
-    { to: "/account/profile", label: "Profile", Icon: UserRound, detail: customer?.phone ? customer.phone : "Add a phone number" },
-    { to: "/account/addresses", label: "Addresses", Icon: MapPin, detail: addresses.data ? `${addresses.data.length} saved` : " " },
-    { to: "/account/wishlist", label: "Wishlist", Icon: Heart, detail: wishlist.data ? `${wishlist.data.meta.total ?? 0} saved ${wishlist.data.meta.total === 1 ? "book" : "books"}` : " " },
-    { to: "/account/security", label: "Sign-in & security", Icon: KeyRound, detail: customer?.phone_verified ? "Email, phone and password" : "Verify your phone, change your password" },
+    { to: "/account/profile", label: a.profile, Icon: UserRound, detail: customer?.phone ? customer.phone : a.addPhone },
+    { to: "/account/addresses", label: a.addresses, Icon: MapPin, detail: addresses.data ? a.savedCount(addresses.data.length) : " " },
+    { to: "/account/wishlist", label: a.wishlist, Icon: Heart, detail: wishlist.data ? a.savedBooks(wishlist.data.meta.total ?? 0) : " " },
+    { to: "/account/security", label: a.security, Icon: KeyRound, detail: customer?.phone_verified ? a.securityDone : a.securityTodo },
   ];
 
   return (
     <AccountSection
-      title={`Hello, ${firstName}`}
+      title={a.hello(firstName)}
       lead={
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
           {isVerified(customer) ? (
             <span className="inline-flex items-center gap-1.5 text-success">
-              <BadgeCheck className="size-4" aria-hidden="true" /> {customer?.email_verified ? "Email verified" : "Phone verified"}
+              <BadgeCheck className="size-4" aria-hidden="true" /> {customer?.email_verified ? a.emailVerified : a.phoneVerified}
             </span>
           ) : null}
-          {memberSince ? <span>Reading with Bookly since {memberSince}</span> : null}
+          {memberSince ? <span>{a.memberSince(memberSince)}</span> : null}
         </p>
       }
     >
@@ -95,17 +99,17 @@ export default function AccountOverviewPage() {
       <section aria-labelledby="recent-orders" className="rounded-xl border border-border bg-card p-5 sm:p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h2 id="recent-orders" className="font-display text-[1.563rem] leading-tight">
-            Recent orders
+            {a.recentOrders}
           </h2>
           {orders.data?.data.length ? (
             <Link to="/account/orders" className="text-sm font-semibold text-primary underline-offset-4 hover:underline">
-              See all orders
+              {a.seeAllOrders}
             </Link>
           ) : null}
         </div>
         <div className="mt-4">
           {orders.isPending ? (
-            <SkeletonGroup label="Loading orders…" className="grid gap-4">
+            <SkeletonGroup label={a.loadingOrders} className="grid gap-4">
               <Skeleton className="h-12" />
               <Skeleton className="h-12" />
             </SkeletonGroup>
@@ -115,11 +119,11 @@ export default function AccountOverviewPage() {
             <EmptyState
               icon={Package}
               headingLevel="h3"
-              title="No orders yet"
-              description="When you place an order, you'll be able to follow it here."
+              title={a.noOrdersYet}
+              description={a.noOrdersLead}
               action={
                 <Link to="/books" className={buttonVariants()}>
-                  Browse books
+                  {a.browseBooks}
                 </Link>
               }
               className="py-6"

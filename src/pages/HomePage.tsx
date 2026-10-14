@@ -11,6 +11,7 @@ import AnimatedContent from "@/components/AnimatedContent";
 import { Button } from "@/components/ui/button";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { clearRecentlyViewed, useRecentlyViewed } from "@/stores/recentlyViewed";
+import { useT } from "@/i18n";
 
 /*
  * Home: hero → service promises → new arrivals → categories → best rated →
@@ -36,13 +37,15 @@ function SectionHeading({ id, eyebrow, title, action }: { id: string; eyebrow: s
 }
 
 const promises = [
-  { Icon: Wallet, title: "Cash on delivery", text: "Pay when your books arrive." },
-  { Icon: Truck, title: "Delivery across Cambodia", text: "Phnom Penh and every province." },
-  { Icon: RotateCcw, title: "Easy returns", text: "Printed books can be returned after delivery." },
-];
+  { Icon: Wallet, title: "cod", text: "codText" },
+  { Icon: Truck, title: "delivery", text: "deliveryText" },
+  { Icon: RotateCcw, title: "returns", text: "returnsText" },
+] as const;
 
 export default function HomePage() {
   useDocumentTitle("Bookly");
+  const { dict } = useT();
+  const h = dict.homePage;
   const newest = useQuery(catalogQueries.books({ sort: "newest", per_page: 10 }));
   const rated = useQuery(catalogQueries.books({ sort: "rating", per_page: 10 }));
   const categories = useQuery(catalogQueries.categories());
@@ -56,21 +59,21 @@ export default function HomePage() {
         <HomeHero
           featured={rated.data?.data.slice(0, 5)}
           stats={[
-            { label: "Books", value: newest.data?.meta.total },
-            { label: "Authors", value: authors.data?.meta.total },
-            { label: "Categories", value: categories.data?.length },
+            { label: h.books, value: newest.data?.meta.total },
+            { label: h.authors, value: authors.data?.meta.total },
+            { label: h.categories, value: categories.data?.length },
           ]}
         />
 
-        <ul className="-mt-8 grid gap-4 sm:grid-cols-3" aria-label="Why shop with Bookly">
+        <ul className="-mt-8 grid gap-4 sm:grid-cols-3" aria-label={h.why}>
           {promises.map(({ Icon, title, text }) => (
             <li key={title} className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
               <span className="grid size-10 shrink-0 place-items-center rounded-full bg-lapis-tint text-primary">
                 <Icon className="size-5" aria-hidden="true" />
               </span>
               <span>
-                <span className="block font-semibold">{title}</span>
-                <span className="text-sm text-muted-foreground">{text}</span>
+                <span className="block font-semibold">{h[title]}</span>
+                <span className="text-sm text-muted-foreground">{h[text]}</span>
               </span>
             </li>
           ))}
@@ -78,8 +81,8 @@ export default function HomePage() {
 
         <BookShelf
           id="new-arrivals"
-          eyebrow="Just in"
-          title="New arrivals"
+          eyebrow={h.justIn}
+          title={h.newArrivals}
           books={newest.data?.data}
           loading={newest.isPending}
           error={newest.isError ? newest.error : undefined}
@@ -91,11 +94,11 @@ export default function HomePage() {
           <section aria-labelledby="categories-title">
             <SectionHeading
               id="categories-title"
-              eyebrow="Browse"
-              title="Shop by category"
+              eyebrow={h.browse}
+              title={h.byCategory}
               action={
                 <Link to="/books" className="inline-flex h-11 items-center gap-1.5 px-2 text-[15px] font-semibold text-primary underline-offset-4 hover:underline">
-                  All books <ArrowRight className="size-4" aria-hidden="true" />
+                  {h.allBooks} <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>
               }
             />
@@ -105,8 +108,8 @@ export default function HomePage() {
 
         <BookShelf
           id="best-rated"
-          eyebrow="Readers love"
-          title="Best rated"
+          eyebrow={h.readersLove}
+          title={h.bestRated}
           books={rated.data?.data}
           loading={rated.isPending}
           error={rated.isError ? rated.error : undefined}
@@ -123,11 +126,11 @@ export default function HomePage() {
             <section aria-labelledby="authors-title">
               <SectionHeading
                 id="authors-title"
-                eyebrow="Writers"
-                title="Meet the authors"
+                eyebrow={h.writers}
+                title={h.meetAuthors}
                 action={
                   <Link to="/authors" className="inline-flex h-11 items-center gap-1.5 px-2 text-[15px] font-semibold text-primary underline-offset-4 hover:underline">
-                    All authors <ArrowRight className="size-4" aria-hidden="true" />
+                    {h.allAuthors} <ArrowRight className="size-4" aria-hidden="true" />
                   </Link>
                 }
               />
@@ -141,7 +144,7 @@ export default function HomePage() {
                       <AuthorAvatar name={author.name ?? ""} photoUrl={author.photo_url} className="size-20 text-2xl transition-transform duration-200 group-hover:scale-105 motion-reduce:group-hover:scale-100" />
                       <span className="font-display text-lg leading-tight underline-offset-4 group-hover:underline">{author.name}</span>
                       <span className="text-sm text-muted-foreground">
-                        {author.books_count ?? 0} {author.books_count === 1 ? "book" : "books"}
+                        {dict.pages.bookCount(author.books_count ?? 0)}
                       </span>
                     </Link>
                   </li>
@@ -153,12 +156,12 @@ export default function HomePage() {
 
         <BookShelf
           id="recently-viewed"
-          eyebrow="Your history"
-          title="Recently viewed"
+          eyebrow={h.yourHistory}
+          title={h.recentlyViewed}
           books={recent}
           action={
             <Button variant="ghost" size="sm" onClick={clearRecentlyViewed}>
-              Clear
+              {h.clear}
             </Button>
           }
         />

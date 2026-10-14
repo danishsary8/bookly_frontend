@@ -11,6 +11,7 @@ import { LegalNotice } from "@/features/content/LegalNotice";
 export default function TermsPage() {
   return (
     <ContentPage
+      englishOnly
       title="Terms of sale"
       documentTitle="Terms"
       eyebrow="Legal"

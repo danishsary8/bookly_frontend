@@ -21,6 +21,7 @@ type LoginState = { email?: string; notice?: string } | null;
 
 export default function LoginPage() {
   const { dict } = useT();
+  const s = dict.signin;
   const [params] = useSearchParams();
   const next = params.get("next");
   const state = useLocation().state as LoginState;
@@ -44,7 +45,7 @@ export default function LoginPage() {
     try {
       const response = await authApi.login(values.email, values.password, await turnstile.getToken());
       const firstName = response.customer?.name?.split(" ")[0];
-      afterSignIn(response.customer, next, firstName ? `Welcome back, ${firstName}` : "Welcome back");
+      afterSignIn(response.customer, next, firstName ? s.welcomeBackName(firstName) : s.welcomeBack);
     } catch (error) {
       const message = applyApiErrors(error, setError, ["email", "password"]);
       resetField("password");
@@ -59,9 +60,9 @@ export default function LoginPage() {
 
   return (
     <AuthPage
-      eyebrow="Welcome back"
+      eyebrow={s.welcomeBack}
       title={dict.auth.signIn}
-      lead="Pick up where you left off: your cart, saved books and orders."
+      lead={s.loginLead}
       footer={
         <>
           <p>
@@ -71,7 +72,7 @@ export default function LoginPage() {
             </Link>
           </p>
           <Link to="/books" className="mx-auto inline-flex min-h-11 items-center font-semibold text-foreground underline-offset-4 hover:underline">
-            Continue browsing as a guest
+            {s.guest}
           </Link>
         </>
       }
@@ -98,7 +99,7 @@ export default function LoginPage() {
 
         <CtaGlare block>
           <Button type="submit" variant="cta" size="lg" className="w-full" loading={isSubmitting}>
-            {isSubmitting ? "Signing in…" : dict.auth.signIn}
+            {isSubmitting ? s.signingIn : dict.auth.signIn}
           </Button>
         </CtaGlare>
 

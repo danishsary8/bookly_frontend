@@ -27,13 +27,13 @@ export function SiteFooter({ className }: { className?: string }) {
         {footerNav.map((column) => (
           <nav key={column.title} aria-labelledby={`footer-${column.title}`}>
             <h2 id={`footer-${column.title}`} className="font-sans text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
-              {column.title}
+              {dict.navLinks[column.title]}
             </h2>
             <ul className="mt-3 grid gap-0.5">
               {column.links.map((link) => (
                 <li key={link.to}>
                   <Link to={link.to} className={linkClass}>
-                    {link.label}
+                    {dict.navLinks[link.label]}
                   </Link>
                 </li>
               ))}
@@ -48,7 +48,7 @@ export function SiteFooter({ className }: { className?: string }) {
             {legalNav.map((link) => (
               <li key={link.to}>
                 <Link to={link.to} className="inline-flex min-h-11 items-center underline-offset-4 hover:text-foreground hover:underline sm:min-h-0">
-                  {link.label}
+                  {dict.navLinks[link.label]}
                 </Link>
               </li>
             ))}

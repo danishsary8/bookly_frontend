@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { buttonVariants } from "@/components/ui/button";
 import { withNext } from "@/lib/forms";
 import { useUsableCart } from "./useCart";
+import { useT } from "@/i18n";
 
 /**
  * What to show instead of a cart when there can't be one: signed out → sign in,
@@ -14,22 +15,24 @@ export function CartGate({ children, onNavigate, headingLevel = "h2" }: { childr
   const { session, verified } = useUsableCart();
   const location = useLocation();
   const here = location.pathname + location.search;
+  const { dict } = useT();
+  const s = dict.signin;
 
   if (!session) {
     return (
       <EmptyState
         icon={ShoppingBag}
         headingLevel={headingLevel}
-        title="Sign in to see your cart"
-        description="Your cart is saved to your account, so it follows you to any device."
+        title={s.cartSignIn}
+        description={s.cartSignInLead}
         action={
           <Link to={withNext("/login", here)} onClick={onNavigate} className={buttonVariants()}>
-            Sign in
+            {s.signIn}
           </Link>
         }
         secondaryAction={
           <Link to={withNext("/register", here)} onClick={onNavigate} className={buttonVariants({ variant: "link" })}>
-            Create an account
+            {s.createAccount}
           </Link>
         }
       />
@@ -40,11 +43,11 @@ export function CartGate({ children, onNavigate, headingLevel = "h2" }: { childr
       <EmptyState
         icon={MailCheck}
         headingLevel={headingLevel}
-        title="Verify your email to use your cart"
-        description="Enter the 6-digit code we emailed you when you signed up."
+        title={s.cartVerify}
+        description={s.cartVerifyLead}
         action={
           <Link to={withNext("/verify-email", here)} onClick={onNavigate} className={buttonVariants()}>
-            Verify email
+            {s.verifyEmail}
           </Link>
         }
       />

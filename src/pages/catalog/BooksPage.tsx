@@ -5,14 +5,15 @@ import { useT } from "@/i18n";
 
 export default function BooksPage() {
   const { dict } = useT();
-  useDocumentTitle("All books", { description: "Browse every book at Bookly: filter by category, format, language and price, in dollars or riel." });
+  const p = dict.pages;
+  useDocumentTitle(dict.catalog.allBooks, { description: p.allBooksMeta });
   return (
     <div className="container-shell pb-16">
       <PageHeader
-        crumbs={[{ label: "Home", to: "/" }, { label: dict.catalog.title }]}
-        eyebrow="The catalogue"
+        crumbs={[{ label: p.home, to: "/" }, { label: dict.catalog.title }]}
+        eyebrow={p.catalogue}
         title={dict.catalog.allBooks}
-        lead="Classics, new releases and local favourites. Filter by category, format or price."
+        lead={p.booksLead}
       />
       <CatalogBrowser />
     </div>

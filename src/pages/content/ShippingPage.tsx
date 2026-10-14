@@ -6,6 +6,7 @@ import { ContentPage } from "@/features/content/ContentPage";
 export default function ShippingPage() {
   return (
     <ContentPage
+      englishOnly
       title="Shipping & delivery"
       eyebrow="Help"
       lead="Printed books come to your door and you pay the courier when they arrive. Ebooks and audiobooks need no delivery at all."

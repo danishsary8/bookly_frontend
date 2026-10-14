@@ -7,6 +7,7 @@ import type { Customer } from "@/api/types";
 import { useSignOut } from "@/components/shell/useSignOut";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n";
 
 /*
  * The account area's frame: a side navigation at ≥ 1024px, a horizontally
@@ -15,14 +16,14 @@ import { cn } from "@/lib/utils";
  */
 
 const accountSections = [
-  { to: "/account", label: "Overview", Icon: LayoutDashboard, end: true },
-  { to: "/account/orders", label: "Orders", Icon: Package },
-  { to: "/account/returns", label: "Returns", Icon: RotateCcw },
-  { to: "/account/reviews", label: "Reviews", Icon: MessageSquareText },
-  { to: "/account/profile", label: "Profile", Icon: UserRound },
-  { to: "/account/security", label: "Sign-in & security", Icon: KeyRound },
-  { to: "/account/addresses", label: "Addresses", Icon: MapPin },
-  { to: "/account/wishlist", label: "Wishlist", Icon: Heart },
+  { to: "/account", key: "overview", Icon: LayoutDashboard, end: true },
+  { to: "/account/orders", key: "orders", Icon: Package },
+  { to: "/account/returns", key: "returns", Icon: RotateCcw },
+  { to: "/account/reviews", key: "reviews", Icon: MessageSquareText },
+  { to: "/account/profile", key: "profile", Icon: UserRound },
+  { to: "/account/security", key: "security", Icon: KeyRound },
+  { to: "/account/addresses", key: "addresses", Icon: MapPin },
+  { to: "/account/wishlist", key: "wishlist", Icon: Heart },
 ] as const;
 
 export function AccountLayout() {
@@ -31,6 +32,7 @@ export function AccountLayout() {
   const firstName = session?.user?.name?.split(" ")[0];
   const { pathname } = useLocation();
   const strip = useRef<HTMLUListElement>(null);
+  const { dict } = useT();
 
   // On phones the links scroll sideways; bring the current one into view (horizontally only,
   // so the page itself doesn't jump).
@@ -46,14 +48,14 @@ export function AccountLayout() {
     <div className="container-shell pb-16 pt-6 sm:pt-8">
       <p className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-accent-text">
         <span className="h-px w-12 bg-current" aria-hidden="true" />
-        Your account
+        {dict.account.eyebrow}
       </p>
-      <p className="mt-2 text-lg text-muted-foreground">{firstName ? `Signed in as ${session?.user?.email ?? session?.user?.phone ?? firstName}` : " "}</p>
+      <p className="mt-2 text-lg text-muted-foreground">{firstName ? dict.account.signedInAs(session?.user?.email ?? session?.user?.phone ?? firstName) : " "}</p>
 
       <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12">
-        <nav aria-label="Account" className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
+        <nav aria-label={dict.account.nav} className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
           <ul ref={strip} className="no-scrollbar relative -mx-4 flex gap-1 overflow-x-auto border-b border-border px-4 lg:mx-0 lg:grid lg:border-b-0 lg:px-0">
-            {accountSections.map(({ to, label, Icon, ...rest }) => (
+            {accountSections.map(({ to, key, Icon, ...rest }) => (
               <li key={to} className="shrink-0">
                 <NavLink
                   to={to}
@@ -68,13 +70,13 @@ export function AccountLayout() {
                   }
                 >
                   <Icon className="hidden size-[18px] lg:block" aria-hidden="true" />
-                  {label}
+                  {dict.account[key]}
                 </NavLink>
               </li>
             ))}
           </ul>
           <Button variant="ghost" onClick={() => void signOut()} className="mt-4 hidden w-full justify-start gap-3 px-3 font-medium text-muted-foreground lg:flex">
-            <LogOut aria-hidden="true" /> Sign out
+            <LogOut aria-hidden="true" /> {dict.account.signOut}
           </Button>
         </nav>
 

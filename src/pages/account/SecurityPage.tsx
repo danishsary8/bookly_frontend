@@ -16,6 +16,7 @@ import { PasswordChecklist } from "@/features/auth/PasswordChecklist";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { applyApiErrors } from "@/lib/forms";
 import { toast } from "@/stores/toast";
+import { useT } from "@/i18n";
 
 /*
  * /account/security: how this account signs in (email, phone with Telegram, Google, Facebook) and the
@@ -23,13 +24,14 @@ import { toast } from "@/stores/toast";
  * this session and signs out every other device.
  */
 export default function SecurityPage() {
-  useDocumentTitle("Sign-in & security");
+  const { dict } = useT();
+  useDocumentTitle(dict.account.security);
   const session = useSession<Customer>("customer");
   const me = useQuery(accountQueries.me());
   const customer = me.data ?? session?.user;
   const hasPassword = customer?.has_password !== false;
   return (
-    <AccountSection title="Sign-in & security" lead="How you sign in to Bookly, your password, and closing your account.">
+    <AccountSection title={dict.account.security} lead={dict.account.securityLead}>
       <SignInMethods customer={customer} />
       <PasswordForm key={String(hasPassword)} hasPassword={hasPassword} />
       <CloseAccount customer={customer} />
@@ -41,6 +43,8 @@ function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
   const queryClient = useQueryClient();
   const [formError, setFormError] = useState<string | null>(null);
   const alertRef = useRef<HTMLDivElement>(null);
+  const { dict } = useT();
+  const a = dict.account;
   const { register, handleSubmit, setError, reset, control, formState } = useForm<PasswordValues>({
     resolver: zodResolver(passwordSchema(hasPassword)),
     defaultValues: { current_password: "", password: "", password_confirmation: "" },
@@ -58,7 +62,7 @@ function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
       });
       reset();
       if (!hasPassword) void queryClient.invalidateQueries({ queryKey: accountKeys.me() });
-      toast.success({ title: hasPassword ? "Password changed" : "Password set", description: "You stay signed in here; other devices were signed out." });
+      toast.success({ title: hasPassword ? a.passwordChanged : a.passwordSet, description: a.passwordToastLead });
     } catch (error) {
       const message = applyApiErrors(error, setError, ["current_password", "password", "password_confirmation"]);
       if (message && /current password/i.test(message)) {
@@ -75,25 +79,25 @@ function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
     <section id="password" aria-labelledby="password-title" className="grid scroll-mt-24 gap-3">
       <div className="grid gap-1">
         <h2 id="password-title" className="font-display text-[1.563rem] leading-tight">
-          {hasPassword ? "Change password" : "Set a password"}
+          {hasPassword ? a.changePassword : a.setPassword}
         </h2>
         <p className="text-[15px] text-muted-foreground">
-          {hasPassword ? "Use a password you don't use anywhere else." : "You signed up with Google or Facebook. Set a password to also sign in with your email."}
+          {hasPassword ? a.changePasswordLead : a.setPasswordLead}
         </p>
       </div>
       <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid max-w-xl gap-5 rounded-xl border border-border bg-card p-5 sm:p-6">
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
         {/* Lets password managers match the change to the right account. */}
         <input type="text" name="username" autoComplete="username" hidden readOnly />
-        {hasPassword ? <PasswordField label="Current password" autoComplete="current-password" error={errors.current_password?.message} {...register("current_password")} /> : null}
+        {hasPassword ? <PasswordField label={a.currentPassword} autoComplete="current-password" error={errors.current_password?.message} {...register("current_password")} /> : null}
         <div className="grid gap-3">
-          <PasswordField label="New password" autoComplete="new-password" aria-describedby="account-password-rules" error={errors.password?.message} {...register("password")} />
+          <PasswordField label={a.newPassword} autoComplete="new-password" aria-describedby="account-password-rules" error={errors.password?.message} {...register("password")} />
           <PasswordChecklist id="account-password-rules" value={password ?? ""} />
         </div>
-        <PasswordField label="Confirm new password" autoComplete="new-password" error={errors.password_confirmation?.message} {...register("password_confirmation")} />
-        <FormAlert tone="info">Saving signs you out on your other devices. You stay signed in here.</FormAlert>
+        <PasswordField label={a.confirmNewPassword} autoComplete="new-password" error={errors.password_confirmation?.message} {...register("password_confirmation")} />
+        <FormAlert tone="info">{a.passwordInfo}</FormAlert>
         <Button type="submit" loading={isSubmitting} className="justify-self-start">
-          {isSubmitting ? "Saving…" : hasPassword ? "Change password" : "Set password"}
+          {isSubmitting ? dict.ui.saving : hasPassword ? a.changePassword : a.setPasswordButton}
         </Button>
       </form>
     </section>

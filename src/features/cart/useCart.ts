@@ -3,9 +3,9 @@ import { cartApi, cartKeys, cartQueries } from "@/api/endpoints/cart";
 import { ApiError } from "@/api/errors";
 import { useSession } from "@/api/session";
 import type { Cart, CartLine, Customer } from "@/api/types";
-import { formatLabel } from "@/lib/catalog";
 import { toast } from "@/stores/toast";
 import { isVerified } from "@/features/auth/verification";
+import { formatName, getDict } from "@/i18n";
 
 /** The cart needs a signed-in customer with a verified email (the API answers 403 before that). */
 export function useUsableCart() {
@@ -43,14 +43,14 @@ export function useCartMutations() {
     onSuccess: settle,
     onError: (error, _vars, context) => {
       if (context?.previous) queryClient.setQueryData(key, context.previous);
-      toast.error({ title: "Couldn't change the quantity", description: ApiError.from(error).message });
+      toast.error({ title: getDict().cartPage.quantityFailed, description: ApiError.from(error).message });
     },
   });
 
   const add = useMutation({
     mutationFn: ({ variantId, quantity }: { variantId: number; quantity: number }) => cartApi.addItem(variantId, quantity),
     onSuccess: settle,
-    onError: (error) => toast.error({ title: "Couldn't put it back", description: ApiError.from(error).message }),
+    onError: (error) => toast.error({ title: getDict().cartPage.undoFailed, description: ApiError.from(error).message }),
   });
 
   const remove = useMutation({
@@ -58,23 +58,23 @@ export function useCartMutations() {
     onSuccess: (cart, line) => {
       settle(cart);
       toast.success({
-        title: "Removed from your cart",
-        description: [line.book?.title, formatLabel(line.format)].filter(Boolean).join(" · "),
+        title: getDict().cartPage.removed,
+        description: [line.book?.title, formatName(getDict(), line.format)].filter(Boolean).join(" · "),
         action: line.book_variant_id
-          ? { label: "Undo", onClick: () => add.mutate({ variantId: line.book_variant_id!, quantity: line.quantity ?? 1 }) }
+          ? { label: getDict().cartPage.undo, onClick: () => add.mutate({ variantId: line.book_variant_id!, quantity: line.quantity ?? 1 }) }
           : undefined,
       });
     },
-    onError: (error) => toast.error({ title: "Couldn't remove it", description: ApiError.from(error).message }),
+    onError: (error) => toast.error({ title: getDict().cartPage.removeFailed, description: ApiError.from(error).message }),
   });
 
   const clear = useMutation({
     mutationFn: cartApi.clear,
     onSuccess: (cart) => {
       settle(cart);
-      toast.success("Your cart is empty");
+      toast.success(getDict().cartPage.emptied);
     },
-    onError: (error) => toast.error({ title: "Couldn't empty the cart", description: ApiError.from(error).message }),
+    onError: (error) => toast.error({ title: getDict().cartPage.emptyFailed, description: ApiError.from(error).message }),
   });
 
   return {

@@ -10,9 +10,12 @@ import { Pagination } from "@/components/ui/pagination";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
+import { useT } from "@/i18n";
 
 export default function SeriesListPage() {
-  useDocumentTitle("Series", { description: "Book series at Bookly, each listed in reading order." });
+  const { dict } = useT();
+  const p = dict.pages;
+  useDocumentTitle(p.series, { description: p.seriesMeta });
   const [params] = useSearchParams();
   const page = Math.max(1, Number(params.get("page")) || 1);
   const series = useQuery({ ...catalogQueries.seriesList({ page, per_page: 24 }), placeholderData: (prev) => prev });
@@ -21,19 +24,19 @@ export default function SeriesListPage() {
 
   return (
     <div className="container-shell pb-16">
-      <PageHeader crumbs={[{ label: "Home", to: "/" }, { label: "Series" }]} eyebrow="Read in order" title="Series" lead="Stories that continue from book to book, listed in reading order." />
+      <PageHeader crumbs={[{ label: p.home, to: "/" }, { label: p.series }]} eyebrow={p.readInOrder} title={p.series} lead={p.seriesLead} />
 
       {series.isError && !series.data ? (
         <ErrorState error={series.error} onRetry={() => series.refetch()} />
       ) : series.isPending ? (
         showSkeleton ? (
-          <SkeletonGroup label="Loading series…" className="grid gap-5 md:grid-cols-2">
+          <SkeletonGroup label={p.loadingSeries} className="grid gap-5 md:grid-cols-2">
             <Skeleton className="h-40 rounded-xl" />
             <Skeleton className="h-40 rounded-xl" />
           </SkeletonGroup>
         ) : null
       ) : series.data.data.length === 0 ? (
-        <EmptyState icon={Library} title="No series yet" description="Series will appear here as they are added to the catalogue." />
+        <EmptyState icon={Library} title={p.noSeries} description={p.noSeriesLead} />
       ) : (
         <Stagger as="ul" className="grid gap-5 md:grid-cols-2">
           {series.data.data.map((s, index) => (
@@ -43,12 +46,12 @@ export default function SeriesListPage() {
                 className="group grid h-full content-start gap-3 rounded-xl border border-border bg-card p-6 transition-[border-color,box-shadow] duration-150 hover:border-input hover:shadow-lift outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <span className="text-xs font-bold uppercase tracking-[0.16em] text-accent-text">
-                  {s.books_count ?? 0} {s.books_count === 1 ? "book" : "books"}
+                  {p.bookCount(s.books_count ?? 0)}
                 </span>
                 <span className="font-display text-[1.563rem] leading-tight underline-offset-4 group-hover:underline">{s.name}</span>
                 {s.description ? <span className="line-clamp-3 text-muted-foreground">{s.description}</span> : null}
                 <span className="mt-2 inline-flex items-center gap-1.5 text-[15px] font-semibold text-primary">
-                  Read in order <ArrowRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
+                  {p.readInOrder} <ArrowRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
                 </span>
               </Link>
             </StaggerItem>

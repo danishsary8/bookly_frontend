@@ -9,6 +9,7 @@ import { anySocialEnabled, isReady, prepare, requestToken, SocialCancelled, soci
 import { openTelegram, useTelegramLink } from "./telegram";
 import { TelegramWait } from "./TelegramWait";
 import { useAfterSignIn } from "./useAfterSignIn";
+import { useT } from "@/i18n";
 
 /*
  * "Continue with Google / Facebook". A provider shows once its id is configured (src/features/auth/social.ts);
@@ -74,9 +75,11 @@ function Divider({ children }: { children: string }) {
 export function SocialButtons({ next = null, telegram = false }: { next?: string | null; telegram?: boolean }) {
   const enabled = (["google", "facebook"] as const).filter(socialEnabled);
   const afterSignIn = useAfterSignIn();
+  const { dict } = useT();
+  const s = dict.signin;
   const telegramLink = useTelegramLink("login", (customer) => {
     const firstName = customer.name?.split(" ")[0];
-    afterSignIn(customer, next, firstName ? `Welcome back, ${firstName}` : "Welcome back");
+    afterSignIn(customer, next, firstName ? s.welcomeBackName(firstName) : s.welcomeBack);
   });
   const navigate = useNavigate();
   const [busy, setBusy] = useState<Provider | null>(null);
@@ -101,7 +104,7 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
   if (!anySocialEnabled() && !telegram) {
     return (
       <div className="grid gap-3">
-        <Divider>or</Divider>
+        <Divider>{s.or}</Divider>
         <div className="grid gap-3 sm:grid-cols-2">
           {(["google", "facebook"] as const).map((p) => (
             <button key={p} type="button" disabled aria-describedby="social-soon" className={cn(buttonClass, "cursor-not-allowed opacity-60")}>
@@ -111,7 +114,7 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
           ))}
         </div>
         <p id="social-soon" className="text-center text-sm text-muted-foreground">
-          Google and Facebook sign-in are coming soon.
+          {s.socialSoon}
         </p>
       </div>
     );
@@ -131,8 +134,8 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
     if (!isReady(provider)) {
       setError(
         failed[provider]
-          ? `${NAMES[provider]} sign-in couldn't load. Check your connection, or allow ${NAMES[provider]} if you use an ad or tracker blocker, then try again.`
-          : `${NAMES[provider]} sign-in is still loading. Try again in a moment.`,
+          ? s.socialFailed(NAMES[provider])
+          : s.socialLoading(NAMES[provider]),
       );
       void load(provider);
       return;
@@ -145,7 +148,7 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
       .then((t) => authApi.social(provider, (accessToken = t)))
       .then((response) => {
         const firstName = response.customer?.name?.split(" ")[0];
-        afterSignIn(response.customer, next, firstName ? `Welcome, ${firstName}` : "Welcome to Bookly", { verifyBy: response.verify_by });
+        afterSignIn(response.customer, next, firstName ? s.welcomeName(firstName) : s.welcome, { verifyBy: response.verify_by });
       })
       .catch((err: unknown) => {
         if (err instanceof SocialCancelled) return;
@@ -162,7 +165,7 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
           return;
         }
         if (err instanceof Error && err.message === "popup_blocked") {
-          setError(`Your browser blocked the ${NAMES[provider]} window. Allow pop-ups for this site, then try again.`);
+          setError(s.popupBlocked(NAMES[provider]));
           return;
         }
         setError(apiError.message);
@@ -187,7 +190,7 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
             )}
           >
             {busy === p ? <Loader2 className="size-[18px] animate-spin motion-reduce:animate-none" aria-hidden="true" /> : ICONS[p]}
-            Continue with {NAMES[p]}
+            {s.continueWith(NAMES[p])}
           </button>
         ))}
         {telegram ? (
@@ -209,12 +212,12 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
               ) : (
                 TELEGRAM_ICON
               )}
-              Continue with Telegram
+              {s.continueWith("Telegram")}
             </button>
           )
         ) : null}
       </div>
-      <Divider>or use your email</Divider>
+      <Divider>{s.orEmail}</Divider>
     </div>
   );
 }

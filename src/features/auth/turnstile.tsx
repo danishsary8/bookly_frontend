@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ShieldAlert } from "lucide-react";
+import { useT } from "@/i18n";
 
 /*
  * Cloudflare Turnstile, the bot check on sign-up, sign-in and the forms that email a code.
@@ -54,6 +55,7 @@ export function useTurnstile(action: string, active = true) {
   const token = useRef<string | null>(null);
   const waiting = useRef<Array<(value: string | undefined) => void>>([]);
   const [problem, setProblem] = useState(false);
+  const { dict } = useT();
 
   const settle = (value: string | undefined) => {
     for (const resolve of waiting.current.splice(0)) resolve(value);
@@ -123,7 +125,7 @@ export function useTurnstile(action: string, active = true) {
       {problem ? (
         <p className="flex items-start gap-2 text-sm text-muted-foreground" role="status">
           <ShieldAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
-          The security check didn't load. Check your connection, or allow challenges.cloudflare.com if you use a blocker, then reload the page.
+          {dict.shell.turnstileFailed}
         </p>
       ) : null}
     </div>

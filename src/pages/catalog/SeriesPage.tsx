@@ -14,6 +14,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { SkeletonGroup } from "@/components/ui/skeleton";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
+import { useT } from "@/i18n";
 
 /* A series in reading order: each card is labelled "Book 1", "Book 2", … */
 export default function SeriesPage() {
@@ -23,10 +24,12 @@ export default function SeriesPage() {
   const cart = useAddToCart();
   const wishlist = useWishlist();
   const showSkeleton = useSkeletonVisible(series.isPending);
-  useDocumentTitle(series.data?.name, { description: series.data?.description || (series.data ? `Every book in the ${series.data.name} series, in reading order.` : null) });
+  const { dict } = useT();
+  const p = dict.pages;
+  useDocumentTitle(series.data?.name, { description: series.data?.description || (series.data ? p.seriesBookMeta(series.data.name ?? "") : null) });
 
   if (!valid || (series.isError && ApiError.from(series.error).kind === "not_found")) {
-    return <NotFoundState what="series" backTo="/series" backLabel="All series" />;
+    return <NotFoundState what={p.whatSeries} backTo="/series" backLabel={p.allSeries} />;
   }
   if (series.isError) return <div className="container-shell py-16"><ErrorState error={series.error} onRetry={() => series.refetch()} headingLevel="h1" /></div>;
 
@@ -34,27 +37,27 @@ export default function SeriesPage() {
   return (
     <div className="container-shell pb-16">
       <PageHeader
-        crumbs={[{ label: "Home", to: "/" }, { label: "Series", to: "/series" }, { label: series.data?.name ?? "Series" }]}
-        eyebrow={series.data ? `Series · ${books.length} ${books.length === 1 ? "book" : "books"}` : "Series"}
+        crumbs={[{ label: p.home, to: "/" }, { label: p.series, to: "/series" }, { label: series.data?.name ?? p.series }]}
+        eyebrow={series.data ? p.seriesEyebrow(books.length) : p.series}
         title={series.data?.name ?? <span aria-hidden="true" className="skeleton inline-block h-12 w-72 max-w-full rounded-sm align-middle" />}
         lead={series.data?.description ?? undefined}
       />
 
       {series.isPending ? (
         showSkeleton ? (
-          <SkeletonGroup label="Loading books…" className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
+          <SkeletonGroup label={p.loadingBooks} className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 4 }, (_, i) => (
               <BookCardSkeleton key={i} />
             ))}
           </SkeletonGroup>
         ) : null
       ) : books.length === 0 ? (
-        <EmptyState icon={Library} title="No books in this series yet" description="Check back soon." />
+        <EmptyState icon={Library} title={p.noSeriesBooks} description={p.checkBack} />
       ) : (
         <Stagger as="ol" className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
           {books.map((book, index) => (
             <StaggerItem as="li" key={book.id} index={index} className="grid gap-2">
-              <p className="text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground">Book {index + 1}</p>
+              <p className="text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground">{p.bookN(index + 1)}</p>
               <BookCard
                 book={book}
                 instanceKey={`series-${book.id}`}

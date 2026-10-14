@@ -18,6 +18,7 @@ import { useAfterSignIn } from "@/features/auth/useAfterSignIn";
 import { applyApiErrors, withNext } from "@/lib/forms";
 import { useTurnstile } from "@/features/auth/turnstile";
 import { useTelegramBot } from "@/features/auth/verification";
+import { useT } from "@/i18n";
 
 const FIELDS = ["name", "email", "phone", "password", "password_confirmation", "verify_by"] as const;
 
@@ -27,6 +28,8 @@ export default function RegisterPage() {
   const afterSignIn = useAfterSignIn();
   const [formError, setFormError] = useState<string | null>(null);
   const alertRef = useRef<HTMLDivElement>(null);
+  const { dict } = useT();
+  const s = dict.signin;
 
   const { register, handleSubmit, setError, control, formState } = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
@@ -65,15 +68,15 @@ export default function RegisterPage() {
 
   return (
     <AuthPage
-      eyebrow="New to Bookly"
-      title="Create your account"
-      lead="Save books, check out faster and track every order."
+      eyebrow={s.newToBookly}
+      title={s.createTitle}
+      lead={s.createLead}
       panel={<LibraryCard name={name} channel={byTelegram ? "telegram" : "email"} destination={byTelegram ? null : email} />}
       footer={
         <p>
-          Already have an account?{" "}
+          {dict.auth.alreadyHaveAccount}{" "}
           <Link to={withNext("/login", next)} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
-            Sign in
+            {dict.auth.signIn}
           </Link>
         </p>
       }
@@ -82,44 +85,44 @@ export default function RegisterPage() {
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
         {anySocialEnabled() ? <SocialButtons next={next} /> : null}
 
-        <TextField label="Full name" autoComplete="name" error={errors.name?.message} {...register("name")} />
+        <TextField label={s.fullName} autoComplete="name" error={errors.name?.message} {...register("name")} />
         <TextField
-          label="Email"
+          label={dict.auth.email}
           optional={byTelegram}
           type="email"
           autoComplete="email"
           inputMode="email"
           placeholder="name@example.com"
-          hint={byTelegram ? "For receipts and order updates. You can add it later." : "We'll send a 6-digit code to confirm it."}
+          hint={byTelegram ? s.emailHintTelegram : s.emailHintCode}
           error={errors.email?.message}
           {...register("email")}
         />
         {telegram ? <ChannelPicker value={byTelegram ? "telegram" : "email"} field={register("verify_by")} /> : null}
         {byTelegram ? null : (
           <TextField
-            label="Phone"
+            label={s.phone}
             optional
             type="tel"
             autoComplete="tel"
             inputMode="tel"
             placeholder="012 345 678"
-            hint="For delivery questions only."
+            hint={s.phoneHint}
             error={errors.phone?.message}
             {...register("phone")}
           />
         )}
 
         <div className="grid gap-3">
-          <PasswordField label="Password" autoComplete="new-password" aria-describedby="password-rules" error={errors.password?.message} {...register("password")} />
+          <PasswordField label={dict.auth.password} autoComplete="new-password" aria-describedby="password-rules" error={errors.password?.message} {...register("password")} />
           <PasswordChecklist id="password-rules" value={password ?? ""} />
         </div>
-        <PasswordField label="Confirm password" autoComplete="new-password" error={errors.password_confirmation?.message} {...register("password_confirmation")} />
+        <PasswordField label={s.confirmPassword} autoComplete="new-password" error={errors.password_confirmation?.message} {...register("password_confirmation")} />
 
         {turnstile.widget}
 
         <CtaGlare block>
           <Button type="submit" variant="cta" size="lg" className="w-full" loading={isSubmitting}>
-            {isSubmitting ? "Creating your account…" : "Create account"}
+            {isSubmitting ? s.creating : s.create}
           </Button>
         </CtaGlare>
 

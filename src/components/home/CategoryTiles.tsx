@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import type { Category } from "@/api/types";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
+import { useT } from "@/i18n";
 
 /** Category tiles linking to /categories/:slug, largest categories first. */
 export function CategoryTiles({ categories, loading }: { categories: Category[] | undefined; loading: boolean }) {
+  const { dict } = useT();
   if (loading) {
     return (
-      <SkeletonGroup label="Loading categories…" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <SkeletonGroup label={dict.homePage.loadingCategories} className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {Array.from({ length: 8 }, (_, i) => (
           <Skeleton key={i} className="h-24 rounded-xl" />
         ))}

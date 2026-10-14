@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/stores/toast";
 import { RatingInput } from "./RatingInput";
 import { useReviewMutations } from "./useReviews";
+import { useT } from "@/i18n";
 
 const MAX_COMMENT = 2000;
 
@@ -17,16 +18,18 @@ export function ReviewForm({ bookId, review, onDone }: { bookId: number; review:
   const [comment, setComment] = useState(review?.comment ?? "");
   const [errors, setErrors] = useState<{ form?: string; rating?: string; comment?: string }>({});
   const alertRef = useRef<HTMLDivElement>(null);
+  const { dict } = useT();
+  const t = dict.reviews;
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (!rating) return setErrors({ rating: "Choose a rating from 1 to 5 stars." });
+    if (!rating) return setErrors({ rating: t.chooseRating });
     setErrors({});
     save.mutate(
       { bookId, review, input: { rating, comment: comment.trim() || null } },
       {
         onSuccess: () => {
-          toast.success(review ? "Review updated" : { title: "Thanks for your review", description: "It helps other readers choose." });
+          toast.success(review ? t.updated : { title: t.thanks, description: t.thanksLead });
           onDone();
         },
         onError: (error) => {
@@ -43,7 +46,7 @@ export function ReviewForm({ bookId, review, onDone }: { bookId: number; review:
   return (
     <form onSubmit={submit} noValidate className="grid gap-5">
       {errors.form ? (
-        <FormAlert ref={alertRef} title={review ? "Your review wasn't updated" : "Your review wasn't posted"}>
+        <FormAlert ref={alertRef} title={review ? t.notUpdated : t.notPosted}>
           {errors.form}
         </FormAlert>
       ) : null}
@@ -56,9 +59,9 @@ export function ReviewForm({ bookId, review, onDone }: { bookId: number; review:
         error={errors.rating}
       />
       <TextAreaField
-        label="Your review"
+        label={t.yourReview}
         optional
-        hint={`What did you think? Up to ${MAX_COMMENT} characters.`}
+        hint={t.hint(MAX_COMMENT)}
         value={comment}
         maxLength={MAX_COMMENT}
         error={errors.comment}
@@ -67,10 +70,10 @@ export function ReviewForm({ bookId, review, onDone }: { bookId: number; review:
       />
       <div className="flex flex-wrap gap-3">
         <Button type="submit" loading={save.isPending}>
-          {review ? "Save review" : "Post review"}
+          {review ? t.save : t.post}
         </Button>
         <Button type="button" variant="ghost" onClick={onDone} disabled={save.isPending}>
-          Cancel
+          {dict.ui.cancel}
         </Button>
       </div>
     </form>

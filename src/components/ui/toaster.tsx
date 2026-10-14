@@ -6,6 +6,7 @@ import { Link } from "react-router-dom"
 import { transitions } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import { dismissToast, useToasts, type Toast, type ToastTone } from "@/stores/toast"
+import { useT } from "@/i18n"
 
 /*
  * MASTER §6.5: bottom-right (bottom-center on mobile), card surface with a tinted
@@ -21,6 +22,7 @@ const tones: Record<ToastTone, { Icon: typeof Info; chip: string }> = {
 }
 
 function ToastCard({ toast }: { toast: Toast }) {
+  const { dict } = useT()
   const [paused, setPaused] = useState(false)
   const remaining = useRef(toast.duration)
 
@@ -82,7 +84,7 @@ function ToastCard({ toast }: { toast: Toast }) {
       <button
         type="button"
         onClick={close}
-        aria-label="Dismiss notification"
+        aria-label={dict.shell.dismiss}
         className="-my-1.5 grid size-11 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors duration-150 hover:bg-secondary hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <X className="size-[18px]" aria-hidden="true" />
@@ -92,9 +94,10 @@ function ToastCard({ toast }: { toast: Toast }) {
 }
 
 function Toaster() {
+  const { dict } = useT()
   const toasts = useToasts()
   return (
-    <section aria-label="Notifications" className="pointer-events-none fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-(--z-toast) sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[400px]">
+    <section aria-label={dict.shell.notifications} className="pointer-events-none fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-(--z-toast) sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[400px]">
       {/* A persistent live region: announced reliably, and kept visible to assistive tech while a
           dialog or drawer is open (Radix hides everything else, but leaves [aria-live] alone). */}
       <div aria-live="polite" className="flex flex-col gap-3">

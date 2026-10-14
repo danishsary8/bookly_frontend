@@ -1,5 +1,6 @@
 import { Banknote, CreditCard, QrCode } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n";
 
 /*
  * Checkout step 2. Cash on delivery is the only method the API accepts today;
@@ -7,15 +8,17 @@ import { cn } from "@/lib/utils";
  * start when the provider keys are ready).
  */
 const methods = [
-  { id: "cod", label: "Cash on delivery", detail: "Pay the courier in dollars or riel when your books arrive.", Icon: Banknote, available: true },
-  { id: "card", label: "Card", detail: "Visa, Mastercard — coming soon.", Icon: CreditCard, available: false },
-  { id: "khqr", label: "Bakong KHQR", detail: "Scan to pay with any Cambodian bank app — coming soon.", Icon: QrCode, available: false },
+  { id: "cod", label: "cod", detail: "codDetail", Icon: Banknote, available: true },
+  { id: "card", label: "card", detail: "cardDetail", Icon: CreditCard, available: false },
+  { id: "khqr", label: "khqr", detail: "khqrDetail", Icon: QrCode, available: false },
 ] as const;
 
 export function PaymentOptions() {
+  const { dict } = useT();
+  const k = dict.checkoutPage;
   return (
     <fieldset className="grid gap-3">
-      <legend className="sr-only">Payment method</legend>
+      <legend className="sr-only">{k.paymentMethod}</legend>
       {methods.map(({ id, label, detail, Icon, available }) => (
         <label
           key={id}
@@ -29,8 +32,8 @@ export function PaymentOptions() {
             <Icon className="size-5" aria-hidden="true" />
           </span>
           <span className="grid">
-            <span className="font-semibold">{label}</span>
-            <span className="text-sm text-muted-foreground">{detail}</span>
+            <span className="font-semibold">{k[label]}</span>
+            <span className="text-sm text-muted-foreground">{k[detail]}</span>
           </span>
         </label>
       ))}

@@ -7,6 +7,8 @@ import { CtaGlare } from "@/components/CtaGlare";
 import { buttonVariants } from "@/components/ui/button";
 import { policy } from "@/content/shop";
 import { ContentPage } from "@/features/content/ContentPage";
+import { useT } from "@/i18n";
+import { Rich } from "@/i18n/Rich";
 
 /*
  * /about: what Bookly is and how buying from it works, in the shop's own terms
@@ -14,75 +16,64 @@ import { ContentPage } from "@/features/content/ContentPage";
  */
 export default function AboutPage() {
   const newest = useQuery(catalogQueries.books({ sort: "newest", per_page: 10 }));
+  const { dict } = useT();
+  const c = dict.content;
   return (
     <ContentPage
-      title="A bookshop for Cambodia"
-      documentTitle="About Bookly"
-      crumb="About"
-      eyebrow="About"
-      lead="Bookly sells printed and digital books online, priced in dollars or riel and paid for in cash at your door."
+      title={c.aboutTitle}
+      documentTitle={c.aboutDoc}
+      crumb={c.about}
+      eyebrow={c.about}
+      lead={c.aboutLead}
       facts={[
-        { value: "4 formats", label: "hardcover, paperback, ebook and audiobook" },
+        { value: c.factFormats, label: c.factFormatsLabel },
         {
           value: (
             <>
               $ <span aria-hidden="true">·</span> <span lang="km">៛</span>
             </>
           ),
-          label: "every price in US dollars or Cambodian riel",
+          label: c.factPricesLabel,
         },
-        { value: "Verified", label: "every review is from someone who bought the book" },
+        { value: c.factVerified, label: c.factVerifiedLabel },
       ]}
       sections={[
         {
           id: "shelves",
-          title: "What's on the shelves",
+          title: c.shelvesTitle,
           body: (
             <>
+              <p>{c.shelves1}</p>
               <p>
-                From classics to this month's new arrivals, many in more than one format: a hardcover to keep, a paperback to carry, or an
-                ebook or audiobook with no delivery at all.
-              </p>
-              <p>
-                Browse by <Link to="/authors">author</Link>, by <Link to="/series">series</Link> or by category, or search for a title. Every book page
-                shows its formats, stock and price side by side.
+                <Rich text={c.shelves2} />
               </p>
             </>
           ),
         },
         {
           id: "buying",
-          title: "How buying works",
+          title: c.buyingTitle,
           body: (
             <>
+              <p>{c.buying1(String(policy.shippingFeesUsd.phnomPenh), String(policy.shippingFeesUsd.provinces))}</p>
               <p>
-                Switch between dollars and riel at the top of any page. When you order, nothing is charged: you pay the courier in cash when the books
-                arrive, with one delivery fee per order: ${policy.shippingFeesUsd.phnomPenh} in Phnom Penh, ${policy.shippingFeesUsd.provinces} to the provinces.
-              </p>
-              <p>
-                Printed books can be returned within {policy.returnWindowDays} days of delivery, from your account. The details are in{" "}
-                <Link to="/shipping">shipping & delivery</Link> and the <Link to="/returns-policy">returns policy</Link>.
+                <Rich text={c.buying2(policy.returnWindowDays)} />
               </p>
             </>
           ),
         },
         {
           id: "reviews",
-          title: "Reviews from real readers",
-          body: (
-            <p>
-              Only customers who bought a book can review it, and only once it has been delivered. That's why every review on Bookly says "Verified
-              purchase": the ratings come from people who actually read the book.
-            </p>
-          ),
+          title: c.reviewsTitle,
+          body: <p>{c.reviews1}</p>,
         },
       ]}
       after={
         <div className="mt-20 grid gap-10">
           <BookShelf
             id="about-newest"
-            eyebrow="Just in"
-            title="New on the shelves"
+            eyebrow={c.justIn}
+            title={c.newOnShelves}
             books={newest.data?.data}
             loading={newest.isPending}
             error={newest.isError ? newest.error : undefined}
@@ -92,7 +83,7 @@ export default function AboutPage() {
           <div className="flex justify-center">
             <CtaGlare>
               <Link to="/books" className={buttonVariants({ variant: "cta", size: "lg" })}>
-                Browse the shelves <ArrowRight aria-hidden="true" />
+                {c.browseShelves} <ArrowRight aria-hidden="true" />
               </Link>
             </CtaGlare>
           </div>

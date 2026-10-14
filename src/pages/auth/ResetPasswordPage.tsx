@@ -14,6 +14,8 @@ import { ResendCode } from "@/features/auth/ResendCode";
 import { forgetResetEmail, recallResetEmail } from "@/features/auth/resetEmail";
 import { resetPasswordSchema, type ResetPasswordValues } from "@/features/auth/schemas";
 import { applyApiErrors, withNext } from "@/lib/forms";
+import { useT } from "@/i18n";
+import { Rich } from "@/i18n/Rich";
 
 /*
  * Step 2 of 2: the emailed code and a new password, sent together (the API has
@@ -29,6 +31,8 @@ export default function ResetPasswordPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const alertRef = useRef<HTMLDivElement>(null);
   const codeRef = useRef<HTMLDivElement>(null);
+  const { dict } = useT();
+  const s = dict.signin;
 
   const { register, control, handleSubmit, setError, formState } = useForm<ResetPasswordValues>({
     resolver: zodResolver(resetPasswordSchema),
@@ -43,7 +47,7 @@ export default function ResetPasswordPage() {
     try {
       await authApi.resetPassword(values);
       forgetResetEmail();
-      navigate(withNext("/login", next), { replace: true, state: { email: values.email, notice: "Password updated. Sign in with your new password." } });
+      navigate(withNext("/login", next), { replace: true, state: { email: values.email, notice: s.passwordUpdated } });
     } catch (error) {
       const message = applyApiErrors(error, setError, ["email", "code", "password", "password_confirmation"]);
       if (message && /code/i.test(message)) {
@@ -58,22 +62,22 @@ export default function ResetPasswordPage() {
 
   return (
     <AuthPage
-      eyebrow="Password help"
-      title="Set a new password"
+      eyebrow={s.passwordHelp}
+      title={s.resetTitle}
       lead={
         knownEmail ? (
           <p>
-            Enter the 6-digit code we sent to <strong className="font-semibold text-foreground">{knownEmail}</strong> and choose a new password.
+            <Rich text={s.resetLeadKnown(knownEmail)} strong="font-semibold text-foreground" />
           </p>
         ) : (
-          <p>Enter your email, the 6-digit code we sent you, and a new password.</p>
+          <p>{s.resetLead}</p>
         )
       }
       footer={
         <p>
-          Need a new code for a different email?{" "}
+          {s.newCodeOther}{" "}
           <Link to={withNext("/forgot-password", next)} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
-            Start over
+            {s.startOver}
           </Link>
         </p>
       }
@@ -83,26 +87,26 @@ export default function ResetPasswordPage() {
         {knownEmail ? (
           <input type="hidden" autoComplete="username" {...register("email")} />
         ) : (
-          <TextField label="Email" type="email" autoComplete="email" inputMode="email" error={errors.email?.message} {...register("email")} />
+          <TextField label={dict.auth.email} type="email" autoComplete="email" inputMode="email" error={errors.email?.message} {...register("email")} />
         )}
         <div ref={codeRef} className="grid gap-1">
           <Controller
             control={control}
             name="code"
             render={({ field, fieldState }) => (
-              <OtpInput value={field.value} onChange={field.onChange} label="Reset code" error={fieldState.error?.message} autoFocus={Boolean(knownEmail)} />
+              <OtpInput value={field.value} onChange={field.onChange} label={s.resetCode} error={fieldState.error?.message} autoFocus={Boolean(knownEmail)} />
             )}
           />
           {email ? <ResendCode send={(token) => authApi.forgotPassword(email, token)} startCoolingDown={state?.justSent} turnstileAction="forgot_password" /> : null}
         </div>
         <div className="grid gap-3">
-          <PasswordField label="New password" autoComplete="new-password" aria-describedby="new-password-rules" error={errors.password?.message} {...register("password")} />
+          <PasswordField label={s.newPassword} autoComplete="new-password" aria-describedby="new-password-rules" error={errors.password?.message} {...register("password")} />
           <PasswordChecklist id="new-password-rules" value={password ?? ""} />
         </div>
-        <PasswordField label="Confirm new password" autoComplete="new-password" error={errors.password_confirmation?.message} {...register("password_confirmation")} />
+        <PasswordField label={s.confirmNewPassword} autoComplete="new-password" error={errors.password_confirmation?.message} {...register("password_confirmation")} />
         <CtaGlare block>
           <Button type="submit" variant="cta" size="lg" className="w-full" loading={isSubmitting}>
-            {isSubmitting ? "Saving…" : "Save new password"}
+            {isSubmitting ? dict.ui.saving : s.saveNewPassword}
           </Button>
         </CtaGlare>
       </form>

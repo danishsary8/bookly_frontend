@@ -41,23 +41,16 @@ export function MobileMenu() {
         <DrawerBody className="grid content-start gap-6">
           <LiveSearch id="mobile-search" onNavigate={closeShellPanel} inputClassName="h-12" />
 
-          <nav aria-label="Main">
+          <nav aria-label={dict.navLinks.main}>
             <ul className="grid gap-1">
               <li>
                 <NavLink to="/" onClick={closeShellPanel} className={linkClass(location.pathname === "/")} aria-current={location.pathname === "/" ? "page" : undefined}>
-                  Home
+                  {dict.navLinks.home}
                 </NavLink>
               </li>
               {primaryNav.map((item) => {
                 const active = isActivePath(location.pathname, item.to);
-                const label =
-                  item.to === "/books"
-                    ? dict.nav.books
-                    : item.to === "/authors"
-                      ? dict.nav.authors
-                      : item.to === "/series"
-                        ? dict.nav.series
-                        : item.label;
+                const label = dict.navLinks[item.label];
                 return (
                   <li key={item.to}>
                     <NavLink to={item.to} onClick={closeShellPanel} className={linkClass(active)} aria-current={active ? "page" : undefined}>
@@ -71,11 +64,11 @@ export function MobileMenu() {
 
           <hr className="border-border" />
 
-          <nav aria-label="Your account">
+          <nav aria-label={dict.navLinks.yourAccount}>
             <ul className="grid gap-1">
               {accountNav.map((item) => {
                 const active = isActivePath(location.pathname, item.to);
-                const label = item.to === "/account" ? dict.nav.account : item.label;
+                const label = dict.navLinks[item.label];
                 return (
                   <li key={item.to}>
                     <NavLink
