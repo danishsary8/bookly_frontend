@@ -21,7 +21,8 @@ export default defineConfig([
     },
     rules: {
       // Only affects hot reload during development; shadcn-style files export variants next to components.
-      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      // Shared helpers that live next to their component on purpose (shadcn style); a hot reload of these files is fine.
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true, allowExportNames: ['buttonVariants', 'badgeVariants', 'controlClassName', 'useTheme'] }],
     },
   },
 ])

@@ -216,7 +216,7 @@ export default function Carousel({
   useEffect(() => {
     const startIndex = isControlled ? Math.min(indexRef.current, Math.max(count - 1, 0)) : 0;
     const startingPosition = loop ? startIndex + 1 : startIndex;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset when the slide set changes
+    // Reset when the slide set changes.
     setPosition(startingPosition);
     x.set(-startingPosition * trackItemOffset);
   }, [count, loop, trackItemOffset, x, isControlled]);
