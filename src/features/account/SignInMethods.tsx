@@ -16,6 +16,7 @@ import { useTelegramLink } from "@/features/auth/telegram";
 import { TelegramWait } from "@/features/auth/TelegramWait";
 import { rememberChannel, useTelegramBot, verifyPath } from "@/features/auth/verification";
 import { toast } from "@/stores/toast";
+import { useT } from "@/i18n";
 
 /*
  * Account → Sign-in & security: every way into this account at a glance (email, phone, Google, Facebook,
@@ -24,16 +25,22 @@ import { toast } from "@/stores/toast";
  * changed) by sharing it in the Bookly Telegram bot (PhoneInTelegram); the old number stays until then.
  */
 
-const Verified = ({ children = "Verified" }: { children?: ReactNode }) => (
-  <Badge tone="success" shape="tint">
-    <BadgeCheck aria-hidden="true" /> {children}
-  </Badge>
-);
-const NotVerified = () => (
-  <Badge tone="warning" shape="tint">
-    <CircleAlert aria-hidden="true" /> Not verified
-  </Badge>
-);
+const Verified = ({ children }: { children?: ReactNode }) => {
+  const { dict } = useT();
+  return (
+    <Badge tone="success" shape="tint">
+      <BadgeCheck aria-hidden="true" /> {children ?? dict.security.verified}
+    </Badge>
+  );
+};
+const NotVerified = () => {
+  const { dict } = useT();
+  return (
+    <Badge tone="warning" shape="tint">
+      <CircleAlert aria-hidden="true" /> {dict.security.notVerified}
+    </Badge>
+  );
+};
 
 export function SignInMethods({ customer }: { customer: Customer | undefined }) {
   const navigate = useNavigate();
@@ -42,6 +49,8 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
   const [editingEmail, setEditingEmail] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
   const verifiedPhone = customer?.phone_verified ? customer.phone : null;
+  const { dict } = useT();
+  const t = dict.security;
 
   const verifyEmail = async () => {
     setSendingEmail(true);
@@ -50,7 +59,7 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
       rememberChannel("email");
       navigate(verifyPath("email", "/account/security"), { state: { justRegistered: true } });
     } catch (error) {
-      toast.error({ title: "Couldn't send the code", description: ApiError.from(error).message });
+      toast.error({ title: t.sendCodeFailed, description: ApiError.from(error).message });
     } finally {
       setSendingEmail(false);
     }
@@ -60,26 +69,26 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
     <section aria-labelledby="sign-in-methods" className="grid max-w-xl gap-4 rounded-xl border border-border bg-card p-5 sm:p-6">
       <div className="grid gap-1">
         <h2 id="sign-in-methods" className="font-display text-[1.563rem] leading-tight">
-          Ways into your account
+          {t.waysIn}
         </h2>
-        <p className="text-[15px] text-muted-foreground">A verified email or phone number lets you order. Keep at least one up to date.</p>
+        <p className="text-[15px] text-muted-foreground">{t.waysInLead}</p>
       </div>
       <ul className="divide-y divide-border">
         <Row
           icon={<Mail className="size-5" aria-hidden="true" />}
-          label="Email"
-          value={customer?.email ?? <span className="text-muted-foreground">Not added</span>}
+          label={t.email}
+          value={customer?.email ?? <span className="text-muted-foreground">{t.notAdded}</span>}
           status={customer?.email ? customer.email_verified ? <Verified /> : <NotVerified /> : null}
           action={
             editingEmail ? null : (
               <div className="flex flex-wrap gap-2">
                 {customer?.email && !customer.email_verified ? (
                   <Button variant="outline" size="sm" onClick={() => void verifyEmail()} loading={sendingEmail}>
-                    Verify
+                    {t.verify}
                   </Button>
                 ) : null}
                 <Button variant="outline" size="sm" onClick={() => setEditingEmail(true)}>
-                  {customer?.email ? "Change" : "Add"}
+                  {customer?.email ? t.change : t.add}
                 </Button>
               </div>
             )
@@ -89,13 +98,13 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
         </Row>
         <Row
           icon={<Phone className="size-5" aria-hidden="true" />}
-          label="Phone"
-          value={verifiedPhone ?? customer?.phone ?? <span className="text-muted-foreground">Not added</span>}
-          status={verifiedPhone ? <Verified>Verified with Telegram</Verified> : customer?.phone ? <NotVerified /> : null}
+          label={t.phone}
+          value={verifiedPhone ?? customer?.phone ?? <span className="text-muted-foreground">{t.notAdded}</span>}
+          status={verifiedPhone ? <Verified>{t.verifiedTelegram}</Verified> : customer?.phone ? <NotVerified /> : null}
           action={
             telegram && !editingPhone ? (
               <Button variant="outline" size="sm" onClick={() => setEditingPhone(true)}>
-                {verifiedPhone ? "Change" : "Confirm"}
+                {verifiedPhone ? t.change : t.confirm}
               </Button>
             ) : null
           }
@@ -103,22 +112,22 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
           {editingPhone ? (
             <PhoneInTelegram onDone={() => setEditingPhone(false)} />
           ) : telegram && verifiedPhone ? (
-            <p className="text-sm text-muted-foreground">You can also sign in with Continue with Telegram.</p>
+            <p className="text-sm text-muted-foreground">{t.telegramSignIn}</p>
           ) : telegram ? (
-            <p className="text-sm text-muted-foreground">Confirm it with one tap in our Telegram bot: it shares the number of your Telegram account.</p>
+            <p className="text-sm text-muted-foreground">{t.telegramConfirm}</p>
           ) : !verifiedPhone ? (
-            <p className="text-sm text-muted-foreground">Confirming phone numbers in Telegram is coming soon.</p>
+            <p className="text-sm text-muted-foreground">{t.telegramSoon}</p>
           ) : null}
         </Row>
         <SocialConnection provider="google" customer={customer} />
         <SocialConnection provider="facebook" customer={customer} />
         <Row
           icon={<KeyRound className="size-5" aria-hidden="true" />}
-          label="Password"
-          value={customer?.has_password === false ? <span className="text-muted-foreground">Not set</span> : "Set"}
+          label={t.password}
+          value={customer?.has_password === false ? <span className="text-muted-foreground">{t.notSet}</span> : t.set}
           action={
             <Button variant="link" size="sm" className="px-0" asChild>
-              <a href="#password">{customer?.has_password === false ? "Set one" : "Change"}</a>
+              <a href="#password">{customer?.has_password === false ? t.setOne : t.change}</a>
             </Button>
           }
         />
@@ -133,9 +142,11 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
  */
 function PhoneInTelegram({ onDone }: { onDone: () => void }) {
   const queryClient = useQueryClient();
+  const { dict } = useT();
+  const t = dict.security;
   const { state, start } = useTelegramLink("phone", (customer) => {
     void queryClient.invalidateQueries({ queryKey: accountKeys.all });
-    toast.success({ title: "Phone number confirmed", description: `${customer.phone ?? "Your number"} is now on your account.` });
+    toast.success({ title: t.phoneConfirmed, description: t.phoneOnAccount(customer.phone ?? t.yourNumber) });
     onDone();
   });
   const started = useRef(false);
@@ -151,10 +162,10 @@ function PhoneInTelegram({ onDone }: { onDone: () => void }) {
         <FormAlert title={state.message} />
         <div className="flex flex-wrap gap-3">
           <Button type="button" onClick={() => void start()}>
-            Try again
+            {dict.ui.tryAgain}
           </Button>
           <Button type="button" variant="ghost" onClick={onDone}>
-            Cancel
+            {dict.ui.cancel}
           </Button>
         </div>
       </div>
@@ -163,7 +174,7 @@ function PhoneInTelegram({ onDone }: { onDone: () => void }) {
   if (state.phase !== "waiting") {
     return (
       <p role="status" className="text-sm text-muted-foreground">
-        Getting Telegram ready…
+        {t.gettingTelegram}
       </p>
     );
   }

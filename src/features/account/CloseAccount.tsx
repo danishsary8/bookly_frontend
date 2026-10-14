@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { isReady, prepare, requestToken, SocialCancelled, socialEnabled, type Provider } from "@/features/auth/social";
 import { toast } from "@/stores/toast";
+import { useT } from "@/i18n";
 
 /*
  * Account → Sign-in & security → Delete my account. Two deliberate steps: open the dialog, then prove it's
@@ -27,6 +28,8 @@ export function CloseAccount({ customer }: { customer: Customer | undefined }) {
   const [error, setError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
+  const { dict } = useT();
+  const t = dict.closeAccount;
   const hasPassword = customer?.has_password !== false;
   const provider: Provider | null = hasPassword ? null : customer?.connected?.google ? "google" : customer?.connected?.facebook ? "facebook" : null;
   const providerName = provider === "google" ? "Google" : "Facebook";
@@ -52,7 +55,7 @@ export function CloseAccount({ customer }: { customer: Customer | undefined }) {
       const response = await accountApi.closeAccount({ confirm: "DELETE", ...proof });
       clearSession("customer");
       queryClient.clear();
-      toast.success({ title: "Your account is closed", description: response.message });
+      toast.success({ title: t.closed, description: response.message });
       navigate("/", { replace: true });
     } catch (err) {
       const apiError = ApiError.from(err);
@@ -66,39 +69,36 @@ export function CloseAccount({ customer }: { customer: Customer | undefined }) {
   const submit = () => {
     if (!confirmed) return;
     if (hasPassword) {
-      if (!password) return setPasswordError("Enter your password.");
+      if (!password) return setPasswordError(dict.forms.enterPassword);
       return void close({ password });
     }
     if (!provider || !socialEnabled(provider) || !isReady(provider)) {
-      setError(`${providerName} sign-in isn't available right now. Try again in a moment, or contact us to close your account.`);
+      setError(t.unavailable(providerName));
       return;
     }
     // The provider's popup must open inside this click.
     requestToken(provider)
       .then((token) => close({ provider, access_token: token }))
       .catch((err: unknown) => {
-        if (!(err instanceof SocialCancelled)) setError(`${providerName} couldn't confirm it's you. Try again.`);
+        if (!(err instanceof SocialCancelled)) setError(t.couldntConfirm(providerName));
       });
   };
 
   return (
     <section aria-labelledby="close-account" className="grid max-w-xl gap-3 rounded-xl border border-destructive/40 bg-card p-5 sm:p-6">
       <h2 id="close-account" className="font-display text-[1.563rem] leading-tight">
-        Delete my account
+        {t.title}
       </h2>
-      <p className="text-[15px] text-muted-foreground">
-        You're signed out everywhere, and your reviews, wishlist and cart are removed straight away. Your name, email, phone number and addresses are erased
-        after 30 days. We keep order records the law requires.
-      </p>
+      <p className="text-[15px] text-muted-foreground">{t.lead}</p>
       <Button variant="outline" className="justify-self-start border-destructive/50 text-destructive hover:bg-destructive-tint" onClick={() => reset(true)}>
-        Delete my account…
+        {t.open}
       </Button>
 
       <Dialog open={open} onOpenChange={reset}>
         <DialogContent size="sm" role="alertdialog">
           <DialogHeader>
-            <DialogTitle>Delete your Bookly account?</DialogTitle>
-            <DialogDescription>This can't be undone after 30 days. Orders on their way and open returns need to finish first.</DialogDescription>
+            <DialogTitle>{t.dialogTitle}</DialogTitle>
+            <DialogDescription>{t.dialogLead}</DialogDescription>
           </DialogHeader>
           <form
             className="grid gap-4"
@@ -112,22 +112,22 @@ export function CloseAccount({ customer }: { customer: Customer | undefined }) {
               <FormAlert title={error} />
             ) : null}
             {hasPassword ? (
-              <PasswordField label="Your password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} error={passwordError} />
+              <PasswordField label={t.yourPassword} autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} error={passwordError} />
             ) : (
               <p className="flex items-start gap-2 text-[15px] text-muted-foreground">
                 <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
-                You'll confirm with the {providerName} account you sign in with.
+                {t.confirmWith(providerName)}
               </p>
             )}
-            <TextField label="Type DELETE to confirm" autoComplete="off" autoCapitalize="characters" value={typed} onChange={(e) => setTyped(e.target.value)} />
+            <TextField label={t.typeDelete} autoComplete="off" autoCapitalize="characters" value={typed} onChange={(e) => setTyped(e.target.value)} />
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" type="button" disabled={busy}>
-                  Keep my account
+                  {t.keep}
                 </Button>
               </DialogClose>
               <Button variant="destructive" type="submit" loading={busy} disabled={!confirmed}>
-                {hasPassword ? "Delete my account" : `Confirm with ${providerName}`}
+                {hasPassword ? t.submit : t.submitWith(providerName)}
               </Button>
             </DialogFooter>
           </form>

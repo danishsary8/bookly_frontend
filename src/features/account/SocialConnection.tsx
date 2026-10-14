@@ -11,6 +11,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Row } from "@/features/account/SecurityRow";
 import { isReady, prepare, requestToken, SocialCancelled, socialEnabled, type Provider } from "@/features/auth/social";
 import { toast } from "@/stores/toast";
+import { useT } from "@/i18n";
 
 /*
  * Google / Facebook on Sign-in & security: connect (the provider's popup, plus the password when the account
@@ -34,6 +35,8 @@ export function SocialConnection({ provider, customer }: { provider: Provider; c
   const [passwordError, setPasswordError] = useState<string | undefined>();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const { dict } = useT();
+  const t = dict.security;
 
   // Load the provider's script early: its popup must open straight from the click.
   useEffect(() => {
@@ -58,9 +61,9 @@ export function SocialConnection({ provider, customer }: { provider: Provider; c
   /** Called inside the click (or the dialog's submit), so the browser lets the popup open. */
   const connect = (withPassword?: string) => {
     if (!isReady(provider)) {
-      const message = `${name} is still loading or was blocked. Check your connection, or allow ${name} if you use an ad or tracker blocker, then try again.`;
+      const message = t.blocked(name);
       if (dialog) setError(message);
-      else toast.error({ title: `Couldn't open ${name}`, description: message });
+      else toast.error({ title: t.couldntOpen(name), description: message });
       void prepare(provider).catch(() => undefined);
       return;
     }
@@ -70,18 +73,18 @@ export function SocialConnection({ provider, customer }: { provider: Provider; c
       .then(async (token) => {
         setBusy(true);
         const response = await accountApi.connect(provider, { access_token: token, ...(withPassword ? { password: withPassword } : {}) });
-        saved(response.customer, `${name} connected`, `You can now sign in with ${name}.`);
+        saved(response.customer, t.nameConnected(name), t.canSignInWith(name));
       })
       .catch((err: unknown) => {
         if (err instanceof SocialCancelled) return;
         if (err instanceof Error && err.message === "popup_blocked") {
-          const message = `Your browser blocked the ${name} window. Allow pop-ups for this site, then try again.`;
-          return dialog ? setError(message) : toast.error({ title: `Couldn't open ${name}`, description: message });
+          const message = t.popupBlocked(name);
+          return dialog ? setError(message) : toast.error({ title: t.couldntOpen(name), description: message });
         }
         const apiError = ApiError.from(err);
         if (apiError.field("password")) return setPasswordError(apiError.field("password"));
         if (dialog) setError(apiError.message);
-        else toast.error({ title: `Couldn't connect ${name}`, description: apiError.message });
+        else toast.error({ title: t.couldntConnect(name), description: apiError.message });
       })
       .finally(() => setBusy(false));
   };
@@ -91,7 +94,7 @@ export function SocialConnection({ provider, customer }: { provider: Provider; c
     setError(null);
     try {
       const response = await accountApi.disconnect(provider);
-      saved(response.customer, `${name} disconnected`, `You can't sign in with ${name} any more. Connect it again at any time.`);
+      saved(response.customer, t.nameDisconnected(name), t.cantSignInWith(name));
     } catch (err) {
       setError(ApiError.from(err).message);
     } finally {
@@ -102,12 +105,12 @@ export function SocialConnection({ provider, customer }: { provider: Provider; c
   const action = connected ? (
     lastWayIn ? null : (
       <Button variant="outline" size="sm" onClick={() => openDialog("disconnect")}>
-        Disconnect
+        {t.disconnect}
       </Button>
     )
   ) : canConnect ? (
     <Button variant="outline" size="sm" loading={busy && !dialog} onClick={() => (hasPassword ? openDialog("connect") : connect())}>
-      Connect
+      {t.connect}
     </Button>
   ) : null;
 
@@ -115,21 +118,21 @@ export function SocialConnection({ provider, customer }: { provider: Provider; c
     <Row
       icon={<span className="text-sm font-bold" aria-hidden="true">{ICONS[provider]}</span>}
       label={name}
-      value={connected ? "Connected" : <span className="text-muted-foreground">Not connected</span>}
+      value={connected ? t.connected : <span className="text-muted-foreground">{t.notConnected}</span>}
       action={action}
     >
       {lastWayIn ? (
         <p className="text-sm text-muted-foreground">
-          {name} is your only way in.{" "}
+          {t.onlyWayIn(name)}{" "}
           {customer?.email ? (
             <>
               <a href="#password" className="font-medium text-primary underline-offset-4 hover:underline">
-                Add a password first
+                {t.addPasswordFirst}
               </a>
-              , so you can still sign in.
+              {t.soYouCan}
             </>
           ) : (
-            "Add an email and a password first, so you can still sign in."
+            t.addEmailAndPassword
           )}
         </p>
       ) : null}
@@ -137,30 +140,30 @@ export function SocialConnection({ provider, customer }: { provider: Provider; c
       <Dialog open={dialog === "connect"} onOpenChange={(open) => openDialog(open ? "connect" : null)}>
         <DialogContent size="sm">
           <DialogHeader>
-            <DialogTitle>Connect {name}</DialogTitle>
-            <DialogDescription>Enter your Bookly password, then choose your {name} account in the window that opens.</DialogDescription>
+            <DialogTitle>{t.connectTitle(name)}</DialogTitle>
+            <DialogDescription>{t.connectLead(name)}</DialogDescription>
           </DialogHeader>
           <form
             className="grid gap-4"
             noValidate
             onSubmit={(event) => {
               event.preventDefault();
-              if (!password) return setPasswordError("Enter your password.");
+              if (!password) return setPasswordError(dict.forms.enterPassword);
               connect(password);
             }}
           >
             {error ? <FormAlert title={error} /> : null}
             {/* Lets password managers match the password to the right account. */}
             <input type="text" name="username" autoComplete="username" value={customer?.email ?? ""} hidden readOnly />
-            <PasswordField label="Your Bookly password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} error={passwordError} />
+            <PasswordField label={t.yourPassword} autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} error={passwordError} />
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" type="button" disabled={busy}>
-                  Cancel
+                  {dict.ui.cancel}
                 </Button>
               </DialogClose>
               <Button type="submit" loading={busy}>
-                Continue with {name}
+                {t.continueWith(name)}
               </Button>
             </DialogFooter>
           </form>
@@ -170,18 +173,18 @@ export function SocialConnection({ provider, customer }: { provider: Provider; c
       <Dialog open={dialog === "disconnect"} onOpenChange={(open) => openDialog(open ? "disconnect" : null)}>
         <DialogContent size="sm" role="alertdialog">
           <DialogHeader>
-            <DialogTitle>Disconnect {name}?</DialogTitle>
-            <DialogDescription>You won't be able to sign in with {name} any more. You can connect it again later.</DialogDescription>
+            <DialogTitle>{t.disconnectTitle(name)}</DialogTitle>
+            <DialogDescription>{t.disconnectLead(name)}</DialogDescription>
           </DialogHeader>
           {error ? <FormAlert title={error} /> : null}
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="outline" type="button" disabled={busy}>
-                Keep it
+                {t.keepIt}
               </Button>
             </DialogClose>
             <Button variant="destructive" loading={busy} onClick={() => void disconnect()}>
-              <Link2Off aria-hidden="true" /> Disconnect {name}
+              <Link2Off aria-hidden="true" /> {t.disconnectName(name)}
             </Button>
           </DialogFooter>
         </DialogContent>

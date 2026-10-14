@@ -10,6 +10,8 @@ import { changeEmailSchema, verifyEmailSchema, type ChangeEmailValues, type Veri
 import { useTurnstile } from "@/features/auth/turnstile";
 import { applyApiErrors } from "@/lib/forms";
 import { toast } from "@/stores/toast";
+import { useT } from "@/i18n";
+import { Rich } from "@/i18n/Rich";
 
 /*
  * Add or change the account's email, in place on Sign-in & security. Two steps: the new address (and the
@@ -21,6 +23,8 @@ export function EmailChanger({ current, hasPassword, onDone }: { current: string
   const turnstile = useTurnstile("change_email");
   const [sentTo, setSentTo] = useState<string | null>(null);
   const codeRef = useRef<HTMLDivElement>(null);
+  const { dict } = useT();
+  const t = dict.security;
   const emailForm = useForm<ChangeEmailValues>({ resolver: zodResolver(changeEmailSchema(hasPassword)), defaultValues: { email: "", password: "" } });
   const codeForm = useForm<VerifyEmailValues>({ resolver: zodResolver(verifyEmailSchema), defaultValues: { code: "" } });
 
@@ -34,7 +38,7 @@ export function EmailChanger({ current, hasPassword, onDone }: { current: string
       });
       setSentTo(response.email ?? values.email);
       codeForm.reset();
-      toast.success({ title: "Code sent", description: `Check the inbox of ${response.email ?? values.email}.` });
+      toast.success({ title: t.codeSent, description: t.checkInbox(response.email ?? values.email) });
     } catch (error) {
       const message = applyApiErrors(error, emailForm.setError, ["email", "password"]);
       if (message) emailForm.setError("email", { type: "server", message });
@@ -48,7 +52,7 @@ export function EmailChanger({ current, hasPassword, onDone }: { current: string
       const response = await accountApi.confirmEmail(values.code);
       if (response.customer) queryClient.setQueryData(accountKeys.me(), response.customer);
       await queryClient.invalidateQueries({ queryKey: accountKeys.me() });
-      toast.success({ title: current ? "Email changed" : "Email added", description: "Other devices were signed out. You stay signed in here." });
+      toast.success({ title: current ? t.emailChanged : t.emailAdded, description: t.emailChangedLead });
       onDone();
     } catch (error) {
       const message = applyApiErrors(error, codeForm.setError, ["code"]);
@@ -63,21 +67,21 @@ export function EmailChanger({ current, hasPassword, onDone }: { current: string
     return (
       <form onSubmit={(event) => void codeForm.handleSubmit(confirm)(event)} noValidate className="grid gap-4 rounded-lg bg-surface-2 p-4">
         <p className="text-[15px]">
-          Enter the code we emailed to <strong className="break-all font-semibold">{sentTo}</strong>. It may take a minute or two, and it can land in spam.
+          <Rich text={t.enterEmailCode(sentTo)} strong="break-all font-semibold" />
         </p>
         <div ref={codeRef}>
           <Controller
             control={codeForm.control}
             name="code"
-            render={({ field, fieldState }) => <OtpInput value={field.value} onChange={field.onChange} label="Email code" error={fieldState.error?.message} autoFocus />}
+            render={({ field, fieldState }) => <OtpInput value={field.value} onChange={field.onChange} label={t.emailCode} error={fieldState.error?.message} autoFocus />}
           />
         </div>
         <div className="flex flex-wrap gap-3">
           <Button type="submit" loading={codeForm.formState.isSubmitting}>
-            {current ? "Change email" : "Add email"}
+            {current ? t.changeEmail : t.addEmail}
           </Button>
           <Button type="button" variant="ghost" onClick={() => setSentTo(null)}>
-            Use another email
+            {t.useAnother}
           </Button>
         </div>
       </form>
@@ -87,25 +91,25 @@ export function EmailChanger({ current, hasPassword, onDone }: { current: string
   return (
     <form onSubmit={(event) => void emailForm.handleSubmit(send)(event)} noValidate className="grid gap-4 rounded-lg bg-surface-2 p-4">
       <TextField
-        label={current ? "New email" : "Email"}
+        label={current ? t.newEmail : t.email}
         type="email"
         autoComplete="email"
         inputMode="email"
         placeholder="name@example.com"
-        hint={current ? `${current} keeps working until you enter the code.` : "We'll send a 6-digit code to check it's yours."}
+        hint={current ? t.keepsWorking(current) : t.sendsCode}
         error={emailForm.formState.errors.email?.message}
         {...emailForm.register("email")}
       />
       {hasPassword ? (
-        <PasswordField label="Your Bookly password" autoComplete="current-password" error={emailForm.formState.errors.password?.message} {...emailForm.register("password")} />
+        <PasswordField label={t.yourPassword} autoComplete="current-password" error={emailForm.formState.errors.password?.message} {...emailForm.register("password")} />
       ) : null}
       {turnstile.widget}
       <div className="flex flex-wrap gap-3">
         <Button type="submit" loading={emailForm.formState.isSubmitting}>
-          Send code
+          {t.sendCode}
         </Button>
         <Button type="button" variant="ghost" onClick={onDone}>
-          Cancel
+          {dict.ui.cancel}
         </Button>
       </div>
     </form>
