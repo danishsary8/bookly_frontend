@@ -12,6 +12,7 @@ import { highlightParts } from "@/lib/highlight";
 import { cn } from "@/lib/utils";
 import { searchPath } from "./nav";
 import { formatMoney, useCurrency } from "@/stores/currency";
+import { useT } from "@/i18n";
 
 /*
  * MASTER §6.20 header live search, an ARIA 1.2 combobox:
@@ -38,6 +39,7 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
   const navigate = useNavigate();
   const location = useLocation();
   const currency = useCurrency();
+  const { dict } = useT();
   const listboxId = `${id}-results`;
   const optionId = (index: number) => `${id}-option-${index}`;
   const hintId = useId();
@@ -138,7 +140,7 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
   return (
     <div ref={rootRef} role="search" className={cn("relative", className)}>
       <label htmlFor={id} className="sr-only">
-        Search books
+        {dict.nav.search}
       </label>
       <Search className="pointer-events-none absolute left-3 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
       <input
@@ -155,7 +157,7 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
         aria-autocomplete="list"
         aria-activedescendant={expanded && active >= 0 ? optionId(active) : undefined}
         aria-describedby={shortcut ? hintId : undefined}
-        placeholder="Search titles, authors, series"
+        placeholder={dict.nav.searchPlaceholder}
         value={query}
         onChange={(event) => {
           setQuery(event.target.value);

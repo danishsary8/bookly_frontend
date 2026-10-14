@@ -19,6 +19,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { useRecentlyViewed } from "@/stores/recentlyViewed";
+import { useT } from "@/i18n";
 
 /*
  * /cart (MASTER 8/4 split): editable lines on the left; on the right a sticky
@@ -29,6 +30,7 @@ import { useRecentlyViewed } from "@/stores/recentlyViewed";
 
 function Summary() {
   const currency = useCurrency();
+  const { dict } = useT();
   const { cart } = useUsableCart();
   const coupon = useCoupon();
   const [check, setCheck] = useState<CouponCheck | null>(null);
@@ -81,7 +83,7 @@ function Summary() {
           tabIndex={blocked ? -1 : undefined}
           className={cn(buttonVariants({ variant: "cta", size: "lg" }), "w-full", blocked && "pointer-events-none opacity-40")}
         >
-          Continue to checkout <ArrowRight aria-hidden="true" />
+          {dict.cart.checkout} <ArrowRight aria-hidden="true" />
         </Link>
       </CtaGlare>
       <p className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -93,6 +95,7 @@ function Summary() {
 
 function CartContents() {
   const { cart } = useUsableCart();
+  const { dict } = useT();
   const mutations = useCartMutations();
   const [confirmClear, setConfirmClear] = useState(false);
 
@@ -112,11 +115,11 @@ function CartContents() {
     return (
       <EmptyState
         icon={ShoppingBag}
-        title="Your cart is empty"
+        title={dict.cart.empty}
         description="Books you add will wait here until you're ready to check out."
         action={
           <Link to="/books" className={buttonVariants()}>
-            Browse books
+            {dict.cart.continueShopping}
           </Link>
         }
       />
@@ -161,11 +164,12 @@ function CartContents() {
 }
 
 export default function CartPage() {
-  useDocumentTitle("Your cart");
+  const { dict } = useT();
+  useDocumentTitle(dict.cart.title);
   const recent = useRecentlyViewed();
   return (
     <div className="container-shell pb-16">
-      <PageHeader crumbs={[{ label: "Home", to: "/" }, { label: "Cart" }]} title="Your cart" />
+      <PageHeader crumbs={[{ label: "Home", to: "/" }, { label: dict.nav.cart }]} title={dict.cart.title} />
       <CartGate headingLevel="h2">
         <CartContents />
       </CartGate>

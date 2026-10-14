@@ -28,6 +28,7 @@ import { formatLabel } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { addRecentlyViewed, useRecentlyViewed } from "@/stores/recentlyViewed";
+import { useT } from "@/i18n";
 
 /*
  * /books/:id. Layout (MASTER 5/7 split): cover panel | title, authors, rating,
@@ -70,6 +71,7 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
 
 function Purchase({ book }: { book: BookDetail }) {
   const currency = useCurrency();
+  const { dict } = useT();
   const cart = useAddToCart();
   const wishlist = useWishlist();
   const variants = book.variants ?? [];
@@ -118,7 +120,7 @@ function Purchase({ book }: { book: BookDetail }) {
           {variant ? formatMoney(variant.price_usd, variant.price_khr, currency) : formatMoney(book.price_from_usd, book.price_from_khr, currency)}
         </p>
         <p className={cn("text-sm", buyable ? "text-success" : "text-destructive")}>
-          {!variant ? "Not available" : !buyable ? "Out of stock in this format" : digital ? "Available now as a download" : "In stock, ready to ship"}
+          {!variant ? "Not available" : !buyable ? dict.bookDetail.outOfStock : digital ? "Available now as a download" : dict.bookDetail.inStock}
         </p>
       </div>
 
@@ -127,7 +129,7 @@ function Purchase({ book }: { book: BookDetail }) {
         <CtaGlare className="min-w-[12rem] flex-1 sm:flex-none">
           <Button variant="cta" size="lg" className="w-full" onClick={add} disabled={!buyable} loading={adding}>
             {!adding ? <ShoppingBag aria-hidden="true" /> : null}
-            {adding ? "Adding…" : "Add to cart"}
+            {adding ? "Adding…" : dict.bookDetail.addToCart}
           </Button>
         </CtaGlare>
         <Button variant="outline" size="icon-lg" onClick={() => wishlist.toggle(book)} aria-pressed={saved} aria-label={`Save ${book.title} to your wishlist`} className={cn(saved && "text-accent-text")}>
@@ -188,6 +190,7 @@ export default function BookDetailPage() {
   const bookId = Number(id);
   const valid = Number.isInteger(bookId) && bookId > 0;
   const location = useLocation();
+  const { dict } = useT();
   const preview = (location.state as BookPreviewState | null)?.preview;
   const { hash } = location;
   const query = useQuery({ ...catalogQueries.book(bookId), enabled: valid });
@@ -246,7 +249,7 @@ export default function BookDetailPage() {
       <Breadcrumb
         items={[
           { label: "Home", to: "/" },
-          { label: "Books", to: "/books" },
+          { label: dict.catalog.title, to: "/books" },
           ...(category ? [{ label: category.name ?? "", to: `/categories/${category.slug}` }] : []),
           { label: shown?.title ?? "Book" },
         ]}
@@ -314,9 +317,11 @@ export default function BookDetailPage() {
       {book ? (
         <Tabs defaultValue={hash === "#your-review" || hash === "#reviews" ? "reviews" : "description"} className="mt-16">
           <TabsList aria-label="About this book">
-            <TabsTrigger value="description">Description</TabsTrigger>
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews ({book.review_count ?? 0})</TabsTrigger>
+            <TabsTrigger value="description">{dict.bookDetail.description}</TabsTrigger>
+            <TabsTrigger value="details">{dict.bookDetail.details}</TabsTrigger>
+            <TabsTrigger value="reviews">
+              {dict.bookDetail.reviews} ({book.review_count ?? 0})
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="description">
             <div className="max-w-prose whitespace-pre-line text-[17px] leading-8 text-foreground">{book.description || "No description yet."}</div>

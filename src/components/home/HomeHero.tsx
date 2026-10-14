@@ -11,6 +11,7 @@ import CountUp from "@/components/CountUp";
 import { CtaGlare } from "@/components/CtaGlare";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney, useCurrency } from "@/stores/currency";
+import { useT } from "@/i18n";
 
 /*
  * Home hero (MASTER §2.1a, §5): lapis panel (full-bleed band at night) with a
@@ -27,6 +28,7 @@ const iconButton =
 
 export function HomeHero({ featured, stats }: { featured: BookCard[] | undefined; stats: Stat[] }) {
   const currency = useCurrency();
+  const { dict, lang } = useT();
   const reduceMotion = useReducedMotion();
   const books = featured ?? [];
   const [index, setIndex] = useState(0);
@@ -63,8 +65,9 @@ export function HomeHero({ featured, stats }: { featured: BookCard[] | undefined
           <p className="eyebrow">Bookly · Phnom Penh</p>
           <h1 id="home-hero-title" className="type-display mt-4 text-on-lapis">
             <BlurText
+              key={lang}
               as="span"
-              text="Stories for every mood, delivered to your door"
+              text={dict.home.heroTitle}
               delay={60}
               animateBy="words"
               animationFrom={{ filter: "blur(8px)", opacity: 0, y: 24 }}
@@ -74,7 +77,7 @@ export function HomeHero({ featured, stats }: { featured: BookCard[] | undefined
             />
           </h1>
           <p className="mt-4 max-w-2xl text-lg leading-[1.6] text-on-lapis-muted">
-            Classics, new releases and series to binge, in print or digital. Prices in dollars or riel, cash on delivery across Cambodia.
+            {dict.home.heroSubtitle}
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -83,14 +86,14 @@ export function HomeHero({ featured, stats }: { featured: BookCard[] | undefined
                 to="/books"
                 className="inline-flex h-12 items-center gap-2 rounded-lg bg-accent px-6 text-base font-semibold text-accent-foreground transition-[filter,scale] duration-150 hover:brightness-105 active:scale-[0.97] motion-reduce:active:scale-100"
               >
-                Browse books <ArrowRight className="size-4" aria-hidden="true" />
+                {dict.home.browseCatalogue} <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </CtaGlare>
             <Link
               to="/books?sort=newest"
               className="inline-flex h-12 items-center gap-2 rounded-lg border border-on-lapis-muted px-6 text-base font-semibold text-on-lapis transition-colors duration-150 hover:bg-on-lapis/10"
             >
-              New arrivals
+              {dict.home.newReleases}
             </Link>
           </div>
 

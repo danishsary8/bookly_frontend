@@ -6,12 +6,14 @@ import { PageHeader } from "@/components/catalog/PageHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useT } from "@/i18n";
 
 /*
  * /search?q=: results by relevance (the API's default with a query) through the
  * shared catalogue browser, with a search field on the page to refine the query.
  */
 export default function SearchPage() {
+  const { dict } = useT();
   const [params, setParams] = useSearchParams();
   const q = params.get("q")?.trim() ?? "";
   const [draft, setDraft] = useState(q);
@@ -20,7 +22,7 @@ export default function SearchPage() {
     setLastQ(q);
     setDraft(q);
   }
-  useDocumentTitle(q ? `Search: ${q}` : "Search", { noindex: true });
+  useDocumentTitle(q ? `Search: ${q}` : dict.search.title, { noindex: true });
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -31,14 +33,14 @@ export default function SearchPage() {
   return (
     <div className="container-shell pb-16">
       <PageHeader
-        crumbs={[{ label: "Home", to: "/" }, { label: "Search" }]}
-        title={q ? <>Results for “{q}”</> : "Search the catalogue"}
+        crumbs={[{ label: "Home", to: "/" }, { label: dict.search.title }]}
+        title={q ? <>Results for “{q}”</> : dict.search.title}
         lead={q ? undefined : "Find a book by its title, author, series, category or ISBN."}
       />
 
       <form role="search" onSubmit={submit} className="mb-10 flex max-w-2xl gap-3">
         <label htmlFor="search-page-field" className="sr-only">
-          Search books
+          {dict.search.title}
         </label>
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
@@ -48,12 +50,12 @@ export default function SearchPage() {
             enterKeyHint="search"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Title, author, series, ISBN…"
+            placeholder={dict.search.placeholder}
             className="h-12 w-full rounded-md border border-input bg-card pl-11 pr-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           />
         </div>
         <Button type="submit" size="lg">
-          Search
+          {dict.search.title}
         </Button>
       </form>
 
