@@ -29,6 +29,7 @@ const iconButton =
 export function HomeHero({ featured, stats }: { featured: BookCard[] | undefined; stats: Stat[] }) {
   const currency = useCurrency();
   const { dict, lang } = useT();
+  const h = dict.homePage;
   const reduceMotion = useReducedMotion();
   const books = featured ?? [];
   const [index, setIndex] = useState(0);
@@ -62,7 +63,7 @@ export function HomeHero({ featured, stats }: { featured: BookCard[] | undefined
     <section className="hero-lapis dark:ml-[calc(50%-50vw)] dark:w-screen" aria-labelledby="home-hero-title">
       <div className="mx-auto grid max-w-(--container-shell) grid-cols-1 items-center gap-12 px-6 py-12 lg:grid-cols-12 lg:gap-x-16 lg:px-12 lg:py-16">
         <div className="lg:col-span-7">
-          <p className="eyebrow">Bookly · Phnom Penh</p>
+          <p className="eyebrow">{h.heroEyebrow}</p>
           <h1 id="home-hero-title" className="type-display mt-4 text-on-lapis">
             <BlurText
               key={lang}
@@ -116,7 +117,7 @@ export function HomeHero({ featured, stats }: { featured: BookCard[] | undefined
             <div
               role="region"
               aria-roledescription="carousel"
-              aria-label="Top rated books"
+              aria-label={h.topRated}
               tabIndex={0}
               onKeyDown={onKeyDown}
               onMouseEnter={() => setHovered(true)}
@@ -135,13 +136,13 @@ export function HomeHero({ featured, stats }: { featured: BookCard[] | undefined
                 className="aspect-[2/3] rounded-sm border-0 bg-surface-2 shadow-overlay"
                 slides={books.map((book) => (
                   <Link key={book.id} to={`/books/${book.id}`} tabIndex={-1} className="block size-full select-none" draggable={false}>
-                    <BookCover src={book.cover_image_url} title={book.title} alt={`${book.title} cover`} className="size-full" />
+                    <BookCover src={book.cover_image_url} title={book.title} alt={h.cover(book.title ?? "")} className="size-full" />
                   </Link>
                 ))}
               />
 
               <div className="mt-8 flex items-center justify-between gap-2">
-                <button type="button" onClick={() => step(-1)} className={iconButton} aria-label="Previous book">
+                <button type="button" onClick={() => step(-1)} className={iconButton} aria-label={h.prevBook}>
                   <ChevronLeft className="size-5" aria-hidden="true" />
                 </button>
                 <div className="flex items-center gap-2" aria-hidden="true">
@@ -150,11 +151,11 @@ export function HomeHero({ featured, stats }: { featured: BookCard[] | undefined
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => step(1)} className={iconButton} aria-label="Next book">
+                  <button type="button" onClick={() => step(1)} className={iconButton} aria-label={h.nextBook}>
                     <ChevronRight className="size-5" aria-hidden="true" />
                   </button>
                   {!reduceMotion && books.length > 1 ? (
-                    <button type="button" onClick={() => setPaused((p) => !p)} className={iconButton} aria-label={paused ? "Play slideshow" : "Pause slideshow"}>
+                    <button type="button" onClick={() => setPaused((p) => !p)} className={iconButton} aria-label={paused ? h.playSlides : h.pauseSlides}>
                       {paused ? <Play className="size-5" aria-hidden="true" /> : <Pause className="size-5" aria-hidden="true" />}
                     </button>
                   ) : null}
@@ -165,7 +166,7 @@ export function HomeHero({ featured, stats }: { featured: BookCard[] | undefined
                 <div className="mt-3 text-center" aria-live={autoplaying ? "off" : "polite"} aria-atomic="true">
                   <p className="text-sm font-medium text-on-lapis">
                     <span className="tabular-nums text-on-lapis-muted">
-                      {index + 1} of {books.length}
+                      {h.nOfM(index + 1, books.length)}
                     </span>
                     <span className="text-on-lapis-muted" aria-hidden="true">
                       {" "}·{" "}
@@ -175,8 +176,8 @@ export function HomeHero({ featured, stats }: { featured: BookCard[] | undefined
                     </Link>
                   </p>
                   <p className="text-sm text-on-lapis-muted">
-                    by {authorNames(current.authors) || "Unknown author"} ·{" "}
-                    <span className="font-semibold tabular-nums text-gold">from {formatMoney(current.price_from_usd, current.price_from_khr, currency)}</span>
+                    {h.by(authorNames(current.authors) || h.unknownAuthor)} ·{" "}
+                    <span className="font-semibold tabular-nums text-gold">{h.from(formatMoney(current.price_from_usd, current.price_from_khr, currency))}</span>
                   </p>
                 </div>
               ) : null}

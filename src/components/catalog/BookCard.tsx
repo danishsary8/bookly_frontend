@@ -6,12 +6,12 @@ import { MorphCover } from "@/components/MorphCover";
 import SpotlightCard from "@/components/SpotlightCard";
 import { StarRating } from "@/components/StarRating";
 import { Button } from "@/components/ui/button";
-import { formatLabel } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { BookCover } from "./BookCover";
 import { useCoverMorphNavigate, useMorphLayoutId } from "./coverMorph";
 import { isNewRelease } from "./bookMeta";
+import { formatName, useT } from "@/i18n";
 
 /*
  * MASTER §6.12: SpotlightCard shell → 2:3 cover (lift on hover) with up to two
@@ -43,9 +43,10 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
   const href = `/books/${book.id}`;
   const outOfStock = book.in_stock === false;
   const authors = (book.authors ?? []).map((a) => a.name).filter(Boolean).join(", ");
-  const formats = (book.formats ?? []).map(formatLabel).join(" · ");
+  const { dict } = useT();
+  const formats = (book.formats ?? []).map((f) => formatName(dict, f)).join(" · ");
   const Heading = headingLevel;
-  const title = book.title ?? "Untitled";
+  const title = book.title ?? dict.cards.untitled;
 
   return (
     <SpotlightCard className={cn("group flex h-full flex-col rounded-xl border-border bg-card p-3", className)}>
@@ -74,7 +75,7 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
             size="icon"
             onClick={() => onToggleWishlist(book)}
             aria-pressed={saved}
-            aria-label={`Save ${title} to your wishlist`}
+            aria-label={dict.cards.saveToWishlist(title)}
             className={cn("absolute right-2 top-2 rounded-full border-transparent bg-card/95 shadow-sm hover:bg-card", saved ? "text-accent-text" : "text-foreground hover:text-accent-text")}
           >
             <Heart className={cn(saved && "fill-current")} aria-hidden="true" />
@@ -94,7 +95,7 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
 
         <div className="mt-auto flex min-h-14 items-center justify-between gap-2 border-t border-border pt-3">
           <p className={cn("tabular-nums", outOfStock ? "text-muted-foreground" : "text-foreground")}>
-            {(book.formats?.length ?? 0) > 1 ? <span className="mr-1 text-sm text-muted-foreground">from</span> : null}
+            {(book.formats?.length ?? 0) > 1 ? <span className="mr-1 text-sm text-muted-foreground">{dict.cards.from}</span> : null}
             <span className="text-lg font-semibold">{formatMoney(book.price_from_usd, book.price_from_khr, currency)}</span>
           </p>
           {onAddToCart && !outOfStock ? (
@@ -105,7 +106,7 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
               onClick={() => onAddToCart(book)}
               disabled={adding}
               aria-busy={adding || undefined}
-              aria-label={`Add ${title} to cart`}
+              aria-label={dict.cards.addToCart(title)}
               className="rounded-full"
             >
               {adding ? <Loader2 className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <ShoppingBag aria-hidden="true" />}

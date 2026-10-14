@@ -1,4 +1,5 @@
 import { Ban, Sparkles, Tag } from "lucide-react";
+import { useT, type Translations } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 /*
@@ -7,19 +8,25 @@ import { cn } from "@/lib/utils";
  * dashed outline (Out of stock). Each always carries an icon and written text.
  */
 
+/** A dictionary word inside the badges (they are plain arrow components). */
+function Word({ pick }: { pick: (dict: Translations) => string }) {
+  const { dict } = useT();
+  return <>{pick(dict)}</>;
+}
+
 const base = "inline-flex h-6 items-center gap-1.5 whitespace-nowrap px-2 text-xs font-bold uppercase leading-none tracking-[0.12em]";
 
-export const SaleBadge = ({ label = "Sale", className }: { label?: string; className?: string }) => (
+export const SaleBadge = ({ label, className }: { label?: string; className?: string }) => (
   <span className={cn(base, "rounded-r-md bg-accent pl-3.5 text-accent-foreground [clip-path:polygon(8px_0,100%_0,100%_100%,8px_100%,0_50%)]", className)}>
     <Tag className="h-3.5 w-3.5" aria-hidden="true" />
-    {label}
+    {label ?? <Word pick={(d) => d.cards.sale} />}
   </span>
 );
 
 export const NewBadge = ({ className }: { className?: string }) => (
   <span className={cn(base, "rounded-none bg-primary text-primary-foreground", className)}>
     <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-    New
+    <Word pick={(d) => d.cards.new} />
   </span>
 );
 
@@ -30,14 +37,14 @@ export const LowStockBadge = ({ remaining, className }: { remaining: number; cla
       <i className="block h-2.5 w-1 rounded-[1px] bg-current opacity-30" />
       <i className="block h-2.5 w-1 rounded-[1px] bg-current opacity-30" />
     </span>
-    Only {remaining} left
+    <Word pick={(d) => d.cards.onlyLeft(remaining)} />
   </span>
 );
 
 export const OutOfStockBadge = ({ className }: { className?: string }) => (
   <span className={cn(base, "rounded-md border-[1.5px] border-dashed border-muted-foreground text-muted-foreground", className)}>
     <Ban className="h-3.5 w-3.5" aria-hidden="true" />
-    Out of stock
+    <Word pick={(d) => d.cards.outOfStock} />
   </span>
 );
 

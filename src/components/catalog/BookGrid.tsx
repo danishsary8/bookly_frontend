@@ -6,6 +6,7 @@ import { SkeletonGroup } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { BookCard } from "./BookCard";
 import { useAddToCart, useWishlist } from "./useCatalogActions";
+import { useT } from "@/i18n";
 
 /*
  * Catalogue grid: 2 / 3 / 4 columns (MASTER §4), staggered entrance, wired to
@@ -30,12 +31,13 @@ type BookGridProps = {
 };
 
 export function BookGrid({ books, loading = false, skeletonCount = 8, empty, headingLevel = "h3", instancePrefix = "grid", stale = false, className }: BookGridProps) {
+  const { dict } = useT();
   const cart = useAddToCart();
   const wishlist = useWishlist();
 
   if (loading) {
     return (
-      <SkeletonGroup label="Loading books…" className={cn(gridClass, className)}>
+      <SkeletonGroup label={dict.cards.loadingBooks} className={cn(gridClass, className)}>
         {Array.from({ length: skeletonCount }, (_, i) => (
           <BookCardSkeleton key={i} />
         ))}
