@@ -96,7 +96,8 @@ jobs:
         run: |
           # Start Laravel API server
           cd backend
-          php artisan serve --host=127.0.0.1 --port=8000 > /tmp/artisan.log 2>&1 &
+          nohup php artisan serve --host=127.0.0.1 --port=8000 > /tmp/artisan.log 2>&1 &
+          disown
           cd ..
 
           for i in $(seq 1 30); do
@@ -118,7 +119,8 @@ jobs:
           export E2E_STAFF_SESSION=$(jq -n --arg token "$TOKEN" --argjson user "$USER_JSON" '{token: $token, expiresAt: null, user: $user}')
 
           # Start Vite frontend server
-          VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1 npm run dev -- --host 127.0.0.1 --port 5173 > /tmp/vite.log 2>&1 &
+          VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1 nohup npm run dev -- --host 127.0.0.1 --port 5173 > /tmp/vite.log 2>&1 &
+          disown
           for i in $(seq 1 30); do
             if curl -fs http://127.0.0.1:5173 >/dev/null; then
               echo "Vite server is responding."
@@ -144,10 +146,17 @@ jobs:
       - name: Show server logs on failure
         if: failure()
         run: |
-          echo "=== Laravel API server log ==="
-          cat /tmp/artisan.log 2>/dev/null || true
-          echo "=== Vite server log ==="
-          cat /tmp/vite.log 2>/dev/null || true
+          {
+            echo "## Failure Diagnostics"
+            echo "### Laravel API log"
+            echo '```'
+            cat /tmp/artisan.log 2>/dev/null || echo "No artisan log"
+            echo '```'
+            echo "### Vite log"
+            echo '```'
+            cat /tmp/vite.log 2>/dev/null || echo "No vite log"
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY
 
       - name: Upload Playwright artifacts on failure
         if: failure()
