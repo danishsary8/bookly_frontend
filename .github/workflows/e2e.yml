@@ -135,7 +135,7 @@ jobs:
           fi
 
           # Run Playwright tests
-          npx playwright test e2e/smoke.spec.ts
+          npx playwright test e2e/smoke.spec.ts 2>&1 | tee /tmp/playwright.log
         env:
           E2E_BASE_URL: http://127.0.0.1:5173
           E2E_API_URL: http://127.0.0.1:8000/api/v1
@@ -148,6 +148,10 @@ jobs:
         run: |
           {
             echo "## Failure Diagnostics"
+            echo "### Playwright log"
+            echo '```'
+            tail -n 100 /tmp/playwright.log 2>/dev/null || echo "No playwright log"
+            echo '```'
             echo "### Laravel API log"
             echo '```'
             cat /tmp/artisan.log 2>/dev/null || echo "No artisan log"
