@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { authApi, type TelegramLink, type TelegramStatus } from "@/api/endpoints/auth";
 import { ApiError } from "@/api/errors";
 import type { Customer } from "@/api/types";
+import { getDict } from "@/i18n";
 
 /*
  * The Bookly Telegram bot, from the website's side: ask the API for a one-time link, open it, and ask every
@@ -18,7 +19,7 @@ export type TelegramState =
   | { phase: "failed"; message: string };
 
 export const POLL_MS = 2000;
-export const EXPIRED = "This Telegram link has expired. Please try again.";
+const expired = () => getDict().signin.telegramExpired;
 
 export function useTelegramLink(purpose: TelegramPurpose, onDone: (customer: Customer, result: TelegramStatus) => void) {
   const [state, setState] = useState<TelegramState>({ phase: "idle" });
@@ -53,7 +54,7 @@ export function useTelegramLink(purpose: TelegramPurpose, onDone: (customer: Cus
     const check = async () => {
       if (stopped || asking) return;
       if (Date.parse(expiresAt) <= Date.now()) {
-        setState({ phase: "failed", message: EXPIRED });
+        setState({ phase: "failed", message: expired() });
         return;
       }
       asking = true;
@@ -75,7 +76,7 @@ export function useTelegramLink(purpose: TelegramPurpose, onDone: (customer: Cus
         const apiError = ApiError.from(error);
         if (apiError.kind === "not_found") {
           stopped = true;
-          setState({ phase: "failed", message: EXPIRED });
+          setState({ phase: "failed", message: expired() });
           return;
         }
         // A dropped connection or a waking server: keep asking.

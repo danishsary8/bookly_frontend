@@ -12,6 +12,7 @@ import { rememberResetEmail } from "@/features/auth/resetEmail";
 import { forgotPasswordSchema, type ForgotPasswordValues } from "@/features/auth/schemas";
 import { applyApiErrors, withNext } from "@/lib/forms";
 import { useTurnstile } from "@/features/auth/turnstile";
+import { useT } from "@/i18n";
 
 /* Step 1 of 2: ask for a reset code by email. The API answers the same way whether or not the email exists. */
 export default function ForgotPasswordPage() {
@@ -21,6 +22,8 @@ export default function ForgotPasswordPage() {
   const prefill = (useLocation().state as { email?: string } | null)?.email ?? "";
   const [formError, setFormError] = useState<string | null>(null);
   const alertRef = useRef<HTMLDivElement>(null);
+  const { dict } = useT();
+  const s = dict.signin;
 
   const { register, handleSubmit, setError, formState } = useForm<ForgotPasswordValues>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -48,25 +51,25 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthPage
-      eyebrow="Password help"
-      title="Forgot your password?"
-      lead="Enter the email you signed up with and we'll send you a 6-digit code to set a new one."
+      eyebrow={s.passwordHelp}
+      title={s.forgotTitle}
+      lead={s.forgotLead}
       footer={
         <p>
-          Remembered it?{" "}
+          {s.remembered}{" "}
           <Link to={withNext("/login", next)} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
-            Back to sign in
+            {s.backToSignIn}
           </Link>
         </p>
       }
     >
       <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid gap-5">
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
-        <TextField label="Email" type="email" autoComplete="email" inputMode="email" placeholder="name@example.com" error={formState.errors.email?.message} {...register("email")} />
+        <TextField label={dict.auth.email} type="email" autoComplete="email" inputMode="email" placeholder="name@example.com" error={formState.errors.email?.message} {...register("email")} />
         {turnstile.widget}
         <CtaGlare block>
           <Button type="submit" variant="cta" size="lg" className="w-full" loading={formState.isSubmitting}>
-            {formState.isSubmitting ? "Sending code…" : "Send reset code"}
+            {formState.isSubmitting ? s.sendingCode : s.sendResetCode}
           </Button>
         </CtaGlare>
       </form>

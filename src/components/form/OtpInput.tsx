@@ -1,6 +1,7 @@
 import { useId, useRef, type ClipboardEvent, type KeyboardEvent } from "react";
 import { AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n";
 
 /*
  * MASTER §6.2 OTP: six 48×56 cells, numeric keypad, one-time-code autofill,
@@ -19,8 +20,9 @@ interface OtpInputProps {
   autoFocus?: boolean;
 }
 
-export const OtpInput = ({ value, onChange, length = 6, label = "Verification code", error, hint, disabled, autoFocus }: OtpInputProps) => {
+export const OtpInput = ({ value, onChange, length = 6, label, error, hint, disabled, autoFocus }: OtpInputProps) => {
   const groupId = useId();
+  const { dict } = useT();
   const refs = useRef<Array<HTMLInputElement | null>>([]);
   const digits = Array.from({ length }, (_, i) => value[i] ?? "");
 
@@ -69,7 +71,7 @@ export const OtpInput = ({ value, onChange, length = 6, label = "Verification co
 
   return (
     <div className="grid gap-1.5">
-      <p id={`${groupId}-label`} className="text-sm font-semibold text-foreground">{label}</p>
+      <p id={`${groupId}-label`} className="text-sm font-semibold text-foreground">{label ?? dict.signin.verificationCode}</p>
       <div role="group" aria-labelledby={`${groupId}-label`} aria-describedby={describedBy} className="flex gap-2 sm:gap-3">
         {digits.map((digit, index) => (
           <input
@@ -83,7 +85,7 @@ export const OtpInput = ({ value, onChange, length = 6, label = "Verification co
             value={digit}
             disabled={disabled}
             autoFocus={autoFocus && index === 0}
-            aria-label={`Digit ${index + 1} of ${length}`}
+            aria-label={dict.signin.digit(index + 1, length)}
             aria-invalid={error ? true : undefined}
             onChange={(event) => {
               const typed = event.target.value.replace(/\D/g, "");

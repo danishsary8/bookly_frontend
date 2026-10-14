@@ -2,6 +2,7 @@ import { m, useReducedMotion } from "motion/react";
 import { Mail, Send } from "lucide-react";
 import type { VerifyChannel } from "@/api/endpoints/auth";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n";
 
 /*
  * The sign-up signature (docs/AUTH_PLAN.md): a Bookly library card on the lapis panel, filled in as the
@@ -23,12 +24,13 @@ export interface CardDetails {
   stamped?: boolean;
 }
 
-const CHANNEL = { email: { label: "Email", Icon: Mail }, telegram: { label: "Telegram", Icon: Send } } as const;
+const CHANNEL = { email: { label: "channelEmail", Icon: Mail }, telegram: { label: "channelTelegram", Icon: Send } } as const;
 
 const cardNo = (id?: number | null) => (id ? String(id).padStart(6, "0") : "——————");
 
 function Stamp({ visible }: { visible: boolean }) {
   const reduceMotion = useReducedMotion();
+  const { dict } = useT();
   if (!visible) return null;
   return (
     <m.div
@@ -39,7 +41,7 @@ function Stamp({ visible }: { visible: boolean }) {
     >
       <span className="grid place-items-center text-center leading-none">
         <span className="text-[0.55rem] font-semibold uppercase tracking-[0.3em]">Bookly</span>
-        <span className="mt-1 font-display text-[1.45rem]">Member</span>
+        <span className="mt-1 font-display text-[1.45rem]">{dict.signin.cardMember}</span>
         <span className="mt-1 text-[0.55rem] font-semibold uppercase tracking-[0.3em]">{new Date().getFullYear()}</span>
       </span>
     </m.div>
@@ -52,6 +54,8 @@ const byTelegram = (channel?: VerifyChannel | null) => channel === "telegram";
 export function LibraryCard({ name, channel, destination, sent = false, cardNumber, stamped = false }: CardDetails) {
   const via = channel ? CHANNEL[channel] : null;
   const telegram = byTelegram(channel);
+  const { dict } = useT();
+  const s = dict.signin;
   return (
     <div aria-hidden="true" className="relative mx-auto w-full max-w-md select-none">
       <div className="bookplate-frame library-card relative px-7 pb-9 pt-7">
@@ -62,35 +66,31 @@ export function LibraryCard({ name, channel, destination, sent = false, cardNumb
           <span>Ex libris · Bookly</span>
           <span className="tabular-nums tracking-[0.18em] text-on-lapis-muted">No. {cardNo(cardNumber)}</span>
         </p>
-        <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-on-lapis-muted">Reader</p>
+        <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-on-lapis-muted">{s.cardReader}</p>
         <p className={cn("mt-1 min-h-[2.6rem] truncate font-display text-[2.1rem] leading-tight", name ? "text-on-lapis" : "text-on-lapis-muted/50", stamped && "pr-28")}>
-          {name?.trim() || "Your name"}
+          {name?.trim() || s.cardYourName}
         </p>
         <dl className="mt-6 divide-y divide-gold/25 border-y border-gold/25 text-[15px]">
           <div className="flex items-center justify-between gap-4 py-2.5">
-            <dt className="text-on-lapis-muted">{telegram ? "Confirm with" : sent ? "Code sent to" : "Code goes to"}</dt>
+            <dt className="text-on-lapis-muted">{telegram ? s.cardConfirmWith : sent ? s.cardCodeSent : s.cardCodeGoes}</dt>
             <dd className="flex min-w-0 items-center gap-2 text-on-lapis">
               {via ? <via.Icon className="size-4 shrink-0 text-gold" /> : null}
-              <span className="truncate">{via ? via.label : "—"}</span>
+              <span className="truncate">{via ? s[via.label] : "—"}</span>
             </dd>
           </div>
           <div className="flex items-center justify-between gap-4 py-2.5">
-            <dt className="text-on-lapis-muted">{channel === "telegram" ? "Number" : "Address"}</dt>
-            <dd className="min-w-0 truncate text-on-lapis tabular-nums">{destination?.trim() || (telegram ? "From Telegram" : "—")}</dd>
+            <dt className="text-on-lapis-muted">{channel === "telegram" ? s.cardNumber : s.cardAddress}</dt>
+            <dd className="min-w-0 truncate text-on-lapis tabular-nums">{destination?.trim() || (telegram ? s.cardFromTelegram : "—")}</dd>
           </div>
           <div className="flex items-center justify-between gap-4 py-2.5">
-            <dt className="text-on-lapis-muted">Status</dt>
-            <dd className={stamped ? "font-semibold text-gold" : "text-on-lapis"}>{stamped ? "Member" : sent ? (telegram ? "Waiting for Telegram" : "Waiting for your code") : "Signing up"}</dd>
+            <dt className="text-on-lapis-muted">{s.cardStatus}</dt>
+            <dd className={stamped ? "font-semibold text-gold" : "text-on-lapis"}>{stamped ? s.cardMember : sent ? (telegram ? s.cardWaitingTelegram : s.cardWaitingCode) : s.cardSigningUp}</dd>
           </div>
         </dl>
         <Stamp visible={stamped} />
       </div>
       <p className="mt-6 max-w-sm text-[15px] leading-6 text-on-lapis-muted">
-        {stamped
-          ? "Welcome to the library. Your card is ready."
-          : telegram
-            ? "Every reader gets a card. Yours is stamped when you share your number in Telegram."
-            : "Every reader gets a card. Yours is stamped when you enter your code."}
+        {stamped ? s.cardReady : telegram ? s.cardStampTelegram : s.cardStampCode}
       </p>
     </div>
   );
@@ -99,17 +99,19 @@ export function LibraryCard({ name, channel, destination, sent = false, cardNumb
 /** Phones hide the lapis panel, so the card shrinks to a strip above the code boxes. */
 export function LibraryStrip({ name, channel, destination, stamped = false }: CardDetails) {
   const via = channel ? CHANNEL[channel] : null;
+  const { dict } = useT();
+  const s = dict.signin;
   return (
     <div aria-hidden="true" className="hero-lapis flex items-center gap-3 rounded-lg px-4 py-3 lg:hidden">
       {via ? <via.Icon className="size-5 shrink-0 text-gold" /> : null}
       <div className="min-w-0 flex-1">
-        <p className="truncate font-display text-lg leading-tight text-on-lapis">{name?.trim() || "Bookly reader"}</p>
+        <p className="truncate font-display text-lg leading-tight text-on-lapis">{name?.trim() || s.cardReaderName}</p>
         <p className="truncate text-sm text-on-lapis-muted">
-          {via ? `${via.label} · ` : ""}
-          {destination || (byTelegram(channel) ? "From Telegram" : "—")}
+          {via ? `${s[via.label]} · ` : ""}
+          {destination || (byTelegram(channel) ? s.cardFromTelegram : "—")}
         </p>
       </div>
-      {stamped ? <span className="rounded-full border border-gold px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-gold">Member</span> : null}
+      {stamped ? <span className="rounded-full border border-gold px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-gold">{s.cardMember}</span> : null}
     </div>
   );
 }
