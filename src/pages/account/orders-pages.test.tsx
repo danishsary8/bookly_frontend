@@ -151,6 +151,16 @@ describe("OrderDetailPage", () => {
     expect(screen.queryByRole("link", { name: "Print invoice" })).not.toBeInTheDocument();
   });
 
+  it("displays the delivery note when present", async () => {
+    vi.mocked(ordersApi.order).mockResolvedValue({
+      ...pending,
+      delivery_note: "Please ring the bell twice",
+    });
+    app("/account/orders/7");
+    expect(await screen.findByRole("heading", { name: "Delivery note" })).toBeInTheDocument();
+    expect(screen.getByText("Please ring the bell twice")).toBeInTheDocument();
+  });
+
   it("offers a return and reviews once delivered", async () => {
     app("/account/orders/8");
     expect(await screen.findByRole("link", { name: /Request a return/ })).toHaveAttribute("href", "/account/orders/8/return");

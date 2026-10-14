@@ -11,6 +11,7 @@ export interface PlaceOrderInput {
   address_id: number;
   payment_method: "cod";
   coupon_code?: string;
+  delivery_note?: string;
 }
 
 const cartData = (response: Resource<Cart>) => response.data;

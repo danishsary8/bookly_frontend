@@ -138,6 +138,22 @@ describe("CheckoutPage", () => {
     expect(getCoupon()).toBeNull();
   });
 
+  it("includes the delivery note and updates the character counter", async () => {
+    const user = userEvent.setup();
+    const place = vi.spyOn(cartApi, "placeOrder").mockResolvedValue(order);
+    vi.spyOn(ordersApi, "order").mockResolvedValue(order);
+    app("/checkout");
+    const noteField = await screen.findByLabelText(/Delivery note/);
+    expect(screen.getByText("0/300")).toBeInTheDocument();
+    await user.type(noteField, "Call before delivery");
+    expect(screen.getByText("20/300")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Place order" }));
+    expect(place).toHaveBeenCalledWith(
+      expect.objectContaining({ delivery_note: "Call before delivery" }),
+      expect.any(String),
+    );
+  });
+
   it("prices delivery for the chosen address", async () => {
     const user = userEvent.setup();
     app("/checkout");

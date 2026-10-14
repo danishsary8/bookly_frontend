@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/catalog/PageHeader";
 import { CoverThumb } from "@/components/CoverThumb";
 import { CtaGlare } from "@/components/CtaGlare";
 import { FormAlert } from "@/components/form/FormAlert";
+import { TextAreaField } from "@/components/form/Field";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
@@ -81,6 +82,7 @@ export default function CheckoutPage() {
     retry: false,
     placeholderData: keepPreviousData,
   });
+  const [deliveryNote, setDeliveryNote] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   // Set when the last attempt lost its response: the order may exist even though the cart
   // now looks empty, so the page stays put and the retry (same key) returns that order.
@@ -97,7 +99,16 @@ export default function CheckoutPage() {
   }, [couponError, coupon]);
 
   const place = useMutation({
-    mutationFn: () => cartApi.placeOrder({ address_id: addressId!, payment_method: "cod", ...(coupon ? { coupon_code: coupon } : {}) }, idempotencyKey.current),
+    mutationFn: () =>
+      cartApi.placeOrder(
+        {
+          address_id: addressId!,
+          payment_method: "cod",
+          ...(coupon ? { coupon_code: coupon } : {}),
+          ...(deliveryNote.trim() ? { delivery_note: deliveryNote.trim() } : {}),
+        },
+        idempotencyKey.current,
+      ),
     onSuccess: (order: Order) => {
       setCoupon(null);
       queryClient.removeQueries({ queryKey: cartKeys.cart() });
@@ -158,6 +169,21 @@ export default function CheckoutPage() {
           <Step n={1} title={shipsSomething ? "Delivery address" : "Contact address"}>
             {!shipsSomething ? <p className="-mt-2 text-sm text-muted-foreground">Everything in this order is digital; we still need an address for your receipt.</p> : null}
             {addresses.isError ? <ErrorState error={addresses.error} onRetry={() => addresses.refetch()} headingLevel="h3" showHomeLink={false} /> : <AddressPicker addresses={list} value={addressId} onChange={setChosenAddress} />}
+            <TextAreaField
+              label="Delivery note"
+              optional
+              hint={
+                <span className="flex items-center justify-between gap-2">
+                  <span>For the courier, e.g. call before delivery</span>
+                  <span className="tabular-nums">{deliveryNote.length}/300</span>
+                </span>
+              }
+              maxLength={300}
+              rows={3}
+              value={deliveryNote}
+              onChange={(e) => setDeliveryNote(e.target.value)}
+              containerClassName="mt-4"
+            />
           </Step>
 
           <Step n={2} title="Payment">

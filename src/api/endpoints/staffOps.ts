@@ -15,6 +15,7 @@ type Person = { id: number; name: string; email: string; phone?: string | null }
 
 export type StaffOrder = Omit<Order, "status_history"> & {
   customer?: Person;
+  staff_note?: string | null;
   status_history?: Array<{ status: string; note: string | null; changed_by: { id: number; name: string } | null; created_at: string }>;
   allowed_next_statuses: OrderStatus[];
 };
@@ -146,6 +147,8 @@ export const opsApi = {
   order: (id: number) => api.get<Resource<StaffOrder>>(`/staff/orders/${id}`).then((r) => r.data),
   setOrderStatus: (id: number, status: OrderStatus, note?: string) =>
     api.post<Resource<StaffOrder>>(`/staff/orders/${id}/status`, { status, ...(note ? { note } : {}) }).then((r) => r.data),
+  setStaffNote: (id: number, staff_note: string | null) =>
+    api.patch<Resource<StaffOrder>>(`/staff/orders/${id}/staff-note`, { staff_note }).then((r) => r.data),
   /** CSV of every order placed between the two days (Phnom Penh), at most 366 days. */
   bulkOrderStatus: (ids: number[], status: BulkStatusTarget, note?: string) =>
     api.post<{ data: BulkStatusResult }>("/staff/orders/bulk-status", { ids, status, ...(note ? { note } : {}) }).then((r) => r.data),

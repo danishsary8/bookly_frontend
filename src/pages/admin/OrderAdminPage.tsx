@@ -81,6 +81,88 @@ function StatusDialog({ order, to, onClose }: { order: StaffOrder; to: OrderStat
   );
 }
 
+function StaffNoteCard({ order }: { order: StaffOrder }) {
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [note, setNote] = useState(order.staff_note ?? "");
+  const [error, setError] = useState<string | null>(null);
+
+  const save = useMutation({
+    mutationFn: () => opsApi.setStaffNote(order.id!, note.trim() || null),
+    onSuccess: (saved) => {
+      queryClient.setQueryData(opsKeys.order(order.id!), saved);
+      void queryClient.invalidateQueries({ queryKey: ["staff", "orders"] });
+      toast.success("Staff note saved");
+      setEditing(false);
+      setError(null);
+    },
+    onError: (err) => {
+      const apiError = ApiError.from(err);
+      setError(apiError.field("staff_note") ?? apiError.message);
+    },
+  });
+
+  const handleStartEdit = () => {
+    setNote(order.staff_note ?? "");
+    setError(null);
+    setEditing(true);
+  };
+
+  const handleCancel = () => {
+    setNote(order.staff_note ?? "");
+    setError(null);
+    setEditing(false);
+  };
+
+  return (
+    <section aria-labelledby="staff-note-heading" className="grid gap-3 rounded-xl border border-border bg-card p-5">
+      <div className="flex items-center justify-between gap-2">
+        <h2 id="staff-note-heading" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
+          Staff note
+        </h2>
+        {!editing ? (
+          <Button variant="outline" size="sm" onClick={handleStartEdit}>
+            Edit
+          </Button>
+        ) : null}
+      </div>
+
+      {editing ? (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setError(null);
+            save.mutate();
+          }}
+          className="grid gap-3"
+        >
+          {error ? <FormAlert title={error} /> : null}
+          <TextAreaField
+            label="Internal note"
+            hint="Private note for staff only. Up to 1000 characters."
+            maxLength={1000}
+            rows={4}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+          <div className="flex items-center gap-2">
+            <Button type="submit" size="sm" loading={save.isPending}>
+              Save
+            </Button>
+            <Button type="button" variant="outline" size="sm" disabled={save.isPending} onClick={handleCancel}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      ) : order.staff_note ? (
+        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{order.staff_note}</p>
+      ) : (
+        <p className="text-sm italic text-muted-foreground">No staff note</p>
+      )}
+    </section>
+  );
+}
+
 /*
  * /admin/orders/:id: one order for staff: lines and totals, the customer, delivery
  * address, payment, the timeline (with who changed what), and the next steps the
@@ -173,6 +255,15 @@ export default function OrderAdminPage() {
               ) : null}
             </section>
           ) : null}
+          {o.delivery_note ? (
+            <section aria-labelledby="delivery-note" className="grid gap-1 rounded-xl border border-border bg-card p-5">
+              <h2 id="delivery-note" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
+                Customer note
+              </h2>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{o.delivery_note}</p>
+            </section>
+          ) : null}
+          <StaffNoteCard order={o} />
           <DeliveryAddressCard address={o.shipping_address} title="Deliver to" />
           <section aria-labelledby="order-payment" className="grid gap-1 rounded-xl border border-border bg-card p-5">
             <h2 id="order-payment" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
