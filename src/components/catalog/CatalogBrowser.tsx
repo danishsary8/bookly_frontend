@@ -76,7 +76,7 @@ export function CatalogBrowser({ locked = {}, noun: nounFor, empty }: Props) {
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10">
-      <aside aria-label="Filters" className="hidden lg:block">
+      <aside aria-label={t.filters} className="hidden lg:block">
         <div className="sticky top-[calc(var(--header-h)+1.5rem)] max-h-[calc(100dvh-var(--header-h)-3rem)] overflow-y-auto pb-6 pr-2">
           <h2 className="mb-5 font-display text-xl">{t.filters}</h2>
           {filterPanel("side")}

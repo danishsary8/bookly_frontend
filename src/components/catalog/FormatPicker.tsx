@@ -1,8 +1,7 @@
 import type { BookVariant } from "@/api/types";
-import { formatLabel } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
-import { useT } from "@/i18n";
+import { formatName, useT } from "@/i18n";
 
 /*
  * Format choice on the book page: a radio group of cards (format, price, stock),
@@ -32,7 +31,7 @@ export function FormatPicker({ variants, value, onChange, name }: { variants: Bo
               )}
             >
               <input type="radio" name={name} value={v.id} checked={selected} disabled={!available} onChange={() => v.id && onChange(v.id)} className="sr-only" />
-              <span className={cn("text-[15px] font-semibold", selected && "text-primary")}>{formatLabel(v.format)}</span>
+              <span className={cn("text-[15px] font-semibold", selected && "text-primary")}>{formatName(dict, v.format)}</span>
               <span className="text-sm font-semibold tabular-nums">{formatMoney(v.price_usd, v.price_khr, currency)}</span>
               <span className={cn("text-xs", available ? "text-muted-foreground" : "text-destructive")}>
                 {!available ? dict.cards.outOfStock : DIGITAL.has(v.format ?? "") ? dict.cards.instant : dict.cards.inStock}

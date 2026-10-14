@@ -80,8 +80,8 @@ export function translate(path: string, lang: Language = currentLanguage): strin
   return path;
 }
 
-/** Locale for Intl dates and numbers in each language. */
-export const LOCALES: Record<Language, string> = { en: "en-GB", km: "km-KH" };
+/** Locales for Intl dates and numbers in each language; a browser without Khmer date names falls back to en-GB, not en-US. */
+export const LOCALES: Record<Language, string[]> = { en: ["en-GB"], km: ["km-KH", "en-GB"] };
 
 /** The dictionary of the current language, for code outside React (validation messages, toasts). */
 export function getDict(): Translations {

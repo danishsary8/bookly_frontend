@@ -1047,3 +1047,9 @@
   }
 }
 
+/* Khmer letters join into clusters: the wide tracking of small labels pulls them apart, so Khmer text keeps normal
+   spacing (only letter-spacing changes; fonts and sizes stay as designed). Unlayered so it wins over the tracking utilities. */
+:lang(km)[class*="tracking-"],
+:lang(km).eyebrow {
+  letter-spacing: normal;
+}

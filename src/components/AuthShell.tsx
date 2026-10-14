@@ -72,7 +72,7 @@ const QuotePanel = () => {
         onIndexChange={setIndex}
         className="min-h-[15rem] rounded-none border-0 bg-transparent"
         slides={QUOTES.map((quote) => (
-          <figure key={quote.author} className="flex h-full select-none flex-col justify-end">
+          <figure key={quote.author} lang="en" className="flex h-full select-none flex-col justify-end">
             <blockquote className="font-display text-[2rem] leading-[1.15] text-on-lapis xl:text-[2.45rem]">
               “{quote.text}”
             </blockquote>
@@ -101,7 +101,7 @@ const QuotePanel = () => {
         ) : null}
       </div>
       <p className="sr-only" aria-live={autoplay ? "off" : "polite"} aria-atomic="true">
-        Quote {index + 1} of {QUOTES.length}: {QUOTES[index].text}, {QUOTES[index].author}
+        {s.quoteN(index + 1, QUOTES.length)} <span lang="en">{QUOTES[index].text}, {QUOTES[index].author}</span>
       </p>
     </div>
   );
