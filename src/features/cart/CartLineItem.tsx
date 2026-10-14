@@ -4,10 +4,10 @@ import type { CartLine } from "@/api/types";
 import { CoverThumb } from "@/components/CoverThumb";
 import { QuantityStepper } from "@/components/QuantityStepper";
 import { Button } from "@/components/ui/button";
-import { formatLabel } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { formatMoney, formatUsd, useCurrency } from "@/stores/currency";
 import { isBlocking, isDigitalLine, maxQuantity } from "./cartIssues";
+import { formatName, useT } from "@/i18n";
 
 /*
  * One cart line: cover, title (link), format and unit price, quantity stepper
@@ -27,7 +27,9 @@ type Props = {
 
 export function CartLineItem({ line, onQuantity, onRemove, busy, compact, onNavigate }: Props) {
   const currency = useCurrency();
-  const title = line.book?.title ?? "Book";
+  const { dict } = useT();
+  const c = dict.cartPage;
+  const title = line.book?.title ?? c.book;
   const issues = line.issues ?? [];
   const blocked = issues.some(isBlocking);
 
@@ -41,7 +43,7 @@ export function CartLineItem({ line, onQuantity, onRemove, busy, compact, onNavi
               {title}
             </Link>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              {formatLabel(line.format)} · <span className="tabular-nums">{formatMoney(line.unit_price_usd, line.unit_price_khr, currency)}</span> each
+              {formatName(dict, line.format)} · <span className="tabular-nums">{formatMoney(line.unit_price_usd, line.unit_price_khr, currency)}</span> {c.each}
             </p>
           </div>
           <p className={cn("shrink-0 font-semibold tabular-nums", blocked && "text-muted-foreground line-through")}>{formatMoney(line.line_total_usd, line.line_total_khr, currency)}</p>
@@ -49,19 +51,19 @@ export function CartLineItem({ line, onQuantity, onRemove, busy, compact, onNavi
 
         <div className="flex flex-wrap items-center gap-2">
           {isDigitalLine(line) ? (
-            <p className="text-sm text-muted-foreground">Qty 1 · digital</p>
+            <p className="text-sm text-muted-foreground">{c.digital}</p>
           ) : (
             <QuantityStepper
               value={line.quantity ?? 1}
               max={maxQuantity(line)}
               onChange={(quantity) => quantity !== line.quantity && onQuantity(line, quantity)}
-              label={`Quantity for ${title}`}
+              label={c.quantityFor(title)}
               disabled={busy}
             />
           )}
-          <Button variant="ghost" size={compact ? "icon" : "sm"} onClick={() => onRemove(line)} disabled={busy} aria-label={`Remove ${title} from your cart`} className="text-muted-foreground hover:text-destructive">
+          <Button variant="ghost" size={compact ? "icon" : "sm"} onClick={() => onRemove(line)} disabled={busy} aria-label={c.removeFrom(title)} className="text-muted-foreground hover:text-destructive">
             <Trash2 aria-hidden="true" />
-            {compact ? null : "Remove"}
+            {compact ? null : c.remove}
           </Button>
         </div>
 
@@ -76,7 +78,7 @@ export function CartLineItem({ line, onQuantity, onRemove, busy, compact, onNavi
             {isBlocking(issue) ? <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" /> : <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />}
             <span>
               {issue.message}
-              {issue.code === "price_changed" && issue.previous_price_usd ? ` (was ${formatUsd(issue.previous_price_usd)})` : null}
+              {issue.code === "price_changed" && issue.previous_price_usd ? c.was(formatUsd(issue.previous_price_usd)) : null}
             </span>
           </p>
         ))}

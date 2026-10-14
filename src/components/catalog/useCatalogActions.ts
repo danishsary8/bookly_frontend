@@ -7,10 +7,10 @@ import { ApiError } from "@/api/errors";
 import { useSession } from "@/api/session";
 import type { BookCard, BookVariant, Customer } from "@/api/types";
 import { withNext } from "@/lib/forms";
-import { formatLabel } from "@/lib/catalog";
 import { openShellPanel } from "@/stores/shell";
 import { toast } from "@/stores/toast";
 import { isVerified, needsVerifying } from "@/features/auth/verification";
+import { formatName, getDict } from "@/i18n";
 
 /*
  * Add to cart and wishlist from anywhere in the catalogue. Both need a verified
@@ -28,16 +28,16 @@ function useAccountGate() {
   const here = location.pathname + location.search;
   const promptVerify = () =>
     toast.info({
-      title: "Verify your email first",
-      description: "Enter the 6-digit code we emailed you to start using your cart and wishlist.",
-      action: { label: "Verify email", href: withNext("/verify-email", here) },
+      title: getDict().cartPage.verifyFirst,
+      description: getDict().cartPage.verifyFirstLead,
+      action: { label: getDict().cartPage.verifyEmail, href: withNext("/verify-email", here) },
     });
-  const check = (what: string) => {
+  const check = (what: "signInToCart" | "signInToWishlist") => {
     if (!session) {
       toast.info({
-        title: `Sign in to ${what}`,
-        description: "It only takes a moment, and your cart and wishlist follow you to any device.",
-        action: { label: "Sign in", href: withNext("/login", here) },
+        title: getDict().cartPage[what],
+        description: getDict().cartPage.signInLead,
+        action: { label: getDict().cartPage.signIn, href: withNext("/login", here) },
       });
       return false;
     }
@@ -67,7 +67,7 @@ export function useAddToCart() {
         // Cards don't carry formats' ids: read the book (usually cached) and take the cheapest in stock.
         const detail = await queryClient.fetchQuery(catalogQueries.book(book.id!));
         variant = pickVariant(detail.variants);
-        if (!variant) throw new ApiError({ kind: "conflict", status: 409, message: `${book.title} is out of stock.` });
+        if (!variant) throw new ApiError({ kind: "conflict", status: 409, message: getDict().cartPage.outOfStock(book.title ?? "") });
       }
       const cart = await cartApi.addItem(variant.id!, quantity);
       return { cart, line: cart.items?.find((item) => item.book_variant_id === variant!.id) };
@@ -75,21 +75,21 @@ export function useAddToCart() {
     onSuccess: ({ cart, line }, { book }) => {
       queryClient.setQueryData(cartKeys.cart(), cart);
       toast.success({
-        title: "Added to cart",
-        description: [book.title, line?.format ? formatLabel(line.format) : null].filter(Boolean).join(" · "),
-        action: { label: "View cart", onClick: () => openShellPanel("cart") },
+        title: getDict().cartPage.added,
+        description: [book.title, line?.format ? formatName(getDict(), line.format) : null].filter(Boolean).join(" · "),
+        action: { label: getDict().cartPage.viewCart, onClick: () => openShellPanel("cart") },
       });
     },
     onError: (error) => {
       const apiError = ApiError.from(error);
       if (apiError.kind === "email_unverified") return gate.promptVerify();
-      toast.error({ title: "Couldn't add to cart", description: apiError.message });
+      toast.error({ title: getDict().cartPage.addFailed, description: apiError.message });
     },
   });
 
   return {
     add: (book: BookCard, variantId?: number, quantity?: number) => {
-      if (!gate.check("add books to your cart") || !book.id) return;
+      if (!gate.check("signInToCart") || !book.id) return;
       mutation.mutate({ book, variantId, quantity });
     },
     pendingBookId: mutation.isPending ? mutation.variables?.book.id : undefined,
@@ -130,14 +130,14 @@ export function useWishlist() {
       toast.success(
         saved
           ? // Removing is one click, so it can be undone from the toast.
-            { title: "Removed from your wishlist", description: book.title, action: { label: "Undo", onClick: () => mutation.mutate({ book, saved: false }) } }
-          : { title: "Saved to your wishlist", description: book.title, action: { label: "View wishlist", href: "/account/wishlist" } },
+            { title: getDict().cartPage.unsaved, description: book.title, action: { label: getDict().cartPage.undo, onClick: () => mutation.mutate({ book, saved: false }) } }
+          : { title: getDict().cartPage.saved, description: book.title, action: { label: getDict().cartPage.viewWishlist, href: "/account/wishlist" } },
       ),
     onError: (error, _vars, context) => {
       if (context?.previous) queryClient.setQueryData(key, context.previous);
       const apiError = ApiError.from(error);
       if (apiError.kind === "email_unverified") return gate.promptVerify();
-      toast.error({ title: "Couldn't update your wishlist", description: apiError.message });
+      toast.error({ title: getDict().cartPage.wishlistFailed, description: apiError.message });
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["account", "wishlist"] }),
   });
@@ -145,7 +145,7 @@ export function useWishlist() {
   return {
     isSaved: (bookId: number | undefined) => bookId !== undefined && ids.has(bookId),
     toggle: (book: BookCard) => {
-      if (!gate.check("save books to your wishlist") || !book.id) return;
+      if (!gate.check("signInToWishlist") || !book.id) return;
       mutation.mutate({ book, saved: ids.has(book.id) });
     },
   };
