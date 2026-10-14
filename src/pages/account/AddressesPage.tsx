@@ -17,6 +17,7 @@ import { AddressForm } from "@/features/account/AddressForm";
 import { MAX_ADDRESSES } from "@/features/account/address";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { toast } from "@/stores/toast";
+import { useT } from "@/i18n";
 
 /*
  * /account/addresses: up to 10 delivery addresses, one default (the API makes the
@@ -27,7 +28,9 @@ import { toast } from "@/stores/toast";
 type Editing = { mode: "new" } | { mode: "edit"; address: Address } | null;
 
 export default function AddressesPage() {
-  useDocumentTitle("Addresses");
+  const { dict } = useT();
+  const t = dict.addresses;
+  useDocumentTitle(t.title);
   const queryClient = useQueryClient();
   const session = useSession<Customer>("customer");
   const addresses = useQuery(accountQueries.addresses());
@@ -43,46 +46,46 @@ export default function AddressesPage() {
     onSuccess: async (_data, address) => {
       await refresh();
       setDeleting(null);
-      toast.success({ title: "Address deleted", description: address.is_default && list.length > 1 ? "Another address is now your default." : undefined });
+      toast.success({ title: t.deleted, description: address.is_default && list.length > 1 ? t.otherDefault : undefined });
     },
-    onError: (error) => toast.error({ title: "Couldn't delete the address", description: ApiError.from(error).message }),
+    onError: (error) => toast.error({ title: t.deleteFailed, description: ApiError.from(error).message }),
   });
 
   const makeDefault = useMutation({
     mutationFn: (address: Address) => accountApi.updateAddress(address.id!, { is_default: true }),
     onSuccess: async (address) => {
       await refresh();
-      toast.success(`${address.label || "This address"} is now your default`);
+      toast.success(t.nowDefault(address.label || t.thisAddress));
     },
-    onError: (error) => toast.error({ title: "Couldn't change the default", description: ApiError.from(error).message }),
+    onError: (error) => toast.error({ title: t.defaultFailed, description: ApiError.from(error).message }),
   });
 
   const saved = async (address: Address) => {
     const isNew = editing?.mode === "new";
     await refresh();
     setEditing(null);
-    toast.success(isNew ? { title: "Address added", description: address.is_default ? "It's your default delivery address." : undefined } : "Address saved");
+    toast.success(isNew ? { title: t.added, description: address.is_default ? t.addedDefault : undefined } : t.saved);
   };
 
   const addButton = (
     <div className="grid justify-items-end gap-1">
       <Button onClick={() => setEditing({ mode: "new" })} disabled={full || addresses.isPending}>
-        <Plus aria-hidden="true" /> Add address
+        <Plus aria-hidden="true" /> {t.add}
       </Button>
-      {full ? <p className="text-sm text-muted-foreground">You can save up to {MAX_ADDRESSES}. Delete one to add another.</p> : null}
+      {full ? <p className="text-sm text-muted-foreground">{t.full(MAX_ADDRESSES)}</p> : null}
     </div>
   );
 
-  const title = editing?.mode === "edit" ? "Edit address" : "New address";
+  const title = editing?.mode === "edit" ? t.edit : t.new;
 
   return (
     <AccountSection
-      title="Addresses"
-      lead={addresses.data ? `${list.length} of ${MAX_ADDRESSES} saved. Your default is picked first at checkout.` : "Where we deliver your books."}
+      title={t.title}
+      lead={addresses.data ? t.count(list.length, MAX_ADDRESSES) : t.lead}
       action={list.length ? addButton : undefined}
     >
       {addresses.isPending ? (
-        <SkeletonGroup label="Loading addresses…" className="grid gap-4 md:grid-cols-2">
+        <SkeletonGroup label={t.loading} className="grid gap-4 md:grid-cols-2">
           <Skeleton className="h-52 rounded-xl" />
           <Skeleton className="h-52 rounded-xl" />
         </SkeletonGroup>
@@ -91,11 +94,11 @@ export default function AddressesPage() {
       ) : list.length === 0 ? (
         <EmptyState
           icon={MapPinPlus}
-          title="No saved addresses"
-          description="Add one now and checkout will fill it in for you."
+          title={t.empty}
+          description={t.emptyLead}
           action={
             <Button onClick={() => setEditing({ mode: "new" })}>
-              <Plus aria-hidden="true" /> Add address
+              <Plus aria-hidden="true" /> {t.add}
             </Button>
           }
           className="rounded-xl border border-dashed border-border"
@@ -120,7 +123,7 @@ export default function AddressesPage() {
         <DialogContent size="lg">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>Couriers use these details to find you, so include a landmark if it helps.</DialogDescription>
+            <DialogDescription>{t.dialogLead}</DialogDescription>
           </DialogHeader>
           <div className="mt-6">
             {editing ? (
@@ -140,13 +143,13 @@ export default function AddressesPage() {
       <ConfirmDialog
         open={deleting !== null}
         onOpenChange={(open) => !open && setDeleting(null)}
-        title="Delete this address?"
+        title={t.deleteTitle}
         description={
           deleting?.is_default && list.length > 1
-            ? "It's your default address; your most recent other address will become the default. Orders already placed keep their address."
-            : "Orders already placed keep their delivery address."
+            ? t.deleteDefaultLead
+            : t.deleteLead
         }
-        confirmLabel="Delete address"
+        confirmLabel={t.deleteConfirm}
         loading={remove.isPending}
         onConfirm={() => deleting && remove.mutate(deleting)}
       />

@@ -3,8 +3,8 @@ import { MapPin, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Order, OrderItem } from "@/api/types";
 import { formatAddressLines } from "@/features/account/address";
-import { formatLabel } from "@/lib/catalog";
 import { formatMoney, formatUsd, useCurrency } from "@/stores/currency";
+import { formatName, useT } from "@/i18n";
 
 /*
  * The parts of an order shown on the checkout confirmation and the order detail:
@@ -14,7 +14,7 @@ import { formatMoney, formatUsd, useCurrency } from "@/stores/currency";
 
 export function OrderItemsCard({
   order,
-  totalLabel = "Total",
+  totalLabel,
   itemAction,
 }: {
   order: Order;
@@ -23,10 +23,12 @@ export function OrderItemsCard({
   itemAction?: (item: OrderItem) => ReactNode;
 }) {
   const currency = useCurrency();
+  const { dict } = useT();
+  const t = dict.orderParts;
   return (
     <section aria-labelledby={`order-items-${order.id}`} className="rounded-xl border border-border bg-card p-5 sm:p-6">
       <h2 id={`order-items-${order.id}`} className="font-display text-[1.563rem] leading-tight">
-        {order.item_count} {order.item_count === 1 ? "item" : "items"}
+        {t.items(order.item_count ?? 0)}
       </h2>
       <ul className="mt-4 divide-y divide-border">
         {(order.items ?? []).map((item) => (
@@ -36,7 +38,7 @@ export function OrderItemsCard({
                 {item.title}
               </Link>
               <span className="block text-sm text-muted-foreground">
-                {formatLabel(item.format)} · Qty {item.quantity} × {formatUsd(item.unit_price_usd)}
+                {t.line(formatName(dict, item.format), item.quantity ?? 0, formatUsd(item.unit_price_usd))}
               </span>
               {itemAction ? <span className="mt-1 block text-sm">{itemAction(item)}</span> : null}
             </span>
@@ -46,27 +48,27 @@ export function OrderItemsCard({
       </ul>
       <dl className="mt-2 grid gap-2 border-t border-border pt-4 text-[15px]">
         <div className="flex justify-between">
-          <dt className="text-muted-foreground">Subtotal</dt>
+          <dt className="text-muted-foreground">{t.subtotal}</dt>
           <dd className="tabular-nums">{formatUsd(order.subtotal_usd)}</dd>
         </div>
         {Number(order.discount_usd) > 0 ? (
           <div className="flex justify-between text-success">
-            <dt>Discount{order.coupon_code ? ` (${order.coupon_code})` : ""}</dt>
+            <dt>{t.discount}{order.coupon_code ? ` (${order.coupon_code})` : ""}</dt>
             <dd className="tabular-nums">−{formatUsd(order.discount_usd)}</dd>
           </div>
         ) : null}
         <div className="flex justify-between">
-          <dt className="text-muted-foreground">Shipping</dt>
+          <dt className="text-muted-foreground">{t.shipping}</dt>
           <dd className="tabular-nums">{formatUsd(order.shipping_fee_usd)}</dd>
         </div>
         {Number(order.tax_usd) > 0 ? (
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">Tax</dt>
+            <dt className="text-muted-foreground">{t.tax}</dt>
             <dd className="tabular-nums">{formatUsd(order.tax_usd)}</dd>
           </div>
         ) : null}
         <div className="mt-2 flex items-baseline justify-between gap-4 border-t border-border pt-3">
-          <dt className="font-semibold">{totalLabel}</dt>
+          <dt className="font-semibold">{totalLabel ?? t.total}</dt>
           <dd className="text-2xl font-semibold tabular-nums">{formatMoney(order.total_usd, order.total_khr, currency)}</dd>
         </div>
       </dl>
@@ -74,12 +76,13 @@ export function OrderItemsCard({
   );
 }
 
-export function DeliveryAddressCard({ address, title = "Delivering to" }: { address: Order["shipping_address"]; title?: string }) {
+export function DeliveryAddressCard({ address, title }: { address: Order["shipping_address"]; title?: string }) {
+  const { dict } = useT();
   if (!address) return null;
   return (
     <section aria-labelledby="order-address" className="grid content-start gap-2 rounded-xl border border-border bg-card p-5 sm:p-6">
       <h2 id="order-address" className="flex items-center gap-2 font-display text-[1.563rem] leading-tight">
-        <MapPin className="size-5 text-primary" aria-hidden="true" /> {title}
+        <MapPin className="size-5 text-primary" aria-hidden="true" /> {title ?? dict.orderParts.deliveringTo}
       </h2>
       <address className="grid not-italic leading-6">
         <span className="font-semibold">{address.recipient_name}</span>

@@ -14,25 +14,19 @@ import { AccountSection } from "@/features/account/AccountSection";
 import { orderDate } from "@/features/orders/format";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
-import { rangeSummary } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
+import { rangeText, useT } from "@/i18n";
 
 const PER_PAGE = 10;
-const STATUSES: Array<{ value: OrderStatus; label: string }> = [
-  { value: "pending", label: "Pending" },
-  { value: "processing", label: "Processing" },
-  { value: "shipped", label: "Shipped" },
-  { value: "delivered", label: "Delivered" },
-  { value: "cancelled", label: "Cancelled" },
-  { value: "returned", label: "Returned" },
-];
-const isStatus = (value: string | null): value is OrderStatus => STATUSES.some((s) => s.value === value);
+const STATUSES: OrderStatus[] = ["pending", "processing", "shipped", "delivered", "cancelled", "returned"];
+const isStatus = (value: string | null): value is OrderStatus => STATUSES.some((s) => s === value);
 
 function OrderRow({ order }: { order: Order }) {
   const currency = useCurrency();
+  const { dict, locale } = useT();
   const titles = (order.items ?? []).map((item) => item.title).filter(Boolean);
-  const more = titles.length > 2 ? ` and ${titles.length - 2} more` : "";
+  const more = titles.length > 2 ? dict.orders.andMore(titles.length - 2) : "";
   return (
     <li>
       <Link
@@ -49,14 +43,14 @@ function OrderRow({ order }: { order: Order }) {
             {more}
           </span>
           <span className="text-sm text-muted-foreground">
-            {orderDate(order.placed_at)}
-            {order.item_count ? ` · ${order.item_count} ${order.item_count === 1 ? "item" : "items"}` : null}
+            {orderDate(order.placed_at, locale)}
+            {order.item_count ? ` · ${dict.orders.items(order.item_count)}` : null}
           </span>
         </span>
         <span className="flex items-center justify-between gap-3 sm:justify-end">
           <span className="font-semibold tabular-nums">{formatMoney(order.total_usd, order.total_khr, currency)}</span>
           <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
-            View order <ChevronRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
+            {dict.orders.view} <ChevronRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
           </span>
         </span>
       </Link>
@@ -69,7 +63,9 @@ function OrderRow({ order }: { order: Order }) {
  * Page and status live in the URL so Back and shared links keep them.
  */
 export default function OrdersPage() {
-  useDocumentTitle("Your orders");
+  const { dict } = useT();
+  const t = dict.orders;
+  useDocumentTitle(t.docTitle);
   const [params, setParams] = useSearchParams();
   const page = Math.max(1, Number(params.get("page")) || 1);
   const statusParam = params.get("status");
@@ -88,19 +84,19 @@ export default function OrdersPage() {
 
   return (
     <AccountSection
-      title="Orders"
-      lead={meta && meta.total ? rangeSummary(meta.from, meta.to, meta.total, meta.total === 1 ? "order" : "orders") : "Follow your orders, cancel, or ask for a return."}
+      title={t.title}
+      lead={meta && meta.total ? rangeText(dict, meta.from, meta.to, meta.total, dict.nouns.order(meta.total)) : t.lead}
       action={
         <SelectField
-          label="Show"
+          label={t.show}
           value={status ?? ""}
           onChange={(event) => setParams(event.target.value ? { status: event.target.value } : {})}
           containerClassName="w-48"
         >
-          <option value="">All orders</option>
+          <option value="">{t.all}</option>
           {STATUSES.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
+            <option key={s} value={s}>
+              {dict.orderStatus[s]}
             </option>
           ))}
         </SelectField>
@@ -110,7 +106,7 @@ export default function OrdersPage() {
         <ErrorState error={orders.error} onRetry={() => orders.refetch()} headingLevel="h2" showHomeLink={false} />
       ) : orders.isPending ? (
         showSkeleton ? (
-          <SkeletonGroup label="Loading orders…" className="grid gap-3">
+          <SkeletonGroup label={t.loading} className="grid gap-3">
             <SkeletonRow thumb="none" />
             <SkeletonRow thumb="none" />
             <SkeletonRow thumb="none" />
@@ -119,23 +115,23 @@ export default function OrdersPage() {
       ) : list.length === 0 ? (
         <EmptyState
           icon={Package}
-          title={status ? "No orders with this status" : "No orders yet"}
-          description={status ? "Try another status, or show all orders." : "When you place an order, you can follow it here."}
+          title={status ? t.noneWithStatus : t.noneYet}
+          description={status ? t.tryAnother : t.followHere}
           action={
             status ? (
               <Link to="/account/orders" className={buttonVariants({ variant: "outline" })}>
-                Show all orders
+                {t.showAll}
               </Link>
             ) : (
               <Link to="/books" className={buttonVariants()}>
-                Browse books
+                {t.browse}
               </Link>
             )
           }
           className="rounded-xl border border-dashed border-border"
         />
       ) : (
-        <ul className={cn("grid gap-3", orders.isPlaceholderData && "opacity-60 transition-opacity")} aria-label="Your orders">
+        <ul className={cn("grid gap-3", orders.isPlaceholderData && "opacity-60 transition-opacity")} aria-label={t.yours}>
           {list.map((order) => (
             <OrderRow key={order.id} order={order} />
           ))}

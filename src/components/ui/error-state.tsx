@@ -4,6 +4,7 @@ import { Link } from "react-router-dom"
 import { ApiError } from "@/api/errors"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useT } from "@/i18n"
 
 /*
  * MASTER §6.22. `ErrorState` replaces a whole page or section whose data failed;
@@ -25,6 +26,7 @@ function ErrorState({ error, onRetry, title, headingLevel = "h2", showHomeLink =
   const offline = apiError.kind === "network"
   const Icon = offline ? WifiOff : AlertTriangle
   const Heading = headingLevel
+  const { dict } = useT()
 
   return (
     <div role="alert" className={cn("mx-auto grid max-w-md justify-items-center gap-3 px-4 py-12 text-center", className)}>
@@ -32,25 +34,25 @@ function ErrorState({ error, onRetry, title, headingLevel = "h2", showHomeLink =
         <Icon className="size-11" strokeWidth={1.5} aria-hidden="true" />
       </div>
       <Heading className="font-display text-[1.563rem] leading-tight text-foreground">
-        {title ?? (offline ? "You're offline" : "Something went wrong")}
+        {title ?? (offline ? dict.ui.offlineTitle : dict.ui.errorTitle)}
       </Heading>
       <p className="text-base text-muted-foreground">
-        {offline ? "Check your connection, then try again." : apiError.message}
+        {offline ? dict.ui.offlineHint : apiError.message}
       </p>
       <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
         {onRetry ? (
           <Button onClick={onRetry}>
-            <RotateCcw aria-hidden="true" /> Try again
+            <RotateCcw aria-hidden="true" /> {dict.ui.tryAgain}
           </Button>
         ) : null}
         {showHomeLink ? (
           <Link to="/" className={buttonVariants({ variant: "link" })}>
-            Go home
+            {dict.ui.goHome}
           </Link>
         ) : null}
       </div>
       {apiError.requestId ? (
-        <p className="mt-2 font-mono text-xs text-muted-foreground">Reference: {apiError.requestId}</p>
+        <p className="mt-2 font-mono text-xs text-muted-foreground">{dict.ui.reference(apiError.requestId)}</p>
       ) : null}
     </div>
   )
@@ -58,6 +60,7 @@ function ErrorState({ error, onRetry, title, headingLevel = "h2", showHomeLink =
 
 function InlineError({ error, onRetry, className }: { error: unknown; onRetry?: () => void; className?: string }) {
   const apiError = ApiError.from(error)
+  const { dict } = useT()
   return (
     <div
       role="alert"
@@ -67,7 +70,7 @@ function InlineError({ error, onRetry, className }: { error: unknown; onRetry?: 
       <p className="min-w-0 flex-1 font-medium">{apiError.message}</p>
       {onRetry ? (
         <Button variant="outline" size="sm" onClick={onRetry} className="border-current text-destructive hover:bg-card">
-          Try again
+          {dict.ui.tryAgain}
         </Button>
       ) : null}
     </div>

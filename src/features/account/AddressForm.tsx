@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { applyApiErrors } from "@/lib/forms";
 import { addressSchema, type AddressValues } from "./schemas";
+import { useT } from "@/i18n";
 
 /*
  * Add / edit a delivery address. Used in the address book and, in the cart
@@ -54,6 +55,8 @@ type Props = {
 export function AddressForm({ address, defaults, hideDefaultToggle, onSaved, onCancel, submitLabel }: Props) {
   const [formError, setFormError] = useState<string | null>(null);
   const alertRef = useRef<HTMLDivElement>(null);
+  const { dict } = useT();
+  const t = dict.addresses;
   const { register, control, handleSubmit, setError, formState } = useForm<AddressValues>({
     resolver: zodResolver(addressSchema),
     defaultValues: toValues(address, defaults),
@@ -81,18 +84,18 @@ export function AddressForm({ address, defaults, hideDefaultToggle, onSaved, onC
     <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid gap-4">
       {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField label="Recipient name" autoComplete="shipping name" error={errors.recipient_name?.message} {...register("recipient_name")} />
-        <TextField label="Phone" type="tel" inputMode="tel" autoComplete="shipping tel" placeholder="012 345 678" hint="The courier calls this number." error={errors.phone?.message} {...register("phone")} />
+        <TextField label={t.recipient} autoComplete="shipping name" error={errors.recipient_name?.message} {...register("recipient_name")} />
+        <TextField label={t.phone} type="tel" inputMode="tel" autoComplete="shipping tel" placeholder="012 345 678" hint={t.phoneHint} error={errors.phone?.message} {...register("phone")} />
       </div>
-      <TextField label="Street address" autoComplete="shipping address-line1" placeholder="House 12, Street 240" error={errors.address_line1?.message} {...register("address_line1")} />
-      <TextField label="Apartment, floor, landmark" optional autoComplete="shipping address-line2" error={errors.address_line2?.message} {...register("address_line2")} />
+      <TextField label={t.street} autoComplete="shipping address-line1" placeholder={t.streetPlaceholder} error={errors.address_line1?.message} {...register("address_line1")} />
+      <TextField label={t.line2} optional autoComplete="shipping address-line2" error={errors.address_line2?.message} {...register("address_line2")} />
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField label="City" autoComplete="shipping address-level2" placeholder="Phnom Penh" error={errors.city?.message} {...register("city")} />
-        <TextField label="State / province" optional autoComplete="shipping address-level1" error={errors.state?.message} {...register("state")} />
-        <TextField label="Postal code" optional autoComplete="shipping postal-code" inputMode="numeric" error={errors.postal_code?.message} {...register("postal_code")} />
-        <TextField label="Country" autoComplete="shipping country-name" error={errors.country?.message} {...register("country")} />
+        <TextField label={t.city} autoComplete="shipping address-level2" placeholder={t.cityPlaceholder} error={errors.city?.message} {...register("city")} />
+        <TextField label={t.state} optional autoComplete="shipping address-level1" error={errors.state?.message} {...register("state")} />
+        <TextField label={t.postal} optional autoComplete="shipping postal-code" inputMode="numeric" error={errors.postal_code?.message} {...register("postal_code")} />
+        <TextField label={t.country} autoComplete="shipping country-name" error={errors.country?.message} {...register("country")} />
       </div>
-      <TextField label="Label" optional placeholder="Home, Work…" hint="Helps you pick the right address at checkout." error={errors.label?.message} {...register("label")} />
+      <TextField label={t.label} optional placeholder={t.labelPlaceholder} hint={t.labelHint} error={errors.label?.message} {...register("label")} />
       {hideDefaultToggle ? null : (
         <Controller
           control={control}
@@ -100,7 +103,7 @@ export function AddressForm({ address, defaults, hideDefaultToggle, onSaved, onC
           render={({ field }) => (
             <label className="flex min-h-11 cursor-pointer items-center gap-3 text-[15px]">
               <Checkbox checked={field.value} onCheckedChange={(checked) => field.onChange(checked === true)} disabled={address?.is_default} />
-              {address?.is_default ? "This is your default address" : "Make this my default address"}
+              {address?.is_default ? t.isDefault : t.makeMyDefault}
             </label>
           )}
         />
@@ -108,11 +111,11 @@ export function AddressForm({ address, defaults, hideDefaultToggle, onSaved, onC
       <div className="mt-2 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         {onCancel ? (
           <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
+            {dict.ui.cancel}
           </Button>
         ) : null}
         <Button type="submit" loading={isSubmitting}>
-          {isSubmitting ? "Saving…" : (submitLabel ?? (address ? "Save address" : "Add address"))}
+          {isSubmitting ? dict.ui.saving : (submitLabel ?? (address ? t.save : t.add))}
         </Button>
       </div>
     </form>

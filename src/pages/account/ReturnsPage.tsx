@@ -13,14 +13,16 @@ import { AccountSection } from "@/features/account/AccountSection";
 import { orderDate } from "@/features/orders/format";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
-import { rangeSummary } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
 import { formatUsd } from "@/stores/currency";
+import { rangeText, useT } from "@/i18n";
 
 const PER_PAGE = 10;
 
 function ReturnRow({ item }: { item: ReturnRequest }) {
   const count = (item.items ?? []).reduce((sum, line) => sum + (line.quantity ?? 0), 0);
+  const { dict, locale } = useT();
+  const t = dict.returns;
   return (
     <li>
       <Link
@@ -29,17 +31,17 @@ function ReturnRow({ item }: { item: ReturnRequest }) {
       >
         <span className="grid min-w-0 gap-1">
           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span className="font-semibold">Return #{item.id}</span>
+            <span className="font-semibold">{t.number(item.id ?? "")}</span>
             <ReturnStatusBadge status={item.status} />
           </span>
           <span className="text-sm text-muted-foreground">
-            Order <span className="tabular-nums">{item.order_number}</span> · requested {orderDate(item.requested_at)} · {count} {count === 1 ? "book" : "books"}
+            {t.rowLine(item.order_number ?? "", orderDate(item.requested_at, locale), count)}
           </span>
         </span>
         <span className="flex items-center justify-between gap-3 sm:justify-end">
           <span className="text-right">
             <span className="block font-semibold tabular-nums">{formatUsd(item.refund_amount_usd)}</span>
-            <span className="block text-xs text-muted-foreground">{item.is_refund_final ? "refunded" : "estimated refund"}</span>
+            <span className="block text-xs text-muted-foreground">{item.is_refund_final ? t.refunded : t.estimated}</span>
           </span>
           <ChevronRight className="size-4 text-primary transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
         </span>
@@ -50,7 +52,9 @@ function ReturnRow({ item }: { item: ReturnRequest }) {
 
 /* /account/returns: the customer's return requests, newest first. */
 export default function ReturnsPage() {
-  useDocumentTitle("Your returns");
+  const { dict } = useT();
+  const t = dict.returns;
+  useDocumentTitle(t.docTitle);
   const [params] = useSearchParams();
   const page = Math.max(1, Number(params.get("page")) || 1);
   const returns = useQuery({ ...orderQueries.returns({ page, per_page: PER_PAGE }), placeholderData: (previous) => previous });
@@ -60,14 +64,14 @@ export default function ReturnsPage() {
 
   return (
     <AccountSection
-      title="Returns"
-      lead={meta && meta.total ? rangeSummary(meta.from, meta.to, meta.total, meta.total === 1 ? "return" : "returns") : "Books you've asked to send back."}
+      title={t.title}
+      lead={meta && meta.total ? rangeText(dict, meta.from, meta.to, meta.total, dict.nouns.return(meta.total)) : t.lead}
     >
       {returns.isError && !returns.data ? (
         <ErrorState error={returns.error} onRetry={() => returns.refetch()} headingLevel="h2" showHomeLink={false} />
       ) : returns.isPending ? (
         showSkeleton ? (
-          <SkeletonGroup label="Loading returns…" className="grid gap-3">
+          <SkeletonGroup label={t.loading} className="grid gap-3">
             <SkeletonRow thumb="none" />
             <SkeletonRow thumb="none" />
           </SkeletonGroup>
@@ -75,17 +79,17 @@ export default function ReturnsPage() {
       ) : list.length === 0 ? (
         <EmptyState
           icon={RotateCcw}
-          title="No returns"
-          description="To send books back, open a delivered order and choose Request a return."
+          title={t.none}
+          description={t.noneLead}
           action={
             <Link to="/account/orders?status=delivered" className={buttonVariants({ variant: "outline" })}>
-              Delivered orders
+              {t.deliveredOrders}
             </Link>
           }
           className="rounded-xl border border-dashed border-border"
         />
       ) : (
-        <ul className={cn("grid gap-3", returns.isPlaceholderData && "opacity-60 transition-opacity")} aria-label="Your returns">
+        <ul className={cn("grid gap-3", returns.isPlaceholderData && "opacity-60 transition-opacity")} aria-label={t.yours}>
           {list.map((item) => (
             <ReturnRow key={item.id} item={item} />
           ))}

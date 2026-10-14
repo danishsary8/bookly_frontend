@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { createContext, createElement, useContext, useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { en, type Translations } from "./en";
 import { km } from "./km";
 
@@ -80,11 +80,42 @@ export function translate(path: string, lang: Language = currentLanguage): strin
   return path;
 }
 
+/** Locale for Intl dates and numbers in each language. */
+export const LOCALES: Record<Language, string> = { en: "en-GB", km: "km-KH" };
+
+/** The dictionary of the current language, for code outside React (validation messages, toasts). */
+export function getDict(): Translations {
+  return translations[currentLanguage];
+}
+
+/**
+ * A zod message that is read when the field is checked, so it follows the language switch:
+ * `z.string().min(1, msg((d) => d.forms.enterName))`.
+ */
+export function msg(pick: (dict: Translations) => string) {
+  return { error: () => pick(getDict()) };
+}
+
+// Parts of the site that stay English whatever the visitor picked (staff area, printed documents).
+const FixedLanguage = createContext<Language | null>(null);
+
+/** Keeps everything inside in English and sets <html lang="en"> while it is shown. */
+export function EnglishOnly({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    document.documentElement.lang = "en";
+    return () => {
+      document.documentElement.lang = currentLanguage;
+    };
+  }, []);
+  return createElement(FixedLanguage.Provider, { value: "en" }, children);
+}
+
 /**
  * Hook to access current language, setter, translations dictionary, and translate helper.
  */
 export function useT() {
-  const lang = useSyncExternalStore(subscribe, getLanguage, () => DEFAULT_LANGUAGE);
+  const picked = useSyncExternalStore(subscribe, getLanguage, () => DEFAULT_LANGUAGE);
+  const lang = useContext(FixedLanguage) ?? picked;
   const dict = translations[lang];
 
   const t = (path: string, fallback?: string): string => {
@@ -95,6 +126,7 @@ export function useT() {
 
   return {
     lang,
+    locale: LOCALES[lang],
     setLanguage,
     dict,
     t,
@@ -102,3 +134,15 @@ export function useT() {
 }
 
 export { en, km, type Translations };
+
+/** "Showing 25–48 of 286 books" in the given language (see lib/pagination rangeSummary). */
+export function rangeText(dict: Translations, from: number | null | undefined, to: number | null | undefined, total: number, noun: string): string {
+  if (!total || !from || !to) return dict.ui.none(noun);
+  return dict.ui.showing(from, to, total, noun);
+}
+
+/** A book format's name ("Paperback") in the given language; unknown formats are shown as they come. */
+export function formatName(dict: Translations, format: string | null | undefined): string {
+  if (!format) return "";
+  return format in dict.formats ? dict.formats[format as keyof Translations["formats"]] : format[0].toUpperCase() + format.slice(1);
+}

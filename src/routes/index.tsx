@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { EnglishOnly } from "../i18n";
 import Loading from "../components/ui/loading";
 import ClientLayout from "../layouts/ClientLayout";
 import LegacyAdminRedirect from "./LegacyAdminRedirect";
@@ -72,6 +73,13 @@ const PublisherPage = lazy(() => import("../pages/catalog/PublisherPage"));
 // Development-only reference page for the UI kit; not part of production builds.
 const UiKit = import.meta.env.DEV ? lazy(() => import("../pages/dev/UiKit")) : null;
 
+// The staff area and printed documents stay in English whatever language the shop is shown in.
+const EnglishArea = () => (
+  <EnglishOnly>
+    <Outlet />
+  </EnglishOnly>
+);
+
 const AppRoutes = () => {
   // Prefetch the book page while idle so the cover morph never waits on a lazy chunk.
   useEffect(() => {
@@ -138,44 +146,46 @@ const AppRoutes = () => {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Route>
-        <Route element={<RequireVerified />}>
-          <Route path="/account/orders/:id/invoice" element={<InvoicePrintPage />} />
-        </Route>
         <Route element={<RequireCustomer />}>
           <Route path="/verify-email" element={<VerifyEmailPage />} />
         </Route>
-        {/* Staff (V2 admin). */}
-        <Route element={<StaffGuestOnly />}>
-          <Route path="/admin/login" element={<StaffLoginPage />} />
-          <Route path="/admin/reset-password" element={<StaffResetPasswordPage />} />
-        </Route>
-        <Route element={<RequireStaffSetup />}>
-          <Route path="/admin/two-factor" element={<StaffTwoFactorSetupPage />} />
-        </Route>
-        <Route element={<RequireStaff />}>
-          {/* Printable sheets sit outside the admin frame so only the paper prints. */}
-          <Route path="/admin/print" element={<OrderDocumentsPrintPage />} />
-          <Route path="/admin" element={<AdminShell />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="books" element={<AdminBooksPage />} />
-            <Route path="books/new" element={<BookEditPage />} />
-            <Route path="books/:id" element={<BookEditPage key="edit" />} />
-            <Route path="authors" element={<LookupPage key="authors" kind="authors" />} />
-            <Route path="categories" element={<LookupPage key="categories" kind="categories" />} />
-            <Route path="publishers" element={<LookupPage key="publishers" kind="publishers" />} />
-            <Route path="series" element={<LookupPage key="series" kind="series" />} />
-            <Route path="orders" element={<OrdersAdminPage />} />
-            <Route path="orders/:id" element={<OrderAdminPage />} />
-            <Route path="returns" element={<ReturnsAdminPage />} />
-            <Route path="returns/:id" element={<ReturnAdminPage />} />
-            <Route path="reviews" element={<ReviewsAdminPage />} />
-            <Route path="coupons" element={<CouponsAdminPage />} />
-            <Route path="customers" element={<CustomersAdminPage />} />
-            <Route path="customers/:id" element={<CustomerAdminPage />} />
-            <Route element={<RequireAdminRole />}>
-              <Route path="members" element={<MembersAdminPage />} />
-              <Route path="exchange-rates" element={<ExchangeRatesPage />} />
-              <Route path="audit-log" element={<AuditLogPage />} />
+        <Route element={<EnglishArea />}>
+          <Route element={<RequireVerified />}>
+            <Route path="/account/orders/:id/invoice" element={<InvoicePrintPage />} />
+          </Route>
+          {/* Staff (V2 admin). */}
+          <Route element={<StaffGuestOnly />}>
+            <Route path="/admin/login" element={<StaffLoginPage />} />
+            <Route path="/admin/reset-password" element={<StaffResetPasswordPage />} />
+          </Route>
+          <Route element={<RequireStaffSetup />}>
+            <Route path="/admin/two-factor" element={<StaffTwoFactorSetupPage />} />
+          </Route>
+          <Route element={<RequireStaff />}>
+            {/* Printable sheets sit outside the admin frame so only the paper prints. */}
+            <Route path="/admin/print" element={<OrderDocumentsPrintPage />} />
+            <Route path="/admin" element={<AdminShell />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="books" element={<AdminBooksPage />} />
+              <Route path="books/new" element={<BookEditPage />} />
+              <Route path="books/:id" element={<BookEditPage key="edit" />} />
+              <Route path="authors" element={<LookupPage key="authors" kind="authors" />} />
+              <Route path="categories" element={<LookupPage key="categories" kind="categories" />} />
+              <Route path="publishers" element={<LookupPage key="publishers" kind="publishers" />} />
+              <Route path="series" element={<LookupPage key="series" kind="series" />} />
+              <Route path="orders" element={<OrdersAdminPage />} />
+              <Route path="orders/:id" element={<OrderAdminPage />} />
+              <Route path="returns" element={<ReturnsAdminPage />} />
+              <Route path="returns/:id" element={<ReturnAdminPage />} />
+              <Route path="reviews" element={<ReviewsAdminPage />} />
+              <Route path="coupons" element={<CouponsAdminPage />} />
+              <Route path="customers" element={<CustomersAdminPage />} />
+              <Route path="customers/:id" element={<CustomerAdminPage />} />
+              <Route element={<RequireAdminRole />}>
+                <Route path="members" element={<MembersAdminPage />} />
+                <Route path="exchange-rates" element={<ExchangeRatesPage />} />
+                <Route path="audit-log" element={<AuditLogPage />} />
+              </Route>
             </Route>
           </Route>
         </Route>

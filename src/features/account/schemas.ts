@@ -1,16 +1,17 @@
 import { z } from "zod";
 import { newPassword } from "@/features/auth/schemas";
+import { msg, type Translations } from "@/i18n";
 
 /* Account forms; rules mirror bookly_backend_v2 ProfileController and AddressController. */
 
 const phone = z
   .string()
   .trim()
-  .max(30, "Keep the phone number under 30 characters.")
-  .regex(/^[+\d\s()-]*$/, "Use digits, spaces, +, - or brackets only.");
+  .max(30, msg((d) => d.forms.phoneTooLong))
+  .regex(/^[+\d\s()-]*$/, msg((d) => d.forms.phoneChars));
 
 export const profileSchema = z.object({
-  name: z.string().trim().min(1, "Enter your name.").max(150, "Keep your name under 150 characters."),
+  name: z.string().trim().min(1, msg((d) => d.forms.enterName)).max(150, msg((d) => d.forms.nameTooLong)),
   phone,
 });
 
@@ -18,29 +19,29 @@ export const profileSchema = z.object({
 export const passwordSchema = (hasPassword: boolean) =>
   z
     .object({
-      current_password: hasPassword ? z.string().min(1, "Enter your current password.") : z.string(),
+      current_password: hasPassword ? z.string().min(1, msg((d) => d.forms.enterCurrentPassword)) : z.string(),
       password: newPassword,
-      password_confirmation: z.string().min(1, "Type your new password again."),
+      password_confirmation: z.string().min(1, msg((d) => d.forms.typeNewPasswordAgain)),
     })
     .refine((data) => data.password === data.password_confirmation, {
       path: ["password_confirmation"],
-      message: "The passwords don't match.",
+      ...msg((d) => d.forms.passwordsDontMatch),
     });
 
-const required = (what: string, max: number) =>
-  z.string().trim().min(1, `Enter ${what}.`).max(max, `Keep it under ${max} characters.`);
-const optional = (max: number) => z.string().trim().max(max, `Keep it under ${max} characters.`);
+const required = (empty: (d: Translations) => string, max: number) =>
+  z.string().trim().min(1, msg(empty)).max(max, msg((d) => d.forms.under(max)));
+const optional = (max: number) => z.string().trim().max(max, msg((d) => d.forms.under(max)));
 
 export const addressSchema = z.object({
   label: optional(50),
-  recipient_name: required("the recipient's name", 150),
-  phone: phone.min(1, "Enter a phone number for the courier."),
-  address_line1: required("the street address", 255),
+  recipient_name: required((d) => d.forms.enterRecipient, 150),
+  phone: phone.min(1, msg((d) => d.forms.enterCourierPhone)),
+  address_line1: required((d) => d.forms.enterStreet, 255),
   address_line2: optional(255),
-  city: required("the city", 100),
+  city: required((d) => d.forms.enterCity, 100),
   state: optional(100),
   postal_code: optional(20),
-  country: required("the country", 100),
+  country: required((d) => d.forms.enterCountry, 100),
   is_default: z.boolean(),
 });
 
