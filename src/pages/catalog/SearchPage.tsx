@@ -33,7 +33,7 @@ export default function SearchPage() {
       <PageHeader
         crumbs={[{ label: "Home", to: "/" }, { label: "Search" }]}
         title={q ? <>Results for “{q}”</> : "Search the catalogue"}
-        lead={q ? undefined : "Find a book by its title, author, series or category."}
+        lead={q ? undefined : "Find a book by its title, author, series, category or ISBN."}
       />
 
       <form role="search" onSubmit={submit} className="mb-10 flex max-w-2xl gap-3">
@@ -48,7 +48,7 @@ export default function SearchPage() {
             enterKeyHint="search"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Title, author, series…"
+            placeholder="Title, author, series, ISBN…"
             className="h-12 w-full rounded-md border border-input bg-card pl-11 pr-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           />
         </div>
