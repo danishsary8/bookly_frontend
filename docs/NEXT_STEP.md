@@ -12,16 +12,18 @@
   category, as you type; old backend PR #10 closed), invoice and packing slip (print one or up to 50 at once; customers
   print their own invoice).
 
-## Now: waiting for the owner's merge (built 2026-10-13 while the owner was away)
-| Branch | Repo | What |
-| --- | --- | --- |
-| `feature/staff-order-alerts` | backend | New orders + low stock to a staff Telegram group (`OPS_STAFF_CHAT_ID`), lines + Open link (`SHOP_URL`) |
-| `feature/dashboard-date-range` | frontend | Dashboard Custom From/To days |
-| `feature/receipt-heading` | frontend | "Receipt" once paid |
-| `docs/away-batch` | frontend | These docs |
-Defaults chosen without the owner (change any): staff group gets new orders + low stock, not reviews; up to 10 book lines
-per alert; the Open link only when `SHOP_URL` is set; custom range max 366 days (the API's limit), end day not after
-today; "Receipt" only when paid and not returned/cancelled.
+## Now: waiting for the owner's merge (built 2026-10-14 while the owner was away)
+Merged before: staff Telegram group (live, both chats confirmed by the owner), dashboard range, receipt heading.
+| Branch | Repo | What | Merge order |
+| --- | --- | --- | --- |
+| `feature/search-isbn-sku` | backend | Shop search finds an ISBN (hyphens ignored) or SKU | before `feature/search-isbn-hint` |
+| `chore/missed-backup-check` | backend | Check-in to Healthchecks.io after each successful backup (owner sets it up) | any |
+| `chore/document-rate-lookup` | backend | One exchange-rate query per print batch | any |
+| `docs/hour-batch` | backend | Work log | last (backend) |
+| `chore/lint-warnings` | frontend | 0 lint warnings; CI also on docs/** | any |
+| `chore/frontend-safe-updates` | frontend | Patch/minor package updates (no majors) | any |
+| `feature/search-isbn-hint` | frontend | Search page says ISBN | after the backend ISBN search |
+| `docs/hour-batch` | frontend | These docs | last (frontend) |
 
 ## Delivery notes: plan, waiting for the owner's answers (needs a migration)
 Goal: the customer can write a note at checkout ("call before delivery", "leave at the guard") that staff see on the
@@ -32,9 +34,10 @@ invoice (no), new-order Telegram alert (yes), customer order page (yes, read-onl
 (4) Should staff also have a private note per order (not seen by the customer) in the same migration?
 
 ## Next: the owner picks one
-Recommended order: (1) delivery notes (answer the four questions above), (2) Phase 2 chores: frontend dependency
-updates with npm 10.9.9 and the 5 old lint warnings, (3) missed-backup check, (4) Khmer language.
-Other backlog: data retention · exchange-rate refresh · missed-backup check · Khmer language · delivery fees per
+Recommended order: (1) delivery notes (answer the four questions above), (2) strict delete security for admins
+(owner asked 2026-10-14 whether admins can remove customers), (3) major package upgrades, one at a time (list in ROADMAP),
+(4) Khmer language.
+Other backlog: data retention · exchange-rate refresh · Khmer language · delivery fees per
 province · SEO/pre-render · custom domain + shop email · E2E tests · security review · redesign last.
 
 ## Still open in Phase 2, in this order
