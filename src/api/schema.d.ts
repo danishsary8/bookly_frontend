@@ -4157,6 +4157,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff/customers/{id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * (admin) Close customer account
+         * @description Closes a customer account, revoking tokens and scheduling personal data erasure after 30 days. Requires admin password, 2FA code, and confirmation of email/phone.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        password: string;
+                        code: string;
+                        confirm: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Closed customer */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Validation error, invalid password/code, wrong confirm, or open orders/returns */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/staff/notifications": {
         parameters: {
             query?: never;

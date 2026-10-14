@@ -175,6 +175,9 @@ export const opsApi = {
     api.get<StaffCustomerPage>("/staff/customers", { params: toQueryParams({ ...f, active: bool(f.active), verified: bool(f.verified), closed: f.closed ? 1 : undefined }) }),
   /** Admins: reopen an account the customer closed, within its 30 days (audit-logged; the customer is emailed). */
   reopenCustomer: (id: number) => api.post<Resource<StaffCustomer>>(`/staff/customers/${id}/reopen`, {}).then((r) => r.data),
+  /** Admins: close a customer account. Requires password, 2FA code, and confirmation of email/phone. */
+  closeCustomer: (id: number, input: { password: string; code: string; confirm: string }) =>
+    api.post<Resource<StaffCustomer>>(`/staff/customers/${id}/close`, input).then((r) => r.data),
   customer: (id: number) => api.get<Resource<StaffCustomer>>(`/staff/customers/${id}`).then((r) => r.data),
   /** Admins: delete an unfinished sign-up now (frees its email). Verified customers are refused. */
   deleteCustomer: (id: number) => api.delete(`/staff/customers/${id}`),

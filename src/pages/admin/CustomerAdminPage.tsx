@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArchiveRestore,
@@ -13,13 +13,15 @@ import {
   UserX,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { opsApi, opsKeys, opsQueries } from "@/api/endpoints/staffOps";
+import { opsApi, opsKeys, opsQueries, type StaffCustomer } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
 import { NotFoundState } from "@/components/catalog/NotFoundState";
+import { PasswordField, TextField } from "@/components/form/Field";
+import { FormAlert } from "@/components/form/FormAlert";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/dialog";
+import { ConfirmDialog, Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
@@ -36,6 +38,128 @@ const SIGN_IN: Record<string, string> = {
   facebook: "Facebook",
 };
 
+function CloseCustomerDialog({
+  customer,
+  open,
+  onOpenChange,
+  onClosed,
+}: {
+  customer: StaffCustomer;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onClosed: (saved: StaffCustomer) => void;
+}) {
+  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const closeMutation = useMutation({
+    mutationFn: () =>
+      opsApi.closeCustomer(customer.id, {
+        password,
+        code,
+        confirm: confirm.trim(),
+      }),
+    onSuccess: (saved) => {
+      toast.success(`${saved.name}'s account was closed`);
+      onOpenChange(false);
+      onClosed(saved);
+    },
+    onError: (err) => {
+      const apiError = ApiError.from(err);
+      setError(
+        apiError.field("password") ??
+          apiError.field("code") ??
+          apiError.field("confirm") ??
+          apiError.message,
+      );
+    },
+  });
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    closeMutation.mutate();
+  };
+
+  const resetForm = () => {
+    setPassword("");
+    setCode("");
+    setConfirm("");
+    setError(null);
+  };
+
+  const expectedConfirm = customer.email ?? customer.phone ?? "";
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next && !closeMutation.isPending) {
+          resetForm();
+          onOpenChange(false);
+        }
+      }}
+    >
+      <DialogContent size="sm">
+        <form onSubmit={handleSubmit} className="grid gap-5">
+          <DialogHeader>
+            <DialogTitle>Close {customer.name}'s account?</DialogTitle>
+            <DialogDescription>
+              The customer is signed out immediately and cannot sign in. The account can be reopened for 30 days. After 30 days, personal details (name, email, phone, addresses) are erased permanently. Orders and sales records are kept.
+            </DialogDescription>
+          </DialogHeader>
+
+          {error ? <FormAlert title={error} /> : null}
+
+          <PasswordField
+            label="Your password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <TextField
+            label="6-digit authenticator code"
+            inputMode="numeric"
+            maxLength={6}
+            autoComplete="one-time-code"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            hint="From your authenticator app"
+            required
+          />
+
+          <TextField
+            label={`Type ${expectedConfirm} to confirm`}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            hint={`Type the customer's ${customer.email ? "email" : "phone number"} exactly.`}
+            required
+          />
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline" disabled={closeMutation.isPending}>
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              type="submit"
+              variant="destructive"
+              loading={closeMutation.isPending}
+            >
+              Close account
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /*
  * /admin/customers/:id: contact details, how they sign in, what they've bought
  * (net of refunds), recent orders, and (admins) deactivate / reactivate, delete an
@@ -51,6 +175,7 @@ export default function CustomerAdminPage() {
   const [confirm, setConfirm] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmReopen, setConfirmReopen] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
   const reopen = useReopenCustomer(() => setConfirmReopen(false));
   const navigate = useNavigate();
   const remove = useMutation({
@@ -326,6 +451,33 @@ export default function CustomerAdminPage() {
               </p>
             )}
           </section>
+          {isAdmin && !closed ? (
+            <section
+              aria-labelledby="danger-zone"
+              className="grid gap-3 rounded-xl border border-destructive/40 bg-card p-5"
+            >
+              <div>
+                <h2
+                  id="danger-zone"
+                  className="font-sans text-[1.0625rem] font-semibold tracking-normal text-destructive"
+                >
+                  Danger zone
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Close this customer's account. This signs them out, revokes their tokens, and schedules their personal details for permanent erasure in 30 days.
+                </p>
+              </div>
+              <div>
+                <Button
+                  variant="outline"
+                  onClick={() => setConfirmClose(true)}
+                  className="border-destructive/50 text-destructive hover:bg-destructive-tint"
+                >
+                  Close account
+                </Button>
+              </div>
+            </section>
+          ) : null}
         </div>
         <section
           aria-labelledby="customer-contact"
@@ -390,6 +542,15 @@ export default function CustomerAdminPage() {
         onConfirm={() => remove.mutate()}
       />
       <ReopenDialog customer={confirmReopen ? c : null} onOpenChange={setConfirmReopen} loading={reopen.isPending} onConfirm={() => reopen.mutate(c)} />
+      <CloseCustomerDialog
+        customer={c}
+        open={confirmClose}
+        onOpenChange={setConfirmClose}
+        onClosed={(saved) => {
+          queryClient.setQueryData(opsKeys.customer(id), saved);
+          void queryClient.invalidateQueries({ queryKey: ["staff", "customers"] });
+        }}
+      />
     </AdminPage>
   );
 }
