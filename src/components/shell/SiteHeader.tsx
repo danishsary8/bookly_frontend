@@ -21,10 +21,11 @@ import { useT } from "@/i18n";
  */
 
 export function Wordmark({ className }: { className?: string }) {
+  const { dict } = useT();
   return (
     <Link
       to="/"
-      aria-label="Bookly home"
+      aria-label={dict.navLinks.homeLabel}
       className={cn("rounded-md font-display text-[1.75rem] leading-none text-primary outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4", className)}
     >
       Bookly
@@ -43,18 +44,11 @@ export function SiteHeader() {
       <div className="container-shell flex h-full items-center gap-4 lg:gap-6">
         <Wordmark />
 
-        <nav aria-label="Main" className="ml-2 hidden min-[900px]:block">
+        <nav aria-label={dict.navLinks.main} className="ml-2 hidden min-[900px]:block">
           <ul className="flex items-center gap-1">
             {primaryNav.map((item, index) => {
               const active = isActivePath(location.pathname, item.to);
-              const label =
-                item.to === "/books"
-                  ? dict.nav.books
-                  : item.to === "/authors"
-                    ? dict.nav.authors
-                    : item.to === "/series"
-                      ? dict.nav.series
-                      : item.label;
+              const label = dict.navLinks[item.label];
               return (
                 <li key={item.to} className={cn(index >= 3 && "hidden xl:block")}>
                   <NavLink
@@ -87,7 +81,7 @@ export function SiteHeader() {
             onClick={() => openShellPanel("cart")}
             aria-haspopup="dialog"
             aria-expanded={panel === "cart"}
-            aria-label={count > 0 ? `${dict.nav.cart}, ${count} ${count === 1 ? "item" : "items"}` : dict.nav.cart}
+            aria-label={count > 0 ? dict.nav.cartCount(count) : dict.nav.cart}
             className="relative"
           >
             <ShoppingBag aria-hidden="true" />

@@ -7,6 +7,7 @@ import { closeShellPanel, useShellPanel, type ShellPanel } from "@/stores/shell"
 import { OfflineBanner } from "./OfflineBanner";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
+import { useT } from "@/i18n";
 
 /*
  * The storefront frame: skip link, sticky header, the routed page (transition +
@@ -29,8 +30,9 @@ function useOpenedOnce(panel: ShellPanel, which: ShellPanel) {
 }
 
 function PageFallback() {
+  const { dict } = useT();
   return (
-    <SkeletonGroup label="Loading page…" className="container-shell grid gap-4 py-12">
+    <SkeletonGroup label={dict.shell.loadingPage} className="container-shell grid gap-4 py-12">
       <Skeleton className="h-3.5 w-48" />
       <Skeleton className="h-9 w-[40%]" />
       <Skeleton className="h-5 w-[70%]" />

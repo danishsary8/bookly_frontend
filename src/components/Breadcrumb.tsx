@@ -1,5 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useT } from "@/i18n";
 
 /*
  * MASTER §6.9: full trail on desktop; below 640px it collapses to a single
@@ -12,10 +13,11 @@ export interface Crumb {
 }
 
 export const Breadcrumb = ({ items }: { items: Crumb[] }) => {
+  const { dict } = useT();
   const parent = [...items].reverse().find((item) => item.to);
 
   return (
-    <nav aria-label="Breadcrumb">
+    <nav aria-label={dict.shell.breadcrumb}>
       <ol className="hidden flex-wrap items-center gap-x-2 text-sm font-medium sm:flex">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;

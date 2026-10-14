@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 
 // replace icons with your own if needed
 import { FiCircle, FiCode, FiFileText, FiLayers, FiLayout } from 'react-icons/fi';
+import { useT } from "@/i18n";
 export interface CarouselItem {
   title: string;
   description: string;
@@ -151,6 +152,7 @@ export default function Carousel({
   itemClassName
 }: CarouselProps): JSX.Element {
   const isControlled = typeof index === 'number';
+  const { dict } = useT();
   const count = slides ? slides.length : items.length;
   const containerRef = useRef<HTMLDivElement>(null);
   const [measuredWidth, setMeasuredWidth] = useState<number>(baseWidth);
@@ -378,7 +380,7 @@ export default function Carousel({
               <m.button
                 type="button"
                 key={dotIndex}
-                aria-label={`Go to slide ${dotIndex + 1}`}
+                aria-label={dict.shell.goToSlide(dotIndex + 1)}
                 aria-current={activeIndex === dotIndex}
                 className={`h-2 w-2 rounded-full cursor-pointer border-0 p-0 appearance-none transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
                   activeIndex === dotIndex
