@@ -2,37 +2,38 @@
 
 **Everything still to do, in order, is in `docs/ROADMAP.md`** (including the "Known limits and small follow-ups" items).
 
-## State on 2026-10-13
-- Phase 1 (sign-in) is done and live, including the free Bookly Telegram bot.
-- Phase 2 is mostly done: nightly encrypted backup + restore drill + failure alert, uptime monitors, `/health` with the
-  Telegram bot, preview CORS, Sentry source maps, quiet tests, backend dependency updates, rate limits (owner's "looser"
-  set) + password security email, Telegram webhook self-repair.
-- Merged on 2026-10-12/13: customer emails for every order and return step, owner Telegram alerts (new order, low stock,
-  1-2 star review), welcome email, dashboard numbers with KHR/comparison/top categories, better search (author, series,
-  category, as you type; old backend PR #10 closed), invoice and packing slip (print one or up to 50 at once; customers
-  print their own invoice).
+## State on 2026-10-14
+- Phases 1-2 are done and live (sign-in incl. the Telegram bot, backups + restore drill + alerts, uptime, rate limits).
+- Live since 2026-10-14: search (title/author/series/category, ISBN/SKU), invoice + packing slip, bulk order status,
+  dashboard date range, staff Telegram group alerts, missed-backup check-in step, delivery notes (customer + staff),
+  admin closes a customer account, E2E money path in CI, Khmer first slice.
 
-## Now: waiting for the owner's merge (built 2026-10-14 while the owner was away)
+## Now: waiting for the owner's merge (built 2026-10-14)
 | Branch | Repo | What | Merge order |
 | --- | --- | --- | --- |
-| `feature/delivery-notes` | backend | Customer delivery note & staff note columns, endpoints, audit, alert | 1 (backend) |
-| `feature/delivery-notes` | frontend | Checkout delivery note with counter, customer & admin note view/edit, packing slip | 2 (after backend) |
-| `feature/admin-close-account` | backend | Admin-only customer account closure (2FA + password + typed email, 30d restore window, audit, alert) | 3 (backend) |
-| `feature/admin-close-account` | frontend | Admin customer page Danger zone with Close account dialog & error handling | 4 (after backend) |
-| `feature/e2e-money-path` | frontend | Playwright CI workflow (`e2e.yml`) testing full money path in < 2m | 5 (frontend) |
-| `feature/khmer-language` | frontend | Khmer storefront slice (English/ភាសាខ្មែរ switch, typography, header, catalog, cart, checkout, login) | 6 (frontend) |
-| `docs/batch-2026-10-14` | backend | Worklog and documentation updates | last (backend) |
-| `docs/batch-2026-10-14` | frontend | Worklog, roadmap, and next step updates | last (frontend) |
+| `fix/close-account-check-order` | backend | Close-account checks the typed email and open orders before the 2FA code | 1 |
+| `fix/e2e-loading-wait` | frontend | E2E waits until "Loading..." is gone before the accessibility check (was flaky on main) | 2 |
+| `feature/khmer-pages` | frontend | Khmer for the whole storefront (account, sign-up, orders, returns, checkout, cart, catalogue, home, About, Contact, 404); legal/help pages say "English for now" | 3 |
+| `docs/khmer-pages-batch` | backend | Worklog and next step | last (backend) |
+| `docs/khmer-pages-batch` | frontend | Worklog, roadmap, next step | last (frontend) |
 
-## Next: the owner picks one
-Recommended order: (1) Telegram order updates for customers (opt-in via bot), (2) Delivery fees per province and estimated delivery dates, (3) Expanding Khmer translations to full storefront & customer emails, (4) Pre-rendered HTML / SEO for public catalog.
-Other backlog: data retention · exchange-rate refresh · security review of both repos · load testing.
+## Next: the owner picks one (recommended order)
+1. Khmer for customer emails + the API's own messages (errors and order timeline notes still come in English).
+2. Custom domain + shop email (SPF/DKIM/DMARC); talk it through first.
+3. Strict delete security for other items (trash with 30-day restore, password + 2FA, Telegram on every delete).
+4. Stock history / restock entries; books CSV import/export; customer notes/tags; staff permissions + sessions.
+5. Delivery fees per province; customer order updates in Telegram (decisions open); "tell me when it's back".
+6. SEO/pre-render, Search Console, accessibility audit, legal pages review; security review; load test; redesign last.
+7. Payments (ABA PayWay / Bakong KHQR) only with provider accounts and the owner's OK.
 
-## Still open in Phase 2, in this order
-1. **Frontend dependency updates**: a plain `npm update` rewrote the whole lockfile and broke `npm ci` in CI; update with the CI's npm (10.9.9) and verify with `npm ci`, or one package at a time.
-2. **Raise the minimum PHP to 8.4** (production runs 8.4) to allow Symfony 8 / PHPUnit 13; then remove `config.platform.php` 8.3.0.
-3. **Chores**: run the backend Tests workflow on `chore/**` and `docs/**` pushes too; Vitest 5 (`@vitest/mocker` advisory).
-4. **Missed-backup check** (postponed 2026-10-10): an outside check-in service such as Healthchecks.io, or a workflow checking the newest artifact's age.
+## Owner's open steps
+- Healthchecks.io for the missed-backup check, if not done (backend `docs/DEPLOYMENT.md` → "Missed-backup check").
+- A native Khmer speaker reviews `src/i18n/km.ts` (the whole storefront now reads from it).
+- Live checks: delivery note on a test order, staff note edit, close + reopen a test customer, Khmer switch on every page.
+
+## Still open in Phase 2
+1. **Raise the minimum PHP to 8.4** (production runs 8.4) to allow Symfony 8 / PHPUnit 13; then remove `config.platform.php` 8.3.0.
+2. **Major package upgrades**, one at a time (list in ROADMAP), incl. Vitest 5 (`@vitest/mocker` advisory).
 
 ## How we work
 - The assistant is planner, reviewer and hands-on builder: reads the docs first, asks the owner before any design
