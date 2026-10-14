@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - 'feature/e2e-money-path'
   pull_request:
     branches:
       - main
@@ -12,6 +11,11 @@ on:
 
 permissions:
   contents: read
+
+# bash with pipefail: "playwright test | tee" must still fail the job when a test fails.
+defaults:
+  run:
+    shell: bash
 
 jobs:
   money-path:
