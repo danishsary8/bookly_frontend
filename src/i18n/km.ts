@@ -1,3 +1,5 @@
+// DRAFT translation, to be reviewed by the owner before launch.
+// Khmer has no spaces between words: put a space between phrases in long headings so they can wrap.
 import type { Translations } from "./en";
 
 /** Khmer translations for Bookly storefront. */
@@ -34,7 +36,7 @@ export const km: Translations = {
     rights: "រក្សាសិទ្ធិគ្រប់យ៉ាង។",
   },
   home: {
-    heroTitle: "សៀវភៅដឹកជូនទូទាំងប្រទេសកម្ពុជា",
+    heroTitle: "សៀវភៅ ដឹកជូន ទូទាំងប្រទេសកម្ពុជា",
     heroSubtitle: "ស្វែងរកសៀវភៅបុរាណ ប្រលោមលោកសហសម័យ ប្រវត្តិសាស្ត្រ និងអក្សរសិល្ប៍។ ទូទាត់ប្រាក់ពេលទទួលទំនិញនៅភ្នំពេញ និងគ្រប់ខេត្តក្រុង។",
     browseCatalogue: "មើលកាតាឡុកសៀវភៅ",
     popularBooks: "សៀវភៅពេញនិយម",
