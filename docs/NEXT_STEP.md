@@ -13,32 +13,20 @@
   print their own invoice).
 
 ## Now: waiting for the owner's merge (built 2026-10-14 while the owner was away)
-Merged before: staff Telegram group (live, both chats confirmed by the owner), dashboard range, receipt heading.
 | Branch | Repo | What | Merge order |
 | --- | --- | --- | --- |
-| `feature/search-isbn-sku` | backend | Shop search finds an ISBN (hyphens ignored) or SKU | before `feature/search-isbn-hint` |
-| `chore/missed-backup-check` | backend | Check-in to Healthchecks.io after each successful backup (owner sets it up) | any |
-| `chore/document-rate-lookup` | backend | One exchange-rate query per print batch | any |
-| `docs/hour-batch` | backend | Work log | last (backend) |
-| `chore/lint-warnings` | frontend | 0 lint warnings; CI also on docs/** | any |
-| `chore/frontend-safe-updates` | frontend | Patch/minor package updates (no majors) | any |
-| `feature/search-isbn-hint` | frontend | Search page says ISBN | after the backend ISBN search |
-| `docs/hour-batch` | frontend | These docs | last (frontend) |
-
-## Delivery notes: plan, waiting for the owner's answers (needs a migration)
-Goal: the customer can write a note at checkout ("call before delivery", "leave at the guard") that staff see on the
-order, the packing slip and the alert. Plan: one migration adding a nullable `orders.delivery_note` (text, max 300),
-`note` field on `POST /checkout` (and preview), shown on the admin order page, packing slip ("Note from the customer"),
-invoice (no), new-order Telegram alert (yes), customer order page (yes, read-only). Questions: (1) OK to add the column?
-(2) 300 characters enough? (3) Editable by the customer after ordering (while pending) or fixed at checkout?
-(4) Should staff also have a private note per order (not seen by the customer) in the same migration?
+| `feature/delivery-notes` | backend | Customer delivery note & staff note columns, endpoints, audit, alert | 1 (backend) |
+| `feature/delivery-notes` | frontend | Checkout delivery note with counter, customer & admin note view/edit, packing slip | 2 (after backend) |
+| `feature/admin-close-account` | backend | Admin-only customer account closure (2FA + password + typed email, 30d restore window, audit, alert) | 3 (backend) |
+| `feature/admin-close-account` | frontend | Admin customer page Danger zone with Close account dialog & error handling | 4 (after backend) |
+| `feature/e2e-money-path` | frontend | Playwright CI workflow (`e2e.yml`) testing full money path in < 2m | 5 (frontend) |
+| `feature/khmer-language` | frontend | Khmer storefront slice (English/ភាសាខ្មែរ switch, typography, header, catalog, cart, checkout, login) | 6 (frontend) |
+| `docs/batch-2026-10-14` | backend | Worklog and documentation updates | last (backend) |
+| `docs/batch-2026-10-14` | frontend | Worklog, roadmap, and next step updates | last (frontend) |
 
 ## Next: the owner picks one
-Recommended order: (1) delivery notes (answer the four questions above), (2) strict delete security for admins
-(owner asked 2026-10-14 whether admins can remove customers), (3) major package upgrades, one at a time (list in ROADMAP),
-(4) Khmer language.
-Other backlog: data retention · exchange-rate refresh · Khmer language · delivery fees per
-province · SEO/pre-render · custom domain + shop email · E2E tests · security review · redesign last.
+Recommended order: (1) Telegram order updates for customers (opt-in via bot), (2) Delivery fees per province and estimated delivery dates, (3) Expanding Khmer translations to full storefront & customer emails, (4) Pre-rendered HTML / SEO for public catalog.
+Other backlog: data retention · exchange-rate refresh · security review of both repos · load testing.
 
 ## Still open in Phase 2, in this order
 1. **Frontend dependency updates**: a plain `npm update` rewrote the whole lockfile and broke `npm ci` in CI; update with the CI's npm (10.9.9) and verify with `npm ci`, or one package at a time.
