@@ -6,10 +6,12 @@ import { cn } from "@/lib/utils";
 import { openShellPanel, useShellPanel } from "@/stores/shell";
 import { AccountMenu } from "./AccountMenu";
 import { CurrencySwitch } from "./CurrencySwitch";
+import { LanguageSwitch } from "./LanguageSwitch";
 import { LiveSearch } from "./LiveSearch";
 import { ThemeToggle } from "./ThemeToggle";
 import { MOBILE_MENU_ID, isActivePath, primaryNav } from "./nav";
 import { useCartCount } from "./useCartCount";
+import { useT } from "@/i18n";
 
 /*
  * MASTER §6.10 header: sticky, 64px (72px ≥ 900px), hairline bottom border and
@@ -34,6 +36,7 @@ export function SiteHeader() {
   const location = useLocation();
   const panel = useShellPanel();
   const count = useCartCount();
+  const { dict } = useT();
 
   return (
     <header className="sticky top-0 z-(--z-header) h-(--header-h) border-b border-border bg-card/95 backdrop-blur-sm supports-[backdrop-filter]:bg-card/85 dark:bg-background/90">
@@ -44,6 +47,14 @@ export function SiteHeader() {
           <ul className="flex items-center gap-1">
             {primaryNav.map((item, index) => {
               const active = isActivePath(location.pathname, item.to);
+              const label =
+                item.to === "/books"
+                  ? dict.nav.books
+                  : item.to === "/authors"
+                    ? dict.nav.authors
+                    : item.to === "/series"
+                      ? dict.nav.series
+                      : item.label;
               return (
                 <li key={item.to} className={cn(index >= 3 && "hidden xl:block")}>
                   <NavLink
@@ -55,7 +66,7 @@ export function SiteHeader() {
                       active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                     )}
                   >
-                    {item.label}
+                    {label}
                     {active ? <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-primary" aria-hidden="true" /> : null}
                   </NavLink>
                 </li>
@@ -67,6 +78,7 @@ export function SiteHeader() {
         <LiveSearch id="header-search" shortcut className="ml-auto hidden w-full max-w-sm min-[900px]:block xl:max-w-md" />
 
         <div className="ml-auto flex items-center gap-1 min-[900px]:ml-0">
+          <LanguageSwitch className="hidden min-[900px]:inline-flex" />
           <CurrencySwitch className="hidden min-[900px]:inline-flex" />
           <ThemeToggle className="hidden min-[900px]:inline-flex" />
           <Button
@@ -75,7 +87,7 @@ export function SiteHeader() {
             onClick={() => openShellPanel("cart")}
             aria-haspopup="dialog"
             aria-expanded={panel === "cart"}
-            aria-label={count > 0 ? `Cart, ${count} ${count === 1 ? "item" : "items"}` : "Cart"}
+            aria-label={count > 0 ? `${dict.nav.cart}, ${count} ${count === 1 ? "item" : "items"}` : dict.nav.cart}
             className="relative"
           >
             <ShoppingBag aria-hidden="true" />
@@ -90,7 +102,7 @@ export function SiteHeader() {
             onClick={() => openShellPanel("menu")}
             aria-expanded={panel === "menu"}
             aria-controls={MOBILE_MENU_ID}
-            aria-label="Menu"
+            aria-label={dict.nav.menu}
             className="min-[900px]:hidden"
           >
             <Menu aria-hidden="true" />

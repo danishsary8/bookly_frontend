@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Wordmark } from "./SiteHeader";
 import { footerNav, legalNav } from "./nav";
+import { useT } from "@/i18n";
 
 /*
  * MASTER §6.13: Daylight --lapis-tint background, Night --card with a top
@@ -13,13 +14,14 @@ const linkClass =
 
 export function SiteFooter({ className }: { className?: string }) {
   const year = new Date().getFullYear();
+  const { dict } = useT();
   return (
     <footer className={cn("mt-24 bg-lapis-tint dark:border-t dark:border-border dark:bg-card", className)}>
       <div className="container-shell grid gap-12 py-16 md:grid-cols-[1.4fr_repeat(3,1fr)] md:gap-8">
         <div className="grid content-start gap-4">
           <Wordmark />
           <p className="max-w-xs text-[15px] leading-6 text-muted-foreground">
-            New and loved books, delivered across Cambodia. Prices in US dollars or riel, cash on delivery.
+            {dict.footer.tagline}
           </p>
         </div>
         {footerNav.map((column) => (
@@ -41,7 +43,7 @@ export function SiteFooter({ className }: { className?: string }) {
       </div>
       <div className="border-t border-border">
         <div className="container-shell flex flex-col gap-2 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>© {year} Bookly. All rights reserved.</p>
+          <p>© {year} Bookly. {dict.footer.rights}</p>
           <ul className="flex gap-6">
             {legalNav.map((link) => (
               <li key={link.to}>

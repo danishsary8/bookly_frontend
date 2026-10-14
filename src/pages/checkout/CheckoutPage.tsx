@@ -22,6 +22,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { formatLabel } from "@/lib/catalog";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { toast } from "@/stores/toast";
+import { useT } from "@/i18n";
 
 /*
  * /checkout (verified customers): 1) delivery address, 2) payment (cash on
@@ -64,7 +65,8 @@ function Row({ label, amount, className, negative }: { label: ReactNode; amount:
 }
 
 export default function CheckoutPage() {
-  useDocumentTitle("Checkout");
+  const { dict } = useT();
+  useDocumentTitle(dict.checkout.title);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currency = useCurrency();
@@ -151,16 +153,16 @@ export default function CheckoutPage() {
 
   return (
     <div className="container-shell pb-16">
-      <PageHeader crumbs={[{ label: "Home", to: "/" }, { label: "Cart", to: "/cart" }, { label: "Checkout" }]} title="Checkout" />
+      <PageHeader crumbs={[{ label: "Home", to: "/" }, { label: dict.nav.cart, to: "/cart" }, { label: dict.checkout.title }]} title={dict.checkout.title} />
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-12 lg:gap-12">
         <div className="grid content-start gap-10 lg:col-span-8">
-          <Step n={1} title={shipsSomething ? "Delivery address" : "Contact address"}>
+          <Step n={1} title={shipsSomething ? dict.checkout.deliveryAddress : "Contact address"}>
             {!shipsSomething ? <p className="-mt-2 text-sm text-muted-foreground">Everything in this order is digital; we still need an address for your receipt.</p> : null}
             {addresses.isError ? <ErrorState error={addresses.error} onRetry={() => addresses.refetch()} headingLevel="h3" showHomeLink={false} /> : <AddressPicker addresses={list} value={addressId} onChange={setChosenAddress} />}
           </Step>
 
-          <Step n={2} title="Payment">
+          <Step n={2} title={dict.checkout.paymentMethod}>
             <PaymentOptions />
           </Step>
 
@@ -265,7 +267,7 @@ export default function CheckoutPage() {
 
             <CtaGlare block>
               <Button variant="cta" size="lg" className="w-full" onClick={() => { setFormError(null); place.mutate(); }} disabled={!ready} loading={place.isPending}>
-                {place.isPending ? "Placing your order…" : "Place order"}
+                {place.isPending ? dict.checkout.placingOrder : dict.checkout.placeOrder}
               </Button>
             </CtaGlare>
             <p className="flex items-center gap-2 text-sm text-muted-foreground">

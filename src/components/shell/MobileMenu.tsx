@@ -5,10 +5,12 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { closeShellPanel, openShellPanel, useShellPanel } from "@/stores/shell";
 import { CurrencySwitch } from "./CurrencySwitch";
+import { LanguageSwitch } from "./LanguageSwitch";
 import { LiveSearch } from "./LiveSearch";
 import { ThemeToggle } from "./ThemeToggle";
 import { MOBILE_MENU_ID, accountNav, isActivePath, primaryNav } from "./nav";
 import { useSignOut } from "./useSignOut";
+import { useT } from "@/i18n";
 
 /*
  * MASTER §6.10 mobile drawer (below 900px): search → main links (48px rows,
@@ -28,12 +30,13 @@ export function MobileMenu() {
   const location = useLocation();
   const session = useSession("customer");
   const signOut = useSignOut();
+  const { dict } = useT();
 
   return (
     <Drawer open={panel === "menu"} onOpenChange={(open) => (open ? openShellPanel("menu") : closeShellPanel())}>
       <DrawerContent id={MOBILE_MENU_ID} side="right" aria-describedby={undefined}>
         <DrawerHeader>
-          <DrawerTitle>Menu</DrawerTitle>
+          <DrawerTitle>{dict.nav.menu}</DrawerTitle>
         </DrawerHeader>
         <DrawerBody className="grid content-start gap-6">
           <LiveSearch id="mobile-search" onNavigate={closeShellPanel} inputClassName="h-12" />
@@ -47,10 +50,18 @@ export function MobileMenu() {
               </li>
               {primaryNav.map((item) => {
                 const active = isActivePath(location.pathname, item.to);
+                const label =
+                  item.to === "/books"
+                    ? dict.nav.books
+                    : item.to === "/authors"
+                      ? dict.nav.authors
+                      : item.to === "/series"
+                        ? dict.nav.series
+                        : item.label;
                 return (
                   <li key={item.to}>
                     <NavLink to={item.to} onClick={closeShellPanel} className={linkClass(active)} aria-current={active ? "page" : undefined}>
-                      {item.label}
+                      {label}
                     </NavLink>
                   </li>
                 );
@@ -64,6 +75,7 @@ export function MobileMenu() {
             <ul className="grid gap-1">
               {accountNav.map((item) => {
                 const active = isActivePath(location.pathname, item.to);
+                const label = item.to === "/account" ? dict.nav.account : item.label;
                 return (
                   <li key={item.to}>
                     <NavLink
@@ -75,7 +87,7 @@ export function MobileMenu() {
                         active ? "text-primary" : "text-foreground hover:bg-secondary",
                       )}
                     >
-                      {item.label}
+                      {label}
                     </NavLink>
                   </li>
                 );
@@ -83,7 +95,8 @@ export function MobileMenu() {
             </ul>
           </nav>
 
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <LanguageSwitch />
             <CurrencySwitch />
             <ThemeToggle />
           </div>
@@ -98,11 +111,11 @@ export function MobileMenu() {
                 void signOut();
               }}
             >
-              Sign out
+              {dict.nav.signOut}
             </Button>
           ) : (
             <NavLink to="/login" onClick={closeShellPanel} className={cn(buttonVariants({ variant: "default" }), "w-full")}>
-              Sign in
+              {dict.nav.signIn}
             </NavLink>
           )}
         </DrawerFooter>

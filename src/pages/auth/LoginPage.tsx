@@ -15,10 +15,12 @@ import { useAfterSignIn } from "@/features/auth/useAfterSignIn";
 import { useTelegramBot } from "@/features/auth/verification";
 import { applyApiErrors, withNext } from "@/lib/forms";
 import { useTurnstile } from "@/features/auth/turnstile";
+import { useT } from "@/i18n";
 
 type LoginState = { email?: string; notice?: string } | null;
 
 export default function LoginPage() {
+  const { dict } = useT();
   const [params] = useSearchParams();
   const next = params.get("next");
   const state = useLocation().state as LoginState;
@@ -58,14 +60,14 @@ export default function LoginPage() {
   return (
     <AuthPage
       eyebrow="Welcome back"
-      title="Sign in"
+      title={dict.auth.signIn}
       lead="Pick up where you left off: your cart, saved books and orders."
       footer={
         <>
           <p>
-            New to Bookly?{" "}
+            {dict.auth.dontHaveAccount}{" "}
             <Link to={withNext("/register", next)} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
-              Create an account
+              {dict.auth.signUp}
             </Link>
           </p>
           <Link to="/books" className="mx-auto inline-flex min-h-11 items-center font-semibold text-foreground underline-offset-4 hover:underline">
@@ -79,16 +81,16 @@ export default function LoginPage() {
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
         {buttonsOnTop ? <SocialButtons next={next} telegram={telegram} /> : null}
 
-        <TextField label="Email" type="email" autoComplete="email" inputMode="email" placeholder="name@example.com" error={errors.email?.message} {...register("email")} />
+        <TextField label={dict.auth.email} type="email" autoComplete="email" inputMode="email" placeholder="name@example.com" error={errors.email?.message} {...register("email")} />
 
         <div className="grid gap-1.5">
-          <PasswordField label="Password" autoComplete="current-password" error={errors.password?.message} {...register("password")} />
+          <PasswordField label={dict.auth.password} autoComplete="current-password" error={errors.password?.message} {...register("password")} />
           <Link
             to={withNext("/forgot-password", next)}
             state={{ email: email?.trim() }}
             className="inline-flex min-h-11 w-max items-center text-sm font-semibold text-primary underline-offset-4 hover:underline"
           >
-            Forgot password?
+            {dict.auth.forgotPassword}
           </Link>
         </div>
 
@@ -96,7 +98,7 @@ export default function LoginPage() {
 
         <CtaGlare block>
           <Button type="submit" variant="cta" size="lg" className="w-full" loading={isSubmitting}>
-            {isSubmitting ? "Signing in…" : "Sign in"}
+            {isSubmitting ? "Signing in…" : dict.auth.signIn}
           </Button>
         </CtaGlare>
 
