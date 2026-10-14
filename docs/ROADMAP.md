@@ -76,7 +76,7 @@ every day, then growth, then looks.
 - [x] Welcome email on first verification and an owner Telegram alert for 1-2 star reviews (2026-10-13, backend `feature/welcome-and-review-alerts`, merged).
 - [ ] **Order updates in Telegram for customers** (owner 2026-10-08): receipt, order details and every status change in Telegram, as well as (or instead of) email. Reuses the Bookly bot (Phase 1): the customer taps "Get order updates in Telegram" once (a `t.me/<bot>?start=<one-time link>`, same as phone confirmation) to connect their chat to the account (needs a small migration for the chat id, ask first), and can turn it off in their account. Discussed 2026-10-08, decisions still open: (1) messages: order confirmation at checkout + **receipt when the order is delivered** (cash on delivery; with card/KHQR later, when the payment succeeds); (2) customers who confirmed their phone in the bot get updates automatically (chat id saved then) or everyone opts in with a button; (3) a failed Telegram message never blocks an order; "View order" button; a blocked bot turns updates off; built like the order email so the staff group alert (Phase 3) reuses it. Owner: later, after Phase 2.
 - [x] Customer emails for every order change (confirmed, shipped with tracking note, delivered, cancelled, refund), not only "order placed". **Done 2026-10-12** (backend `feature/order-status-emails`): processing, shipped with the staff note, delivered receipt, cancelled, and every return step; a mail failure never blocks the change.
-- [x] **Khmer language** (Khmer / English switch) on the storefront and emails. First storefront slice done 2026-10-14 (frontend `feature/khmer-language`: language switcher, typography, header, footer, home, catalog, book detail, cart, checkout, login).
+- [ ] **Khmer language** (Khmer / English switch) on the storefront and emails. First storefront slice done 2026-10-14 (frontend `feature/khmer-language`: language switcher, typography, header, footer, home, catalog, book detail, cart, checkout, login). Still open: the other storefront pages (account, sign-up, order pages, help pages, the rest of checkout), emails, a native-speaker review of the draft Khmer.
 - [ ] Delivery: fees per province, estimated delivery date, free-delivery threshold.
 - [ ] Payments: card and KHQR stay "coming soon" until the owner gives the provider keys (ABA PayWay / Bakong); then a separate plan.
 - [ ] "Tell me when it's back" for out-of-stock books; recently viewed; "customers also bought".
@@ -97,7 +97,7 @@ every day, then growth, then looks.
 - [ ] Legal pages reviewed: terms, returns/refunds, delivery, cookies notice if analytics needs one.
 
 ## Phase 6 · Confidence
-- [x] End-to-end tests in CI for the money paths: sign-up → verify → cart → checkout → admin ships → return. Money path done 2026-10-14 (frontend `feature/e2e-money-path`: GitHub Actions `e2e.yml` with real Postgres 16, Laravel API, and Vite server; smoke test covers full money path from checkout to delivered receipt in CI).
+- [ ] End-to-end tests in CI for the money paths: sign-up → verify → cart → checkout → admin ships → return. Money path done 2026-10-14 (frontend `feature/e2e-money-path`: GitHub Actions `e2e.yml` with real Postgres 16, Laravel API, and Vite server; smoke test covers full money path from checkout to delivered receipt in CI). Still open: sign-up + email verification, returns.
 - [ ] Security review of both repos (OWASP list, file uploads, staff routes, secrets).
 - [ ] Load test the busiest pages.
 
