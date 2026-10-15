@@ -41,7 +41,7 @@ every day, then growth, then looks.
 - [x] Apply the rate-limit changes from backend docs/RATE_LIMITS.md. **Done 2026-10-13** (backend `feature/rate-limits`, merged): the owner's "looser" set (checkout, coupon check + 15-minute lock after 5 unknown codes, Telegram status polling, `/books` search, dashboard), Telegram webhook exempt with its secret, security email when a password is changed or reset; frontend `fix/rate-limit-wait-message` says long waits in minutes.
 - [x] Investigate why the Telegram webhook showed 'not set' on 2026-10-11 (the API repaired it itself when a sign-in started; watch /health; if it recurs, search the Render logs for 'webhook was'). **Done 2026-10-13:** Telegram had no address at all (removed from outside); `/health` now repairs it from `APP_URL` at most every 10 minutes, and the address never comes from the request (backend `fix/telegram-webhook-self-repair` + `fix/telegram-webhook-app-url`).
 - [x] Frontend dependency updates: a plain `npm update` rewrote the whole lockfile and broke `npm ci` in CI; do updates with the CI's npm (10.9.9) and verify with `npm ci`, or one package at a time; majors still to decide are listed in 'Major upgrades to decide'. **Done 2026-10-14 for patch/minor** (`chore/frontend-safe-updates`: 12 packages with npm 10.9.9 one by one, 89 lockfile entries, 0 majors, `npm ci` and a browser smoke pass). Majors still to decide: eslint 10, @eslint/js 10, typescript 7, vite 8, @vitejs/plugin-react 6, vitest 5, jsdom 29, lucide-react 1.x, motion 14, globals 17, @testing-library/jest-dom 7, eslint-plugin-react-refresh 0.5, shadcn 4, @playwright/test 1.64, @types/node 26.
-- [ ] Raise the minimum PHP to 8.4 (production already runs 8.4) to allow Symfony 8 / PHPUnit 13; then remove config.platform.php 8.3.0.
+- [x] Raise the minimum PHP to 8.4 (production already runs 8.4) to allow Symfony 8 / PHPUnit 13; then remove config.platform.php 8.3.0. **Done 2026-10-15** (backend `chore/php-84-minimum`).
 - [x] Run the Tests workflow on pushes to chore/** and docs/** branches too (backend .github/workflows/tests.yml only runs on main, feature/**, fix/** and pull requests). **Done**: backend already ran on chore/** and docs/**; frontend CI added docs/** on 2026-10-14 (`chore/lint-warnings`).
 - [x] Backend docs/NEXT_STEP.md still lists the finished alert-bot steps (create bot, add secrets) as to-do; clean it up. (checked 2026-10-13: it already lists the alert bot and secrets as done and verified).
 - [x] Fix backend docs/DEPLOYMENT.md restore steps (done in backend `feature/backup-failure-alert`): say restore into a NEW Neon branch with `pg_restore --clean --if-exists --no-owner --no-privileges`, note that a new branch already contains production tables, add the Windows notes (install Gpg4win or use gpg from Git for Windows; use `gpg -o bookly.dump -d bookly.dump.gpg` instead of `>` redirect in PowerShell; never paste the connection string or passphrase in chat or screenshots; delete the unencrypted dump afterwards).
@@ -96,7 +96,7 @@ every day, then growth, then looks.
 
 - [ ] Search: known limits (2026-10-13)
   - [x] ISBN and SKU are not searchable in the shop search (customers may type an ISBN). **Done 2026-10-14** (backend `feature/search-isbn-sku`; search page hint in `feature/search-isbn-hint`).
-  - [ ] Half-typed words match unstemmed only in titles; in descriptions and names a half-typed word can briefly match nothing ("runni" vs "run").
+  - [x] Half-typed words match unstemmed only in titles; in descriptions and names a half-typed word can briefly match nothing ("runni" vs "run"). **Done 2026-10-15** (backend `fix/search-half-typed-words`: unstemmed 'simple' dictionary added for descriptions, series, and categories).
   - [ ] Khmer text has no spaces, so it matches only from the start of a phrase (handle with the Khmer language item).
   - [ ] The search limit is 60/min per IP for visitors who are not signed in; many phones behind one mobile-network IP share it: watch 429s in Sentry.
   - [ ] Not browser-checked: search in dark mode and the mobile-menu search field (same component).
@@ -126,7 +126,7 @@ every day, then growth, then looks.
   - [x] `Rich` text link pattern restricted to single leading slash not followed by `/` or `\` (frontend `fix/rich-link-pattern`).
   - [x] Ignore local `.env` files in git (frontend `chore/ignore-env-files`).
   - [ ] Still open (low, not chosen yet): `/health` shows queue/Telegram details to anyone; Swagger UI from a CDN without SRI on `/docs`; dev-only npm advisories (Vitest 5 / shadcn); `/api/report` (Sentry tunnel) has no rate limit; Telegram-only accounts can't close themselves (bug); staff see a customer's lifetime spend (decide if "money numbers admin only" covers it).
-- [x] Load test the busiest pages: k6 script ramping to 30 VUs over 2 minutes on catalog and search endpoints with README for local execution (backend `chore/load-test-script`).
+- [x] Load test the busiest pages: k6 script ramping to 30 VUs over 2 minutes on catalog and search endpoints (backend `chore/load-test-script`); baseline run recorded in `load/RESULTS.md` (backend `chore/load-test-results`).
 
 - [ ] Checks never done in a real browser so far (unit tests only): dashboard Today/30 days switch on real data and dark mode; the real Telegram app and Facebook sign-in (needs real accounts).
 

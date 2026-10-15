@@ -6,7 +6,16 @@
 - Phases 1-2 are done and live. Merged 2026-10-15: Khmer for the whole storefront, close-account check order, E2E loader wait,
   and the **Reports page** (backend `feature/reports-api`, frontend `feature/reports-dashboard`).
 
-## Now: waiting for the owner's merge (security fixes & one-hour batch, 2026-10-15)
+## Now: waiting for the owner's merge (Batch 3, 2026-10-15)
+
+### Batch 3: PHP 8.4, search, load test (merge order: backend first, docs last)
+| # | Branch | Repo | What |
+| --- | --- | --- | --- |
+| 1 | `chore/php-84-minimum` | backend | Raise minimum PHP to 8.4, remove 8.3 platform pin, update CI and docs |
+| 2 | `fix/search-half-typed-words` | backend | Match half-typed words in descriptions, series, and categories ('simple' dictionary) |
+| 3 | `chore/load-test-results` | backend | Run k6 load test locally with SPREAD_IPS and record baseline in RESULTS.md |
+| 4 | `docs/batch-3` | backend | Document PHP 8.4 minimum, search fix, and load test results in WORKLOG.md |
+| 5 | `docs/batch-3` | frontend | Roadmap tick/annotations and merge-order table in NEXT_STEP.md |
 
 ### One-hour batch (ready to merge, backend before frontend in each pair)
 All branches verified green locally and on GitHub Actions CI.
@@ -59,7 +68,7 @@ All branches verified green locally and on GitHub Actions CI.
 - Live checks: delivery note on a test order, staff note edit, close + reopen a test customer, Khmer switch on every page.
 
 ## Still open in Phase 2
-1. **Raise the minimum PHP to 8.4** (production runs 8.4) to allow Symfony 8 / PHPUnit 13; then remove `config.platform.php` 8.3.0.
+1. ~~**Raise the minimum PHP to 8.4**~~ (done in backend `chore/php-84-minimum`).
 2. **Major package upgrades**, one at a time (list in ROADMAP), incl. Vitest 5 (`@vitest/mocker` advisory).
 
 ## How we work
