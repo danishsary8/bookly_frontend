@@ -195,7 +195,7 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
         ))}
         {telegram ? (
           telegramState.phase === "waiting" || telegramState.phase === "done" ? (
-            telegramState.phase === "waiting" ? <TelegramWait url={telegramState.link.url} onCancel={telegramLink.cancel} /> : null
+            telegramState.phase === "waiting" ? <TelegramWait url={telegramState.link.url} signIn onCancel={telegramLink.cancel} /> : null
           ) : (
             <button
               type="button"

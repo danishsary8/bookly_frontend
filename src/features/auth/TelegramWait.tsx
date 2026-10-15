@@ -14,18 +14,21 @@ import { Rich } from "@/i18n/Rich";
 
 export function TelegramWait({
   url,
+  signIn = false,
   primary = false,
   onCancel,
   className,
 }: {
   url: string;
+  /** "Continue with Telegram": the bot's button is "Yes, sign me in" (it asks first, so a sent link can be refused). */
+  signIn?: boolean;
   primary?: boolean;
   onCancel?: () => void;
   className?: string;
 }) {
   const { dict } = useT();
   const t = dict.telegram;
-  const steps = [t.open, t.tapStart, t.tapShare];
+  const steps = [t.open, t.tapStart, signIn ? t.tapYes : t.tapShare];
   const open = (
     <a
       href={url}

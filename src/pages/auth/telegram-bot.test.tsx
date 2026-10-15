@@ -124,6 +124,8 @@ describe("Confirm your phone number in Telegram", () => {
     app("/verify-email?via=telegram&next=%2Fcart");
 
     expect(await screen.findByRole("link", { name: "Open Telegram" })).toHaveAttribute("target", "_blank");
+    expect(screen.getAllByText("Share my phone number").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Yes, sign me in")).not.toBeInTheDocument();
     expect(post).toHaveBeenCalledWith("/auth/telegram/phone");
     expect(screen.getByRole("status")).toHaveTextContent("Waiting for Telegram…");
 
@@ -205,6 +207,8 @@ describe("Continue with Telegram", () => {
     expect(post).toHaveBeenCalledWith("/auth/telegram");
     expect(open).toHaveBeenCalledWith(LINK.url, "_blank", "noopener");
     expect(screen.getByRole("link", { name: "Open Telegram" })).toHaveAttribute("href", LINK.url);
+    // The bot asks "Sign in to Bookly?" first, so the step names its Yes button (security review 2026-10-15).
+    expect(screen.getByText("Yes, sign me in")).toBeInTheDocument();
 
     await tick();
     await tick();

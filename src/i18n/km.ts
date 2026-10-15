@@ -525,6 +525,7 @@ export const km: Translations = {
     open: "បើក Telegram",
     tapStart: "ចុច **Start** ក្នុង bot Bookly",
     tapShare: "ចុច **Share my phone number**",
+    tapYes: "ចុច **Yes, sign me in**",
     waiting: "កំពុងរង់ចាំ Telegram…",
     carriesOn: "ទំព័រនេះនឹងបន្តដោយខ្លួនឯង នៅពេលអ្នកចែករំលែកលេខរបស់អ្នក។ តំណនេះប្រើបាន 10 នាទី។",
   },
