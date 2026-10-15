@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { daysIn, rangeFromParams, rangeProblem, rangeToParams } from "./dashboardRange";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { daysIn, rangeDays, rangeFromParams, rangeProblem, rangeToParams } from "./dashboardRange";
 
 describe("dashboard range", () => {
   it("reads presets and custom days from the URL, and falls back to 30 days", () => {
@@ -19,4 +19,16 @@ describe("dashboard range", () => {
     expect(rangeProblem("2025-01-01", "2026-01-02")).toBe("Choose at most 366 days.");
     expect(rangeProblem("", "2026-01-02")).toBe("Choose a start and an end day.");
   });
+
+  it("turns a preset into Phnom Penh days, counting today", () => {
+    vi.useFakeTimers();
+    // 20:00 UTC on 14 Oct is already 15 Oct in Phnom Penh (UTC+7).
+    vi.setSystemTime(new Date("2026-10-14T20:00:00Z"));
+    expect(rangeDays({ period: "today" })).toEqual({ from: "2026-10-15", to: "2026-10-15" });
+    expect(rangeDays({ period: "7d" })).toEqual({ from: "2026-10-09", to: "2026-10-15" });
+    expect(rangeDays({ period: "30d" })).toEqual({ from: "2026-09-16", to: "2026-10-15" });
+    expect(rangeDays({ period: "custom", from: "2026-01-01", to: "2026-03-31" })).toEqual({ from: "2026-01-01", to: "2026-03-31" });
+  });
 });
+
+afterEach(() => vi.useRealTimers());
