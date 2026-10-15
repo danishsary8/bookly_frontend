@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
  */
 export function Rich({ text, strong }: { text: string; strong?: string }) {
   const parts: ReactNode[] = [];
-  const pattern = /\*\*(.+?)\*\*|\[(.+?)\]\((\/[^)\s]*)\)/g;
+  const pattern = /\*\*(.+?)\*\*|\[(.+?)\]\((\/(?![/\\])[^)\s]*)\)/g;
   let last = 0;
   for (const match of text.matchAll(pattern)) {
     const at = match.index ?? 0;
