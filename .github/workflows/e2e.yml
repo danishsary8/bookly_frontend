@@ -21,7 +21,7 @@ jobs:
   money-path:
     name: Money path end-to-end
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
 
     services:
       postgres:
@@ -139,10 +139,11 @@ jobs:
           fi
 
           # Run Playwright tests
-          npx playwright test e2e/smoke.spec.ts 2>&1 | tee /tmp/playwright.log
+          npx playwright test 2>&1 | tee /tmp/playwright.log
         env:
           E2E_BASE_URL: http://127.0.0.1:5173
           E2E_API_URL: http://127.0.0.1:8000/api/v1
+          E2E_MAIL_LOG: ${{ github.workspace }}/backend/storage/logs/laravel.log
           E2E_STAFF_EMAIL: admin@bookly.test
           E2E_STAFF_PASSWORD: ${{ env.E2E_STAFF_PASSWORD }}
           E2E_STAFF_TOTP_SECRET: ${{ env.E2E_STAFF_TOTP_SECRET }}
