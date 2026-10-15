@@ -16,6 +16,9 @@ const STAFF_SESSION = process.env.E2E_STAFF_SESSION;
 const CUSTOMER = { email: process.env.E2E_CUSTOMER_EMAIL ?? "demo@bookly.test", password: process.env.E2E_CUSTOMER_PASSWORD ?? "Password123!" };
 const json = { Accept: "application/json" };
 
+// Reduced motion: headings fade in with JavaScript motion, which axe would catch half-visible.
+test.use({ contextOptions: { reducedMotion: "reduce" } });
+
 /** The last 6-digit code mailed to this address (the log keeps the whole email). */
 function codeMailedTo(email: string): string | null {
   const log = readFileSync(MAIL_LOG!, "utf8");
