@@ -84,7 +84,7 @@ export function BookShelf({ id, title, eyebrow, books, loading, error, onRetry, 
           {action}
           {seeAllHref ? (
             <Link to={seeAllHref} className="inline-flex h-11 items-center gap-1.5 rounded-md px-2 text-[15px] font-semibold text-primary underline-offset-4 hover:underline">
-              {seeAllLabel} <ArrowRight className="size-4" aria-hidden="true" />
+              {seeAllLabel ?? dict.cards.seeAll} <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           ) : null}
           {books && books.length > 2 ? (
