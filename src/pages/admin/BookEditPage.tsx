@@ -54,6 +54,8 @@ function Panel({ id, title, action, children }: { id: string; title: string; act
 function DetailsForm({ book }: { book: StaffBook | null }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const staffSession = useStaff();
+  const isAdmin = staffSession?.user?.role === "admin";
   const [formError, setFormError] = useState<string | null>(null);
   const [names, setNames] = useState<Record<number, string>>(() => Object.fromEntries((book?.authors ?? []).map((a) => [a.id, a.name])));
   const categories = useQuery(catalogQueries.categories());
@@ -63,11 +65,13 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
   const { errors, isSubmitting, isDirty } = formState;
   const seriesId = useWatch({ control, name: "series_id" });
   const language = useWatch({ control, name: "language" });
+  const statusWatch = useWatch({ control, name: "status" });
 
   const submit = async (values: BookValues) => {
     setFormError(null);
     try {
-      const saved = book ? await staffApi.updateBook(book.id, toBookInput(values)) : await staffApi.createBook(toBookInput(values));
+      const payload = toBookInput(values, isAdmin);
+      const saved = book ? await staffApi.updateBook(book.id, payload) : await staffApi.createBook(payload);
       queryClient.setQueryData(staffKeys.book(saved.id), saved);
       void queryClient.invalidateQueries({ queryKey: ["staff", "books"] });
       void queryClient.invalidateQueries({ queryKey: ["catalog"] });
@@ -79,7 +83,7 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
         navigate(`/admin/books/${saved.id}`, { replace: true });
       }
     } catch (error) {
-      const message = applyApiErrors(error, setError, ["title", "author_ids", "category_ids", "publisher_id", "series_id", "series_order", "language", "page_count", "publish_date", "description"]);
+      const message = applyApiErrors(error, setError, ["title", "status", "publish_at", "author_ids", "category_ids", "publisher_id", "series_id", "series_order", "language", "page_count", "publish_date", "description"]);
       if (message) setFormError(message);
     }
   };
@@ -88,6 +92,45 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
     <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid content-start gap-5 rounded-xl border border-border bg-card p-5">
       <h2 className="font-sans text-[1.0625rem] font-semibold tracking-normal">Details</h2>
       {formError ? <FormAlert title={formError} /> : null}
+
+      {isAdmin ? (
+        <div className="grid gap-3 rounded-lg border border-border bg-surface-2/40 p-3.5">
+          <label className="text-sm font-semibold">Publishing Status</label>
+          <div role="radiogroup" aria-label="Book Status" className="inline-flex flex-wrap gap-2">
+            {(["draft", "scheduled", "live"] as const).map((s) => (
+              <label
+                key={s}
+                className={cn(
+                  "flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
+                  statusWatch === s
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-foreground hover:bg-surface-2",
+                )}
+              >
+                <input type="radio" value={s} {...register("status")} className="sr-only" />
+                <span className="capitalize">{s}</span>
+              </label>
+            ))}
+          </div>
+          {statusWatch === "scheduled" ? (
+            <TextField
+              label="Scheduled Publish Date & Time"
+              type="datetime-local"
+              error={errors.publish_at?.message}
+              {...register("publish_at")}
+            />
+          ) : null}
+        </div>
+      ) : (
+        <div className="rounded-lg border border-border bg-surface-2/40 p-3.5 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">Publishing Status:</span>
+            {book ? <BookState book={book} /> : <span className="font-medium text-muted-foreground">Draft (default)</span>}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">Only administrators can publish or schedule books.</p>
+        </div>
+      )}
+
       <TextField label="Title" error={errors.title?.message} {...register("title")} />
       <Controller
         control={control}

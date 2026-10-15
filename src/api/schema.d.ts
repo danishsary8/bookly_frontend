@@ -2863,7 +2863,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** All books incl. hidden/deleted (q, trashed) */
+        /** All books incl. hidden/deleted (q, status, trashed) */
         get: {
             parameters: {
                 query?: never;
@@ -2883,7 +2883,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** Create a book (title, publisher_id, series_id, author_ids, category_ids, ...) */
+        /** Create a book (title, status, publish_at, publisher_id, series_id, author_ids, category_ids, ...) */
         post: {
             parameters: {
                 query?: never;
@@ -2895,6 +2895,176 @@ export interface paths {
             responses: {
                 /** @description Created */
                 201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/books/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bulk update books (ids, add/remove categories, status, publish_at) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/books/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** (admin) Export books and variants as UTF-8 CSV with BOM */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description CSV */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/books/export-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** (admin) Download CSV import template */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description CSV */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/books/import/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** (admin) Preview CSV book import (file) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Preview */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/books/import/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** (admin) Confirm CSV book import (preview_token) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Imported */
+                200: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2976,6 +3146,40 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/staff/variants/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bulk update variants (ids, stock_quantity, low_stock_threshold, is_active, price_usd) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/staff/books/{id}/restore": {
@@ -5967,5 +6171,45 @@ export interface components {
     headers: never;
     pathItems: never;
 }
+export type SchemaError = components['schemas']['Error'];
+export type SchemaValidationError = components['schemas']['ValidationError'];
+export type SchemaMoney = components['schemas']['Money'];
+export type SchemaRiel = components['schemas']['Riel'];
+export type SchemaPageMeta = components['schemas']['PageMeta'];
+export type SchemaPageLinks = components['schemas']['PageLinks'];
+export type SchemaAmount = components['schemas']['Amount'];
+export type SchemaAuthor = components['schemas']['Author'];
+export type SchemaCategory = components['schemas']['Category'];
+export type SchemaPublisher = components['schemas']['Publisher'];
+export type SchemaSeries = components['schemas']['Series'];
+export type SchemaSeriesDetail = components['schemas']['SeriesDetail'];
+export type SchemaRatingSummary = components['schemas']['RatingSummary'];
+export type SchemaCheckoutPreview = components['schemas']['CheckoutPreview'];
+export type SchemaCouponCheck = components['schemas']['CouponCheck'];
+export type SchemaTokenResponse = components['schemas']['TokenResponse'];
+export type SchemaCustomer = components['schemas']['Customer'];
+export type SchemaBookCard = components['schemas']['BookCard'];
+export type SchemaVariant = components['schemas']['Variant'];
+export type SchemaBookDetail = components['schemas']['BookDetail'];
+export type SchemaAddress = components['schemas']['Address'];
+export type SchemaAddressInput = components['schemas']['AddressInput'];
+export type SchemaCartIssue = components['schemas']['CartIssue'];
+export type SchemaCart = components['schemas']['Cart'];
+export type SchemaOrder = components['schemas']['Order'];
+export type SchemaOrderDocument = components['schemas']['OrderDocument'];
+export type SchemaReturn = components['schemas']['Return'];
+export type SchemaReview = components['schemas']['Review'];
+export type SchemaOwnReview = components['schemas']['OwnReview'];
+export type ResponseValidation = components['responses']['Validation'];
+export type ResponseUnauthorized = components['responses']['Unauthorized'];
+export type ResponseForbidden = components['responses']['Forbidden'];
+export type ResponseNotFound = components['responses']['NotFound'];
+export type ResponseNoContent = components['responses']['NoContent'];
+export type ParameterId = components['parameters']['Id'];
+export type ParameterProvider = components['parameters']['Provider'];
+export type ParameterPerPage = components['parameters']['PerPage'];
+export type ParameterPeriod = components['parameters']['Period'];
+export type ParameterFrom = components['parameters']['From'];
+export type ParameterTo = components['parameters']['To'];
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

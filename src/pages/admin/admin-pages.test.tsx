@@ -27,6 +27,8 @@ const book: StaffBook = {
   id: 6,
   title: "The Hound of the Baskervilles",
   description: null,
+  status: "live",
+  publish_at: null,
   language: "English",
   page_count: 256,
   publish_date: null,

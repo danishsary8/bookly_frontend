@@ -55,10 +55,14 @@ export interface StaffVariant {
   cover_image_url: string | null;
 }
 
+export type BookStatus = "draft" | "scheduled" | "live";
+
 export interface StaffBook {
   id: number;
   title: string;
   description: string | null;
+  status: BookStatus;
+  publish_at: string | null;
   language: string;
   page_count: number | null;
   publish_date: string | null;
@@ -77,6 +81,8 @@ export interface StaffBook {
 export interface BookInput {
   title?: string;
   description?: string | null;
+  status?: BookStatus;
+  publish_at?: string | null;
   language?: string;
   page_count?: number | null;
   publish_date?: string | null;
@@ -85,6 +91,48 @@ export interface BookInput {
   series_order?: number | null;
   author_ids?: number[];
   category_ids?: number[];
+}
+
+export interface BulkBooksInput {
+  ids: number[];
+  add_category_ids?: number[];
+  remove_category_ids?: number[];
+  status?: BookStatus;
+  publish_at?: string | null;
+}
+
+export interface BulkVariantsInput {
+  ids: number[];
+  stock_quantity?: number;
+  low_stock_threshold?: number;
+  is_active?: boolean;
+  price_usd?: string;
+}
+
+export interface BookImportRow {
+  row_number: number;
+  action: "new" | "update" | "error";
+  title: string;
+  sku: string | null;
+  format: string | null;
+  price_usd: string | null;
+  stock_quantity: number | null;
+  errors: string[];
+}
+
+export interface BookImportPreviewResult {
+  preview_token: string;
+  total_rows: number;
+  new_books_count: number;
+  update_variants_count: number;
+  error_rows_count: number;
+  rows: BookImportRow[];
+}
+
+export interface BookImportConfirmResult {
+  books_created: number;
+  variants_updated: number;
+  message: string;
 }
 
 export interface VariantInput {
@@ -240,13 +288,28 @@ export const staffApi = {
   readNotification: (id: string) => api.post(`/staff/notifications/${id}/read`, {}),
   readAllNotifications: () => api.post("/staff/notifications/read-all", {}),
 
-  books: (params: { q?: string; trashed?: boolean; page?: number; per_page?: number } = {}) =>
+  books: (params: { q?: string; status?: BookStatus; trashed?: boolean; page?: number; per_page?: number } = {}) =>
     api.get<Paginated<StaffBook>>("/staff/books", { params: toQueryParams(params) }),
   book: (id: number) => api.get<Resource<StaffBook>>(`/staff/books/${id}`).then((r) => r.data),
   createBook: (input: BookInput) => api.post<Resource<StaffBook>>("/staff/books", input).then((r) => r.data),
   updateBook: (id: number, input: BookInput) => api.patch<Resource<StaffBook>>(`/staff/books/${id}`, input).then((r) => r.data),
   deleteBook: (id: number) => api.delete(`/staff/books/${id}`),
   restoreBook: (id: number) => api.post<Resource<StaffBook>>(`/staff/books/${id}/restore`, {}).then((r) => r.data),
+  bulkUpdateBooks: (input: BulkBooksInput) =>
+    api.post<Resource<{ updated_count: number; items: Array<{ id: number; title: string; status: BookStatus; success: boolean }> }>>("/staff/books/bulk", input).then((r) => r.data),
+  bulkUpdateVariants: (input: BulkVariantsInput) =>
+    api.post<Resource<{ updated_count: number; items: Array<{ id: number; sku: string; stock_quantity: number; price_usd: string; is_active: boolean; success: boolean }> }>>("/staff/variants/bulk", input).then((r) => r.data),
+  exportBooksCsv: () => api.get<Blob>("/staff/books/export", { responseType: "blob" }),
+  exportTemplateCsv: () => api.get<Blob>("/staff/books/export-template", { responseType: "blob" }),
+  previewImportBooksCsv: (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return api.post<Resource<BookImportPreviewResult>>("/staff/books/import/preview", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }).then((r) => r.data);
+  },
+  confirmImportBooksCsv: (preview_token: string) =>
+    api.post<Resource<BookImportConfirmResult>>("/staff/books/import/confirm", { preview_token }).then((r) => r.data),
 
   createVariant: (bookId: number, input: VariantInput) => api.post<Resource<StaffVariant>>(`/staff/books/${bookId}/variants`, input).then((r) => r.data),
   updateVariant: (id: number, input: VariantInput) => api.patch<Resource<StaffVariant>>(`/staff/variants/${id}`, input).then((r) => r.data),
