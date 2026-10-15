@@ -3,6 +3,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "@/test/render";
 import { newsletterApi } from "@/api/endpoints/newsletter";
+import { ApiError } from "@/api/errors";
 import { NewsletterSignup } from "@/components/shell/NewsletterSignup";
 import NewsletterConfirmPage from "@/pages/NewsletterConfirmPage";
 import NewsletterUnsubscribePage from "@/pages/NewsletterUnsubscribePage";
@@ -52,7 +53,7 @@ describe("NewsletterSignup", () => {
   it("handles api errors gracefully during subscription", async () => {
     const user = userEvent.setup();
     vi.spyOn(newsletterApi, "subscribe").mockRejectedValue(
-      new Error("Too many requests. Please wait.")
+      new ApiError({ kind: "rate_limited", message: "Too many requests. Please wait." })
     );
 
     renderWithProviders(<NewsletterSignup />);
