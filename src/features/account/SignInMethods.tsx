@@ -6,6 +6,7 @@ import { accountKeys } from "@/api/endpoints/account";
 import { authApi } from "@/api/endpoints/auth";
 import { ApiError } from "@/api/errors";
 import type { Customer } from "@/api/types";
+import { PasswordField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -110,7 +111,7 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
           }
         >
           {editingPhone ? (
-            <PhoneInTelegram onDone={() => setEditingPhone(false)} />
+            <PhoneInTelegram needsPassword={!!customer?.verified && customer.has_password !== false} onDone={() => setEditingPhone(false)} />
           ) : telegram && verifiedPhone ? (
             <p className="text-sm text-muted-foreground">{t.telegramSignIn}</p>
           ) : telegram ? (
@@ -138,12 +139,17 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
 
 /**
  * Confirm or change the number in place: the bot link is made straight away, so "Open Telegram" opens the
- * bot in one tap; the row updates by itself once the number is shared.
+ * bot in one tap; the row updates by itself once the number is shared. A verified account with a password
+ * types it first (a new number is a new way in); one without a password that signed in a while ago is asked
+ * to sign in again.
  */
-function PhoneInTelegram({ onDone }: { onDone: () => void }) {
+function PhoneInTelegram({ needsPassword, onDone }: { needsPassword: boolean; onDone: () => void }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { dict } = useT();
   const t = dict.security;
+  const [password, setPassword] = useState("");
+  const [asked, setAsked] = useState(false);
   const { state, start } = useTelegramLink("phone", (customer) => {
     void queryClient.invalidateQueries({ queryKey: accountKeys.all });
     toast.success({ title: t.phoneConfirmed, description: t.phoneOnAccount(customer.phone ?? t.yourNumber) });
@@ -151,19 +157,63 @@ function PhoneInTelegram({ onDone }: { onDone: () => void }) {
   });
   const started = useRef(false);
   useEffect(() => {
-    if (started.current) return;
+    if (needsPassword || started.current) return;
     started.current = true;
     void start();
-  }, [start]);
+  }, [needsPassword, start]);
 
+  const wrongPassword = state.phase === "failed" && !!state.error?.fieldErrors.password;
+  if (needsPassword && (!asked || wrongPassword)) {
+    return (
+      <form
+        noValidate
+        className="grid gap-4 rounded-lg bg-surface-2 p-4"
+        onSubmit={(event) => {
+          event.preventDefault();
+          setAsked(true);
+          void start(password);
+        }}
+      >
+        <p className="text-[15px]">{t.phonePasswordLead}</p>
+        <PasswordField
+          label={t.yourPassword}
+          autoComplete="current-password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          error={wrongPassword ? state.message : undefined}
+          autoFocus
+        />
+        <div className="flex flex-wrap gap-3">
+          <Button type="submit" disabled={password === ""}>
+            {t.continueToTelegram}
+          </Button>
+          <Button type="button" variant="ghost" onClick={onDone}>
+            {dict.ui.cancel}
+          </Button>
+        </div>
+      </form>
+    );
+  }
   if (state.phase === "failed") {
+    const signInAgain = state.error?.data.reason === "sign_in_again";
     return (
       <div className="grid gap-3 rounded-lg bg-surface-2 p-4">
         <FormAlert title={state.message} />
         <div className="flex flex-wrap gap-3">
-          <Button type="button" onClick={() => void start()}>
-            {dict.ui.tryAgain}
-          </Button>
+          {signInAgain ? (
+            <Button
+              type="button"
+              onClick={() => {
+                void authApi.logout().finally(() => navigate(`/login?next=${encodeURIComponent("/account/security")}`));
+              }}
+            >
+              {t.signInAgain}
+            </Button>
+          ) : (
+            <Button type="button" onClick={() => void start(needsPassword ? password : undefined)}>
+              {dict.ui.tryAgain}
+            </Button>
+          )}
           <Button type="button" variant="ghost" onClick={onDone}>
             {dict.ui.cancel}
           </Button>

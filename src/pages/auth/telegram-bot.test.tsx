@@ -298,8 +298,11 @@ describe("Account → Sign-in & security", () => {
 
     expect(await phoneRow().findByText("You can also sign in with Continue with Telegram.")).toBeInTheDocument();
     await user.click(phoneRow().getByRole("button", { name: "Change" }));
+    // A new number is a new way in: the password comes first (security review 2026-10-15).
+    await user.type(phoneRow().getByLabelText("Your Bookly password"), "reading123");
+    await user.click(phoneRow().getByRole("button", { name: "Continue" }));
     expect(await phoneRow().findByRole("link", { name: "Open Telegram" })).toBeInTheDocument();
-    expect(post).toHaveBeenCalledWith("/auth/telegram/phone");
+    expect(post).toHaveBeenCalledWith("/auth/telegram/phone", { password: "reading123" });
 
     await tick();
     await waitFor(() => expect(phoneRow().queryByRole("link", { name: "Open Telegram" })).not.toBeInTheDocument());
