@@ -256,8 +256,28 @@ export interface RestockInput {
   note?: string | null;
 }
 
+export interface StaffHealth {
+  status: "ok" | "degraded" | "down";
+  checks: {
+    database: { status: "ok" | "down" };
+    queue: {
+      status: "ok" | "degraded";
+      driver?: string;
+      pending: number;
+      failed: number;
+      oldest_pending_seconds: number | null;
+    };
+    telegram_bot: {
+      status: "off" | "ok" | "degraded";
+      error?: string;
+      repaired?: boolean;
+    };
+  };
+}
+
 export const staffKeys = {
   me: () => ["staff", "me"] as const,
+  health: () => ["staff", "health"] as const,
   dashboard: (range: DashboardRange) => ["staff", "dashboard", range] as const,
   sales: (range: DashboardRange) => ["staff", "sales", range] as const,
   books: (params: object) => ["staff", "books", toQueryParams(params)] as const,
@@ -280,6 +300,7 @@ export const staffAuthApi = {
 };
 
 export const staffApi = {
+  health: () => api.get<StaffHealth>("/staff/health"),
   summary: (range: DashboardRange) => api.get<Resource<DashboardSummary>>("/staff/dashboard/summary", { params: range }).then((r) => r.data),
   sales: (range: DashboardRange) => api.get<Resource<DailySales[]>>("/staff/dashboard/sales", { params: range }).then((r) => r.data),
 
@@ -330,6 +351,8 @@ export const staffApi = {
 
 export const staffQueries = {
   me: () => queryOptions({ queryKey: staffKeys.me(), queryFn: staffAuthApi.me }),
+  health: () =>
+    queryOptions({ queryKey: staffKeys.health(), queryFn: () => staffApi.health(), refetchInterval: 30_000 }),
   summary: (range: DashboardRange) => queryOptions({ queryKey: staffKeys.dashboard(range), queryFn: () => staffApi.summary(range), placeholderData: keepPreviousData }),
   sales: (range: DashboardRange) => queryOptions({ queryKey: staffKeys.sales(range), queryFn: () => staffApi.sales(range), placeholderData: keepPreviousData }),
   notifications: () =>

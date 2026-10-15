@@ -1,11 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { envelopeTarget, parseDsn, POST } from "../../api/report";
+import { envelopeTarget, parseDsn, POST, resetRateLimits } from "../../api/report";
 
 const DSN = "https://abc123@o4512.ingest.us.sentry.io/4512208";
 const envelope = (dsn: string) => `${JSON.stringify({ event_id: "1", dsn })}\n{"type":"event"}\n{"message":"boom"}`;
 const post = (body: string) => POST(new Request("https://bookly.test/api/report", { method: "POST", body }));
 
 afterEach(() => {
+  resetRateLimits();
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
 });
@@ -45,5 +46,37 @@ describe("error-report tunnel", () => {
     vi.stubEnv("VITE_SENTRY_DSN", DSN);
     vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 429 }));
     expect((await post(envelope(DSN))).status).toBe(429);
+  });
+
+  it("rejects payloads larger than 200 KB with 413", async () => {
+    vi.stubEnv("VITE_SENTRY_DSN", DSN);
+    const oversizedBody = envelope(DSN) + "x".repeat(205 * 1024);
+    const response = await post(oversizedBody);
+    expect(response.status).toBe(413);
+  });
+
+  it("rate limits to 30 requests per minute per IP", async () => {
+    vi.stubEnv("VITE_SENTRY_DSN", DSN);
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 200 }));
+    const postWithIp = (ip: string) =>
+      POST(
+        new Request("https://bookly.test/api/report", {
+          method: "POST",
+          headers: { "x-forwarded-for": ip },
+          body: envelope(DSN),
+        })
+      );
+
+    for (let i = 0; i < 30; i++) {
+      const res = await postWithIp("1.2.3.4");
+      expect(res.status).toBe(200);
+    }
+
+    const blocked = await postWithIp("1.2.3.4");
+    expect(blocked.status).toBe(429);
+    expect(blocked.headers.get("Retry-After")).toBeTruthy();
+
+    const otherIp = await postWithIp("5.6.7.8");
+    expect(otherIp.status).toBe(200);
   });
 });

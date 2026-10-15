@@ -46,8 +46,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Database, queue and Telegram bot health for uptime monitors
-         * @description Includes checks.telegram_bot: off without a bot token; otherwise getWebhookInfo is cached for 10 minutes, including failures. Status is ok when the webhook URL matches this request's API address (HTTPS in production) and no delivery error is dated within the last 30 minutes. Otherwise degraded with error: Telegram delivery message (token redacted), webhook not set, or Telegram unreachable. A degraded queue or bot makes overall status degraded; HTTP stays 200. Database down keeps the existing 503 response.
+         * Liveness and database health for uptime monitors
+         * @description Returns only status: "ok" (200) or status: "fail" (503). Database down returns 503. Detailed checks are restricted to admins on /staff/health.
          */
         get: {
             parameters: {
@@ -58,14 +58,14 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description status ok or degraded (queue jobs waiting > 10 min or Telegram bot degraded); checks include database, queue and telegram_bot */
+                /** @description status ok */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Database unreachable */
+                /** @description status fail (database unreachable) */
                 503: {
                     headers: {
                         [name: string]: unknown;
@@ -6391,6 +6391,47 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** (admin) Detailed system health (database, queue, telegram bot) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description status ok or degraded; checks include database, queue and telegram_bot */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description status down (database unreachable) */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
