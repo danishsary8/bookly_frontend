@@ -159,7 +159,14 @@ export function InvoiceSheet({ doc }: { doc: Doc }) {
               </td>
               <td className="py-2.5 pr-3 text-right tabular-nums">{item.quantity}</td>
               <td className="py-2.5 pr-3 text-right tabular-nums">{formatUsd(item.unit_price_usd)}</td>
-              <td className="py-2.5 text-right tabular-nums">{formatUsd(item.subtotal_usd)}</td>
+              <td className="py-2.5 text-right tabular-nums">
+                <span className="block">{formatUsd(item.subtotal_usd)}</span>
+                {doc.khr?.rate ? (
+                  <span className="block text-xs text-muted-foreground">
+                    ≈ {formatKhr(Math.round(num(item.subtotal_usd) * num(doc.khr.rate)))}
+                  </span>
+                ) : null}
+              </td>
             </tr>
           ))}
         </tbody>
