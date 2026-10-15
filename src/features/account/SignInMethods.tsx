@@ -47,6 +47,10 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
   const telegram = useTelegramBot();
   const [editingPhone, setEditingPhone] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
+  const [pendingDismissed, setPendingDismissed] = useState(false);
+  // An email waiting for its code (typed at a Telegram sign-up) opens at the code step.
+  const pending = customer?.pending_email && !pendingDismissed ? customer.pending_email : null;
+  const showChanger = editingEmail || pending !== null;
   const [sendingEmail, setSendingEmail] = useState(false);
   const verifiedPhone = customer?.phone_verified ? customer.phone : null;
   const { dict } = useT();
@@ -80,7 +84,7 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
           value={customer?.email ?? <span className="text-muted-foreground">{t.notAdded}</span>}
           status={customer?.email ? customer.email_verified ? <Verified /> : <NotVerified /> : null}
           action={
-            editingEmail ? null : (
+            showChanger ? null : (
               <div className="flex flex-wrap gap-2">
                 {customer?.email && !customer.email_verified ? (
                   <Button variant="outline" size="sm" onClick={() => void verifyEmail()} loading={sendingEmail}>
@@ -94,7 +98,17 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
             )
           }
         >
-          {editingEmail ? <EmailChanger current={customer?.email ?? null} hasPassword={customer?.has_password !== false} onDone={() => setEditingEmail(false)} /> : null}
+          {showChanger ? (
+            <EmailChanger
+              current={customer?.email ?? null}
+              hasPassword={customer?.has_password !== false}
+              pending={editingEmail ? null : pending}
+              onDone={() => {
+                setEditingEmail(false);
+                setPendingDismissed(true);
+              }}
+            />
+          ) : null}
         </Row>
         <Row
           icon={<Phone className="size-5" aria-hidden="true" />}
