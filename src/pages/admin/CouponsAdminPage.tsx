@@ -166,10 +166,15 @@ export default function CouponsAdminPage() {
     <AdminPage
       title="Coupons"
       lead={meta && meta.total ? rangeSummary(meta.from, meta.to, meta.total, meta.total === 1 ? "coupon" : "coupons") : "Discount codes customers enter on their cart."}
+      // Owner 2026-10-15 (security review): coupons give money away, so only admins make or change them.
       actions={
-        <Button onClick={() => setEditing("new")}>
-          <Plus aria-hidden="true" /> New coupon
-        </Button>
+        isAdmin ? (
+          <Button onClick={() => setEditing("new")}>
+            <Plus aria-hidden="true" /> New coupon
+          </Button>
+        ) : (
+          <p className="text-sm text-muted-foreground">Only admins create or change coupons.</p>
+        )
       }
     >
       <div className="flex flex-wrap items-center gap-3">
@@ -217,16 +222,16 @@ export default function CouponsAdminPage() {
                   </td>
                   <td className={`${td} whitespace-nowrap text-sm text-muted-foreground`}>{c.expires_at ? orderDate(c.expires_at) : "No end"}</td>
                   <td className={td}>
-                    <div className="flex justify-end gap-1">
-                      <Button size="icon" variant="ghost" aria-label={`Edit ${c.code}`} onClick={() => setEditing(c)}>
-                        <Pencil aria-hidden="true" />
-                      </Button>
-                      {isAdmin ? (
+                    {isAdmin ? (
+                      <div className="flex justify-end gap-1">
+                        <Button size="icon" variant="ghost" aria-label={`Edit ${c.code}`} onClick={() => setEditing(c)}>
+                          <Pencil aria-hidden="true" />
+                        </Button>
                         <Button size="icon" variant="ghost" aria-label={`Delete ${c.code}`} onClick={() => setDeleting(c)}>
                           <Trash2 aria-hidden="true" />
                         </Button>
-                      ) : null}
-                    </div>
+                      </div>
+                    ) : null}
                   </td>
                 </tr>
               );

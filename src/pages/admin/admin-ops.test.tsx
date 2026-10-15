@@ -327,11 +327,15 @@ describe("coupons", () => {
     expect(create).not.toHaveBeenCalled();
   });
 
-  it("only lets admins delete", async () => {
+  it("lets staff see coupons but only admins create, edit or delete them", async () => {
+    // Owner 2026-10-15 (security review): a coupon gives money away.
     signIn(staff);
     vi.spyOn(opsApi, "coupons").mockResolvedValue(page([coupon]));
     app("/admin/coupons");
-    expect(await screen.findByRole("button", { name: "Edit WELCOME10" })).toBeInTheDocument();
+    expect(await screen.findByText("WELCOME10")).toBeInTheDocument();
+    expect(screen.getByText("Only admins create or change coupons.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "New coupon" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Edit WELCOME10" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Delete WELCOME10" })).not.toBeInTheDocument();
   });
 });
