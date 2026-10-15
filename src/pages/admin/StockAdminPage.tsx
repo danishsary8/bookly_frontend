@@ -250,7 +250,7 @@ export default function StockAdminPage() {
           </div>
         )}
 
-        {Boolean(meta?.last_page && meta.last_page > 1) ? (
+        {meta?.last_page && meta.last_page > 1 ? (
           <div className="pt-2">
             <Pagination
               page={meta?.current_page ?? 1}

@@ -187,7 +187,7 @@ export function StockHistoryDrawer({
                 </table>
               </div>
 
-              {Boolean(meta?.last_page && meta.last_page > 1) ? (
+              {meta?.last_page && meta.last_page > 1 ? (
                 <div className="flex items-center justify-between pt-2">
                   <p className="text-xs text-muted-foreground">
                     Page {meta?.current_page ?? 1} of {meta?.last_page ?? 1} ({meta?.total ?? 0} movements)
