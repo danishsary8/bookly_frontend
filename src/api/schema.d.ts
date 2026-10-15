@@ -3374,7 +3374,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** Create (code, type percentage|fixed, value, min_order_amount, max_uses, starts_at, expires_at) */
+        /** (admin) Create (code, type percentage|fixed, value, min_order_amount, max_uses, starts_at, expires_at) */
         post: {
             parameters: {
                 query?: never;
@@ -3391,6 +3391,7 @@ export interface paths {
                     };
                     content?: never;
                 };
+                403: components["responses"]["Forbidden"];
             };
         };
         delete?: never;
@@ -3446,7 +3447,7 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        /** Update coupon */
+        /** (admin) Update coupon */
         patch: {
             parameters: {
                 query?: never;
@@ -3465,6 +3466,7 @@ export interface paths {
                     };
                     content?: never;
                 };
+                403: components["responses"]["Forbidden"];
             };
         };
         trace?: never;
