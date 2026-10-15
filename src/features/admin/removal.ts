@@ -24,3 +24,9 @@ export function erasureLabel(iso: string, now = Date.now()): string {
   const days = Math.round(hours / 24);
   return `Erased in ${days} day${days === 1 ? "" : "s"}`;
 }
+
+/** Days remaining out of the 30-day Trash retention window. Returns 0 if expired. */
+export function trashDaysRemaining(deletedAt: string, now = Date.now()): number {
+  const expires = new Date(deletedAt).getTime() + 30 * 24 * 60 * 60 * 1000;
+  return Math.max(0, Math.ceil((expires - now) / (24 * 60 * 60 * 1000)));
+}

@@ -113,7 +113,7 @@ describe("Book Publishing, Bulk Actions and CSV Import/Export", () => {
     expect(screen.getByRole("radio", { name: "Live" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Scheduled" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Draft" })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "Deleted" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Trash" })).toBeInTheDocument();
 
     // Books and status badges rendered
     expect(await screen.findByText("Live Odyssey")).toBeInTheDocument();

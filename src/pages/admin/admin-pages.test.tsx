@@ -361,6 +361,84 @@ describe("books", () => {
     expect(screen.queryByRole("button", { name: "Delete Paperback" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Delete book/ })).not.toBeInTheDocument();
   });
+
+  it("allows admin to strict delete a book with title, password, and 2FA code", async () => {
+    const user = userEvent.setup();
+    signIn(admin);
+    vi.spyOn(staffApi, "book").mockResolvedValue(book);
+    vi.spyOn(catalogApi, "categories").mockResolvedValue([]);
+    vi.spyOn(catalogApi, "publishers").mockResolvedValue(page([]));
+    vi.spyOn(catalogApi, "seriesList").mockResolvedValue(page([]));
+    const deleteSpy = vi.spyOn(staffApi, "deleteBook").mockResolvedValue({
+      ...book,
+      deleted_at: new Date().toISOString(),
+    });
+
+    app("/admin/books/6");
+    const openBtn = await screen.findByRole("button", { name: "Strict delete book" });
+    await user.click(openBtn);
+
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Strict delete book" })).toBeInTheDocument();
+
+    const submitBtn = within(dialog).getByRole("button", { name: "Strict delete" });
+    expect(submitBtn).toBeDisabled();
+
+    await user.type(within(dialog).getByLabelText(/to confirm/), "The Hound of the Baskervilles");
+    await user.type(within(dialog).getByLabelText("Your password"), "AdminSecret123!");
+    await user.type(within(dialog).getByLabelText("Two-step authentication code"), "123456");
+
+    expect(submitBtn).toBeEnabled();
+    await user.click(submitBtn);
+
+    expect(deleteSpy).toHaveBeenCalledWith(6, {
+      confirm: "The Hound of the Baskervilles",
+      password: "AdminSecret123!",
+      code: "123456",
+    });
+  });
+
+  it("displays remaining restore days in trash and allows restoring", async () => {
+    const user = userEvent.setup();
+    signIn(admin);
+    const trashedBook: StaffBook = {
+      ...book,
+      deleted_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+    vi.spyOn(staffApi, "book").mockResolvedValue(trashedBook);
+    vi.spyOn(catalogApi, "categories").mockResolvedValue([]);
+    vi.spyOn(catalogApi, "publishers").mockResolvedValue(page([]));
+    vi.spyOn(catalogApi, "seriesList").mockResolvedValue(page([]));
+    const restoreSpy = vi.spyOn(staffApi, "restoreBook").mockResolvedValue({
+      ...book,
+      deleted_at: null,
+    });
+
+    app("/admin/books/6");
+    expect(await screen.findByText(/20 days remaining to restore/)).toBeInTheDocument();
+
+    const restoreBtn = screen.getByRole("button", { name: "Restore book" });
+    expect(restoreBtn).toBeEnabled();
+    await user.click(restoreBtn);
+
+    expect(restoreSpy).toHaveBeenCalledWith(6);
+  });
+
+  it("disables restore button when trash retention is expired (> 30 days)", async () => {
+    signIn(admin);
+    const expiredBook: StaffBook = {
+      ...book,
+      deleted_at: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+    vi.spyOn(staffApi, "book").mockResolvedValue(expiredBook);
+    vi.spyOn(catalogApi, "categories").mockResolvedValue([]);
+    vi.spyOn(catalogApi, "publishers").mockResolvedValue(page([]));
+    vi.spyOn(catalogApi, "seriesList").mockResolvedValue(page([]));
+
+    app("/admin/books/6");
+    expect(await screen.findByText(/30-day restore window expired/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Restore book" })).toBeDisabled();
+  });
 });
 
 describe("lookups", () => {

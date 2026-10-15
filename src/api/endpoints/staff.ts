@@ -146,6 +146,12 @@ export interface VariantInput {
   is_active?: boolean;
 }
 
+export interface StrictDeleteInput {
+  confirm: string;
+  password: string;
+  code: string;
+}
+
 export type DashboardPeriod = "today" | "7d" | "30d";
 /** A preset period, or Phnom Penh days `from`–`to` (YYYY-MM-DD, at most 366 days; the API checks it too). */
 export type DashboardRange = { period: DashboardPeriod } | { period: "custom"; from: string; to: string };
@@ -314,7 +320,8 @@ export const staffApi = {
   book: (id: number) => api.get<Resource<StaffBook>>(`/staff/books/${id}`).then((r) => r.data),
   createBook: (input: BookInput) => api.post<Resource<StaffBook>>("/staff/books", input).then((r) => r.data),
   updateBook: (id: number, input: BookInput) => api.patch<Resource<StaffBook>>(`/staff/books/${id}`, input).then((r) => r.data),
-  deleteBook: (id: number) => api.delete(`/staff/books/${id}`),
+  deleteBook: (id: number, input: StrictDeleteInput) =>
+    api.delete<Resource<StaffBook>>(`/staff/books/${id}`, { data: input }).then((r) => r.data),
   restoreBook: (id: number) => api.post<Resource<StaffBook>>(`/staff/books/${id}/restore`, {}).then((r) => r.data),
   bulkUpdateBooks: (input: BulkBooksInput) =>
     api.post<Resource<{ updated_count: number; items: Array<{ id: number; title: string; status: BookStatus; success: boolean }> }>>("/staff/books/bulk", input).then((r) => r.data),

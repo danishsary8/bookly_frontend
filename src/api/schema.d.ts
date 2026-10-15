@@ -3256,7 +3256,7 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        /** (admin) Soft delete */
+        /** (admin) Strict soft delete into trash (requires confirm matching title, password, and fresh 2FA code) */
         delete: {
             parameters: {
                 query?: never;
@@ -3266,9 +3266,40 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Exact title of the book */
+                        confirm: string;
+                        /** @description Admin current password */
+                        password: string;
+                        /** @description 6-digit 2FA TOTP code */
+                        code: string;
+                    };
+                };
+            };
             responses: {
-                204: components["responses"]["NoContent"];
+                /** @description Trashed book resource */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Confirmation mismatch or invalid password/code */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Too many failed 2FA attempts */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
         };
         options?: never;
@@ -3339,7 +3370,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** (admin) Restore a deleted book */
+        /** (admin) Restore a trashed book within 30-day window */
         post: {
             parameters: {
                 query?: never;
@@ -3351,8 +3382,15 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Restored */
+                /** @description Restored book resource */
                 200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Book has been in trash for more than 30 days */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };

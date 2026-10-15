@@ -177,7 +177,7 @@ export default function BooksPage() {
             { label: "Live", status: "live", view: undefined },
             { label: "Scheduled", status: "scheduled", view: undefined },
             { label: "Draft", status: "draft", view: undefined },
-            { label: "Deleted", status: undefined, view: "deleted" },
+            { label: "Trash", status: undefined, view: "deleted" },
           ].map((opt) => {
             const active = opt.view ? trashed : !trashed && statusParam === opt.status;
             return (
@@ -248,8 +248,8 @@ export default function BooksPage() {
       ) : list.length === 0 ? (
         <EmptyState
           icon={BookCopy}
-          title={q ? `No books match "${q}"` : trashed ? "No deleted books" : "No books yet"}
-          description={q ? "Check the spelling or search for part of the title." : trashed ? "Books you delete can be restored from here." : "Add the first book to start selling."}
+          title={q ? `No books match "${q}"` : trashed ? "Trash is empty" : "No books yet"}
+          description={q ? "Check the spelling or search for part of the title." : trashed ? "Books you delete are kept here for 30 days before permanent removal." : "Add the first book to start selling."}
           className="rounded-xl border border-dashed border-border"
         />
       ) : (

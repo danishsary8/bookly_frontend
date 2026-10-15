@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, ExternalLink, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Clock, ExternalLink, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { staffApi, staffKeys, staffQueries, type StaffBook, type StaffVariant } from "@/api/endpoints/staff";
@@ -21,7 +21,9 @@ import { AdminPage } from "@/features/admin/AdminPage";
 import { AuthorPicker } from "@/features/admin/books/AuthorPicker";
 import { bookDefaults, bookSchema, toBookInput, type BookValues } from "@/features/admin/books/bookSchema";
 import { BookState } from "@/features/admin/books/BookState";
+import { DeleteBookDialog } from "@/features/admin/books/DeleteBookDialog";
 import { VariantDialog } from "@/features/admin/books/VariantDialog";
+import { trashDaysRemaining } from "@/features/admin/removal";
 import { StockHistoryDrawer } from "@/features/admin/stock/StockHistoryDrawer";
 import { useStaff } from "@/features/admin/staffSession";
 import { formatLabel, LANGUAGES } from "@/lib/catalog";
@@ -334,25 +336,17 @@ function Formats({ book, isAdmin }: { book: StaffBook; isAdmin: boolean }) {
   );
 }
 
-/** Admins: soft delete (the book leaves the shop, past orders keep it) and restore. */
+/** Admins: strict delete into 30-day trash and restore. */
 function DangerZone({ book }: { book: StaffBook }) {
   const queryClient = useQueryClient();
-  const [confirm, setConfirm] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const done = (saved?: StaffBook) => {
     if (saved) queryClient.setQueryData(staffKeys.book(book.id), saved);
     else void queryClient.invalidateQueries({ queryKey: staffKeys.book(book.id) });
     void queryClient.invalidateQueries({ queryKey: ["staff", "books"] });
     void queryClient.invalidateQueries({ queryKey: ["catalog"] });
   };
-  const remove = useMutation({
-    mutationFn: () => staffApi.deleteBook(book.id),
-    onSuccess: () => {
-      toast.success({ title: `"${book.title}" deleted`, description: "It's in Deleted books if you need it back." });
-      done();
-    },
-    onError: (error) => toast.error({ title: "Couldn't delete the book", description: ApiError.from(error).message }),
-    onSettled: () => setConfirm(false),
-  });
+
   const restore = useMutation({
     mutationFn: () => staffApi.restoreBook(book.id),
     onSuccess: (saved) => {
@@ -362,31 +356,63 @@ function DangerZone({ book }: { book: StaffBook }) {
     onError: (error) => toast.error({ title: "Couldn't restore the book", description: ApiError.from(error).message }),
   });
 
+  const [now] = useState(() => Date.now());
+  const isTrashed = Boolean(book.deleted_at);
+  const daysRemaining = book.deleted_at ? trashDaysRemaining(book.deleted_at, now) : null;
+  const canRestore = daysRemaining !== null && daysRemaining > 0;
+
   return (
-    <Panel id="book-danger" title={book.deleted_at ? "Deleted book" : "Delete"}>
-      {book.deleted_at ? (
+    <Panel id="book-danger" title={isTrashed ? "Trash" : "Strict delete"}>
+      {isTrashed ? (
         <>
-          <p className="text-[15px] text-muted-foreground">This book is hidden from the shop and the book list. Restore it to edit and sell it again.</p>
-          <Button variant="outline" onClick={() => restore.mutate()} loading={restore.isPending} className="w-fit">
+          <p className="text-[15px] text-muted-foreground">
+            This book was moved to the Trash. It can be restored within 30 days of deletion.
+          </p>
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold",
+                canRestore ? "bg-amber-500/10 text-amber-700 dark:text-amber-400" : "bg-destructive/10 text-destructive",
+              )}
+            >
+              <Clock className="size-3.5" aria-hidden="true" />
+              {canRestore
+                ? `${daysRemaining} ${daysRemaining === 1 ? "day" : "days"} remaining to restore`
+                : "30-day restore window expired"}
+            </span>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => restore.mutate()}
+            loading={restore.isPending}
+            disabled={!canRestore}
+            className="w-fit"
+          >
             <RotateCcw aria-hidden="true" /> Restore book
           </Button>
         </>
       ) : (
         <>
-          <p className="text-[15px] text-muted-foreground">Removes the book from the shop. Past orders keep it, and you can restore it later.</p>
-          <Button variant="outline" onClick={() => setConfirm(true)} className="w-fit border-destructive/50 text-destructive hover:bg-destructive-tint">
-            <Trash2 aria-hidden="true" /> Delete book
+          <p className="text-[15px] text-muted-foreground">
+            Strict delete moves this book to the Trash for 30 days. Requires your password, 2FA code, and typing the title to confirm.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => setDeleteOpen(true)}
+            className="w-fit border-destructive/50 text-destructive hover:bg-destructive-tint"
+          >
+            <Trash2 aria-hidden="true" /> Strict delete book
           </Button>
         </>
       )}
-      <ConfirmDialog
-        open={confirm}
-        onOpenChange={setConfirm}
-        title={`Delete "${book.title}"?`}
-        description="It disappears from the shop straight away. Past orders keep it, and an admin can restore it from Deleted books."
-        confirmLabel="Delete book"
-        loading={remove.isPending}
-        onConfirm={() => remove.mutate()}
+      <DeleteBookDialog
+        book={book}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onSuccess={() => {
+          toast.success({ title: `"${book.title}" moved to Trash`, description: "Available to restore for 30 days." });
+          done();
+        }}
       />
     </Panel>
   );

@@ -1,15 +1,26 @@
+import { useState } from "react";
 import { CalendarClock, CheckCircle2, EyeOff, FileText, Trash2 } from "lucide-react";
 import type { StaffBook } from "@/api/endpoints/staff";
 import { Badge } from "@/components/ui/badge";
+import { trashDaysRemaining } from "@/features/admin/removal";
 
 /** Live (on sale), scheduled, draft, or deleted: icon, fill style and text (MASTER §6.3). */
 export function BookState({ book }: { book: StaffBook }) {
-  if (book.deleted_at)
+  const [now] = useState(() => Date.now());
+
+  if (book.deleted_at) {
+    const daysLeft = trashDaysRemaining(book.deleted_at, now);
+
     return (
-      <Badge tone="danger" shape="outline">
-        <Trash2 aria-hidden="true" /> Deleted
+      <Badge
+        tone="danger"
+        shape="outline"
+        title={daysLeft > 0 ? `${daysLeft} days remaining to restore` : "Trash retention expired (over 30 days)"}
+      >
+        <Trash2 aria-hidden="true" /> Trash{daysLeft > 0 ? ` (${daysLeft}d)` : " (expired)"}
       </Badge>
     );
+  }
 
   if (book.status === "draft")
     return (
