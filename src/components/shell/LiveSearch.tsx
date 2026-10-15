@@ -205,7 +205,7 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
         <div className="ui-pop absolute inset-x-0 top-[calc(100%+6px)] z-(--z-popover) min-w-[min(28rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-overlay" data-state="open">
           <ul id={listboxId} role="listbox" aria-label={dict.shell.suggestions} className="max-h-[min(28rem,70dvh)] overflow-y-auto p-1.5">
             {showSkeleton ? (
-              <li role="presentation" className="grid gap-3 p-2">
+              <li role="option" aria-disabled="true" className="grid gap-3 p-2">
                 <span className="sr-only">{dict.shell.searching}</span>
                 <SkeletonRow className="[&>div:first-child]:h-12 [&>div:first-child]:w-8" />
                 <SkeletonRow className="[&>div:first-child]:h-12 [&>div:first-child]:w-8" />
@@ -214,7 +214,7 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
             ) : null}
 
             {!waiting && results.isError ? (
-              <li role="presentation" className="px-3 py-3 text-sm text-muted-foreground">
+              <li role="option" aria-disabled="true" className="px-3 py-3 text-sm text-muted-foreground">
                 {dict.shell.searchDown}{" "}
                 <button type="button" onClick={() => results.refetch()} className="font-semibold text-primary underline-offset-4 hover:underline">
                   {dict.ui.tryAgain}
@@ -223,7 +223,7 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
             ) : null}
 
             {!waiting && !results.isError && enabled && results.isSuccess && books.length === 0 ? (
-              <li role="presentation" className="px-3 py-3 text-sm text-muted-foreground">
+              <li role="option" aria-disabled="true" className="px-3 py-3 text-sm text-muted-foreground">
                 {dict.shell.noMatch(term)}
               </li>
             ) : null}

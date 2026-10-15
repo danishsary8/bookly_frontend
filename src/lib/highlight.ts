@@ -5,7 +5,8 @@ export type TextPart = { text: string; match: boolean };
  * so search results can bold what matched: "harry po" in "Harry Potter".
  */
 export function highlightParts(text: string, query: string): TextPart[] {
-  const words = query.trim().toLowerCase().split(/\s+/).filter((w) => w.length > 0);
+  const cleanQuery = query.replace(/[\u200B\uFEFF]/g, "");
+  const words = cleanQuery.trim().toLowerCase().split(/\s+/).filter((w) => w.length > 0);
   if (words.length === 0) return [{ text, match: false }];
 
   const escaped = [...words].sort((a, b) => b.length - a.length).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
