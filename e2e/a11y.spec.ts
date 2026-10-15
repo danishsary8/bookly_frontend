@@ -18,7 +18,7 @@ const PAGES = [
 const ACCOUNT_PAGES = ["/account", "/account/profile", "/account/security", "/account/addresses", "/account/wishlist", "/account/orders", "/account/returns", "/account/reviews", "/checkout"];
 const ADMIN_PAGES = [
   "/admin", "/admin/reports", "/admin/orders", "/admin/returns", "/admin/reviews", "/admin/coupons", "/admin/customers", "/admin/books", "/admin/books/new",
-  "/admin/authors", "/admin/categories", "/admin/publishers", "/admin/series", "/admin/members", "/admin/exchange-rates", "/admin/audit-log",
+  "/admin/stock", "/admin/authors", "/admin/categories", "/admin/publishers", "/admin/series", "/admin/members", "/admin/exchange-rates", "/admin/audit-log",
 ];
 
 async function audit(page: Page) {

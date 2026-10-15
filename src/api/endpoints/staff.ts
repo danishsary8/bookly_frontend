@@ -172,12 +172,50 @@ export type SeriesInput = { name?: string; description?: string | null };
 type LookupOf<K extends LookupKind> = K extends "authors" ? Author : K extends "categories" ? Category : K extends "publishers" ? Publisher : Series;
 type LookupInputOf<K extends LookupKind> = K extends "authors" ? AuthorInput : K extends "categories" ? CategoryInput : K extends "publishers" ? PublisherInput : SeriesInput;
 
+export interface StockItem {
+  id: number;
+  book_id: number;
+  book_title: string;
+  format: BookFormat;
+  sku: string;
+  isbn: string | null;
+  price_usd: string;
+  stock_quantity: number;
+  low_stock_threshold: number;
+  status: "in_stock" | "low" | "out";
+  is_active: boolean;
+  cover_image_url: string | null;
+}
+
+export interface InventoryMovementItem {
+  id: number;
+  book_variant_id: number;
+  change_qty: number;
+  reason: "sale" | "restock" | "return" | "adjustment";
+  reference: { type: string; id: number; order_number?: string | null } | null;
+  staff: { id: number; name: string } | null;
+  note: string | null;
+  supplier: string | null;
+  stock_after: number | null;
+  unit_cost_usd?: string | null;
+  created_at: string;
+}
+
+export interface RestockInput {
+  quantity: number;
+  supplier?: string | null;
+  unit_cost_usd?: string | number | null;
+  note?: string | null;
+}
+
 export const staffKeys = {
   me: () => ["staff", "me"] as const,
   dashboard: (range: DashboardRange) => ["staff", "dashboard", range] as const,
   sales: (range: DashboardRange) => ["staff", "sales", range] as const,
   books: (params: object) => ["staff", "books", toQueryParams(params)] as const,
   book: (id: number) => ["staff", "book", id] as const,
+  stock: (params: object) => ["staff", "stock", toQueryParams(params)] as const,
+  stockHistory: (variantId: number, params: object) => ["staff", "variants", variantId, "history", toQueryParams(params)] as const,
   notifications: () => ["staff", "notifications"] as const,
 };
 
@@ -214,6 +252,13 @@ export const staffApi = {
   updateVariant: (id: number, input: VariantInput) => api.patch<Resource<StaffVariant>>(`/staff/variants/${id}`, input).then((r) => r.data),
   deleteVariant: (id: number) => api.delete(`/staff/variants/${id}`),
 
+  stock: (params: { status?: "low" | "out"; q?: string; page?: number; per_page?: number } = {}) =>
+    api.get<Paginated<StockItem>>("/staff/stock", { params: toQueryParams(params) }),
+  restockVariant: (variantId: number, input: RestockInput) =>
+    api.post<{ variant: StaffVariant; movement: InventoryMovementItem }>(`/staff/variants/${variantId}/restock`, input),
+  stockHistory: (variantId: number, params: { page?: number; per_page?: number } = {}) =>
+    api.get<Paginated<InventoryMovementItem>>(`/staff/variants/${variantId}/stock-history`, { params: toQueryParams(params) }),
+
   createLookup: <K extends LookupKind>(kind: K, input: LookupInputOf<K>) => api.post<Resource<LookupOf<K>>>(`/staff/${kind}`, input).then((r) => r.data),
   updateLookup: <K extends LookupKind>(kind: K, id: number, input: LookupInputOf<K>) =>
     api.patch<Resource<LookupOf<K>>>(`/staff/${kind}/${id}`, input).then((r) => r.data),
@@ -229,4 +274,8 @@ export const staffQueries = {
   books: (params: Parameters<typeof staffApi.books>[0] = {}) =>
     queryOptions({ queryKey: staffKeys.books(params), queryFn: () => staffApi.books(params), placeholderData: keepPreviousData }),
   book: (id: number) => queryOptions({ queryKey: staffKeys.book(id), queryFn: () => staffApi.book(id) }),
+  stock: (params: Parameters<typeof staffApi.stock>[0] = {}) =>
+    queryOptions({ queryKey: staffKeys.stock(params), queryFn: () => staffApi.stock(params), placeholderData: keepPreviousData }),
+  stockHistory: (variantId: number, params: Parameters<typeof staffApi.stockHistory>[1] = {}) =>
+    queryOptions({ queryKey: staffKeys.stockHistory(variantId, params), queryFn: () => staffApi.stockHistory(variantId, params), placeholderData: keepPreviousData }),
 };

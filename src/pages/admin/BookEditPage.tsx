@@ -22,6 +22,7 @@ import { AuthorPicker } from "@/features/admin/books/AuthorPicker";
 import { bookDefaults, bookSchema, toBookInput, type BookValues } from "@/features/admin/books/bookSchema";
 import { BookState } from "@/features/admin/books/BookState";
 import { VariantDialog } from "@/features/admin/books/VariantDialog";
+import { StockHistoryDrawer } from "@/features/admin/stock/StockHistoryDrawer";
 import { useStaff } from "@/features/admin/staffSession";
 import { formatLabel, LANGUAGES } from "@/lib/catalog";
 import { applyApiErrors } from "@/lib/forms";
@@ -175,6 +176,7 @@ function Formats({ book, isAdmin }: { book: StaffBook; isAdmin: boolean }) {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<StaffVariant | null | "new">(null);
   const [deleting, setDeleting] = useState<StaffVariant | null>(null);
+  const [historyVariant, setHistoryVariant] = useState<StaffVariant | null>(null);
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: staffKeys.book(book.id) });
     void queryClient.invalidateQueries({ queryKey: ["staff", "books"] });
@@ -227,10 +229,19 @@ function Formats({ book, isAdmin }: { book: StaffBook; isAdmin: boolean }) {
                     {v.isbn ? ` · ISBN ${v.isbn}` : ""}
                   </p>
                   {digital ? null : (
-                    <p className={cn("text-sm tabular-nums", v.is_low_stock ? "font-semibold text-warning" : "text-muted-foreground")}>
-                      {v.is_low_stock ? <AlertTriangle className="mr-1 inline size-3.5 align-[-2px]" aria-hidden="true" /> : null}
-                      {v.stock_quantity} in stock · alert at {v.low_stock_threshold}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <span className={cn("tabular-nums", v.is_low_stock ? "font-semibold text-warning" : "text-muted-foreground")}>
+                        {v.is_low_stock ? <AlertTriangle className="mr-1 inline size-3.5 align-[-2px]" aria-hidden="true" /> : null}
+                        {v.stock_quantity} in stock · alert at {v.low_stock_threshold}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setHistoryVariant(v)}
+                        className="text-xs font-semibold text-primary underline-offset-2 hover:underline"
+                      >
+                        Stock history
+                      </button>
+                    </div>
                   )}
                 </div>
                 <div className="flex gap-1">
@@ -270,6 +281,11 @@ function Formats({ book, isAdmin }: { book: StaffBook; isAdmin: boolean }) {
         confirmLabel="Delete format"
         loading={remove.isPending}
         onConfirm={() => deleting && remove.mutate(deleting)}
+      />
+      <StockHistoryDrawer
+        variant={historyVariant ? { id: historyVariant.id, book_title: book.title, format: historyVariant.format, sku: historyVariant.sku, stock_quantity: historyVariant.stock_quantity } : null}
+        open={Boolean(historyVariant)}
+        onOpenChange={(open) => !open && setHistoryVariant(null)}
       />
     </Panel>
   );
