@@ -156,6 +156,8 @@ export interface paths {
                     max_price?: number;
                     in_stock?: boolean;
                     sort?: "relevance" | "newest" | "price_asc" | "price_desc" | "title" | "rating";
+                    /** @description Comma-separated IDs or array (max 12); keeps order and drops missing/hidden books */
+                    ids?: string;
                     per_page?: components["parameters"]["PerPage"];
                 };
                 header?: never;
@@ -215,6 +217,47 @@ export interface paths {
                     content: {
                         "application/json": {
                             data?: components["schemas"]["BookDetail"];
+                        };
+                    };
+                };
+                404: components["responses"]["NotFound"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/books/{id}/also-bought": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Up to 6 recommended books bought together with this book, fallback to category best sellers */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Recommended book cards */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["BookCard"][];
                         };
                     };
                 };
@@ -1568,6 +1611,111 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/stock-alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Active and past stock alerts for the signed-in customer */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Stock alerts */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["StockAlert"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Subscribe to back-in-stock alert for a physical variant */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @example 1 */
+                        book_variant_id: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Alert created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["StockAlert"];
+                        };
+                    };
+                };
+                422: components["responses"]["Validation"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/stock-alerts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a stock alert */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                404: components["responses"]["NotFound"];
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -6118,6 +6266,26 @@ export interface components {
             /** @description false when staff have hidden the review */
             is_visible?: boolean;
         };
+        StockAlert: {
+            id?: number;
+            book_variant_id?: number;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            notified_at?: string | null;
+            book?: {
+                id?: number;
+                title?: string;
+                cover_image_url?: string | null;
+            } | null;
+            variant?: {
+                id?: number;
+                format?: string;
+                price_usd?: string;
+                stock_quantity?: number;
+                is_active?: boolean;
+            } | null;
+        };
     };
     responses: {
         /** @description Validation failed */
@@ -6205,6 +6373,7 @@ export type SchemaOrderDocument = components['schemas']['OrderDocument'];
 export type SchemaReturn = components['schemas']['Return'];
 export type SchemaReview = components['schemas']['Review'];
 export type SchemaOwnReview = components['schemas']['OwnReview'];
+export type SchemaStockAlert = components['schemas']['StockAlert'];
 export type ResponseValidation = components['responses']['Validation'];
 export type ResponseUnauthorized = components['responses']['Unauthorized'];
 export type ResponseForbidden = components['responses']['Forbidden'];
