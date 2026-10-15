@@ -6,8 +6,25 @@
 - Phases 1-2 are done and live. Merged 2026-10-15: Khmer for the whole storefront, close-account check order, E2E loader wait,
   and the **Reports page** (backend `feature/reports-api`, frontend `feature/reports-dashboard`).
 
-## Now: waiting for the owner's merge (security fixes, 2026-10-15)
-Each pair is backend first, then frontend. All test-merged in this order on main (backend 441 tests, frontend 310).
+## Now: waiting for the owner's merge (security fixes & one-hour batch, 2026-10-15)
+
+### One-hour batch (ready to merge, backend before frontend in each pair)
+All branches verified green locally and on GitHub Actions CI.
+| # | Branch | Repo | What |
+| --- | --- | --- | --- |
+| 1 | `fix/login-limit-per-email` | backend | Per-email limit (20/hour across all IPs) on customer and staff login |
+| 2 | `fix/staff-2fa-parallel-guesses` | backend | Increment attempt count before code verification to prevent parallel 2FA bypass |
+| 3 | `fix/audit-log-hide-secrets` | backend | Filter `$hidden` and explicit secrets (`password_hash`, `two_factor_secret`, `remember_token`) from audit logs |
+| 4 | `fix/cors-pattern-anchors` | backend | Anchor `CORS_ALLOWED_ORIGIN_PATTERNS` regex to prevent domain suffix bypasses |
+| 5 | `fix/staff-reset-notice` | backend | Send `AccountSecurityNotice` email to staff after password reset via `SafeNotifier` |
+| 6 | `fix/rich-link-pattern` | frontend | Reject protocol-relative (`//evil.com`) and backslash (`/\evil.com`) URLs in Rich text |
+| 7 | `chore/ignore-env-files` | frontend | Ignore `.env`, `.env.local`, `.env.*.local` in `.gitignore` |
+| 8 | `fix/invoice-riel-per-line` | frontend | Show `≈ ៛…` under each line item's USD amount at order-date rate |
+| 9 | `chore/load-test-script` | backend | k6 load test script ramping to 30 VUs over 2 minutes with local-only documentation |
+| 10 | `docs/one-hour-batch` | backend | Worklog updates for the one-hour batch |
+| 11 | `docs/one-hour-batch` | frontend | Worklog, roadmap, and next step updates for the one-hour batch |
+
+### Earlier security review batch (merged or pending)
 | # | Branch | Repo | What |
 | --- | --- | --- | --- |
 | 1 | `fix/otp-wrong-guess-limit` | backend | HIGH: throw a code away after 5 wrong guesses (database cache) |
