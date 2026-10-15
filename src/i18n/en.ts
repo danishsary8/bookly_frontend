@@ -526,6 +526,7 @@ export const en = {
     open: "Open Telegram",
     tapStart: "Tap **Start** in the Bookly bot",
     tapShare: "Tap **Share my phone number**",
+    tapYes: "Tap **Yes, sign me in**",
     waiting: "Waiting for Telegram…",
     carriesOn: "This page carries on by itself once you've shared your number. The link works for 10 minutes.",
   },
