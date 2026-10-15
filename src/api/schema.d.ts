@@ -1249,7 +1249,7 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        /** Update name or phone */
+        /** Update name, phone, or locale (en|km) */
         patch: {
             parameters: {
                 query?: never;
@@ -5855,6 +5855,11 @@ export interface components {
             /** @description Email or phone proven; only verified customers can shop */
             verified?: boolean;
             has_password?: boolean;
+            /**
+             * @example en
+             * @enum {string}
+             */
+            locale?: "en" | "km";
             connected?: {
                 google?: boolean;
                 facebook?: boolean;

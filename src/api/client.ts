@@ -1,4 +1,5 @@
 import axios, { type AxiosRequestConfig } from "axios";
+import { getLanguage } from "@/i18n";
 import { reportError } from "@/lib/monitoring";
 import { ApiError } from "./errors";
 import { clearSession, getToken, type SessionKind } from "./session";
@@ -23,6 +24,7 @@ export const http = axios.create({
 http.interceptors.request.use((config) => {
   const token = getToken(sessionKindFor(config.url));
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  config.headers["Accept-Language"] = getLanguage();
   return config;
 });
 

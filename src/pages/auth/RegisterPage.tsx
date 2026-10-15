@@ -29,7 +29,7 @@ export default function RegisterPage() {
   const afterSignIn = useAfterSignIn();
   const [formError, setFormError] = useState<string | null>(null);
   const alertRef = useRef<HTMLDivElement>(null);
-  const { dict } = useT();
+  const { lang, dict } = useT();
   const s = dict.signin;
 
   const { register, handleSubmit, setError, control, formState } = useForm<RegisterValues>({
@@ -52,6 +52,7 @@ export default function RegisterPage() {
         password_confirmation: values.password_confirmation,
         ...(values.phone && !byTelegram ? { phone: values.phone } : {}),
         verify_by: byTelegram ? "telegram" : "email",
+        locale: lang,
         turnstile_token: await turnstile.getToken(),
       });
       // New accounts are unverified, so this continues to the code page or Telegram (which keep `next`).

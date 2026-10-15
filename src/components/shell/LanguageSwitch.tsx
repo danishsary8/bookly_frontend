@@ -1,6 +1,9 @@
 import { m } from "motion/react";
 import { RadioGroup } from "radix-ui";
 import { useId } from "react";
+import { accountApi } from "@/api/endpoints/account";
+import { getSession } from "@/api/session";
+import type { Customer } from "@/api/types";
 import { transitions } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { useT, type Language } from "@/i18n";
@@ -14,10 +17,20 @@ export function LanguageSwitch({ className }: { className?: string }) {
   const { lang, setLanguage, dict } = useT();
   const layoutId = `language-${useId()}`;
 
+  const handleChange = (value: Language) => {
+    setLanguage(value);
+    const session = getSession<Customer>("customer");
+    if (session) {
+      accountApi.updateProfile({ locale: value }).catch(() => {
+        // Ignored: network issues do not block local language switch
+      });
+    }
+  };
+
   return (
     <RadioGroup.Root
       value={lang}
-      onValueChange={(value) => setLanguage(value as Language)}
+      onValueChange={(value) => handleChange(value as Language)}
       aria-label={dict.language.label}
       orientation="horizontal"
       className={cn("inline-flex h-11 items-center rounded-lg border border-border bg-card p-1", className)}

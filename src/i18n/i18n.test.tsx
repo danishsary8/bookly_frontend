@@ -1,11 +1,12 @@
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, vi } from "vitest";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { getLanguage, setLanguage, translate, useT, en, km } from "./index";
 import { LanguageSwitch } from "@/components/shell/LanguageSwitch";
 import { SiteHeader } from "@/components/shell/SiteHeader";
+import type { Customer } from "@/api/types";
 
 function renderWithProviders(ui: React.ReactElement) {
   const queryClient = new QueryClient({
@@ -123,5 +124,33 @@ describe("i18n system", () => {
 
     // Books link in Khmer
     expect(screen.getByRole("link", { name: "សៀវភៅ" })).toBeInTheDocument();
+  });
+
+  it("saves locale to profile when signed in as customer", async () => {
+    const { accountApi } = await import("@/api/endpoints/account");
+    const { setSession } = await import("@/api/session");
+    const updateSpy = vi.spyOn(accountApi, "updateProfile").mockResolvedValue({ id: 1, name: "Test", locale: "km" } as unknown as Customer);
+
+    setSession("customer", { token: "tok", expiresAt: null, user: { id: 1, name: "Test", locale: "en" } });
+
+    const user = userEvent.setup();
+    renderWithProviders(<LanguageSwitch />);
+
+    const kmRadio = screen.getByRole("radio", { name: "ភាសាខ្មែរ" });
+    await user.click(kmRadio);
+
+    expect(updateSpy).toHaveBeenCalledWith({ locale: "km" });
+    updateSpy.mockRestore();
+  });
+
+  it("switches site language on customer sign-in with locale preference", async () => {
+    const { setSession } = await import("@/api/session");
+    expect(getLanguage()).toBe("en");
+
+    act(() => {
+      setSession("customer", { token: "tok-km", expiresAt: null, user: { id: 2, name: "Sokha", locale: "km" } });
+    });
+
+    expect(getLanguage()).toBe("km");
   });
 });

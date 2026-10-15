@@ -36,7 +36,7 @@ export type AddressPayload = Omit<AddressInput, "address_line2" | "state" | "pos
 
 export const accountApi = {
   me: () => api.get<Resource<Customer>>("/me").then((r) => r.data),
-  updateProfile: async (input: { name?: string; phone?: string | null }) => {
+  updateProfile: async (input: { name?: string; phone?: string | null; locale?: "en" | "km" }) => {
     const customer = (await api.patch<Resource<Customer>>("/me", input)).data;
     updateSessionUser("customer", customer);
     return customer;
