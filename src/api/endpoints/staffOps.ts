@@ -64,6 +64,20 @@ export type CouponInput = Partial<{
   is_active: boolean;
 }>;
 
+export interface CustomerNote {
+  id: number;
+  customer_id: number;
+  body: string;
+  author: { id: number | null; name: string };
+  created_at: string;
+}
+
+export interface CustomerTagSuggestion {
+  name: string;
+  count: number;
+  customer_count: number;
+}
+
 export interface StaffCustomer {
   id: number;
   name: string;
@@ -77,9 +91,10 @@ export interface StaffCustomer {
   /** Email or phone proven: a real account that can order. */
   verified?: boolean;
   is_active: boolean;
+  tags?: string[];
   login_methods: string[];
   orders_count?: number;
-  stats?: { orders_by_status: Record<string, number>; returns_count: number; reviews_count: number; lifetime_spent_usd: string; last_order_at: string | null };
+  stats?: { orders_by_status: Record<string, number>; returns_count: number; reviews_count: number; lifetime_spent_usd?: string; last_order_at: string | null };
   recent_orders?: Order[];
   created_at: string;
   /** Unfinished sign-ups only: when the account is deleted unless the customer enters their code. */
@@ -121,7 +136,7 @@ export type OrderFilters = { status?: OrderStatus; q?: string; from?: string; to
 export type ReturnFilters = { status?: string; q?: string; page?: number; per_page?: number };
 export type ReviewFilters = { visible?: boolean | null; q?: string; max_rating?: number; page?: number; per_page?: number };
 export type CouponFilters = { q?: string; active?: boolean | null; page?: number; per_page?: number };
-export type CustomerFilters = { q?: string; active?: boolean | null; verified?: boolean | null; closed?: boolean; page?: number; per_page?: number };
+export type CustomerFilters = { q?: string; tag?: string; active?: boolean | null; verified?: boolean | null; closed?: boolean; page?: number; per_page?: number };
 export type MemberFilters = { q?: string; role?: StaffRole; active?: boolean | null; page?: number; per_page?: number };
 export type AuditFilters = { staff_user_id?: number; action?: string; entity_type?: string; entity_id?: number; from?: string; to?: string; page?: number; per_page?: number };
 
@@ -137,6 +152,8 @@ export const opsKeys = {
   coupons: (f: object) => ["staff", "coupons", toQueryParams(f)] as const,
   customers: (f: object) => ["staff", "customers", toQueryParams(f)] as const,
   customer: (id: number) => ["staff", "customer", id] as const,
+  customerNotes: (id: number) => ["staff", "customer", id, "notes"] as const,
+  customerTags: (q?: string) => ["staff", "customer-tags", q ?? ""] as const,
   members: (f: object) => ["staff", "members", toQueryParams(f)] as const,
   rates: (page: number) => ["staff", "rates", page] as const,
   audit: (f: object) => ["staff", "audit", toQueryParams(f)] as const,
@@ -182,6 +199,18 @@ export const opsApi = {
   closeCustomer: (id: number, input: { password: string; code: string; confirm: string }) =>
     api.post<Resource<StaffCustomer>>(`/staff/customers/${id}/close`, input).then((r) => r.data),
   customer: (id: number) => api.get<Resource<StaffCustomer>>(`/staff/customers/${id}`).then((r) => r.data),
+  customerNotes: (customerId: number) =>
+    api.get<{ data: CustomerNote[] }>(`/staff/customers/${customerId}/notes`).then((r) => r.data),
+  addCustomerNote: (customerId: number, body: string) =>
+    api.post<Resource<CustomerNote>>(`/staff/customers/${customerId}/notes`, { body }).then((r) => r.data),
+  deleteCustomerNote: (noteId: number) =>
+    api.delete(`/staff/customer-notes/${noteId}`),
+  updateCustomerTags: (customerId: number, tags: string[]) =>
+    api.put<{ tags: string[] }>(`/staff/customers/${customerId}/tags`, { tags }),
+  customerTagSuggestions: (q?: string) =>
+    api.get<{ data: CustomerTagSuggestion[] }>("/staff/customer-tags", { params: q ? { q } : undefined }).then((r) => r.data),
+  resendCustomerVerification: (customerId: number) =>
+    api.post<{ message: string }>(`/staff/customers/${customerId}/resend-verification`, {}),
   /** Admins: delete an unfinished sign-up now (frees its email). Verified customers are refused. */
   deleteCustomer: (id: number) => api.delete(`/staff/customers/${id}`),
   setCustomerActive: (id: number, active: boolean) =>
@@ -212,6 +241,8 @@ export const opsQueries = {
   coupons: (f: CouponFilters) => queryOptions({ queryKey: opsKeys.coupons(f), queryFn: () => opsApi.coupons(f), placeholderData: keepPreviousData }),
   customers: (f: CustomerFilters) => queryOptions({ queryKey: opsKeys.customers(f), queryFn: () => opsApi.customers(f), placeholderData: keepPreviousData }),
   customer: (id: number) => queryOptions({ queryKey: opsKeys.customer(id), queryFn: () => opsApi.customer(id) }),
+  customerNotes: (id: number) => queryOptions({ queryKey: opsKeys.customerNotes(id), queryFn: () => opsApi.customerNotes(id) }),
+  customerTagSuggestions: (q?: string) => queryOptions({ queryKey: opsKeys.customerTags(q), queryFn: () => opsApi.customerTagSuggestions(q) }),
   members: (f: MemberFilters) => queryOptions({ queryKey: opsKeys.members(f), queryFn: () => opsApi.members(f), placeholderData: keepPreviousData }),
   rates: (page: number) => queryOptions({ queryKey: opsKeys.rates(page), queryFn: () => opsApi.rates(page), placeholderData: keepPreviousData }),
   audit: (f: AuditFilters) => queryOptions({ queryKey: opsKeys.audit(f), queryFn: () => opsApi.audit(f), placeholderData: keepPreviousData }),

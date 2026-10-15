@@ -4433,6 +4433,105 @@ export interface paths {
                     };
                     content?: never;
                 };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/customers/{id}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List customer notes */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Notes */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /** Add note to customer */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        body: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/customer-notes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete customer note (author or admin only) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description Forbidden */
                 403: {
                     headers: {
@@ -4440,8 +4539,128 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Validation error, invalid password/code, wrong confirm, or open orders/returns */
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/customers/{id}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update customer tags (replaces set) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        tags: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated tags */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/customer-tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Customer tag suggestions with customer count */
+        get: {
+            parameters: {
+                query?: {
+                    q?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tags */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/customers/{id}/resend-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resend verification email to unverified customer */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sent */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No email or already verified */
                 422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Rate limit (3/hour) */
+                429: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -5748,45 +5967,5 @@ export interface components {
     headers: never;
     pathItems: never;
 }
-export type SchemaError = components['schemas']['Error'];
-export type SchemaValidationError = components['schemas']['ValidationError'];
-export type SchemaMoney = components['schemas']['Money'];
-export type SchemaRiel = components['schemas']['Riel'];
-export type SchemaPageMeta = components['schemas']['PageMeta'];
-export type SchemaPageLinks = components['schemas']['PageLinks'];
-export type SchemaAmount = components['schemas']['Amount'];
-export type SchemaAuthor = components['schemas']['Author'];
-export type SchemaCategory = components['schemas']['Category'];
-export type SchemaPublisher = components['schemas']['Publisher'];
-export type SchemaSeries = components['schemas']['Series'];
-export type SchemaSeriesDetail = components['schemas']['SeriesDetail'];
-export type SchemaRatingSummary = components['schemas']['RatingSummary'];
-export type SchemaCheckoutPreview = components['schemas']['CheckoutPreview'];
-export type SchemaCouponCheck = components['schemas']['CouponCheck'];
-export type SchemaTokenResponse = components['schemas']['TokenResponse'];
-export type SchemaCustomer = components['schemas']['Customer'];
-export type SchemaBookCard = components['schemas']['BookCard'];
-export type SchemaVariant = components['schemas']['Variant'];
-export type SchemaBookDetail = components['schemas']['BookDetail'];
-export type SchemaAddress = components['schemas']['Address'];
-export type SchemaAddressInput = components['schemas']['AddressInput'];
-export type SchemaCartIssue = components['schemas']['CartIssue'];
-export type SchemaCart = components['schemas']['Cart'];
-export type SchemaOrder = components['schemas']['Order'];
-export type SchemaOrderDocument = components['schemas']['OrderDocument'];
-export type SchemaReturn = components['schemas']['Return'];
-export type SchemaReview = components['schemas']['Review'];
-export type SchemaOwnReview = components['schemas']['OwnReview'];
-export type ResponseValidation = components['responses']['Validation'];
-export type ResponseUnauthorized = components['responses']['Unauthorized'];
-export type ResponseForbidden = components['responses']['Forbidden'];
-export type ResponseNotFound = components['responses']['NotFound'];
-export type ResponseNoContent = components['responses']['NoContent'];
-export type ParameterId = components['parameters']['Id'];
-export type ParameterProvider = components['parameters']['Provider'];
-export type ParameterPerPage = components['parameters']['PerPage'];
-export type ParameterPeriod = components['parameters']['Period'];
-export type ParameterFrom = components['parameters']['From'];
-export type ParameterTo = components['parameters']['To'];
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;
