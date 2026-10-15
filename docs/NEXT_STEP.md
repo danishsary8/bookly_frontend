@@ -6,22 +6,35 @@
 - Phases 1-2 are done and live. Merged 2026-10-15: Khmer for the whole storefront, close-account check order, E2E loader wait,
   and the **Reports page** (backend `feature/reports-api`, frontend `feature/reports-dashboard`).
 
-## Now: waiting for the owner's merge
-| Branch | Repo | What | Merge order |
+## Now: waiting for the owner's merge (security fixes, 2026-10-15)
+Each pair is backend first, then frontend. All test-merged in this order on main (backend 441 tests, frontend 310).
+| # | Branch | Repo | What |
 | --- | --- | --- | --- |
-| `docs/reports-batch` | backend | Worklog and next step | 1 |
-| `docs/reports-batch` | frontend | Worklog, roadmap (Reports ticked, redesign library list), next step | 2 |
+| 1 | `fix/otp-wrong-guess-limit` | backend | HIGH: throw a code away after 5 wrong guesses (database cache) |
+| 2 | `fix/unproven-email-claims` | backend | Unproven emails don't block their owner or open a phone account |
+| 3 | `fix/unproven-email-claims` | frontend | Code step for a Telegram sign-up's email |
+| 4 | `fix/reauth-sensitive-changes` | backend | Password / recent sign-in before adding a way in |
+| 5 | `fix/reauth-sensitive-changes` | frontend | Password step before a new phone; Sign in again |
+| 6 | `fix/telegram-sign-in-confirm` | backend | Bot asks Yes/No; Sign me out everywhere |
+| 7 | `fix/telegram-sign-in-confirm` | frontend | Steps name the Yes button |
+| 8 | `fix/content-security-policy` | frontend | CSP (allowlist Report-Only first) |
+| 9 | `fix/admin-only-coupons` | backend | Coupons admin-only; no $0 or >50% price cut by staff |
+| 10 | `fix/admin-only-coupons` | frontend | Coupon buttons for admins only |
+| 11 | `fix/backup-public-key` | backend | Backups encrypted to the owner's public key |
+| 12 | `docs/security-review` | backend | Worklog, next step |
+| 13 | `docs/security-review` | frontend | Worklog, roadmap, next step |
 
-## Next (owner chose 2026-10-15): security review of both repos
-Read-only audit first (auth, 2FA, tokens, staff routes, uploads, rate limits, CORS, headers, secrets, dependencies), then a
-findings list ranked by risk; the owner picks which fixes to do, one branch per fix.
+## Owner steps after merging
+1. Backup key: backend `docs/DEPLOYMENT.md` → "1b. Make your backup key"; then run the backup workflow once by hand.
+2. CSP: on the live site sign in with Google and Facebook, open sign-up (security check), look for "[Report Only]" in the
+   browser console; send a screenshot of any, or say "none" and the allowlist gets switched to enforced.
+3. Telegram: try "Continue with Telegram" once on the live site: the bot now asks "Sign in to Bookly?".
 
-## After that (recommended order)
-1. Stock history + restock entries (needs one new table: ask first).
-2. Customer notes/tags/lifetime value, resend verification.
-3. Tests & quality: E2E sign-up + verify + return, accessibility audit, load test script.
-4. Khmer for customer emails + API messages; custom domain + shop email; strict delete security for other items.
-5. Payments only with provider accounts and the owner's OK. Redesign last (library list in ROADMAP Phase 7).
+## Next (pick one)
+1. The low security items left (ROADMAP Phase 6 list), as one small batch.
+2. Stock history + restock entries (needs one new table: ask first).
+3. Customer notes/tags/lifetime value, resend verification.
+4. Tests & quality: E2E sign-up + verify + return, accessibility audit, load test script.
 
 ## Owner's open steps
 - Healthchecks.io for the missed-backup check, if not done (backend `docs/DEPLOYMENT.md` → "Missed-backup check").
