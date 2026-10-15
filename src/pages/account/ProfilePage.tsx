@@ -10,6 +10,7 @@ import { TextField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { AccountSection } from "@/features/account/AccountSection";
+import { NewsletterToggle } from "@/features/account/NewsletterToggle";
 import { profileSchema, type ProfileValues } from "@/features/account/schemas";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { applyApiErrors } from "@/lib/forms";
@@ -86,6 +87,10 @@ function ProfileForm({ customer }: { customer: Customer }) {
           ) : null}
         </div>
       </form>
+
+      <div className="mt-8 max-w-xl rounded-xl border border-border bg-card p-5 sm:p-6">
+        <NewsletterToggle customer={customer} />
+      </div>
     </AccountSection>
   );
 }

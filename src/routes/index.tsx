@@ -56,6 +56,9 @@ const CustomerAdminPage = lazy(() => import("../pages/admin/CustomerAdminPage"))
 const MembersAdminPage = lazy(() => import("../pages/admin/MembersAdminPage"));
 const ExchangeRatesPage = lazy(() => import("../pages/admin/ExchangeRatesPage"));
 const AuditLogPage = lazy(() => import("../pages/admin/AuditLogPage"));
+const NewsletterAdminPage = lazy(() => import("../pages/admin/NewsletterAdminPage"));
+const NewsletterConfirmPage = lazy(() => import("../pages/NewsletterConfirmPage"));
+const NewsletterUnsubscribePage = lazy(() => import("../pages/NewsletterUnsubscribePage"));
 const ShippingPage = lazy(() => import("../pages/content/ShippingPage"));
 const ReturnsPolicyPage = lazy(() => import("../pages/content/ReturnsPolicyPage"));
 const FaqPage = lazy(() => import("../pages/content/FaqPage"));
@@ -118,6 +121,8 @@ const AppRoutes = () => {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
+          <Route path="/newsletter/confirm" element={<NewsletterConfirmPage />} />
+          <Route path="/newsletter/unsubscribe" element={<NewsletterUnsubscribePage />} />
           {UiKit ? <Route path="/ui-kit" element={<UiKit />} /> : null}
           <Route path="*" element={<NotFound />} />
           <Route element={<RequireVerified />}>
@@ -185,6 +190,7 @@ const AppRoutes = () => {
               <Route path="customers" element={<CustomersAdminPage />} />
               <Route path="customers/:id" element={<CustomerAdminPage />} />
               <Route element={<RequireAdminRole />}>
+                <Route path="newsletter" element={<NewsletterAdminPage />} />
                 <Route path="reports" element={<ReportsPage />} />
                 <Route path="members" element={<MembersAdminPage />} />
                 <Route path="exchange-rates" element={<ExchangeRatesPage />} />
