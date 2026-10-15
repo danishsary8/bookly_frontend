@@ -70,7 +70,7 @@ every day, then growth, then looks.
 - [ ] Invoice and packing slip: known limits (2026-10-13)
   - [x] Order lines keep only the price at purchase time, not the title/format/SKU: renaming a book or changing a SKU changes its old invoices. **Done 2026-10-13** (backend `feature/order-line-snapshot`, owner-approved migration): lines store title, format, SKU, ISBN and authors at checkout; old lines were filled once from the books.
   - [x] The heading says "Invoice" even when the order is paid. **Done 2026-10-13** (`feature/receipt-heading`): "Receipt" once the cash is recorded (sheet, page title, customer button "Print receipt"); returned/cancelled stay "Invoice" with their stamp.
-  - [ ] Riel is shown only for the total (and the amount to collect), not per line; no riel at all when no exchange rate existed when the order was placed.
+  - [x] Riel is shown only for the total (and the amount to collect), not per line. **Done 2026-10-15** (frontend `fix/invoice-riel-per-line`): shows "≈ ៛…" under each line's USD amount at the order-date exchange rate; shows nothing when no rate existed then.
   - [ ] Shop details on the sheets come from `src/content/shop.ts` (temporary personal email, "Phnom Penh, Cambodia" without a street address); update with the shop email and domain (Phase 5).
   - [x] Batch print reads the exchange rate once per order (at most 50 small queries); cache it per batch if printing gets slow. **Done 2026-10-14** (backend `chore/document-rate-lookup`: one query per request).
   - [ ] Not tested yet: a real printer (only Chromium's Save as PDF), Safari and Firefox print; print one slip and one invoice on the shop's printer.
@@ -118,8 +118,15 @@ every day, then growth, then looks.
   - [x] Content-Security-Policy: framing/plugins/base/form enforced; the script/connection allowlist runs Report-Only (frontend `fix/content-security-policy`). **Owner step**: open the live site, use Google/Facebook sign-in and a page with the security check, look in the browser console for "[Report Only]" lines, then ask to switch the allowlist to enforced.
   - [x] Coupons are admin-only to create/change; staff can't set a price of $0 or cut it by more than half (both repos `fix/admin-only-coupons`).
   - [x] Nightly backups encrypted to the owner's age public key, because the public repo lets anyone signed in to GitHub download artifacts (backend `fix/backup-public-key`). **Owner step**: make the key (backend DEPLOYMENT.md → 1b) and set the `BACKUP_AGE_RECIPIENT` variable.
-  - [ ] Still open (low, not chosen yet): per-email limit on login attempts (password spraying from many IPs); staff 2FA guesses sent in parallel can pass the 5-try lockout; the audit log can store password hashes (filter hidden fields); anchor `CORS_ALLOWED_ORIGIN_PATTERNS`; `/health` shows queue/Telegram details to anyone; Swagger UI from a CDN without SRI on `/docs`; the `Rich` text link pattern accepts `//host`; no notice email on a staff password reset; `.env`/`.env.production` tracked in the frontend (public URL only); dev-only npm advisories (Vitest 5 / shadcn); `/api/report` (Sentry tunnel) has no rate limit; Telegram-only accounts can't close themselves (bug); staff see a customer's lifetime spend (decide if "money numbers admin only" covers it).
-- [ ] Load test the busiest pages.
+  - [x] Per-email limit on login attempts (password spraying from many IPs): 20/hour across all IPs on customer and staff login (backend `fix/login-limit-per-email`).
+  - [x] Staff 2FA guesses sent in parallel can pass the 5-try lockout: increment attempt counter before verifying code (backend `fix/staff-2fa-parallel-guesses`).
+  - [x] Audit log hides model secrets: filters `$hidden` and explicit sensitive fields (`password_hash`, `two_factor_secret`, `remember_token`) from snapshots (backend `fix/audit-log-hide-secrets`).
+  - [x] Anchor `CORS_ALLOWED_ORIGIN_PATTERNS` regex to prevent domain suffix bypasses (backend `fix/cors-pattern-anchors`).
+  - [x] Notice email on staff password reset via `SafeNotifier` (backend `fix/staff-reset-notice`).
+  - [x] `Rich` text link pattern restricted to single leading slash not followed by `/` or `\` (frontend `fix/rich-link-pattern`).
+  - [x] Ignore local `.env` files in git (frontend `chore/ignore-env-files`).
+  - [ ] Still open (low, not chosen yet): `/health` shows queue/Telegram details to anyone; Swagger UI from a CDN without SRI on `/docs`; dev-only npm advisories (Vitest 5 / shadcn); `/api/report` (Sentry tunnel) has no rate limit; Telegram-only accounts can't close themselves (bug); staff see a customer's lifetime spend (decide if "money numbers admin only" covers it).
+- [x] Load test the busiest pages: k6 script ramping to 30 VUs over 2 minutes on catalog and search endpoints with README for local execution (backend `chore/load-test-script`).
 
 - [ ] Checks never done in a real browser so far (unit tests only): dashboard Today/30 days switch on real data and dark mode; the real Telegram app and Facebook sign-in (needs real accounts).
 
