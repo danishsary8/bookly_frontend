@@ -229,6 +229,13 @@ export const km: Translations = {
     noOrdersYet: "មិនទាន់មានការបញ្ជាទិញ",
     noOrdersLead: "នៅពេលអ្នកបញ្ជាទិញ អ្នកអាចតាមដានវានៅទីនេះ។",
     browseBooks: "មើលសៀវភៅ",
+    // draft
+    storeCredits: "ឥណទានហាង",
+    storeCreditsLead: "ឥណទានពីការបង្វិលសងទំនិញដែលបានអនុម័ត។ ប្រើកូដទាំងនេះពេលទូទាត់ប្រាក់។",
+    copyCode: "ចម្លងកូដ",
+    codeCopied: "បានចម្លង!",
+    expiresOn: (date: string) => `ផុតកំណត់ ${date}`,
+    noStoreCredits: "គ្មានឥណទានហាងទេ",
     profileLead: "ឈ្មោះរបស់អ្នកបង្ហាញលើការបញ្ជាទិញ និងបង្កាន់ដៃ ហើយអ្នកដឹកជញ្ជូនប្រើលេខទូរស័ព្ទរបស់អ្នកសម្រាប់ការដឹក។",
     fullName: "ឈ្មោះពេញ",
     phone: "លេខទូរស័ព្ទ",

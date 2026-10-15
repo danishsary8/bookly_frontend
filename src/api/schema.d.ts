@@ -1516,6 +1516,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/store-credits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Active store credits for the signed-in customer
+         * @description Lists active, unexpired, and unused store credit coupons bound to the current customer.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Store credits */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                id?: number;
+                                /** @example CREDIT-ABCD-1234 */
+                                code?: string;
+                                /** @example 25.00 */
+                                value_usd?: string;
+                                /** @example fixed */
+                                type?: string;
+                                used_count?: number;
+                                max_uses?: number | null;
+                                /** Format: date-time */
+                                starts_at?: string | null;
+                                /** Format: date-time */
+                                expires_at?: string | null;
+                                /** Format: date-time */
+                                created_at?: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/addresses": {
         parameters: {
             query?: never;
@@ -4045,7 +4102,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Mark refunded: books back in stock, amount saved */
+        /** Mark refunded: books back in stock, issue store credit or record manual offline refund */
         post: {
             parameters: {
                 query?: never;
@@ -4055,7 +4112,20 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @default manual_offline
+                         * @enum {string}
+                         */
+                        method?: "store_credit" | "manual_offline";
+                        /** @description Required for manual_offline: receipt or transaction ref */
+                        reference?: string;
+                        note?: string;
+                    };
+                };
+            };
             responses: {
                 /** @description Refunded */
                 200: {
@@ -5587,6 +5657,11 @@ export interface components {
             refund_amount_usd?: components["schemas"]["Money"];
             /** @description false while the amount is an estimate */
             is_refund_final?: boolean;
+            /** @enum {string|null} */
+            refund_method?: "store_credit" | "manual_offline" | null;
+            refund_reference?: string | null;
+            /** Format: date-time */
+            refunded_at?: string | null;
             staff_note?: string | null;
             /** Format: date-time */
             requested_at?: string;

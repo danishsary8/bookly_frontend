@@ -28,7 +28,7 @@ export interface BulkStatusResult {
   failed: Array<{ id: number; order_number: string | null; reason: string }>;
 }
 
-export type StaffReturn = ReturnRequest & { customer?: Person; handled_by?: { id: number; name: string } | null };
+export type StaffReturn = ReturnRequest & { customer?: Person; handled_by?: { id: number; name: string } | null; refunded_by?: { id: number; name: string } | null };
 
 export interface StaffReview {
   id: number;
@@ -160,7 +160,10 @@ export const opsApi = {
   return: (id: number) => api.get<Resource<StaffReturn>>(`/staff/returns/${id}`).then((r) => r.data),
   approveReturn: (id: number, note?: string) => api.post<Resource<StaffReturn>>(`/staff/returns/${id}/approve`, note ? { note } : {}).then((r) => r.data),
   rejectReturn: (id: number, note: string) => api.post<Resource<StaffReturn>>(`/staff/returns/${id}/reject`, { note }).then((r) => r.data),
-  refundReturn: (id: number, note?: string) => api.post<Resource<StaffReturn>>(`/staff/returns/${id}/refund`, note ? { note } : {}).then((r) => r.data),
+  refundReturn: (id: number, input?: { method?: "store_credit" | "manual_offline"; reference?: string; note?: string } | string) => {
+    const body = typeof input === "string" ? { note: input } : input || {};
+    return api.post<Resource<StaffReturn>>(`/staff/returns/${id}/refund`, body).then((r) => r.data);
+  },
 
   reviews: (f: ReviewFilters = {}) => api.get<Paginated<StaffReview>>("/staff/reviews", { params: toQueryParams({ ...f, visible: bool(f.visible) }) }),
   hideReview: (id: number) => api.post<Resource<StaffReview>>(`/staff/reviews/${id}/hide`, {}).then((r) => r.data),
