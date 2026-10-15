@@ -2,29 +2,26 @@
 
 **Everything still to do, in order, is in `docs/ROADMAP.md`** (including the "Known limits and small follow-ups" items).
 
-## State on 2026-10-14
-- Phases 1-2 are done and live (sign-in incl. the Telegram bot, backups + restore drill + alerts, uptime, rate limits).
-- Live since 2026-10-14: search (title/author/series/category, ISBN/SKU), invoice + packing slip, bulk order status,
-  dashboard date range, staff Telegram group alerts, missed-backup check-in step, delivery notes (customer + staff),
-  admin closes a customer account, E2E money path in CI, Khmer first slice.
+## State on 2026-10-15
+- Phases 1-2 are done and live. Merged 2026-10-15: Khmer for the whole storefront, close-account check order, E2E loader wait,
+  and the **Reports page** (backend `feature/reports-api`, frontend `feature/reports-dashboard`).
 
-## Now: waiting for the owner's merge (built 2026-10-14)
+## Now: waiting for the owner's merge
 | Branch | Repo | What | Merge order |
 | --- | --- | --- | --- |
-| `fix/close-account-check-order` | backend | Close-account checks the typed email and open orders before the 2FA code | 1 |
-| `fix/e2e-loading-wait` | frontend | E2E waits until "Loading..." is gone before the accessibility check (was flaky on main) | 2 |
-| `feature/khmer-pages` | frontend | Khmer for the whole storefront (account, sign-up, orders, returns, checkout, cart, catalogue, home, About, Contact, 404); legal/help pages say "English for now" | 3 |
-| `docs/khmer-pages-batch` | backend | Worklog and next step | last (backend) |
-| `docs/khmer-pages-batch` | frontend | Worklog, roadmap, next step | last (frontend) |
+| `docs/reports-batch` | backend | Worklog and next step | 1 |
+| `docs/reports-batch` | frontend | Worklog, roadmap (Reports ticked, redesign library list), next step | 2 |
 
-## Next: the owner picks one (recommended order)
-1. Khmer for customer emails + the API's own messages (errors and order timeline notes still come in English).
-2. Custom domain + shop email (SPF/DKIM/DMARC); talk it through first.
-3. Strict delete security for other items (trash with 30-day restore, password + 2FA, Telegram on every delete).
-4. Stock history / restock entries; books CSV import/export; customer notes/tags; staff permissions + sessions.
-5. Delivery fees per province; customer order updates in Telegram (decisions open); "tell me when it's back".
-6. SEO/pre-render, Search Console, accessibility audit, legal pages review; security review; load test; redesign last.
-7. Payments (ABA PayWay / Bakong KHQR) only with provider accounts and the owner's OK.
+## Next (owner chose 2026-10-15): security review of both repos
+Read-only audit first (auth, 2FA, tokens, staff routes, uploads, rate limits, CORS, headers, secrets, dependencies), then a
+findings list ranked by risk; the owner picks which fixes to do, one branch per fix.
+
+## After that (recommended order)
+1. Stock history + restock entries (needs one new table: ask first).
+2. Customer notes/tags/lifetime value, resend verification.
+3. Tests & quality: E2E sign-up + verify + return, accessibility audit, load test script.
+4. Khmer for customer emails + API messages; custom domain + shop email; strict delete security for other items.
+5. Payments only with provider accounts and the owner's OK. Redesign last (library list in ROADMAP Phase 7).
 
 ## Owner's open steps
 - Healthchecks.io for the missed-backup check, if not done (backend `docs/DEPLOYMENT.md` → "Missed-backup check").
