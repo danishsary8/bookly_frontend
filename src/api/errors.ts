@@ -96,7 +96,8 @@ export class ApiError extends Error {
         : /verify your (email|account)/i.test(message)
           ? "email_unverified"
           : "forbidden";
-      return new ApiError({ kind, status, message, requestId });
+      // data keeps `reason` (e.g. "sign_in_again": the API wants a recent sign-in before this change).
+      return new ApiError({ kind, status, message, requestId, data: body as Record<string, unknown> });
     }
     if (status === 404) return new ApiError({ kind: "not_found", status, message: "We couldn't find that.", requestId });
     if (status === 409) return new ApiError({ kind: "conflict", status, message, requestId });

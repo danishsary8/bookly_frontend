@@ -16,7 +16,7 @@ export type TelegramState =
   | { phase: "starting" }
   | { phase: "waiting"; link: TelegramLink }
   | { phase: "done"; customer: Customer }
-  | { phase: "failed"; message: string };
+  | { phase: "failed"; message: string; error?: ApiError };
 
 export const POLL_MS = 2000;
 const expired = () => getDict().signin.telegramExpired;
@@ -29,14 +29,15 @@ export function useTelegramLink(purpose: TelegramPurpose, onDone: (customer: Cus
   });
 
   /** Makes a new link; returns it so a click handler can open it at once. */
-  const start = useCallback(async (): Promise<TelegramLink | null> => {
+  const start = useCallback(async (password?: string): Promise<TelegramLink | null> => {
     setState({ phase: "starting" });
     try {
-      const link = await (purpose === "login" ? authApi.telegram.signIn() : authApi.telegram.confirmPhone());
+      const link = await (purpose === "login" ? authApi.telegram.signIn() : authApi.telegram.confirmPhone(password));
       setState({ phase: "waiting", link });
       return link;
     } catch (error) {
-      setState({ phase: "failed", message: ApiError.from(error).message });
+      const apiError = ApiError.from(error);
+      setState({ phase: "failed", message: apiError.message, error: apiError });
       return null;
     }
   }, [purpose]);

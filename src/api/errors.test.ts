@@ -19,6 +19,8 @@ describe("ApiError.from", () => {
     expect(ApiError.from(httpError(403, { message: "Please verify your email address first." })).kind).toBe("email_unverified");
     expect(ApiError.from(httpError(403, { message: "Set up 2FA", two_factor_setup_required: true })).kind).toBe("two_factor_setup_required");
     expect(ApiError.from(httpError(403, { message: "This action is unauthorized." })).kind).toBe("forbidden");
+    // The reason travels with the error, so a page can offer "Sign in again".
+    expect(ApiError.from(httpError(403, { message: "For your safety, sign in again first.", reason: "sign_in_again" })).data.reason).toBe("sign_in_again");
   });
 
   it("says long waits in minutes", () => {

@@ -1042,7 +1042,14 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @description Verified accounts with a password: required (a new number is a new way in) */
+                        password?: string;
+                    };
+                };
+            };
             responses: {
                 /** @description url, key, expires_at */
                 201: {
@@ -1052,6 +1059,14 @@ export interface paths {
                     content?: never;
                 };
                 401: components["responses"]["Unauthorized"];
+                /** @description reason=sign_in_again: a verified account without a password signed in more than 10 minutes ago */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                422: components["responses"]["Validation"];
                 /** @description The bot is off */
                 503: {
                     headers: {
@@ -1263,7 +1278,10 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Change password (signs out other devices) */
+        /**
+         * Change password (signs out other devices)
+         * @description A first password (account without one) needs a sign-in in the last 10 minutes.
+         */
         put: {
             parameters: {
                 query?: never;
@@ -1275,6 +1293,13 @@ export interface paths {
             responses: {
                 /** @description Changed */
                 200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description reason=sign_in_again */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1323,6 +1348,13 @@ export interface paths {
             responses: {
                 /** @description Code sent; email is the address it went to */
                 200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description reason=sign_in_again: no password and the last sign-in is more than 10 minutes old */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1420,6 +1452,13 @@ export interface paths {
             responses: {
                 /** @description Connected (customer in the body) */
                 200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description reason=sign_in_again: no password and the last sign-in is more than 10 minutes old */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
