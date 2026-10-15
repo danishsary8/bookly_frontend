@@ -16,6 +16,7 @@ import { useTurnstile } from "@/features/auth/turnstile";
 import { useAfterSignIn } from "@/features/auth/useAfterSignIn";
 import { applyApiErrors, withNext } from "@/lib/forms";
 import { useT } from "@/i18n";
+import { toast } from "@/stores/toast";
 import { Rich } from "@/i18n/Rich";
 
 /*
@@ -54,6 +55,7 @@ function FacebookDetailsForm({ accessToken, profile, telegram, next }: FacebookS
         ...(values.email ? { email: values.email } : {}),
         turnstile_token: await turnstile.getToken(),
       });
+      if (response.pending_email) toast.info({ title: dict.security.pendingEmailTitle, description: dict.security.pendingEmailSent(response.pending_email) });
       afterSignIn(response.customer, next, firstName ? s.welcomeName(firstName) : s.welcome, { verifyBy: response.verify_by ?? null, justRegistered: true });
     } catch (error) {
       const message = applyApiErrors(error, setError, ["verify_by", "email"]);

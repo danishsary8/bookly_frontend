@@ -18,7 +18,8 @@ export interface RegisterInput {
 export type VerifyChannel = "email" | "telegram";
 
 /** How the new account is confirmed next; null when nothing needs confirming. */
-export type SignUpResponse = LoginResponse & { message?: string; verify_by?: VerifyChannel | null };
+/** `pending_email`: a typed email that got a code and is added once the code comes back (Sign-in & security). */
+export type SignUpResponse = LoginResponse & { message?: string; verify_by?: VerifyChannel | null; pending_email?: string | null };
 
 /** A new Facebook customer's second step: confirm a phone number in Telegram, or give an email. */
 export interface FacebookDetails {

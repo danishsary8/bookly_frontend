@@ -18,10 +18,11 @@ import { Rich } from "@/i18n/Rich";
  * password, when the account has one) gets a 6-digit code; the code saves it as verified. The old email
  * keeps working until then, so a typo never locks anyone out.
  */
-export function EmailChanger({ current, hasPassword, onDone }: { current: string | null; hasPassword: boolean; onDone: () => void }) {
+export function EmailChanger({ current, hasPassword, pending = null, onDone }: { current: string | null; hasPassword: boolean; pending?: string | null; onDone: () => void }) {
   const queryClient = useQueryClient();
   const turnstile = useTurnstile("change_email");
-  const [sentTo, setSentTo] = useState<string | null>(null);
+  // An address that already got a code (a Telegram sign-up's email) starts at the code step.
+  const [sentTo, setSentTo] = useState<string | null>(pending);
   const codeRef = useRef<HTMLDivElement>(null);
   const { dict } = useT();
   const t = dict.security;

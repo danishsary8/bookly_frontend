@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { accountApi } from "@/api/endpoints/account";
 import { ApiError } from "@/api/errors";
@@ -122,5 +122,22 @@ describe("Change email", () => {
     expect(await row.findByText("The code is invalid or has expired.")).toBeInTheDocument();
     await user.click(row.getByRole("button", { name: "Use another email" }));
     expect(row.getByLabelText("New email")).toBeInTheDocument();
+  });
+
+  it("opens at the code step for an email a Telegram sign-up typed, and adds it with the code", async () => {
+    const user = userEvent.setup();
+    const phoneOnly: Customer = { ...base, email: null, email_verified: false, phone_verified: true, has_password: true, sign_in_methods: ["telegram"], pending_email: "dara@example.com" };
+    const send = vi.spyOn(accountApi, "sendEmailCode");
+    const confirm = vi.spyOn(accountApi, "confirmEmail").mockResolvedValue({ message: "ok", customer: { ...phoneOnly, email: "dara@example.com", email_verified: true, pending_email: null } });
+    page(phoneOnly);
+
+    const row = within(emailRow());
+    expect(await row.findByText("dara@example.com", { selector: "strong" })).toBeInTheDocument();
+    await user.type(row.getAllByRole("textbox")[0], "123456");
+    await user.click(row.getByRole("button", { name: "Add email" }));
+
+    await waitFor(() => expect(confirm).toHaveBeenCalledWith("123456"));
+    expect(send).not.toHaveBeenCalled();
+    expect(await notifications().findByText("Email added")).toBeInTheDocument();
   });
 });

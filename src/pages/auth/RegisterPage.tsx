@@ -19,6 +19,7 @@ import { applyApiErrors, withNext } from "@/lib/forms";
 import { useTurnstile } from "@/features/auth/turnstile";
 import { useTelegramBot } from "@/features/auth/verification";
 import { useT } from "@/i18n";
+import { toast } from "@/stores/toast";
 
 const FIELDS = ["name", "email", "phone", "password", "password_confirmation", "verify_by"] as const;
 
@@ -54,6 +55,7 @@ export default function RegisterPage() {
         turnstile_token: await turnstile.getToken(),
       });
       // New accounts are unverified, so this continues to the code page or Telegram (which keep `next`).
+      if (response.pending_email) toast.info({ title: dict.security.pendingEmailTitle, description: dict.security.pendingEmailSent(response.pending_email) });
       afterSignIn(response.customer, next, undefined, { justRegistered: true, verifyBy: response.verify_by ?? "email" });
     } catch (error) {
       const message = applyApiErrors(error, setError, FIELDS);

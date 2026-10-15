@@ -442,6 +442,8 @@ export const en = {
     notVerified: "Not verified",
     sendCodeFailed: "Couldn't send the code",
     waysIn: "Ways into your account",
+    pendingEmailTitle: "Check your email",
+    pendingEmailSent: (email: string) => `We sent a code to ${email}. Enter it in Account → Sign-in & security to add your email.`,
     waysInLead: "A verified email or phone number lets you order. Keep at least one up to date.",
     email: "Email",
     phone: "Phone",

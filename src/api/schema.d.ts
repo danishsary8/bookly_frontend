@@ -566,7 +566,7 @@ export interface paths {
         put?: never;
         /**
          * Create an account; confirm it with an email code, or with your phone number in the Telegram bot (verify_by)
-         * @description verify_by=telegram needs GET /auth/options telegram=true (else 422 on verify_by); the email is then optional and no code is sent: the website continues with POST /auth/telegram/phone, and the number shared in the bot verifies the account (it then signs in with Continue with Telegram). If the email belongs to a sign-up that was never verified, that account is taken over (new name and password, its old sessions and codes cancelled). Sign-ups still unverified after UNVERIFIED_CUSTOMER_HOURS (48) are deleted. A verified, deactivated or deleted account keeps its email (422).
+         * @description verify_by=telegram needs GET /auth/options telegram=true (else 422 on verify_by); the email is then optional; a typed email is not saved yet but gets an email-change code (pending_email in the answer) and is added by POST /me/email/verify; the website continues with POST /auth/telegram/phone, and the number shared in the bot verifies the account (it then signs in with Continue with Telegram). If the email belongs to a sign-up that was never verified, an email sign-up takes that account over (new name and password, its old sessions and codes cancelled); an unproven copy of the email on a phone account is taken off it. Forgot/reset password is refused for such an unproven email. Sign-ups still unverified after UNVERIFIED_CUSTOMER_HOURS (48) are deleted. An account with a proven email, or a deactivated or deleted one, keeps its email (422).
          */
         post: {
             parameters: {
@@ -738,7 +738,7 @@ export interface paths {
         put?: never;
         /**
          * Log in with a Google or Facebook access token
-         * @description Signs in the account already linked to this Google/Facebook id, or creates one. An email that already has a verified (or closed) account is refused with 409 and told how to sign in instead; an unfinished sign-up with that email becomes the social account (its password and sessions are removed). A new Facebook account confirms a phone number in the Telegram bot, or gives an email: without verify_by the answer is 422 with needs=phone, profile {name, email} and telegram (bot on); call again with the same access_token, verify_by (telegram or email), the email (optional with telegram) and turnstile_token. verify_by in the response says what is next: telegram (POST /auth/telegram/phone), email (a code was sent) or null (Facebook confirmed the email).
+         * @description Signs in the account already linked to this Google/Facebook id, or creates one. An email proven on another account (or on a closed one) is refused with 409 (an unproven copy on a phone account is taken off it instead) and told how to sign in instead; an unfinished sign-up with that email becomes the social account (its password and sessions are removed). A new Facebook account confirms a phone number in the Telegram bot, or gives an email: without verify_by the answer is 422 with needs=phone, profile {name, email} and telegram (bot on); call again with the same access_token, verify_by (telegram or email), the email (optional with telegram; unless it is the Facebook email it is not saved yet but gets a code, pending_email in the answer) and turnstile_token. verify_by in the response says what is next: telegram (POST /auth/telegram/phone), email (a code was sent) or null (Facebook confirmed the email).
          */
         post: {
             parameters: {
@@ -5203,6 +5203,8 @@ export interface components {
             };
             /** @description Ways this account can sign in today (password counts only with an email; telegram means a verified number, while the Telegram bot is on). The last one cannot be removed. */
             sign_in_methods?: ("password" | "google" | "facebook" | "telegram")[];
+            /** @description Only on the customer's own account: an address that was sent a code (Telegram sign-up, change email) and is added once POST /me/email/verify gets that code. */
+            pending_email?: string | null;
             /** Format: date-time */
             created_at?: string;
         };
