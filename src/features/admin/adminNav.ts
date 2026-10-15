@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { ArrowLeftRight, BookCopy, Building2, FolderTree, LayoutDashboard, Library, MessageSquareText, Package, PenTool, RotateCcw, ScrollText, ShieldCheck, TicketPercent, Users } from "lucide-react";
+import { ArrowLeftRight, BarChart3, BookCopy, Building2, FolderTree, LayoutDashboard, Library, MessageSquareText, Package, PenTool, RotateCcw, ScrollText, ShieldCheck, TicketPercent, Users } from "lucide-react";
 import type { StaffRole } from "@/api/endpoints/staff";
 
 export type AdminNavItem = { to: string; label: string; Icon: ComponentType<{ className?: string }>; end?: boolean; roles?: StaffRole[] };
@@ -9,7 +9,13 @@ export type AdminNavGroup = { label: string; items: AdminNavItem[] };
  * Admin navigation, grouped. `roles` hides an item from staff the API would refuse anyway.
  */
 export const adminNav: AdminNavGroup[] = [
-  { label: "Overview", items: [{ to: "/admin", label: "Dashboard", Icon: LayoutDashboard, end: true }] },
+  {
+    label: "Overview",
+    items: [
+      { to: "/admin", label: "Dashboard", Icon: LayoutDashboard, end: true },
+      { to: "/admin/reports", label: "Reports", Icon: BarChart3, roles: ["admin"] },
+    ],
+  },
   {
     label: "Sales",
     items: [

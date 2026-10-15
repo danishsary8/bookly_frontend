@@ -4836,6 +4836,236 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff/reports/sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** (admin) Sales report totals and series by day/week/month (format json|csv) */
+        get: {
+            parameters: {
+                query?: {
+                    from?: components["parameters"]["From"];
+                    to?: components["parameters"]["To"];
+                    group?: "day" | "week" | "month";
+                    format?: "json" | "csv";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sales report data or CSV stream */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/reports/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** (admin) Orders breakdown by status, payment method, delivery area, and fulfillment hours */
+        get: {
+            parameters: {
+                query?: {
+                    from?: components["parameters"]["From"];
+                    to?: components["parameters"]["To"];
+                    format?: "json" | "csv";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Orders report data or CSV stream */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/reports/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** (admin) Best sellers, worst sellers with stock, low-stock, and category revenue */
+        get: {
+            parameters: {
+                query?: {
+                    from?: components["parameters"]["From"];
+                    to?: components["parameters"]["To"];
+                    limit?: number;
+                    format?: "json" | "csv";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Products report data or CSV stream */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/reports/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** (admin) Verified customer acquisition series, returning rate, and top spenders */
+        get: {
+            parameters: {
+                query?: {
+                    from?: components["parameters"]["From"];
+                    to?: components["parameters"]["To"];
+                    format?: "json" | "csv";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Customers report data or CSV stream */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/reports/funnel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** (admin) Conversion funnel: carts with items -> orders placed -> delivered -> returned */
+        get: {
+            parameters: {
+                query?: {
+                    from?: components["parameters"]["From"];
+                    to?: components["parameters"]["To"];
+                    format?: "json" | "csv";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Funnel report data or CSV stream */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/reports/coupons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** (admin) Coupon usage performance and refunds by return reason */
+        get: {
+            parameters: {
+                query?: {
+                    from?: components["parameters"]["From"];
+                    to?: components["parameters"]["To"];
+                    format?: "json" | "csv";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Coupons and refunds report data or CSV stream */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {

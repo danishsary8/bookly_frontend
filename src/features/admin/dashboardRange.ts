@@ -36,3 +36,16 @@ export function rangeFromParams(params: URLSearchParams): DashboardRange {
 /** URL params for a range (30 days is the default, so it leaves the URL clean). */
 export const rangeToParams = (range: DashboardRange): Record<string, string> =>
   range.period === "custom" ? { period: "custom", from: range.from, to: range.to } : range.period === "30d" ? {} : { period: range.period };
+
+const dayFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+/** "15 Oct" for a Y-m-d day. */
+export const day = (date: string) => dayFormat.format(new Date(`${date}T00:00:00Z`));
+
+/** The first and last Phnom Penh day of a dashboard range ("7d" is today and the 6 days before). */
+export function rangeDays(range: DashboardRange): { from: string; to: string } {
+  if (range.period === "custom") return { from: range.from, to: range.to };
+  const to = shopToday();
+  const back = { today: 0, "7d": 6, "30d": 29 }[range.period];
+  const from = new Date(Date.parse(`${to}T00:00:00Z`) - back * 86_400_000).toISOString().slice(0, 10);
+  return { from, to };
+}

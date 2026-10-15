@@ -39,6 +39,7 @@ const StaffTwoFactorSetupPage = lazy(() => import("../pages/admin/auth/StaffTwoF
 const StaffResetPasswordPage = lazy(() => import("../pages/admin/auth/StaffResetPasswordPage"));
 const AdminShell = lazy(() => import("../features/admin/AdminShell").then((m) => ({ default: m.AdminShell })));
 const DashboardPage = lazy(() => import("../pages/admin/DashboardPage"));
+const ReportsPage = lazy(() => import("../pages/admin/ReportsPage"));
 const AdminBooksPage = lazy(() => import("../pages/admin/BooksPage"));
 const BookEditPage = lazy(() => import("../pages/admin/BookEditPage"));
 const LookupPage = lazy(() => import("../pages/admin/LookupPage"));
@@ -182,6 +183,7 @@ const AppRoutes = () => {
               <Route path="customers" element={<CustomersAdminPage />} />
               <Route path="customers/:id" element={<CustomerAdminPage />} />
               <Route element={<RequireAdminRole />}>
+                <Route path="reports" element={<ReportsPage />} />
                 <Route path="members" element={<MembersAdminPage />} />
                 <Route path="exchange-rates" element={<ExchangeRatesPage />} />
                 <Route path="audit-log" element={<AuditLogPage />} />
