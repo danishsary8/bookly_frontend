@@ -41,6 +41,7 @@ const AdminShell = lazy(() => import("../features/admin/AdminShell").then((m) =>
 const DashboardPage = lazy(() => import("../pages/admin/DashboardPage"));
 const ReportsPage = lazy(() => import("../pages/admin/ReportsPage"));
 const AdminBooksPage = lazy(() => import("../pages/admin/BooksPage"));
+const StockAdminPage = lazy(() => import("../pages/admin/StockAdminPage"));
 const BookEditPage = lazy(() => import("../pages/admin/BookEditPage"));
 const LookupPage = lazy(() => import("../pages/admin/LookupPage"));
 const OrdersAdminPage = lazy(() => import("../pages/admin/OrdersAdminPage"));
@@ -55,6 +56,9 @@ const CustomerAdminPage = lazy(() => import("../pages/admin/CustomerAdminPage"))
 const MembersAdminPage = lazy(() => import("../pages/admin/MembersAdminPage"));
 const ExchangeRatesPage = lazy(() => import("../pages/admin/ExchangeRatesPage"));
 const AuditLogPage = lazy(() => import("../pages/admin/AuditLogPage"));
+const NewsletterAdminPage = lazy(() => import("../pages/admin/NewsletterAdminPage"));
+const NewsletterConfirmPage = lazy(() => import("../pages/NewsletterConfirmPage"));
+const NewsletterUnsubscribePage = lazy(() => import("../pages/NewsletterUnsubscribePage"));
 const ShippingPage = lazy(() => import("../pages/content/ShippingPage"));
 const ReturnsPolicyPage = lazy(() => import("../pages/content/ReturnsPolicyPage"));
 const FaqPage = lazy(() => import("../pages/content/FaqPage"));
@@ -117,6 +121,8 @@ const AppRoutes = () => {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
+          <Route path="/newsletter/confirm" element={<NewsletterConfirmPage />} />
+          <Route path="/newsletter/unsubscribe" element={<NewsletterUnsubscribePage />} />
           {UiKit ? <Route path="/ui-kit" element={<UiKit />} /> : null}
           <Route path="*" element={<NotFound />} />
           <Route element={<RequireVerified />}>
@@ -168,6 +174,7 @@ const AppRoutes = () => {
             <Route path="/admin" element={<AdminShell />}>
               <Route index element={<DashboardPage />} />
               <Route path="books" element={<AdminBooksPage />} />
+              <Route path="stock" element={<StockAdminPage />} />
               <Route path="books/new" element={<BookEditPage />} />
               <Route path="books/:id" element={<BookEditPage key="edit" />} />
               <Route path="authors" element={<LookupPage key="authors" kind="authors" />} />
@@ -183,6 +190,7 @@ const AppRoutes = () => {
               <Route path="customers" element={<CustomersAdminPage />} />
               <Route path="customers/:id" element={<CustomerAdminPage />} />
               <Route element={<RequireAdminRole />}>
+                <Route path="newsletter" element={<NewsletterAdminPage />} />
                 <Route path="reports" element={<ReportsPage />} />
                 <Route path="members" element={<MembersAdminPage />} />
                 <Route path="exchange-rates" element={<ExchangeRatesPage />} />

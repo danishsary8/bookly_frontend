@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { ArrowLeftRight, BarChart3, BookCopy, Building2, FolderTree, LayoutDashboard, Library, MessageSquareText, Package, PenTool, RotateCcw, ScrollText, ShieldCheck, TicketPercent, Users } from "lucide-react";
+import { ArrowLeftRight, BarChart3, BookCopy, Boxes, Building2, FolderTree, LayoutDashboard, Library, Mail, MessageSquareText, Package, PenTool, RotateCcw, ScrollText, ShieldCheck, TicketPercent, Users } from "lucide-react";
 import type { StaffRole } from "@/api/endpoints/staff";
 
 export type AdminNavItem = { to: string; label: string; Icon: ComponentType<{ className?: string }>; end?: boolean; roles?: StaffRole[] };
@@ -30,6 +30,7 @@ export const adminNav: AdminNavGroup[] = [
     label: "Catalogue",
     items: [
       { to: "/admin/books", label: "Books", Icon: BookCopy },
+      { to: "/admin/stock", label: "Stock", Icon: Boxes },
       { to: "/admin/authors", label: "Authors", Icon: PenTool },
       { to: "/admin/categories", label: "Categories", Icon: FolderTree },
       { to: "/admin/publishers", label: "Publishers", Icon: Building2 },
@@ -39,6 +40,7 @@ export const adminNav: AdminNavGroup[] = [
   {
     label: "Admin",
     items: [
+      { to: "/admin/newsletter", label: "Newsletter", Icon: Mail, roles: ["admin"] },
       { to: "/admin/members", label: "Staff members", Icon: ShieldCheck, roles: ["admin"] },
       { to: "/admin/exchange-rates", label: "Exchange rate", Icon: ArrowLeftRight, roles: ["admin"] },
       { to: "/admin/audit-log", label: "Audit log", Icon: ScrollText, roles: ["admin"] },

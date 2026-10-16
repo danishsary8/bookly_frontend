@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Wordmark } from "./SiteHeader";
 import { footerNav, legalNav } from "./nav";
 import { useT } from "@/i18n";
+import { NewsletterSignup } from "./NewsletterSignup";
 
 /*
  * MASTER §6.13: Daylight --lapis-tint background, Night --card with a top
@@ -23,6 +24,9 @@ export function SiteFooter({ className }: { className?: string }) {
           <p className="max-w-xs text-[15px] leading-6 text-muted-foreground">
             {dict.footer.tagline}
           </p>
+          <div className="mt-2">
+            <NewsletterSignup />
+          </div>
         </div>
         {footerNav.map((column) => (
           <nav key={column.title} aria-labelledby={`footer-${column.title}`}>

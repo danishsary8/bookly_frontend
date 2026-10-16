@@ -27,6 +27,8 @@ const book: StaffBook = {
   id: 6,
   title: "The Hound of the Baskervilles",
   description: null,
+  status: "live",
+  publish_at: null,
   language: "English",
   page_count: 256,
   publish_date: null,
@@ -288,6 +290,40 @@ describe("dashboard", () => {
     expect(screen.getByRole("status")).toHaveTextContent("$20.00");
     expect(screen.getByRole("status")).toHaveTextContent("2 new orders placed");
     expect(screen.getAllByRole("row")).toHaveLength(3);
+  });
+
+  it("shows system health card on admin dashboard for admin users", async () => {
+    signIn(admin);
+    vi.spyOn(staffApi, "summary").mockResolvedValue(summary);
+    vi.spyOn(staffApi, "sales").mockResolvedValue(days);
+    const healthSpy = vi.spyOn(staffApi, "health").mockResolvedValue({
+      status: "ok",
+      checks: {
+        database: { status: "ok" },
+        queue: { status: "ok", pending: 0, failed: 0, oldest_pending_seconds: null },
+        telegram_bot: { status: "ok" },
+      },
+    });
+    app("/admin");
+
+    expect(await screen.findByRole("region", { name: "System health" })).toBeInTheDocument();
+    expect(healthSpy).toHaveBeenCalled();
+    const healthRegion = screen.getByRole("region", { name: "System health" });
+    expect(await within(healthRegion).findByText("Database")).toBeInTheDocument();
+    expect(within(healthRegion).getByText("Background queue")).toBeInTheDocument();
+    expect(within(healthRegion).getByText("Telegram bot")).toBeInTheDocument();
+  });
+
+  it("does not show system health card on dashboard for non-admin staff", async () => {
+    signIn(staff);
+    vi.spyOn(staffApi, "summary").mockResolvedValue(summary);
+    vi.spyOn(staffApi, "sales").mockResolvedValue(days);
+    const healthSpy = vi.spyOn(staffApi, "health").mockReturnValue(new Promise(() => {}));
+    app("/admin");
+
+    expect(await screen.findByText("$50.50")).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "System health" })).not.toBeInTheDocument();
+    expect(healthSpy).not.toHaveBeenCalled();
   });
 });
 

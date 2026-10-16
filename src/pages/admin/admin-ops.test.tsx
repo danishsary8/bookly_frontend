@@ -489,7 +489,7 @@ describe("customer", () => {
     vi.spyOn(opsApi, "customer").mockResolvedValue(customer);
     app("/admin/customers/4");
     expect(await screen.findByRole("heading", { level: 1, name: "Sokha Chan" })).toBeInTheDocument();
-    expect(screen.getByText("$40.00")).toBeInTheDocument();
+    expect(screen.queryByText("$40.00")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Deactivate" })).not.toBeInTheDocument();
   });
 

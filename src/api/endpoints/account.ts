@@ -9,7 +9,19 @@ export const accountKeys = {
   me: () => ["account", "me"] as const,
   addresses: () => ["account", "addresses"] as const,
   wishlist: (params: object) => ["account", "wishlist", toQueryParams(params)] as const,
+  storeCredits: () => ["account", "store-credits"] as const,
 };
+
+/** A refund paid as a one-use coupon that only this customer can use. */
+export interface StoreCredit {
+  id: number;
+  code: string;
+  amount_usd: string;
+  expires_at: string | null;
+  used: boolean;
+  expired: boolean;
+  created_at: string;
+}
 
 /**
  * Address body. The API also accepts null for the optional text fields (to clear
@@ -23,7 +35,7 @@ export type AddressPayload = Omit<AddressInput, "address_line2" | "state" | "pos
 
 export const accountApi = {
   me: () => api.get<Resource<Customer>>("/me").then((r) => r.data),
-  updateProfile: async (input: { name?: string; phone?: string | null }) => {
+  updateProfile: async (input: { name?: string; phone?: string | null; locale?: "en" | "km" }) => {
     const customer = (await api.patch<Resource<Customer>>("/me", input)).data;
     updateSessionUser("customer", customer);
     return customer;
@@ -65,6 +77,8 @@ export const accountApi = {
     api.get<Paginated<BookCard>>("/wishlist", { params: toQueryParams(params) }),
   addToWishlist: (bookId: number) => api.post<MessageResponse & { book_id: number }>("/wishlist", { book_id: bookId }),
   removeFromWishlist: (bookId: number) => api.delete(`/wishlist/${bookId}`),
+
+  storeCredits: () => api.get<Resource<StoreCredit[]>>("/me/store-credits").then((r) => r.data),
 };
 
 export const accountQueries = {
@@ -72,4 +86,5 @@ export const accountQueries = {
   addresses: () => queryOptions({ queryKey: accountKeys.addresses(), queryFn: accountApi.addresses }),
   wishlist: (params: Parameters<typeof accountApi.wishlist>[0] = {}) =>
     queryOptions({ queryKey: accountKeys.wishlist(params), queryFn: () => accountApi.wishlist(params) }),
+  storeCredits: () => queryOptions({ queryKey: accountKeys.storeCredits(), queryFn: accountApi.storeCredits }),
 };

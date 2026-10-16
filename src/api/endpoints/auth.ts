@@ -12,6 +12,7 @@ export interface RegisterInput {
   phone?: string;
   /** How the account is confirmed: a 6-digit email code, or the phone number shared in the Telegram bot. */
   verify_by?: VerifyChannel;
+  locale?: "en" | "km";
   turnstile_token?: string;
 }
 

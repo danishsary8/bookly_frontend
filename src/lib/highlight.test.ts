@@ -23,4 +23,12 @@ describe("highlightParts", () => {
       { text: "th)", match: false },
     ]);
   });
+
+  it("handles Khmer queries with zero-width spaces", () => {
+    expect(highlightParts("រឿងព្រេងបុរាណ", "ព្រេង\u200B")).toEqual([
+      { text: "រឿង", match: false },
+      { text: "ព្រេង", match: true },
+      { text: "បុរាណ", match: false },
+    ]);
+  });
 });

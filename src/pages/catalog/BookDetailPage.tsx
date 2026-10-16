@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { BookX, Heart, RotateCcw, ShoppingBag, Truck, Wallet } from "lucide-react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Bell, BookX, Heart, RotateCcw, ShoppingBag, Truck, Wallet } from "lucide-react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
+import { stockAlertQueries, stockAlertsApi } from "@/api/endpoints/stockAlerts";
 import { ApiError } from "@/api/errors";
-import type { BookCard, BookDetail } from "@/api/types";
+import { useSession } from "@/api/session";
+import type { BookCard, BookDetail, Customer } from "@/api/types";
 import { BookCover } from "@/components/catalog/BookCover";
 import { BookShelf } from "@/components/catalog/BookShelf";
 import { FormatPicker } from "@/components/catalog/FormatPicker";
@@ -24,9 +26,11 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
+import { withNext } from "@/lib/forms";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
-import { addRecentlyViewed, useRecentlyViewed } from "@/stores/recentlyViewed";
+import { addRecentlyViewed, clearRecentlyViewed, useRecentlyViewed } from "@/stores/recentlyViewed";
+import { toast } from "@/stores/toast";
 import { formatName, useT } from "@/i18n";
 
 /*
@@ -74,6 +78,11 @@ function Purchase({ book }: { book: BookDetail }) {
   const b = dict.book;
   const cart = useAddToCart();
   const wishlist = useWishlist();
+  const session = useSession<Customer>("customer");
+  const queryClient = useQueryClient();
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const variants = book.variants ?? [];
   const [variantId, setVariantId] = useState<number | undefined>(() => pickVariant(variants)?.id ?? variants[0]?.id);
   const [quantity, setQuantity] = useState(1);
@@ -82,6 +91,45 @@ function Purchase({ book }: { book: BookDetail }) {
   const buyable = Boolean(variant && variant.in_stock !== false);
   const saved = wishlist.isSaved(book.id);
   const adding = cart.pendingBookId === book.id;
+
+  const alerts = useQuery({
+    ...stockAlertQueries.list(),
+    enabled: Boolean(session?.token),
+  });
+
+  const activeAlert = alerts.data?.find((a) => a.book_variant_id === variant?.id && !a.notified_at);
+
+  const createAlert = useMutation({
+    mutationFn: (id: number) => stockAlertsApi.create(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: stockAlertQueries.all() });
+      toast.success(b.alertSet);
+    },
+    onError: (err) => {
+      toast.error(ApiError.from(err).message);
+    },
+  });
+
+  const deleteAlert = useMutation({
+    mutationFn: (id: number) => stockAlertsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: stockAlertQueries.all() });
+      toast.success(b.alertRemoved);
+    },
+    onError: (err) => {
+      toast.error(ApiError.from(err).message);
+    },
+  });
+
+  const onAlertClick = () => {
+    if (!session?.token) {
+      navigate(withNext("/login", location.pathname));
+      return;
+    }
+    if (variant?.id) {
+      createAlert.mutate(variant.id);
+    }
+  };
 
   const mainButton = useRef<HTMLDivElement>(null);
   const [showBar, setShowBar] = useState(false);
@@ -126,12 +174,45 @@ function Purchase({ book }: { book: BookDetail }) {
 
       <div ref={mainButton} className="flex flex-wrap items-center gap-3">
         {!digital && buyable ? <QuantityStepper value={quantity} onChange={setQuantity} max={MAX_QTY} label={b.quantityFor(book.title ?? "")} /> : null}
-        <CtaGlare className="min-w-[12rem] flex-1 sm:flex-none">
-          <Button variant="cta" size="lg" className="w-full" onClick={add} disabled={!buyable} loading={adding}>
-            {!adding ? <ShoppingBag aria-hidden="true" /> : null}
-            {adding ? b.adding : dict.bookDetail.addToCart}
-          </Button>
-        </CtaGlare>
+        {!digital && !buyable ? (
+          activeAlert ? (
+            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface-1 px-4 py-2.5">
+              <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Bell className="size-4 text-primary" aria-hidden="true" />
+                {b.weWillEmailYou}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => deleteAlert.mutate(activeAlert.id!)}
+                disabled={deleteAlert.isPending}
+                loading={deleteAlert.isPending}
+                className="h-8 text-xs font-semibold text-muted-foreground hover:text-foreground"
+              >
+                {b.undoAlert}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={onAlertClick}
+              disabled={createAlert.isPending}
+              loading={createAlert.isPending}
+              className="min-w-[12rem] flex-1 sm:flex-none gap-2"
+            >
+              <Bell className="size-4 text-primary" aria-hidden="true" />
+              {b.tellMeWhenBack}
+            </Button>
+          )
+        ) : (
+          <CtaGlare className="min-w-[12rem] flex-1 sm:flex-none">
+            <Button variant="cta" size="lg" className="w-full" onClick={add} disabled={!buyable} loading={adding}>
+              {!adding ? <ShoppingBag aria-hidden="true" /> : null}
+              {adding ? b.adding : dict.bookDetail.addToCart}
+            </Button>
+          </CtaGlare>
+        )}
         <Button variant="outline" size="icon-lg" onClick={() => wishlist.toggle(book)} aria-pressed={saved} aria-label={b.saveToWishlist(book.title ?? "")} className={cn(saved && "text-accent-text")}>
           <Heart className={cn(saved && "fill-current")} aria-hidden="true" />
         </Button>
@@ -176,9 +257,42 @@ function Purchase({ book }: { book: BookDetail }) {
               {variant ? `${formatName(dict, variant.format)} · ${formatMoney(variant.price_usd, variant.price_khr, currency)}` : null}
             </p>
           </div>
-          <Button variant="cta" onClick={add} disabled={!buyable} loading={adding} tabIndex={showBar ? 0 : -1}>
-            {dict.bookDetail.addToCart}
-          </Button>
+          {!digital && !buyable ? (
+            activeAlert ? (
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  <Bell className="size-3.5 text-primary" aria-hidden="true" />
+                  {b.weWillEmailYou}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => deleteAlert.mutate(activeAlert.id!)}
+                  disabled={deleteAlert.isPending}
+                  tabIndex={showBar ? 0 : -1}
+                  className="h-7 text-xs"
+                >
+                  {b.undoAlert}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onAlertClick}
+                disabled={createAlert.isPending}
+                tabIndex={showBar ? 0 : -1}
+                className="gap-1.5"
+              >
+                <Bell className="size-3.5 text-primary" aria-hidden="true" />
+                {b.tellMeWhenBack}
+              </Button>
+            )
+          ) : (
+            <Button variant="cta" onClick={add} disabled={!buyable} loading={adding} tabIndex={showBar ? 0 : -1}>
+              {dict.bookDetail.addToCart}
+            </Button>
+          )}
         </div>
       </div>
     </div>
@@ -198,7 +312,8 @@ export default function BookDetailPage() {
   const book = query.data;
   const shown: BookCard | undefined = book ?? (preview?.id === bookId ? preview : undefined);
   const showSkeleton = useSkeletonVisible(query.isPending && !shown);
-  const recent = useRecentlyViewed();
+  const recentOthers = useRecentlyViewed(bookId);
+  const alsoBought = useQuery({ ...catalogQueries.alsoBought(bookId), enabled: valid });
   useDocumentTitle(shown?.title ?? (query.isError ? b.notFoundDoc : null), {
     description: book ? book.description || b.metaBy(book.title ?? "", (book.authors ?? []).map((a) => a.name).join(", ")) : null,
     image: shown?.cover_image_url,
@@ -210,7 +325,7 @@ export default function BookDetailPage() {
   const series = useQuery({ ...catalogQueries.series(book?.series?.id ?? 0), enabled: Boolean(book?.series?.id) });
 
   useEffect(() => {
-    if (book) addRecentlyViewed(book);
+    if (book?.id) addRecentlyViewed(book.id);
   }, [book]);
 
   const notFound = !valid || (query.isError && ApiError.from(query.error).kind === "not_found");
@@ -243,7 +358,6 @@ export default function BookDetailPage() {
   const authors = shown?.authors ?? [];
   const otherByAuthor = (byAuthor.data?.data ?? []).filter((b) => b.id !== bookId).slice(0, 8);
   const otherInSeries = (series.data?.books ?? []).filter((b) => b.id !== bookId);
-  const recentOthers = recent.filter((b) => b.id !== bookId);
 
   return (
     <div className="container-shell pb-24 pt-6 sm:pt-8">
@@ -378,7 +492,25 @@ export default function BookDetailPage() {
             seeAllLabel={b.aboutAuthor}
           />
         ) : null}
-        <BookShelf id="recent" eyebrow={b.yourHistory} title={b.recentlyViewed} books={recentOthers} />
+        {alsoBought.data?.length ? (
+          <BookShelf
+            id="also-bought"
+            eyebrow={b.alsoBoughtEyebrow}
+            title={b.alsoBought}
+            books={alsoBought.data}
+          />
+        ) : null}
+        <BookShelf
+          id="recent"
+          eyebrow={b.yourHistory}
+          title={b.recentlyViewed}
+          books={recentOthers}
+          action={
+            <Button variant="ghost" size="sm" onClick={clearRecentlyViewed}>
+              {b.clearHistory}
+            </Button>
+          }
+        />
       </div>
     </div>
   );

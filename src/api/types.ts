@@ -62,6 +62,8 @@ export interface MessageResponse {
   message: string;
 }
 
+export type StockAlert = Schemas["StockAlert"];
+
 /** GET /orders/{id}/returnable-items */
 export interface ReturnableItems {
   order_id: number;

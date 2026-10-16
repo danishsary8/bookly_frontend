@@ -12,6 +12,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { InlineError } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AccountSection } from "@/features/account/AccountSection";
+import { StockAlertsCard } from "@/features/account/StockAlertsCard";
+import { StoreCreditsCard } from "@/features/account/StoreCreditsCard";
 import { orderDate } from "@/features/orders/format";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { formatMoney, useCurrency } from "@/stores/currency";
@@ -95,6 +97,10 @@ export default function AccountOverviewPage() {
           </li>
         ))}
       </ul>
+
+      <StoreCreditsCard />
+
+      <StockAlertsCard />
 
       <section aria-labelledby="recent-orders" className="rounded-xl border border-border bg-card p-5 sm:p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-3">

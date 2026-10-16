@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArchiveRestore, Ban, Clock3, MailCheck, Trash2, UserX, Users } from "lucide-react";
+import { ArchiveRestore, Ban, Clock3, MailCheck, Trash2, UserX, Users, X } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { opsApi, opsQueries, type StaffCustomer } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
@@ -33,15 +33,17 @@ export default function CustomersAdminPage() {
   const { get, page, set, hrefFor } = useListParams();
   const [params] = useSearchParams();
   const q = get("q");
+  const tag = get("tag");
   const view: View = get("view") === "unverified" ? "unverified" : get("view") === "closed" ? "closed" : "verified";
   const closedView = view === "closed";
   const filter = (["all", "active", "deactivated"] as const).find((f) => f === get("show")) ?? "all";
   const customers = useQuery(
     opsQueries.customers(
       closedView
-        ? { q: q || undefined, closed: true, page, per_page: 25 }
+        ? { q: q || undefined, tag: tag || undefined, closed: true, page, per_page: 25 }
         : {
             q: q || undefined,
+            tag: tag || undefined,
             active: filter === "active" ? true : filter === "deactivated" ? false : null,
             verified: view === "verified",
             page,
@@ -69,7 +71,7 @@ export default function CustomersAdminPage() {
   const [reopening, setReopening] = useState<StaffCustomer | null>(null);
   const reopen = useReopenCustomer(() => setReopening(null));
   const canReopen = closedView && isAdmin;
-  const filtered = Boolean(q) || (!closedView && filter !== "all");
+  const filtered = Boolean(q) || Boolean(tag) || (!closedView && filter !== "all");
 
   // Switching tabs keeps the search and filter, and goes back to page 1.
   const viewHref = (next: View) => {
@@ -113,6 +115,19 @@ export default function CustomersAdminPage() {
       ) : null}
       <div className="flex flex-wrap items-center gap-3">
         <SearchBox label="Search customers" value={q} placeholder="Name, email or phone" onSearch={(v) => set({ q: v || undefined })} />
+        {tag ? (
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-1 text-sm font-semibold text-primary">
+            Tag: #{tag}
+            <button
+              type="button"
+              onClick={() => set({ tag: undefined })}
+              className="ml-1 text-primary/70 hover:text-primary"
+              aria-label="Clear tag filter"
+            >
+              <X className="size-3.5" aria-hidden="true" />
+            </button>
+          </span>
+        ) : null}
         {closedView ? null : (
         <Segmented
           label="Show"
@@ -163,6 +178,21 @@ export default function CustomersAdminPage() {
                     {c.name}
                   </Link>
                   <span className="block text-sm text-muted-foreground">{c.email ?? c.phone}</span>
+                  {c.tags?.length ? (
+                    <div className="mt-1 flex flex-wrap gap-1" aria-label="Customer tags">
+                      {c.tags.map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => set({ tag: t })}
+                          className="inline-flex items-center rounded border border-border bg-surface-2 px-1.5 py-0.5 text-xs font-medium text-muted-foreground transition hover:border-primary/50 hover:text-primary"
+                          title={`Filter by tag #${t}`}
+                        >
+                          #{t}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
                 </th>
                 <td className={td}>
                   <span className="flex flex-wrap items-center gap-1.5">

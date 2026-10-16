@@ -11,6 +11,7 @@ import { AdminPage } from "@/features/admin/AdminPage";
 import { SalesChart } from "@/features/admin/SalesChart";
 import { day, rangeFromParams, rangeToParams } from "@/features/admin/dashboardRange";
 import { Change, CustomRange, Khr, Panel, PeriodPicker, Tile } from "@/features/admin/reportKit";
+import { SystemHealthCard } from "@/features/admin/SystemHealthCard";
 import { useStaff } from "@/features/admin/staffSession";
 import { formatLabel } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
@@ -218,6 +219,8 @@ export default function DashboardPage() {
               )}
             </Panel>
           </div>
+
+          {session?.user.role === "admin" ? <SystemHealthCard /> : null}
         </div>
       )}
     </AdminPage>

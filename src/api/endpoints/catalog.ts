@@ -30,6 +30,7 @@ export interface BookFilters {
   sort?: BookSort;
   page?: number;
   per_page?: number;
+  ids?: string;
 }
 
 /** Drops empty values and turns booleans into 1, as the API expects. */
@@ -46,6 +47,7 @@ export const catalogKeys = {
   all: ["catalog"] as const,
   books: (filters: BookFilters) => ["catalog", "books", toQueryParams(filters)] as const,
   book: (id: number) => ["catalog", "book", id] as const,
+  alsoBought: (id: number) => ["catalog", "book", id, "also-bought"] as const,
   bookReviews: (id: number, params: object) => ["catalog", "book", id, "reviews", toQueryParams(params)] as const,
   authors: (params: object) => ["catalog", "authors", toQueryParams(params)] as const,
   author: (id: number) => ["catalog", "author", id] as const,
@@ -58,6 +60,7 @@ export const catalogKeys = {
 export const catalogApi = {
   books: (filters: BookFilters = {}) => api.get<Paginated<BookCard>>("/books", { params: toQueryParams(filters) }),
   book: (id: number) => api.get<Resource<BookDetail>>(`/books/${id}`).then((r) => r.data),
+  alsoBought: (id: number) => api.get<Resource<BookCard[]>>(`/books/${id}/also-bought`).then((r) => r.data),
   bookReviews: (id: number, params: { sort?: "newest" | "highest" | "lowest"; rating?: number; page?: number; per_page?: number } = {}) =>
     api.get<BookReviewsPage>(`/books/${id}/reviews`, { params: toQueryParams(params) }),
   authors: (params: { q?: string; page?: number; per_page?: number } = {}) =>
@@ -76,6 +79,8 @@ export const catalogQueries = {
   books: (filters: BookFilters = {}) =>
     queryOptions({ queryKey: catalogKeys.books(filters), queryFn: () => catalogApi.books(filters), placeholderData: keepPreviousData }),
   book: (id: number) => queryOptions({ queryKey: catalogKeys.book(id), queryFn: () => catalogApi.book(id) }),
+  alsoBought: (id: number) =>
+    queryOptions({ queryKey: catalogKeys.alsoBought(id), queryFn: () => catalogApi.alsoBought(id), enabled: id > 0 }),
   bookReviews: (id: number, params: Parameters<typeof catalogApi.bookReviews>[1] = {}) =>
     queryOptions({ queryKey: catalogKeys.bookReviews(id, params), queryFn: () => catalogApi.bookReviews(id, params), placeholderData: keepPreviousData }),
   authors: (params: Parameters<typeof catalogApi.authors>[0] = {}) =>

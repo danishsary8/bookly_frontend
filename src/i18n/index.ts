@@ -35,6 +35,8 @@ export function getLanguage(): Language {
   return currentLanguage;
 }
 
+export const LANGUAGE_CHANGED_EVENT = "bookly:language-changed";
+
 export function setLanguage(lang: Language): void {
   if (currentLanguage === lang) return;
   currentLanguage = lang;
@@ -47,6 +49,9 @@ export function setLanguage(lang: Language): void {
     document.documentElement.lang = lang;
   }
   listeners.forEach((listener) => listener());
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(LANGUAGE_CHANGED_EVENT, { detail: { lang } }));
+  }
 }
 
 function subscribe(callback: () => void): () => void {

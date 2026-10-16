@@ -46,8 +46,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Database, queue and Telegram bot health for uptime monitors
-         * @description Includes checks.telegram_bot: off without a bot token; otherwise getWebhookInfo is cached for 10 minutes, including failures. Status is ok when the webhook URL matches this request's API address (HTTPS in production) and no delivery error is dated within the last 30 minutes. Otherwise degraded with error: Telegram delivery message (token redacted), webhook not set, or Telegram unreachable. A degraded queue or bot makes overall status degraded; HTTP stays 200. Database down keeps the existing 503 response.
+         * Liveness and database health for uptime monitors
+         * @description Returns only status: "ok" (200) or status: "fail" (503). Database down returns 503. Detailed checks are restricted to admins on /staff/health.
          */
         get: {
             parameters: {
@@ -58,14 +58,14 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description status ok or degraded (queue jobs waiting > 10 min or Telegram bot degraded); checks include database, queue and telegram_bot */
+                /** @description status ok */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Database unreachable */
+                /** @description status fail (database unreachable) */
                 503: {
                     headers: {
                         [name: string]: unknown;
@@ -156,6 +156,8 @@ export interface paths {
                     max_price?: number;
                     in_stock?: boolean;
                     sort?: "relevance" | "newest" | "price_asc" | "price_desc" | "title" | "rating";
+                    /** @description Comma-separated IDs or array (max 12); keeps order and drops missing/hidden books */
+                    ids?: string;
                     per_page?: components["parameters"]["PerPage"];
                 };
                 header?: never;
@@ -215,6 +217,47 @@ export interface paths {
                     content: {
                         "application/json": {
                             data?: components["schemas"]["BookDetail"];
+                        };
+                    };
+                };
+                404: components["responses"]["NotFound"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/books/{id}/also-bought": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Up to 6 recommended books bought together with this book, fallback to category best sellers */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Recommended book cards */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["BookCard"][];
                         };
                     };
                 };
@@ -1249,7 +1292,7 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        /** Update name or phone */
+        /** Update name, phone, or locale (en|km) */
         patch: {
             parameters: {
                 query?: never;
@@ -1509,6 +1552,163 @@ export interface paths {
                     };
                     content?: never;
                 };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/store-credits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Store credits of the signed-in customer (refunds paid as a coupon)
+         * @description Newest first, including used and expired ones.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Store credits */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                id?: number;
+                                /** @example CREDIT-K7M2Q9XA */
+                                code?: string;
+                                amount_usd?: components["schemas"]["Money"];
+                                /** Format: date-time */
+                                expires_at?: string | null;
+                                used?: boolean;
+                                expired?: boolean;
+                                /** Format: date-time */
+                                created_at?: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/stock-alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Active and past stock alerts for the signed-in customer */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Stock alerts */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["StockAlert"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Subscribe to back-in-stock alert for a physical variant */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @example 1 */
+                        book_variant_id: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Alert created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["StockAlert"];
+                        };
+                    };
+                };
+                422: components["responses"]["Validation"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/stock-alerts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a stock alert */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                404: components["responses"]["NotFound"];
             };
         };
         options?: never;
@@ -2806,7 +3006,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** All books incl. hidden/deleted (q, trashed) */
+        /** All books incl. hidden/deleted (q, status, trashed) */
         get: {
             parameters: {
                 query?: never;
@@ -2826,7 +3026,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** Create a book (title, publisher_id, series_id, author_ids, category_ids, ...) */
+        /** Create a book (title, status, publish_at, publisher_id, series_id, author_ids, category_ids, ...) */
         post: {
             parameters: {
                 query?: never;
@@ -2842,6 +3042,217 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/books/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bulk update books (ids, add/remove categories, status, publish_at) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/books/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** (admin) Export books and variants as UTF-8 CSV with BOM */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description CSV */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/books/export-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** (admin) Download CSV import template */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description CSV */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/books/import/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * (admin) Preview CSV book import: nothing is written
+         * @description Same columns as the export (book_id ignored), one row per format; only `sku` is a required column. A row updates the format with the same SKU (any case), else the same ISBN (digits/X compared); otherwise it creates a new book + format (needs title, format, sku, price_usd; new books are drafts unless `status` says otherwise; rows with the same title and authors become one book). On an update a blank cell keeps the current value. Categories must exist; authors, publisher and series are created. `publish_at` is read in shop time. Max 2 MB and 2000 rows; quoted cells may span lines.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Preview */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                preview_token?: string;
+                                totals?: {
+                                    total?: number;
+                                    new?: number;
+                                    update?: number;
+                                    error?: number;
+                                };
+                                rows?: components["schemas"]["BookImportRow"][];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/books/import/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * (admin) Apply a previewed import
+         * @description Checks every row again against the catalog as it is now, then applies the valid rows in one transaction (stock changes are logged as adjustments). The token works once, for 30 minutes, for the admin who made it.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        preview_token: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Imported */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                created?: number;
+                                updated?: number;
+                                skipped?: number;
+                                errors?: components["schemas"]["BookImportRow"][];
+                            };
+                        };
+                    };
                 };
             };
         };
@@ -2919,6 +3330,40 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/staff/variants/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bulk update variants (ids, stock_quantity, low_stock_threshold, is_active, price_usd) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/staff/books/{id}/restore": {
@@ -3048,6 +3493,132 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/staff/variants/{id}/restock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restock physical variant (quantity, supplier, unit_cost_usd, note) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        quantity: number;
+                        supplier?: string;
+                        unit_cost_usd?: number;
+                        note?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Restocked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Validation error or digital format */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/variants/{id}/stock-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Movement history with running balance and admin-only unit cost */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Movement history */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Physical variants stock overview (status=low|out, q search, sorted by stock ascending) */
+        get: {
+            parameters: {
+                query?: {
+                    status?: "low" | "out";
+                    q?: string;
+                    per_page?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Stock list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/staff/authors": {
@@ -3919,7 +4490,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Mark refunded: books back in stock, amount saved */
+        /**
+         * Mark refunded: books back in stock and the refund record saved (how, who, when)
+         * @description store_credit makes a one-use fixed coupon CREDIT-XXXXXXXX for the refund amount, usable only by this customer, valid until 23:59:59 shop time on the same day 12 months later (for anyone else it answers like an unknown code).
+         */
         post: {
             parameters: {
                 query?: never;
@@ -3929,7 +4503,17 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        method: "cash" | "bank_transfer" | "store_credit";
+                        /** @description Optional; only allowed for bank_transfer */
+                        reference?: string;
+                        note?: string;
+                    };
+                };
+            };
             responses: {
                 /** @description Refunded */
                 200: {
@@ -4237,6 +4821,105 @@ export interface paths {
                     };
                     content?: never;
                 };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/customers/{id}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List customer notes */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Notes */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /** Add note to customer */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        body: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/customer-notes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete customer note (author or admin only) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description Forbidden */
                 403: {
                     headers: {
@@ -4244,8 +4927,128 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Validation error, invalid password/code, wrong confirm, or open orders/returns */
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/customers/{id}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update customer tags (replaces set) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        tags: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated tags */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/customer-tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Customer tag suggestions with customer count */
+        get: {
+            parameters: {
+                query?: {
+                    q?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tags */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/customers/{id}/resend-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resend verification email to unverified customer */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sent */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No email or already verified */
                 422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Rate limit (3/hour) */
+                429: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -5107,6 +5910,570 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/newsletter/subscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Subscribe to newsletter (sends double opt-in confirmation) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: email */
+                        email: string;
+                        /** @enum {string} */
+                        locale?: "en" | "km";
+                        turnstile_token?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Confirmation email sent */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/newsletter/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm newsletter subscription */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        token: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Confirmed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid token */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/newsletter/unsubscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Unsubscribe from newsletter via web token */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        token: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Unsubscribed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid token */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/newsletter/unsubscribe/one-click": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** RFC 8058 one-click unsubscribe */
+        post: {
+            parameters: {
+                query?: {
+                    token?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Unsubscribed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid token */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/newsletter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** View customer newsletter subscription status */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Subscription status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /** Toggle newsletter subscription for verified customer */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        subscribed: boolean;
+                        /** @enum {string} */
+                        locale?: "en" | "km";
+                    };
+                };
+            };
+            responses: {
+                /** @description Subscription updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unverified customer */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/newsletter/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** (admin) Summary counts of newsletter subscribers by status */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Subscriber counts */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/newsletter/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** (admin) List newsletter campaigns */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Campaigns list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /** (admin) Create draft newsletter campaign */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        subject_en: string;
+                        subject_km?: string;
+                        body_en: string;
+                        body_km?: string;
+                        book_ids?: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Campaign created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/newsletter/campaigns/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** (admin) Show newsletter campaign */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Campaign details */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /** (admin) Update draft newsletter campaign */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        subject_en: string;
+                        subject_km?: string;
+                        body_en: string;
+                        body_km?: string;
+                        book_ids?: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Campaign updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not draft or validation failed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        /** (admin) Delete draft newsletter campaign */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Campaign deleted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not draft */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/newsletter/campaigns/{id}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** (admin) Send test newsletter to admin email */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Test email sent */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/newsletter/campaigns/{id}/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** (admin) Send newsletter campaign to confirmed subscribers */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Queued to outbox with estimated days */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not draft or already sent */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** (admin) Detailed system health (database, queue, telegram bot) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description status ok or degraded; checks include database, queue and telegram_bot */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description status down (database unreachable) */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5236,6 +6603,11 @@ export interface components {
             /** @description Email or phone proven; only verified customers can shop */
             verified?: boolean;
             has_password?: boolean;
+            /**
+             * @example en
+             * @enum {string}
+             */
+            locale?: "en" | "km";
             connected?: {
                 google?: boolean;
                 facebook?: boolean;
@@ -5461,12 +6833,37 @@ export interface components {
             refund_amount_usd?: components["schemas"]["Money"];
             /** @description false while the amount is an estimate */
             is_refund_final?: boolean;
+            /**
+             * @description null before the refund and for refunds made before methods were recorded
+             * @enum {string|null}
+             */
+            refund_method?: "cash" | "bank_transfer" | "store_credit" | null;
+            /** @description bank transfer reference */
+            refund_reference?: string | null;
+            /** Format: date-time */
+            refunded_at?: string | null;
+            store_credit?: {
+                code?: string;
+                amount_usd?: components["schemas"]["Money"];
+                /** Format: date-time */
+                expires_at?: string;
+            } | null;
             staff_note?: string | null;
             /** Format: date-time */
             requested_at?: string;
             /** Format: date-time */
             resolved_at?: string | null;
             can_withdraw?: boolean;
+        };
+        BookImportRow: {
+            /** @description Data rows start at 2 (row 1 is the header) */
+            row_number?: number;
+            /** @enum {string} */
+            action?: "new" | "update" | "error";
+            title?: string;
+            format?: string;
+            sku?: string;
+            messages?: string[];
         };
         Review: {
             id?: number;
@@ -5488,6 +6885,26 @@ export interface components {
             };
             /** @description false when staff have hidden the review */
             is_visible?: boolean;
+        };
+        StockAlert: {
+            id?: number;
+            book_variant_id?: number;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            notified_at?: string | null;
+            book?: {
+                id?: number;
+                title?: string;
+                cover_image_url?: string | null;
+            } | null;
+            variant?: {
+                id?: number;
+                format?: string;
+                price_usd?: string;
+                stock_quantity?: number;
+                is_active?: boolean;
+            } | null;
         };
     };
     responses: {
@@ -5574,8 +6991,10 @@ export type SchemaCart = components['schemas']['Cart'];
 export type SchemaOrder = components['schemas']['Order'];
 export type SchemaOrderDocument = components['schemas']['OrderDocument'];
 export type SchemaReturn = components['schemas']['Return'];
+export type SchemaBookImportRow = components['schemas']['BookImportRow'];
 export type SchemaReview = components['schemas']['Review'];
 export type SchemaOwnReview = components['schemas']['OwnReview'];
+export type SchemaStockAlert = components['schemas']['StockAlert'];
 export type ResponseValidation = components['responses']['Validation'];
 export type ResponseUnauthorized = components['responses']['Unauthorized'];
 export type ResponseForbidden = components['responses']['Forbidden'];

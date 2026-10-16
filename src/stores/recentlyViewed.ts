@@ -1,62 +1,71 @@
 import { useSyncExternalStore } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { catalogQueries } from "@/api/endpoints/catalog";
 import type { BookCard } from "@/api/types";
 
 /*
- * Books this browser opened, newest first, at most 12. Kept in localStorage
- * (no account needed) as the BookCard fields a card needs, so the Home shelf
- * renders without another request. Synced across tabs.
+ * Books this browser opened, newest first, at most 12 book IDs. Kept in localStorage
+ * key bookly.recentlyViewed, wrapped in try/catch (private mode safe).
+ * The shelves load book cards via GET /books?ids=1,2,3 so unlisted or modified books update cleanly.
  */
 
 const KEY = "bookly.recentlyViewed";
 export const RECENT_LIMIT = 12;
 
 const listeners = new Set<() => void>();
-let cache: { raw: string | null; books: BookCard[] } = { raw: null, books: [] };
 
-const read = (): BookCard[] => {
+let cachedRaw: string | null = "__initial__";
+let cachedIds: number[] = [];
+
+export const getRecentlyViewedIds = (): number[] => {
   let raw: string | null = null;
   try {
     raw = window.localStorage.getItem(KEY);
   } catch {
-    return cache.books;
+    return [];
   }
-  if (raw === cache.raw) return cache.books;
-  let books: BookCard[] = [];
+  if (raw === cachedRaw) {
+    return cachedIds;
+  }
+  cachedRaw = raw;
+  if (!raw) {
+    cachedIds = [];
+    return cachedIds;
+  }
   try {
-    const parsed: unknown = raw ? JSON.parse(raw) : [];
-    books = Array.isArray(parsed) ? parsed.filter((b): b is BookCard => typeof b?.id === "number").slice(0, RECENT_LIMIT) : [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      cachedIds = [];
+      return cachedIds;
+    }
+    cachedIds = parsed
+      .map((item) =>
+        typeof item === "number"
+          ? item
+          : typeof item === "object" && item !== null && "id" in item
+            ? Number(item.id)
+            : Number(item)
+      )
+      .filter((id) => Number.isInteger(id) && id > 0)
+      .slice(0, RECENT_LIMIT);
+    return cachedIds;
   } catch {
-    books = [];
+    cachedIds = [];
+    return cachedIds;
   }
-  cache = { raw, books };
-  return books;
 };
 
 const emit = () => listeners.forEach((listener) => listener());
 
-export const getRecentlyViewed = () => read();
-
-export function addRecentlyViewed(book: BookCard) {
-  if (typeof book.id !== "number") return;
-  const card: BookCard = {
-    id: book.id,
-    title: book.title,
-    language: book.language,
-    publish_date: book.publish_date,
-    authors: book.authors,
-    cover_image_url: book.cover_image_url,
-    price_from_usd: book.price_from_usd,
-    price_from_khr: book.price_from_khr,
-    formats: book.formats,
-    in_stock: book.in_stock,
-    rating_avg: book.rating_avg,
-    review_count: book.review_count,
-  };
-  const next = [card, ...read().filter((b) => b.id !== book.id)].slice(0, RECENT_LIMIT);
+export function addRecentlyViewed(idOrBook: number | { id?: number; [key: string]: unknown }) {
+  const id = typeof idOrBook === "number" ? idOrBook : idOrBook?.id;
+  if (typeof id !== "number" || id <= 0) return;
+  const current = getRecentlyViewedIds();
+  const next = [id, ...current.filter((i) => i !== id)].slice(0, RECENT_LIMIT);
   try {
     window.localStorage.setItem(KEY, JSON.stringify(next));
   } catch {
-    cache = { raw: cache.raw, books: next };
+    // Ignore private mode or storage quota exceeded
   }
   emit();
 }
@@ -65,7 +74,7 @@ export function clearRecentlyViewed() {
   try {
     window.localStorage.removeItem(KEY);
   } catch {
-    cache = { raw: null, books: [] };
+    // Ignore
   }
   emit();
 }
@@ -80,5 +89,22 @@ const subscribe = (listener: () => void) => {
   };
 };
 
-const EMPTY: BookCard[] = [];
-export const useRecentlyViewed = () => useSyncExternalStore(subscribe, read, () => EMPTY);
+const EMPTY_IDS: number[] = [];
+export const useRecentlyViewedIds = () =>
+  useSyncExternalStore(subscribe, getRecentlyViewedIds, () => EMPTY_IDS);
+
+export const useRecentlyViewed = (excludeId?: number): BookCard[] => {
+  const ids = useRecentlyViewedIds();
+  const filtered = excludeId ? ids.filter((id) => id !== excludeId) : ids;
+  const idsParam = filtered.join(",");
+
+  const query = useQuery({
+    ...catalogQueries.books({ ids: idsParam }),
+    enabled: filtered.length > 0,
+  });
+
+  return query.data?.data ?? [];
+};
+
+export const getRecentlyViewed = () =>
+  getRecentlyViewedIds().map((id) => ({ id }) as BookCard);

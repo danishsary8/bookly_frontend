@@ -114,8 +114,9 @@ test("return: customer asks to return a delivered book → staff approve → ref
   await page.getByRole("button", { name: "Approve" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Approve" }).click();
   await expect(page.getByText("Return approved").first()).toBeVisible();
-  await page.getByRole("button", { name: "Refund" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Refund" }).click();
+  await page.getByRole("button", { name: /record refund|refund/i }).click();
+  await page.getByRole("dialog").getByLabel(/how was the money returned/i).selectOption("cash");
+  await page.getByRole("dialog").getByRole("button", { name: /record refund|refund/i }).click();
   await expect(page.getByText("Refund recorded").first()).toBeVisible();
 
   // The customer sees it refunded, and the whole order is returned.

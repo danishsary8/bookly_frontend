@@ -4,11 +4,12 @@ import { RECENT_LIMIT, addRecentlyViewed, clearRecentlyViewed, getRecentlyViewed
 beforeEach(() => clearRecentlyViewed());
 
 describe("recently viewed", () => {
-  it("keeps the newest first without duplicates", () => {
+  it("keeps the newest first without duplicates and stores array of ids in localStorage", () => {
     addRecentlyViewed({ id: 1, title: "Dune" });
     addRecentlyViewed({ id: 2, title: "Emma" });
     addRecentlyViewed({ id: 1, title: "Dune" });
     expect(getRecentlyViewed().map((b) => b.id)).toEqual([1, 2]);
+    expect(JSON.parse(localStorage.getItem("bookly.recentlyViewed")!)).toEqual([1, 2]);
   });
 
   it("stores only card fields and caps the list", () => {

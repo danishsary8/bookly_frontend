@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { setLanguage } from "@/i18n";
 
 /*
  * Login sessions for the two kinds of account. The API issues Bearer tokens (customers: 7 days,
@@ -64,6 +65,12 @@ export const getSession = <TUser = unknown>(kind: SessionKind): Session<TUser> |
 export const setSession = <TUser>(kind: SessionKind, session: Session<TUser>) => {
   writeStorage(storageKey(kind), JSON.stringify(session));
   emit();
+  if (kind === "customer" && session.user && typeof session.user === "object" && "locale" in session.user) {
+    const loc = (session.user as { locale?: unknown }).locale;
+    if (loc === "en" || loc === "km") {
+      setLanguage(loc);
+    }
+  }
 };
 
 /** Keep the token, replace the stored profile (after a profile update). */

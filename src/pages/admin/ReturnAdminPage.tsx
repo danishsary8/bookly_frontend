@@ -2,10 +2,10 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Ban, CheckCircle2, WalletCards } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
-import { opsApi, opsKeys, opsQueries, type StaffReturn } from "@/api/endpoints/staffOps";
+import { opsApi, opsKeys, opsQueries, REFUND_METHOD_LABELS, type RefundMethod, type StaffReturn } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
 import { NotFoundState } from "@/components/catalog/NotFoundState";
-import { TextAreaField } from "@/components/form/Field";
+import { SelectField, TextAreaField, TextField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
 import { ReturnStatusBadge } from "@/components/orders/ReturnStatusBadge";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ const ACTIONS: Record<Action, { label: string; Icon: typeof Ban; detail: (r: Sta
     destructive: true,
   },
   refund: {
-    label: "Refund",
+    label: "Record refund",
     Icon: WalletCards,
     detail: (r) => `Records a refund of ${formatUsd(r.refund_amount_usd)} and puts the books back into stock. When every book of the order is refunded, the order becomes Returned.`,
     done: "Refund recorded",
@@ -48,11 +48,21 @@ const ACTIONS: Record<Action, { label: string; Icon: typeof Ban; detail: (r: Sta
 function ActionDialog({ item, action, onClose }: { item: StaffReturn; action: Action; onClose: () => void }) {
   const queryClient = useQueryClient();
   const a = ACTIONS[action];
+  const [method, setMethod] = useState<RefundMethod | "">("");
+  const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
+
   const run = useMutation({
-    mutationFn: () =>
-      action === "approve" ? opsApi.approveReturn(item.id!, note.trim() || undefined) : action === "reject" ? opsApi.rejectReturn(item.id!, note.trim()) : opsApi.refundReturn(item.id!, note.trim() || undefined),
+    mutationFn: () => {
+      if (action === "approve") return opsApi.approveReturn(item.id!, note.trim() || undefined);
+      if (action === "reject") return opsApi.rejectReturn(item.id!, note.trim());
+      return opsApi.refundReturn(item.id!, {
+        method: method as RefundMethod,
+        reference: method === "bank_transfer" && reference.trim() ? reference.trim() : undefined,
+        note: note.trim() || undefined,
+      });
+    },
     onSuccess: (saved) => {
       queryClient.setQueryData(opsKeys.return(item.id!), saved);
       void queryClient.invalidateQueries({ queryKey: ["staff", "returns"] });
@@ -62,16 +72,19 @@ function ActionDialog({ item, action, onClose }: { item: StaffReturn; action: Ac
     },
     onError: (err) => {
       const apiError = ApiError.from(err);
-      setError(apiError.field("note") ?? apiError.field("status") ?? apiError.message);
+      setError(apiError.field("method") ?? apiError.field("reference") ?? apiError.field("note") ?? apiError.field("status") ?? apiError.message);
       void queryClient.invalidateQueries({ queryKey: opsKeys.return(item.id!) });
     },
   });
+
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (a.noteRequired && !note.trim()) return setError("Write the reason the customer will see.");
+    if (action === "refund" && !method) return setError("Choose how the money was returned.");
     setError(null);
     run.mutate();
   };
+
   return (
     <Dialog open onOpenChange={(open) => !open && !run.isPending && onClose()}>
       <DialogContent size="sm">
@@ -83,6 +96,35 @@ function ActionDialog({ item, action, onClose }: { item: StaffReturn; action: Ac
             <DialogDescription>{a.detail(item)}</DialogDescription>
           </DialogHeader>
           {error ? <FormAlert title={error} /> : null}
+
+          {action === "refund" ? (
+            <>
+              <SelectField label="How was the money returned?" value={method} onChange={(e) => setMethod(e.target.value as RefundMethod | "")} required>
+                <option value="" disabled>
+                  Choose…
+                </option>
+                <option value="cash">Cash</option>
+                <option value="bank_transfer">Bank transfer</option>
+                <option value="store_credit">Store credit</option>
+              </SelectField>
+              {method === "bank_transfer" ? (
+                <TextField
+                  label="Reference"
+                  optional
+                  hint="The bank's transaction number, if you have it."
+                  maxLength={100}
+                  value={reference}
+                  onChange={(e) => setReference(e.target.value)}
+                />
+              ) : null}
+              {method === "store_credit" ? (
+                <p className="rounded-lg border border-border bg-surface-2 p-3 text-sm text-muted-foreground">
+                  Makes a one-use code for {formatUsd(item.refund_amount_usd)} that only this customer can use, valid for 12 months. The customer gets it by email and sees it in their account.
+                </p>
+              ) : null}
+            </>
+          ) : null}
+
           <TextAreaField
             label={a.noteRequired ? "Reason" : "Note for the customer"}
             optional={!a.noteRequired}
@@ -191,6 +233,39 @@ export default function ReturnAdminPage() {
               <div className="grid gap-1">
                 <dt className="text-sm font-semibold text-muted-foreground">Shop's note{r.handled_by ? ` (${r.handled_by.name})` : ""}</dt>
                 <dd className="whitespace-pre-line">{r.staff_note}</dd>
+              </div>
+            ) : null}
+            {r.status === "refunded" ? (
+              <div className="grid gap-1 border-t border-border pt-3">
+                <dt className="text-sm font-semibold text-muted-foreground">Refund record</dt>
+                <dd className="grid gap-0.5 text-sm">
+                  {r.refund_method ? (
+                    <>
+                      <span>
+                        <span className="font-semibold">{REFUND_METHOD_LABELS[r.refund_method]}</span>
+                        {r.refund_reference ? <span className="ml-2 font-mono text-xs text-muted-foreground">Ref: {r.refund_reference}</span> : null}
+                      </span>
+                      {r.store_credit ? (
+                        <span>
+                          Code{" "}
+                          <Link
+                            to={`/admin/coupons?q=${encodeURIComponent(r.store_credit.code ?? "")}`}
+                            className="font-mono font-semibold text-primary underline-offset-4 hover:underline"
+                          >
+                            {r.store_credit.code}
+                          </Link>
+                          {r.store_credit.expires_at ? <span className="text-muted-foreground"> · valid until {orderDate(r.store_credit.expires_at)}</span> : null}
+                        </span>
+                      ) : null}
+                      <span className="text-muted-foreground">
+                        {r.refunded_by ? `By ${r.refunded_by.name}` : "By a former staff member"}
+                        {r.refunded_at ? ` · ${orderDateTime(r.refunded_at)}` : ""}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">Not recorded (refunded before refund records were kept).</span>
+                  )}
+                </dd>
               </div>
             ) : null}
             <div className="flex items-baseline justify-between gap-4 border-t border-border pt-3">

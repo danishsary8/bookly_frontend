@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import type { VerifyChannel } from "@/api/endpoints/auth";
 import type { Customer } from "@/api/types";
+import { setLanguage } from "@/i18n";
 import { safeNext } from "@/lib/forms";
 import { toast } from "@/stores/toast";
 import { needsVerifying, rememberChannel, rememberedChannel, verifyPath } from "./verification";
@@ -24,6 +25,9 @@ export function useAfterSignIn() {
   ) => {
     queryClient.removeQueries({ queryKey: ["cart"] });
     queryClient.removeQueries({ queryKey: ["account"] });
+    if (customer?.locale && (customer.locale === "en" || customer.locale === "km")) {
+      setLanguage(customer.locale);
+    }
     if (options.verifyBy) rememberChannel(options.verifyBy);
     const state = { justRegistered: options.justRegistered ?? Boolean(options.verifyBy) };
 

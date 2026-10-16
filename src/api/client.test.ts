@@ -1,5 +1,6 @@
 import type { AxiosAdapter, InternalAxiosRequestConfig } from "axios";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { setLanguage } from "@/i18n";
 import { reportError } from "@/lib/monitoring";
 import { api, http, newIdempotencyKey, SESSION_EXPIRED_EVENT, sessionKindFor } from "./client";
 import { ApiError } from "./errors";
@@ -50,6 +51,17 @@ describe("http client", () => {
     http.defaults.adapter = respond(200, {});
     await api.get("/books");
     expect(sent[0].headers.Authorization).toBeUndefined();
+  });
+
+  it("sends Accept-Language matching the current i18n language", async () => {
+    http.defaults.adapter = respond(200, {});
+    setLanguage("km");
+    await api.get("/books");
+    expect(sent[0].headers["Accept-Language"]).toBe("km");
+
+    setLanguage("en");
+    await api.get("/books");
+    expect(sent[1].headers["Accept-Language"]).toBe("en");
   });
 
   it("ends the session and announces it when the API rejects the token", async () => {

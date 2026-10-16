@@ -28,6 +28,8 @@ import { AdminPage } from "@/features/admin/AdminPage";
 import { ReopenDialog } from "@/features/admin/ReopenAccount";
 import { useReopenCustomer } from "@/features/admin/useReopenCustomer";
 import { useStaff } from "@/features/admin/staffSession";
+import { CustomerNotesPanel } from "@/features/admin/customer/CustomerNotesPanel";
+import { CustomerTagsEditor } from "@/features/admin/customer/CustomerTagsEditor";
 import { orderDate, orderDateTime } from "@/features/orders/format";
 import { formatUsd } from "@/stores/currency";
 import { toast } from "@/stores/toast";
@@ -215,6 +217,17 @@ export default function CustomerAdminPage() {
       }),
     onSettled: () => setConfirm(false),
   });
+  const resendVerification = useMutation({
+    mutationFn: () => opsApi.resendCustomerVerification(id),
+    onSuccess: () => {
+      toast.success("Verification email sent");
+    },
+    onError: (error) =>
+      toast.error({
+        title: "Couldn't send verification email",
+        description: ApiError.from(error).message,
+      }),
+  });
   const back = (
     <Link
       to="/admin/customers"
@@ -298,40 +311,51 @@ export default function CustomerAdminPage() {
         </span>
       }
       actions={
-        isAdmin && closed ? (
-          <Button variant="outline" onClick={() => setConfirmReopen(true)}>
-            <ArchiveRestore aria-hidden="true" /> Reopen account
-          </Button>
-        ) : isAdmin ? (
-          <span className="flex flex-wrap gap-2">
-            {verified ? null : (
-              <Button
-                variant="outline"
-                onClick={() => setConfirmDelete(true)}
-                className="border-destructive/50 text-destructive hover:bg-destructive-tint"
-              >
-                <Trash2 aria-hidden="true" /> Delete now
-              </Button>
-            )}
-            {c.is_active ? (
-              <Button
-                variant="outline"
-                onClick={() => setConfirm(true)}
-                className="border-destructive/50 text-destructive hover:bg-destructive-tint"
-              >
-                <Ban aria-hidden="true" /> Deactivate
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                onClick={() => toggle.mutate(true)}
-                loading={toggle.isPending}
-              >
-                <RotateCcw aria-hidden="true" /> Reactivate
-              </Button>
-            )}
-          </span>
-        ) : null
+        <span className="flex flex-wrap gap-2">
+          {c.email && !c.email_verified && !closed ? (
+            <Button
+              variant="outline"
+              onClick={() => resendVerification.mutate()}
+              loading={resendVerification.isPending}
+            >
+              <Mail aria-hidden="true" /> Resend verification email
+            </Button>
+          ) : null}
+          {isAdmin && closed ? (
+            <Button variant="outline" onClick={() => setConfirmReopen(true)}>
+              <ArchiveRestore aria-hidden="true" /> Reopen account
+            </Button>
+          ) : isAdmin ? (
+            <>
+              {verified ? null : (
+                <Button
+                  variant="outline"
+                  onClick={() => setConfirmDelete(true)}
+                  className="border-destructive/50 text-destructive hover:bg-destructive-tint"
+                >
+                  <Trash2 aria-hidden="true" /> Delete now
+                </Button>
+              )}
+              {c.is_active ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setConfirm(true)}
+                  className="border-destructive/50 text-destructive hover:bg-destructive-tint"
+                >
+                  <Ban aria-hidden="true" /> Deactivate
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => toggle.mutate(true)}
+                  loading={toggle.isPending}
+                >
+                  <RotateCcw aria-hidden="true" /> Reactivate
+                </Button>
+              )}
+            </>
+          ) : null}
+        </span>
       }
     >
       {closed && c.closed_at && c.erase_at ? (
@@ -348,55 +372,71 @@ export default function CustomerAdminPage() {
       {c.removal_at ? (
         <div
           role="note"
-          className="flex gap-3 rounded-xl border border-warning/40 bg-warning-tint p-4 text-[15px] leading-6"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning/40 bg-warning-tint p-4 text-[15px] leading-6"
         >
-          <Clock3
-            className="mt-0.5 size-5 shrink-0 text-warning"
-            aria-hidden="true"
-          />
-          <p>
-            <strong className="font-semibold">Unfinished sign-up.</strong>{" "}
-            {c.name} hasn't entered the code we emailed, so they can't order
-            yet. The account is removed on{" "}
-            <time dateTime={c.removal_at}>{orderDateTime(c.removal_at)}</time>{" "}
-            unless they finish. If they're stuck, they can sign up again with
-            the same email to get a new code.
-          </p>
+          <div className="flex gap-3">
+            <Clock3
+              className="mt-0.5 size-5 shrink-0 text-warning"
+              aria-hidden="true"
+            />
+            <p>
+              <strong className="font-semibold">Unfinished sign-up.</strong>{" "}
+              {c.name} hasn't entered the code we emailed, so they can't order
+              yet. The account is removed on{" "}
+              <time dateTime={c.removal_at}>{orderDateTime(c.removal_at)}</time>{" "}
+              unless they finish. If they're stuck, they can sign up again with
+              the same email to get a new code.
+            </p>
+          </div>
+          {c.email && !c.email_verified && !closed ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => resendVerification.mutate()}
+              loading={resendVerification.isPending}
+            >
+              <Mail aria-hidden="true" /> Resend verification email
+            </Button>
+          ) : null}
         </div>
       ) : null}
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="grid content-start gap-6">
           {s ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-              {[
-                {
-                  label: "Spent",
-                  value: formatUsd(s.lifetime_spent_usd),
-                  detail: "paid, less refunds",
-                },
-                {
-                  label: "Orders",
-                  value: orderCount,
-                  detail: s.last_order_at
-                    ? `last ${orderDate(s.last_order_at)}`
-                    : "none yet",
-                },
-                { label: "Returns", value: s.returns_count },
-                { label: "Reviews", value: s.reviews_count },
-              ].map((t) => (
-                <div
-                  key={t.label}
-                  className="grid content-start gap-1 rounded-xl border border-border bg-card p-4"
-                >
-                  <p className="text-sm text-muted-foreground">{t.label}</p>
-                  <p className="text-[1.5rem] font-semibold leading-tight tabular-nums">
-                    {t.value}
-                  </p>
-                  {t.detail ? (
-                    <p className="text-sm text-muted-foreground">{t.detail}</p>
-                  ) : null}
-                </div>
-              ))}
+              {(() => {
+                const statCards: Array<{ label: string; value: string | number; detail?: string }> = [];
+                if (isAdmin && s.lifetime_spent_usd) {
+                  statCards.push({
+                    label: "Spent",
+                    value: formatUsd(s.lifetime_spent_usd),
+                    detail: "paid, less refunds",
+                  });
+                }
+                statCards.push(
+                  {
+                    label: "Orders",
+                    value: orderCount,
+                    detail: s.last_order_at ? `last ${orderDate(s.last_order_at)}` : "none yet",
+                  },
+                  { label: "Returns", value: s.returns_count },
+                  { label: "Reviews", value: s.reviews_count },
+                );
+                return statCards.map((t) => (
+                  <div
+                    key={t.label}
+                    className="grid content-start gap-1 rounded-xl border border-border bg-card p-4"
+                  >
+                    <p className="text-sm text-muted-foreground">{t.label}</p>
+                    <p className="text-[1.5rem] font-semibold leading-tight tabular-nums">
+                      {t.value}
+                    </p>
+                    {t.detail ? (
+                      <p className="text-sm text-muted-foreground">{t.detail}</p>
+                    ) : null}
+                  </div>
+                ));
+              })()}
             </div>
           ) : null}
           <section
@@ -437,9 +477,11 @@ export default function CustomerAdminPage() {
                       </span>
                       <span className="flex items-center gap-3">
                         <OrderStatusBadge status={o.status} />
-                        <span className="w-20 text-right font-semibold tabular-nums">
-                          {formatUsd(o.total_usd)}
-                        </span>
+                        {isAdmin && o.total_usd ? (
+                          <span className="w-20 text-right font-semibold tabular-nums">
+                            {formatUsd(o.total_usd)}
+                          </span>
+                        ) : null}
                       </span>
                     </Link>
                   </li>
@@ -451,6 +493,7 @@ export default function CustomerAdminPage() {
               </p>
             )}
           </section>
+          <CustomerNotesPanel customerId={id} />
           {isAdmin && !closed ? (
             <section
               aria-labelledby="danger-zone"
@@ -522,6 +565,7 @@ export default function CustomerAdminPage() {
               "nothing yet"}
           </p>
         </section>
+        <CustomerTagsEditor customerId={id} initialTags={c.tags} />
       </div>
       <ConfirmDialog
         open={confirm}

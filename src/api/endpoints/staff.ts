@@ -55,10 +55,14 @@ export interface StaffVariant {
   cover_image_url: string | null;
 }
 
+export type BookStatus = "draft" | "scheduled" | "live";
+
 export interface StaffBook {
   id: number;
   title: string;
   description: string | null;
+  status: BookStatus;
+  publish_at: string | null;
   language: string;
   page_count: number | null;
   publish_date: string | null;
@@ -77,6 +81,8 @@ export interface StaffBook {
 export interface BookInput {
   title?: string;
   description?: string | null;
+  status?: BookStatus;
+  publish_at?: string | null;
   language?: string;
   page_count?: number | null;
   publish_date?: string | null;
@@ -85,6 +91,46 @@ export interface BookInput {
   series_order?: number | null;
   author_ids?: number[];
   category_ids?: number[];
+}
+
+export interface BulkBooksInput {
+  ids: number[];
+  add_category_ids?: number[];
+  remove_category_ids?: number[];
+  status?: BookStatus;
+  publish_at?: string | null;
+}
+
+export interface BulkVariantsInput {
+  ids: number[];
+  stock_quantity?: number;
+  low_stock_threshold?: number;
+  is_active?: boolean;
+  price_usd?: string;
+}
+
+export interface BookImportRow {
+  /** Data rows start at 2 (row 1 is the header). */
+  row_number: number;
+  action: "new" | "update" | "error";
+  title: string;
+  format: string;
+  sku: string;
+  messages: string[];
+}
+
+export interface BookImportPreviewResult {
+  preview_token: string;
+  totals: { total: number; new: number; update: number; error: number };
+  rows: BookImportRow[];
+}
+
+/** What confirm applied; rows that became errors since the preview are in `errors`. */
+export interface BookImportConfirmResult {
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: BookImportRow[];
 }
 
 export interface VariantInput {
@@ -172,12 +218,70 @@ export type SeriesInput = { name?: string; description?: string | null };
 type LookupOf<K extends LookupKind> = K extends "authors" ? Author : K extends "categories" ? Category : K extends "publishers" ? Publisher : Series;
 type LookupInputOf<K extends LookupKind> = K extends "authors" ? AuthorInput : K extends "categories" ? CategoryInput : K extends "publishers" ? PublisherInput : SeriesInput;
 
+export interface StockItem {
+  id: number;
+  book_id: number;
+  book_title: string;
+  format: BookFormat;
+  sku: string;
+  isbn: string | null;
+  price_usd: string;
+  stock_quantity: number;
+  low_stock_threshold: number;
+  status: "in_stock" | "low" | "out";
+  is_active: boolean;
+  cover_image_url: string | null;
+}
+
+export interface InventoryMovementItem {
+  id: number;
+  book_variant_id: number;
+  change_qty: number;
+  reason: "sale" | "restock" | "return" | "adjustment";
+  reference: { type: string; id: number; order_number?: string | null } | null;
+  staff: { id: number; name: string } | null;
+  note: string | null;
+  supplier: string | null;
+  stock_after: number | null;
+  unit_cost_usd?: string | null;
+  created_at: string;
+}
+
+export interface RestockInput {
+  quantity: number;
+  supplier?: string | null;
+  unit_cost_usd?: string | number | null;
+  note?: string | null;
+}
+
+export interface StaffHealth {
+  status: "ok" | "degraded" | "down";
+  checks: {
+    database: { status: "ok" | "down" };
+    queue: {
+      status: "ok" | "degraded";
+      driver?: string;
+      pending: number;
+      failed: number;
+      oldest_pending_seconds: number | null;
+    };
+    telegram_bot: {
+      status: "off" | "ok" | "degraded";
+      error?: string;
+      repaired?: boolean;
+    };
+  };
+}
+
 export const staffKeys = {
   me: () => ["staff", "me"] as const,
+  health: () => ["staff", "health"] as const,
   dashboard: (range: DashboardRange) => ["staff", "dashboard", range] as const,
   sales: (range: DashboardRange) => ["staff", "sales", range] as const,
   books: (params: object) => ["staff", "books", toQueryParams(params)] as const,
   book: (id: number) => ["staff", "book", id] as const,
+  stock: (params: object) => ["staff", "stock", toQueryParams(params)] as const,
+  stockHistory: (variantId: number, params: object) => ["staff", "variants", variantId, "history", toQueryParams(params)] as const,
   notifications: () => ["staff", "notifications"] as const,
 };
 
@@ -194,6 +298,7 @@ export const staffAuthApi = {
 };
 
 export const staffApi = {
+  health: () => api.get<StaffHealth>("/staff/health"),
   summary: (range: DashboardRange) => api.get<Resource<DashboardSummary>>("/staff/dashboard/summary", { params: range }).then((r) => r.data),
   sales: (range: DashboardRange) => api.get<Resource<DailySales[]>>("/staff/dashboard/sales", { params: range }).then((r) => r.data),
 
@@ -202,17 +307,39 @@ export const staffApi = {
   readNotification: (id: string) => api.post(`/staff/notifications/${id}/read`, {}),
   readAllNotifications: () => api.post("/staff/notifications/read-all", {}),
 
-  books: (params: { q?: string; trashed?: boolean; page?: number; per_page?: number } = {}) =>
+  books: (params: { q?: string; status?: BookStatus; trashed?: boolean; page?: number; per_page?: number } = {}) =>
     api.get<Paginated<StaffBook>>("/staff/books", { params: toQueryParams(params) }),
   book: (id: number) => api.get<Resource<StaffBook>>(`/staff/books/${id}`).then((r) => r.data),
   createBook: (input: BookInput) => api.post<Resource<StaffBook>>("/staff/books", input).then((r) => r.data),
   updateBook: (id: number, input: BookInput) => api.patch<Resource<StaffBook>>(`/staff/books/${id}`, input).then((r) => r.data),
   deleteBook: (id: number) => api.delete(`/staff/books/${id}`),
   restoreBook: (id: number) => api.post<Resource<StaffBook>>(`/staff/books/${id}/restore`, {}).then((r) => r.data),
+  bulkUpdateBooks: (input: BulkBooksInput) =>
+    api.post<Resource<{ updated_count: number; items: Array<{ id: number; title: string; status: BookStatus; success: boolean }> }>>("/staff/books/bulk", input).then((r) => r.data),
+  bulkUpdateVariants: (input: BulkVariantsInput) =>
+    api.post<Resource<{ updated_count: number; items: Array<{ id: number; sku: string; stock_quantity: number; price_usd: string; is_active: boolean; success: boolean }> }>>("/staff/variants/bulk", input).then((r) => r.data),
+  exportBooksCsv: () => api.get<Blob>("/staff/books/export", { responseType: "blob" }),
+  exportTemplateCsv: () => api.get<Blob>("/staff/books/export-template", { responseType: "blob" }),
+  previewImportBooksCsv: (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return api.post<Resource<BookImportPreviewResult>>("/staff/books/import/preview", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }).then((r) => r.data);
+  },
+  confirmImportBooksCsv: (preview_token: string) =>
+    api.post<Resource<BookImportConfirmResult>>("/staff/books/import/confirm", { preview_token }).then((r) => r.data),
 
   createVariant: (bookId: number, input: VariantInput) => api.post<Resource<StaffVariant>>(`/staff/books/${bookId}/variants`, input).then((r) => r.data),
   updateVariant: (id: number, input: VariantInput) => api.patch<Resource<StaffVariant>>(`/staff/variants/${id}`, input).then((r) => r.data),
   deleteVariant: (id: number) => api.delete(`/staff/variants/${id}`),
+
+  stock: (params: { status?: "low" | "out"; q?: string; page?: number; per_page?: number } = {}) =>
+    api.get<Paginated<StockItem>>("/staff/stock", { params: toQueryParams(params) }),
+  restockVariant: (variantId: number, input: RestockInput) =>
+    api.post<{ variant: StaffVariant; movement: InventoryMovementItem }>(`/staff/variants/${variantId}/restock`, input),
+  stockHistory: (variantId: number, params: { page?: number; per_page?: number } = {}) =>
+    api.get<Paginated<InventoryMovementItem>>(`/staff/variants/${variantId}/stock-history`, { params: toQueryParams(params) }),
 
   createLookup: <K extends LookupKind>(kind: K, input: LookupInputOf<K>) => api.post<Resource<LookupOf<K>>>(`/staff/${kind}`, input).then((r) => r.data),
   updateLookup: <K extends LookupKind>(kind: K, id: number, input: LookupInputOf<K>) =>
@@ -222,6 +349,8 @@ export const staffApi = {
 
 export const staffQueries = {
   me: () => queryOptions({ queryKey: staffKeys.me(), queryFn: staffAuthApi.me }),
+  health: () =>
+    queryOptions({ queryKey: staffKeys.health(), queryFn: () => staffApi.health(), refetchInterval: 30_000 }),
   summary: (range: DashboardRange) => queryOptions({ queryKey: staffKeys.dashboard(range), queryFn: () => staffApi.summary(range), placeholderData: keepPreviousData }),
   sales: (range: DashboardRange) => queryOptions({ queryKey: staffKeys.sales(range), queryFn: () => staffApi.sales(range), placeholderData: keepPreviousData }),
   notifications: () =>
@@ -229,4 +358,8 @@ export const staffQueries = {
   books: (params: Parameters<typeof staffApi.books>[0] = {}) =>
     queryOptions({ queryKey: staffKeys.books(params), queryFn: () => staffApi.books(params), placeholderData: keepPreviousData }),
   book: (id: number) => queryOptions({ queryKey: staffKeys.book(id), queryFn: () => staffApi.book(id) }),
+  stock: (params: Parameters<typeof staffApi.stock>[0] = {}) =>
+    queryOptions({ queryKey: staffKeys.stock(params), queryFn: () => staffApi.stock(params), placeholderData: keepPreviousData }),
+  stockHistory: (variantId: number, params: Parameters<typeof staffApi.stockHistory>[1] = {}) =>
+    queryOptions({ queryKey: staffKeys.stockHistory(variantId, params), queryFn: () => staffApi.stockHistory(variantId, params), placeholderData: keepPreviousData }),
 };
