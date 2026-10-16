@@ -1,8 +1,24 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Ban, KeyRound, MailPlus, MoreHorizontal, Pencil, RotateCcw, ShieldCheck, ShieldOff, UserPlus, UsersRound } from "lucide-react";
+import {
+  AlertTriangle,
+  Ban,
+  CheckCircle2,
+  History,
+  KeyRound,
+  MailPlus,
+  MoreHorizontal,
+  Pencil,
+  RotateCcw,
+  ShieldAlert,
+  ShieldCheck,
+  ShieldOff,
+  UserPlus,
+  UsersRound,
+  XCircle,
+} from "lucide-react";
 import { DropdownMenu } from "radix-ui";
-import type { StaffRole } from "@/api/endpoints/staff";
+import { DEFAULT_STAFF_PERMISSIONS, type StaffLoginHistoryItem, type StaffRole } from "@/api/endpoints/staff";
 import { opsApi, opsQueries, type StaffMember } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
 import { SelectField, TextField } from "@/components/form/Field";
@@ -24,6 +40,16 @@ const ROLES: Record<StaffRole, { label: string; detail: string }> = {
   admin: { label: "Admin", detail: "Everything staff can do, plus staff members, exchange rates, the audit log, exports and deleting." },
 };
 
+const AVAILABLE_PERMISSIONS = [
+  { id: "orders:view", label: "View orders", group: "Orders" },
+  { id: "orders:manage", label: "Manage order statuses & notes", group: "Orders" },
+  { id: "catalog:view", label: "View books & stock", group: "Catalog" },
+  { id: "catalog:manage", label: "Create & edit books, variants, authors", group: "Catalog" },
+  { id: "customers:view", label: "View customers", group: "Customers" },
+  { id: "customers:manage", label: "Manage customer notes & tags", group: "Customers" },
+  { id: "reviews:manage", label: "Moderate & hide reviews", group: "Reviews" },
+] as const;
+
 const SHOW = [
   { value: "all", label: "All" },
   { value: "admin", label: "Admins" },
@@ -40,19 +66,82 @@ const refusal = (error: unknown) => {
 
 const itemClass = "flex min-h-11 cursor-pointer select-none items-center gap-3 rounded-md px-3 text-[15px] text-foreground outline-none data-[highlighted]:bg-secondary";
 
-type Values = { name: string; email: string; role: StaffRole };
+function statusBadge(status: StaffLoginHistoryItem["status"]) {
+  switch (status) {
+    case "success":
+      return (
+        <Badge tone="success" shape="tint" className="gap-1">
+          <CheckCircle2 className="size-3.5" aria-hidden="true" />
+          Success
+        </Badge>
+      );
+    case "failed_password":
+      return (
+        <Badge tone="danger" shape="tint" className="gap-1">
+          <XCircle className="size-3.5" aria-hidden="true" />
+          Wrong password
+        </Badge>
+      );
+    case "failed_2fa":
+      return (
+        <Badge tone="warning" shape="tint" className="gap-1">
+          <AlertTriangle className="size-3.5" aria-hidden="true" />
+          Invalid 2FA code
+        </Badge>
+      );
+    case "deactivated":
+      return (
+        <Badge tone="danger" shape="outline" className="gap-1">
+          <ShieldAlert className="size-3.5" aria-hidden="true" />
+          Deactivated
+        </Badge>
+      );
+    default:
+      return <Badge tone="neutral">{status}</Badge>;
+  }
+}
 
-/** Invite (member = null) or edit name and role. */
+type Values = { name: string; email: string; role: StaffRole; permissions: string[] };
+
+/** Invite (member = null) or edit name, role, and granular permissions. */
 function MemberDialog({ member, isSelf, onClose }: { member: StaffMember | null; isSelf: boolean; onClose: () => void }) {
   const queryClient = useQueryClient();
-  const [v, setV] = useState<Values>({ name: member?.name ?? "", email: member?.email ?? "", role: member?.role ?? "staff" });
+  const [v, setV] = useState<Values>({
+    name: member?.name ?? "",
+    email: member?.email ?? "",
+    role: member?.role ?? "staff",
+    permissions: member?.permissions ?? [...DEFAULT_STAFF_PERMISSIONS],
+  });
   const [errors, setErrors] = useState<Partial<Record<keyof Values | "form", string>>>({});
   const set = (patch: Partial<Values>) => setV((prev) => ({ ...prev, ...patch }));
+
   const save = useMutation({
-    mutationFn: () => (member ? opsApi.updateMember(member.id, { name: v.name.trim(), role: v.role }) : opsApi.inviteMember({ name: v.name.trim(), email: v.email.trim(), role: v.role })),
+    mutationFn: () => {
+      const isCustom =
+        v.role === "staff" &&
+        (v.permissions.length !== DEFAULT_STAFF_PERMISSIONS.length ||
+          !AVAILABLE_PERMISSIONS.every((p) => v.permissions.includes(p.id)));
+
+      return member
+        ? opsApi.updateMember(member.id, {
+            name: v.name.trim(),
+            role: v.role,
+            permissions: v.role === "admin" ? undefined : v.permissions,
+          })
+        : opsApi.inviteMember({
+            name: v.name.trim(),
+            email: v.email.trim(),
+            role: v.role,
+            ...(isCustom ? { permissions: v.permissions } : {}),
+          });
+    },
     onSuccess: (saved) => {
       void queryClient.invalidateQueries({ queryKey: ["staff", "members"] });
-      toast.success(member ? { title: `${saved.name} saved` } : { title: `Invitation sent to ${saved.email}`, description: "They get a 6-digit setup code, valid for 72 hours." });
+      toast.success(
+        member
+          ? { title: `${saved.name} saved` }
+          : { title: `Invitation sent to ${saved.email}`, description: "They get a 6-digit setup code, valid for 72 hours." },
+      );
       onClose();
     },
     onError: (err) => {
@@ -66,6 +155,7 @@ function MemberDialog({ member, isSelf, onClose }: { member: StaffMember | null;
       setErrors(next);
     },
   });
+
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const e: typeof errors = {};
@@ -74,16 +164,17 @@ function MemberDialog({ member, isSelf, onClose }: { member: StaffMember | null;
     setErrors(e);
     if (!Object.keys(e).length) save.mutate();
   };
+
   return (
     <Dialog open onOpenChange={(open) => !open && !save.isPending && onClose()}>
-      <DialogContent size="sm">
+      <DialogContent size="md">
         <form onSubmit={submit} noValidate className="grid gap-5">
           <DialogHeader>
             <DialogTitle>{member ? `Edit ${member.name}` : "Invite a staff member"}</DialogTitle>
             <DialogDescription>
               {member
-                ? "Changing the role signs them out, so the new access applies at their next sign-in."
-                : "We email them a 6-digit setup code. They open the staff sign-in, choose “Forgot password?”, then “I already have a code”, and set a password and two-step verification."}
+                ? "Changing the role or permissions signs them out, so updated privileges apply on next sign-in."
+                : "We email them a 6-digit setup code. They open staff sign-in, choose “Forgot password?”, enter their code, and set a password and 2FA."}
             </DialogDescription>
           </DialogHeader>
           {errors.form ? <FormAlert title={errors.form} /> : null}
@@ -100,6 +191,61 @@ function MemberDialog({ member, isSelf, onClose }: { member: StaffMember | null;
             <option value="staff">Staff</option>
             <option value="admin">Admin</option>
           </SelectField>
+
+          {v.role === "admin" ? (
+            <div className="rounded-lg border border-border bg-surface-2 p-3 text-sm text-muted-foreground">
+              Administrators automatically receive full permissions across all features, settings, reports, and staff management.
+            </div>
+          ) : (
+            <div className="grid gap-2.5">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold text-foreground">Granular Permissions</label>
+                <div className="flex items-center gap-2 text-xs">
+                  <button
+                    type="button"
+                    className="text-primary hover:underline"
+                    onClick={() => set({ permissions: AVAILABLE_PERMISSIONS.map((p) => p.id) })}
+                  >
+                    Select all
+                  </button>
+                  <span className="text-muted-foreground">•</span>
+                  <button
+                    type="button"
+                    className="text-primary hover:underline"
+                    onClick={() => set({ permissions: [...DEFAULT_STAFF_PERMISSIONS] })}
+                  >
+                    Reset defaults
+                  </button>
+                </div>
+              </div>
+              <div className="grid max-h-56 gap-2 overflow-y-auto rounded-lg border border-border bg-surface-2 p-3">
+                {AVAILABLE_PERMISSIONS.map((p) => {
+                  const checked = v.permissions.includes(p.id);
+                  return (
+                    <label key={p.id} className="flex cursor-pointer select-none items-start gap-2.5 text-sm">
+                      <input
+                        type="checkbox"
+                        className="mt-0.5 rounded border-border"
+                        checked={checked}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            set({ permissions: [...v.permissions, p.id] });
+                          } else {
+                            set({ permissions: v.permissions.filter((id) => id !== p.id) });
+                          }
+                        }}
+                      />
+                      <div className="grid gap-0.5">
+                        <span className="font-medium text-foreground">{p.label}</span>
+                        <span className="font-mono text-xs text-muted-foreground">{p.id}</span>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline" disabled={save.isPending}>
@@ -116,9 +262,85 @@ function MemberDialog({ member, isSelf, onClose }: { member: StaffMember | null;
   );
 }
 
+function MemberLoginHistoryDialog({ member, onClose }: { member: StaffMember; onClose: () => void }) {
+  const [page, setPage] = useState(1);
+  const query = useQuery(opsQueries.memberLoginHistory(member.id, { page, per_page: 15 }));
+  const historyList = query.data?.data ?? [];
+  const meta = query.data?.meta;
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent size="lg">
+        <DialogHeader>
+          <DialogTitle>Login History: {member.name}</DialogTitle>
+          <DialogDescription>
+            Recent authentication attempts and active device information for {member.email}.
+          </DialogDescription>
+        </DialogHeader>
+        <ListState
+          query={query}
+          empty={{
+            when: historyList.length === 0,
+            icon: History,
+            title: "No login attempts",
+            description: "No past login attempts recorded for this member.",
+          }}
+        >
+          <div className="max-h-96 overflow-y-auto">
+            <TableCard minWidth={500}>
+              <thead className={thead}>
+                <tr>
+                  <th scope="col" className={th}>Status</th>
+                  <th scope="col" className={th}>Device</th>
+                  <th scope="col" className={th}>IP Address</th>
+                  <th scope="col" className={th}>Date & Time</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {historyList.map((item) => (
+                  <tr key={item.id} className="hover:bg-surface-2/60">
+                    <td className={td}>{statusBadge(item.status)}</td>
+                    <td className={`${td} font-medium text-sm`}>{item.device || "Unknown"}</td>
+                    <td className={`${td} font-mono text-xs text-muted-foreground`}>{item.ip_address || "—"}</td>
+                    <td className={`${td} text-muted-foreground text-sm`}>{orderDate(item.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </TableCard>
+          </div>
+        </ListState>
+        {meta && meta.last_page && meta.last_page > 1 ? (
+          <Pagination
+            page={meta.current_page ?? 1}
+            lastPage={meta.last_page}
+            onPageChange={(p) => setPage(p)}
+          />
+        ) : null}
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 type Confirm = { kind: "deactivate" | "reset2fa"; member: StaffMember };
 
-function MemberActions({ member, isSelf, onEdit, onConfirm }: { member: StaffMember; isSelf: boolean; onEdit: () => void; onConfirm: (c: Confirm) => void }) {
+function MemberActions({
+  member,
+  isSelf,
+  onEdit,
+  onViewHistory,
+  onConfirm,
+}: {
+  member: StaffMember;
+  isSelf: boolean;
+  onEdit: () => void;
+  onViewHistory: () => void;
+  onConfirm: (c: Confirm) => void;
+}) {
   const queryClient = useQueryClient();
   const activate = useMutation({
     mutationFn: () => opsApi.setMemberActive(member.id, true),
@@ -144,6 +366,9 @@ function MemberActions({ member, isSelf, onEdit, onConfirm }: { member: StaffMem
         <DropdownMenu.Content align="end" sideOffset={6} className="ui-pop z-(--z-popover) w-64 rounded-xl border border-border bg-popover p-1.5 text-popover-foreground shadow-overlay">
           <DropdownMenu.Item className={itemClass} onSelect={onEdit}>
             <Pencil className="size-[18px] text-muted-foreground" aria-hidden="true" /> Edit name or role
+          </DropdownMenu.Item>
+          <DropdownMenu.Item className={itemClass} onSelect={onViewHistory}>
+            <History className="size-[18px] text-muted-foreground" aria-hidden="true" /> View login history
           </DropdownMenu.Item>
           {member.is_active && !member.two_factor_enabled ? (
             <DropdownMenu.Item className={itemClass} onSelect={() => resend.mutate()}>
@@ -176,10 +401,8 @@ function MemberActions({ member, isSelf, onEdit, onConfirm }: { member: StaffMem
 }
 
 /*
- * /admin/members (admins only): invite staff, change name or role, deactivate,
- * reset two-step verification after a lost phone, resend the setup code. The
- * API refuses changes that would lock the shop out (yourself, the last admin);
- * those messages are shown as they come.
+ * /admin/members (admins only): invite staff, change name or role, granular permissions,
+ * deactivate, reset two-step verification after a lost phone, resend the setup code, and view login history.
  */
 export default function MembersAdminPage() {
   const me = useStaff()?.user;
@@ -193,6 +416,7 @@ export default function MembersAdminPage() {
   const meta = members.data?.meta;
   const list = members.data?.data ?? [];
   const [editing, setEditing] = useState<StaffMember | "new" | null>(null);
+  const [viewingHistory, setViewingHistory] = useState<StaffMember | null>(null);
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const run = useMutation({
     mutationFn: (c: Confirm) => (c.kind === "deactivate" ? opsApi.setMemberActive(c.member.id, false) : opsApi.resetMemberTwoFactor(c.member.id)),
@@ -223,7 +447,7 @@ export default function MembersAdminPage() {
           <thead className={thead}>
             <tr>
               <th scope="col" className={th}>Member</th>
-              <th scope="col" className={th}>Role</th>
+              <th scope="col" className={th}>Role & Permissions</th>
               <th scope="col" className={th}>Two-step</th>
               <th scope="col" className={th}>Added</th>
               <th scope="col" className={th}>
@@ -253,9 +477,18 @@ export default function MembersAdminPage() {
                     <span className="block text-sm text-muted-foreground">{m.email}</span>
                   </th>
                   <td className={td}>
-                    <Badge tone={m.role === "admin" ? "info" : "neutral"} shape="tint">
-                      {ROLES[m.role].label}
-                    </Badge>
+                    <div className="grid gap-1">
+                      <Badge tone={m.role === "admin" ? "info" : "neutral"} shape="tint" className="w-fit">
+                        {ROLES[m.role].label}
+                      </Badge>
+                      {m.role === "staff" ? (
+                        <span className="text-xs text-muted-foreground">
+                          {m.permissions ? `${m.permissions.length} permissions` : "Default access"}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Full access</span>
+                      )}
+                    </div>
                   </td>
                   <td className={`${td} whitespace-nowrap text-sm`}>
                     {m.two_factor_enabled ? (
@@ -270,7 +503,13 @@ export default function MembersAdminPage() {
                   </td>
                   <td className={`${td} whitespace-nowrap text-sm text-muted-foreground`}>{orderDate(m.created_at)}</td>
                   <td className={`${td} text-right`}>
-                    <MemberActions member={m} isSelf={isSelf} onEdit={() => setEditing(m)} onConfirm={setConfirm} />
+                    <MemberActions
+                      member={m}
+                      isSelf={isSelf}
+                      onEdit={() => setEditing(m)}
+                      onViewHistory={() => setViewingHistory(m)}
+                      onConfirm={setConfirm}
+                    />
                   </td>
                 </tr>
               );
@@ -280,6 +519,7 @@ export default function MembersAdminPage() {
       </ListState>
       <Pagination page={meta?.current_page ?? 1} lastPage={meta?.last_page ?? 1} hrefFor={hrefFor} />
       {editing ? <MemberDialog key={editing === "new" ? "new" : editing.id} member={editing === "new" ? null : editing} isSelf={editing !== "new" && editing.id === me?.id} onClose={() => setEditing(null)} /> : null}
+      {viewingHistory ? <MemberLoginHistoryDialog member={viewingHistory} onClose={() => setViewingHistory(null)} /> : null}
       <ConfirmDialog
         open={confirm !== null}
         onOpenChange={(open) => !open && setConfirm(null)}

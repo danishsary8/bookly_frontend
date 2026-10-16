@@ -57,6 +57,7 @@ const MembersAdminPage = lazy(() => import("../pages/admin/MembersAdminPage"));
 const ExchangeRatesPage = lazy(() => import("../pages/admin/ExchangeRatesPage"));
 const AuditLogPage = lazy(() => import("../pages/admin/AuditLogPage"));
 const NewsletterAdminPage = lazy(() => import("../pages/admin/NewsletterAdminPage"));
+const StaffSecurityPage = lazy(() => import("../pages/admin/StaffSecurityPage"));
 const NewsletterConfirmPage = lazy(() => import("../pages/NewsletterConfirmPage"));
 const NewsletterUnsubscribePage = lazy(() => import("../pages/NewsletterUnsubscribePage"));
 const ShippingPage = lazy(() => import("../pages/content/ShippingPage"));
@@ -189,6 +190,7 @@ const AppRoutes = () => {
               <Route path="coupons" element={<CouponsAdminPage />} />
               <Route path="customers" element={<CustomersAdminPage />} />
               <Route path="customers/:id" element={<CustomerAdminPage />} />
+              <Route path="security" element={<StaffSecurityPage />} />
               <Route element={<RequireAdminRole />}>
                 <Route path="newsletter" element={<NewsletterAdminPage />} />
                 <Route path="reports" element={<ReportsPage />} />

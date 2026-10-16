@@ -1,5 +1,5 @@
 import { Suspense, useState } from "react";
-import { ExternalLink, LogOut, Menu, UserRound } from "lucide-react";
+import { ExternalLink, LogOut, Menu, ShieldCheck, UserRound } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { RouteErrorBoundary } from "@/components/ErrorBoundary";
@@ -80,6 +80,11 @@ function UserMenu() {
             </Badge>
           </div>
           <DropdownMenu.Separator className="my-1 h-px bg-border" />
+          <DropdownMenu.Item asChild className={itemClass}>
+            <Link to="/admin/security">
+              <ShieldCheck className="size-[18px] text-muted-foreground" aria-hidden="true" /> Security & Sessions
+            </Link>
+          </DropdownMenu.Item>
           <DropdownMenu.Item asChild className={itemClass}>
             <Link to="/" target="_blank" rel="noreferrer">
               <ExternalLink className="size-[18px] text-muted-foreground" aria-hidden="true" /> View the shop
