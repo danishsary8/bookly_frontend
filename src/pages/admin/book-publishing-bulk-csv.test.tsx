@@ -2,7 +2,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router-dom";
-import { staffApi, type BookImportPreviewResult, type StaffBook, type StaffUser } from "@/api/endpoints/staff";
+import { api } from "@/api/client";
+import {
+  staffApi,
+  type BookImportPreviewResult,
+  type StaffBook,
+  type StaffUser,
+} from "@/api/endpoints/staff";
 import { clearSession, setSession } from "@/api/session";
 import { Toaster } from "@/components/ui/toaster";
 import { RequireStaff } from "@/routes/adminGuards";
@@ -27,12 +33,21 @@ const staff: StaffUser = {
   role: "staff",
 };
 
-const signIn = (user: StaffUser) => setSession("staff", { token: "t", expiresAt: null, user });
+const signIn = (user: StaffUser) =>
+  setSession("staff", { token: "t", expiresAt: null, user });
 const page = <T,>(data: T[], meta: object = {}) =>
   ({
     data,
     links: {},
-    meta: { current_page: 1, last_page: 1, per_page: 25, total: data.length, from: 1, to: data.length, ...meta },
+    meta: {
+      current_page: 1,
+      last_page: 1,
+      per_page: 25,
+      total: data.length,
+      from: 1,
+      to: data.length,
+      ...meta,
+    },
   }) as never;
 
 const liveBook: StaffBook = {
@@ -97,7 +112,9 @@ describe("Book Publishing, Bulk Actions and CSV Import/Export", () => {
 
   it("displays status badges and filter radio options on books page", async () => {
     signIn(admin);
-    vi.spyOn(staffApi, "books").mockResolvedValue(page([liveBook, scheduledBook, draftBook]));
+    vi.spyOn(staffApi, "books").mockResolvedValue(
+      page([liveBook, scheduledBook, draftBook]),
+    );
 
     renderWithProviders(
       <Routes>
@@ -109,9 +126,13 @@ describe("Book Publishing, Bulk Actions and CSV Import/Export", () => {
     );
 
     // Filter options are present
-    expect(await screen.findByRole("radio", { name: "All" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("radio", { name: "All" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Live" })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "Scheduled" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("radio", { name: "Scheduled" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Draft" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Deleted" })).toBeInTheDocument();
 
@@ -129,13 +150,15 @@ describe("Book Publishing, Bulk Actions and CSV Import/Export", () => {
     const user = userEvent.setup();
     signIn(admin);
     vi.spyOn(staffApi, "books").mockResolvedValue(page([liveBook, draftBook]));
-    const bulkBooksSpy = vi.spyOn(staffApi, "bulkUpdateBooks").mockResolvedValue({
-      updated_count: 2,
-      items: [
-        { id: 101, title: "Live Odyssey", status: "live", success: true },
-        { id: 103, title: "Draft Manuscript", status: "live", success: true },
-      ],
-    });
+    const bulkBooksSpy = vi
+      .spyOn(staffApi, "bulkUpdateBooks")
+      .mockResolvedValue({
+        updated_count: 2,
+        items: [
+          { id: 101, title: "Live Odyssey", status: "live", success: true },
+          { id: 103, title: "Draft Manuscript", status: "live", success: true },
+        ],
+      });
 
     renderWithProviders(
       <>
@@ -168,10 +191,14 @@ describe("Book Publishing, Bulk Actions and CSV Import/Export", () => {
     await user.click(statusBtn);
 
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText(/Update Publishing Status/)).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/Update Publishing Status/),
+    ).toBeInTheDocument();
 
     // Submit changes
-    const applyBtn = within(dialog).getByRole("button", { name: "Apply changes" });
+    const applyBtn = within(dialog).getByRole("button", {
+      name: "Apply changes",
+    });
     await user.click(applyBtn);
 
     await waitFor(() => {
@@ -203,7 +230,10 @@ describe("Book Publishing, Bulk Actions and CSV Import/Export", () => {
 
     const statusBtn = screen.getByRole("button", { name: "Status" });
     expect(statusBtn).toBeDisabled();
-    expect(statusBtn).toHaveAttribute("title", "Only administrators can change status");
+    expect(statusBtn).toHaveAttribute(
+      "title",
+      "Only administrators can change status",
+    );
   });
 
   it("admin can change book status to draft, live or scheduled with future datetime in BookEditPage", async () => {
@@ -219,13 +249,21 @@ describe("Book Publishing, Bulk Actions and CSV Import/Export", () => {
       { route: "/admin/books/103" },
     );
 
-    expect(await screen.findByRole("heading", { name: "Details" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Details" }),
+    ).toBeInTheDocument();
 
     // Admin sees the publishing status selector
-    expect(screen.getByText("Publishing Status")).toBeInTheDocument();
-    expect(screen.getByRole("radiogroup", { name: "Book Status" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("group", { name: "Publishing" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("radiogroup", { name: "Book Status" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "live" })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "scheduled" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("radio", { name: "scheduled" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "draft" })).toBeInTheDocument();
   });
 
@@ -242,24 +280,27 @@ describe("Book Publishing, Bulk Actions and CSV Import/Export", () => {
       { route: "/admin/books/103" },
     );
 
-    expect(await screen.findByRole("heading", { name: "Details" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Details" }),
+    ).toBeInTheDocument();
 
     // Staff sees notice that status changes are restricted to admin
-    expect(screen.getByText("Only administrators can publish or schedule books.")).toBeInTheDocument();
-    expect(screen.queryByRole("radiogroup", { name: "Book Status" })).not.toBeInTheDocument();
+    expect(
+      screen.getByText("An admin publishes this book."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("radiogroup", { name: "Book Status" }),
+    ).not.toBeInTheDocument();
   });
 
-  it("CSV import dialog previews rows and confirms import", async () => {
+  it("CSV import dialog previews rows, filters them and imports the valid ones", async () => {
     const user = userEvent.setup();
     signIn(admin);
     vi.spyOn(staffApi, "books").mockResolvedValue(page([]));
 
     const mockPreview: BookImportPreviewResult = {
       preview_token: "test-preview-token-123",
-      total_rows: 3,
-      new_books_count: 2,
-      update_variants_count: 1,
-      error_rows_count: 0,
+      totals: { total: 3, new: 1, update: 1, error: 1 },
       rows: [
         {
           row_number: 2,
@@ -267,9 +308,7 @@ describe("Book Publishing, Bulk Actions and CSV Import/Export", () => {
           title: "New Book 1",
           sku: "NB1-PB",
           format: "paperback",
-          price_usd: "12.00",
-          stock_quantity: 10,
-          errors: [],
+          messages: [],
         },
         {
           row_number: 3,
@@ -277,19 +316,24 @@ describe("Book Publishing, Bulk Actions and CSV Import/Export", () => {
           title: "Existing Book",
           sku: "EXT-PB",
           format: "paperback",
-          price_usd: "14.00",
-          stock_quantity: 20,
-          errors: [],
+          messages: [],
+        },
+        {
+          row_number: 4,
+          action: "error",
+          title: "Broken",
+          sku: "BRK-1",
+          format: "paperback",
+          messages: ["The price usd field must be a number."],
         },
       ],
     };
-
-    const previewSpy = vi.spyOn(staffApi, "previewImportBooksCsv").mockResolvedValue(mockPreview);
-    const confirmSpy = vi.spyOn(staffApi, "confirmImportBooksCsv").mockResolvedValue({
-      books_created: 1,
-      variants_updated: 1,
-      message: "Catalog imported successfully.",
-    });
+    const previewSpy = vi
+      .spyOn(staffApi, "previewImportBooksCsv")
+      .mockResolvedValue(mockPreview);
+    const confirmSpy = vi
+      .spyOn(staffApi, "confirmImportBooksCsv")
+      .mockResolvedValue({ created: 1, updated: 1, skipped: 1, errors: [] });
 
     renderWithProviders(
       <>
@@ -303,33 +347,51 @@ describe("Book Publishing, Bulk Actions and CSV Import/Export", () => {
       { route: "/admin/books" },
     );
 
-    // Open import dialog
-    const importBtn = await screen.findByRole("button", { name: "Import CSV" });
-    await user.click(importBtn);
-
+    await user.click(await screen.findByRole("button", { name: "Import CSV" }));
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText("Import books from CSV")).toBeInTheDocument();
-    expect(within(dialog).getByText("Download template")).toBeInTheDocument();
+    await user.upload(
+      within(dialog).getByLabelText(/choose file/i, { selector: "input" }),
+      new File(["sku,price_usd\nX,1.00"], "books.csv", { type: "text/csv" }),
+    );
+    await waitFor(() => expect(previewSpy).toHaveBeenCalled());
 
-    // Upload a simulated CSV file
-    const file = new File(["title,format,sku\nTest,paperback,TST-PB"], "books.csv", { type: "text/csv" });
-    const input = within(dialog).getByLabelText(/Browse file/i, { selector: "input" });
-    await user.upload(input, file);
+    expect(await within(dialog).findByText("New Book 1")).toBeInTheDocument();
+    expect(
+      within(dialog).getByText("The price usd field must be a number."),
+    ).toBeInTheDocument();
 
-    await waitFor(() => {
-      expect(previewSpy).toHaveBeenCalled();
-    });
+    await user.click(within(dialog).getByRole("button", { name: /errors 1/i }));
+    expect(within(dialog).queryByText("New Book 1")).not.toBeInTheDocument();
+    expect(within(dialog).getByText("Broken")).toBeInTheDocument();
 
-    // Preview table and confirm button appear
-    expect(await within(dialog).findByText("New books")).toBeInTheDocument();
-    expect(within(dialog).getByText("New Book 1")).toBeInTheDocument();
-    expect(within(dialog).getByText("Confirm & Import 3 valid items")).toBeInTheDocument();
+    await user.click(
+      within(dialog).getByRole("button", { name: "Import 2 rows" }),
+    );
+    await waitFor(() =>
+      expect(confirmSpy).toHaveBeenCalledWith("test-preview-token-123"),
+    );
+    expect(
+      await screen.findByText(/1 formats created, 1 updated, 1 skipped/),
+    ).toBeInTheDocument();
+  });
 
-    // Confirm import
-    await user.click(within(dialog).getByRole("button", { name: "Confirm & Import 3 valid items" }));
+  it("reads the preview from the API's data wrapper", async () => {
+    const body = {
+      data: {
+        preview_token: "t",
+        totals: { total: 0, new: 0, update: 0, error: 0 },
+        rows: [],
+      },
+    };
+    const post = vi.spyOn(api, "post").mockResolvedValue(body as never);
 
-    await waitFor(() => {
-      expect(confirmSpy).toHaveBeenCalledWith("test-preview-token-123");
-    });
+    await expect(
+      staffApi.previewImportBooksCsv(new File(["sku"], "a.csv")),
+    ).resolves.toEqual(body.data);
+    expect(post).toHaveBeenCalledWith(
+      "/staff/books/import/preview",
+      expect.any(FormData),
+      expect.anything(),
+    );
   });
 });

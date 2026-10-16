@@ -110,29 +110,27 @@ export interface BulkVariantsInput {
 }
 
 export interface BookImportRow {
+  /** Data rows start at 2 (row 1 is the header). */
   row_number: number;
   action: "new" | "update" | "error";
   title: string;
-  sku: string | null;
-  format: string | null;
-  price_usd: string | null;
-  stock_quantity: number | null;
-  errors: string[];
+  format: string;
+  sku: string;
+  messages: string[];
 }
 
 export interface BookImportPreviewResult {
   preview_token: string;
-  total_rows: number;
-  new_books_count: number;
-  update_variants_count: number;
-  error_rows_count: number;
+  totals: { total: number; new: number; update: number; error: number };
   rows: BookImportRow[];
 }
 
+/** What confirm applied; rows that became errors since the preview are in `errors`. */
 export interface BookImportConfirmResult {
-  books_created: number;
-  variants_updated: number;
-  message: string;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: BookImportRow[];
 }
 
 export interface VariantInput {
