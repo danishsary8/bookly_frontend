@@ -2,65 +2,30 @@
 
 **Everything still to do, in order, is in `docs/ROADMAP.md`** (including the "Known limits and small follow-ups" items).
 
-## State on 2026-10-15
-- Phases 1-2 are done and live. Merged 2026-10-15: Khmer for the whole storefront, close-account check order, E2E loader wait,
-  and the **Reports page** (backend `feature/reports-api`, frontend `feature/reports-dashboard`).
+## State on 2026-10-16
+- Merged: everything up to Batch 3 (PHP 8.4, half-typed search, load test), the security review and the one-hour batch.
 
-## Now: waiting for the owner's merge (Batch 3, 2026-10-15)
+## Now: waiting for the owner's merge (overnight batch, tasks 1-9)
+The overnight branches were reviewed and corrected in one branch per repo, built on top of the task-9 branch, so it
+carries tasks 1-9. Merge only these two, backend first:
 
-### Batch 3: PHP 8.4, search, load test (merge order: backend first, docs last)
-| # | Branch | Repo | What |
+| # | Repo | Branch | What |
 | --- | --- | --- | --- |
-| 1 | `chore/php-84-minimum` | backend | Raise minimum PHP to 8.4, remove 8.3 platform pin, update CI and docs |
-| 2 | `fix/search-half-typed-words` | backend | Match half-typed words in descriptions, series, and categories ('simple' dictionary) |
-| 3 | `chore/load-test-results` | backend | Run k6 load test locally with SPREAD_IPS and record baseline in RESULTS.md |
-| 4 | `docs/batch-3` | backend | Document PHP 8.4 minimum, search fix, and load test results in WORKLOG.md |
-| 5 | `docs/batch-3` | frontend | Roadmap tick/annotations and merge-order table in NEXT_STEP.md |
+| 1 | backend | `feature/overnight-batch-fixes` | Stock history + restock, refund record + store credit, customer notes/tags, book drafts/schedule/bulk/CSV, Khmer emails + API messages, back-in-stock + also bought + capped marketing outbox, Khmer search, newsletter, security leftovers (14 new migrations) |
+| 2 | frontend | `feature/overnight-batch-fixes` | The screens for all of the above |
 
-### One-hour batch (ready to merge, backend before frontend in each pair)
-All branches verified green locally and on GitHub Actions CI.
-| # | Branch | Repo | What |
-| --- | --- | --- | --- |
-| 1 | `fix/login-limit-per-email` | backend | Per-email limit (20/hour across all IPs) on customer and staff login |
-| 2 | `fix/staff-2fa-parallel-guesses` | backend | Increment attempt count before code verification to prevent parallel 2FA bypass |
-| 3 | `fix/audit-log-hide-secrets` | backend | Filter `$hidden` and explicit secrets (`password_hash`, `two_factor_secret`, `remember_token`) from audit logs |
-| 4 | `fix/cors-pattern-anchors` | backend | Anchor `CORS_ALLOWED_ORIGIN_PATTERNS` regex to prevent domain suffix bypasses |
-| 5 | `fix/staff-reset-notice` | backend | Send `AccountSecurityNotice` email to staff after password reset via `SafeNotifier` |
-| 6 | `fix/rich-link-pattern` | frontend | Reject protocol-relative (`//evil.com`) and backslash (`/\evil.com`) URLs in Rich text |
-| 7 | `chore/ignore-env-files` | frontend | Ignore `.env`, `.env.local`, `.env.*.local` in `.gitignore` |
-| 8 | `fix/invoice-riel-per-line` | frontend | Show `≈ ៛…` under each line item's USD amount at order-date rate |
-| 9 | `chore/load-test-script` | backend | k6 load test script ramping to 30 VUs over 2 minutes with local-only documentation |
-| 10 | `docs/one-hour-batch` | backend | Worklog updates for the one-hour batch |
-| 11 | `docs/one-hour-batch` | frontend | Worklog, roadmap, and next step updates for the one-hour batch |
-
-### Earlier security review batch (merged or pending)
-| # | Branch | Repo | What |
-| --- | --- | --- | --- |
-| 1 | `fix/otp-wrong-guess-limit` | backend | HIGH: throw a code away after 5 wrong guesses (database cache) |
-| 2 | `fix/unproven-email-claims` | backend | Unproven emails don't block their owner or open a phone account |
-| 3 | `fix/unproven-email-claims` | frontend | Code step for a Telegram sign-up's email |
-| 4 | `fix/reauth-sensitive-changes` | backend | Password / recent sign-in before adding a way in |
-| 5 | `fix/reauth-sensitive-changes` | frontend | Password step before a new phone; Sign in again |
-| 6 | `fix/telegram-sign-in-confirm` | backend | Bot asks Yes/No; Sign me out everywhere |
-| 7 | `fix/telegram-sign-in-confirm` | frontend | Steps name the Yes button |
-| 8 | `fix/content-security-policy` | frontend | CSP (allowlist Report-Only first) |
-| 9 | `fix/admin-only-coupons` | backend | Coupons admin-only; no $0 or >50% price cut by staff |
-| 10 | `fix/admin-only-coupons` | frontend | Coupon buttons for admins only |
-| 11 | `fix/backup-public-key` | backend | Backups encrypted to the owner's public key |
-| 12 | `docs/security-review` | backend | Worklog, next step |
-| 13 | `docs/security-review` | frontend | Worklog, roadmap, next step |
+Do NOT merge: the separate overnight task branches, `feature/strict-delete-trash`, `feature/staff-permissions-sessions`
+and both `docs/overnight-batch` branches (strict delete and staff permissions were only partly built; they are redone later).
 
 ## Owner steps after merging
-1. Backup key: backend `docs/DEPLOYMENT.md` → "1b. Make your backup key"; then run the backup workflow once by hand.
-2. CSP: on the live site sign in with Google and Facebook, open sign-up (security check), look for "[Report Only]" in the
-   browser console; send a screenshot of any, or say "none" and the allowlist gets switched to enforced.
-3. Telegram: try "Continue with Telegram" once on the live site: the bot now asks "Sign in to Bookly?".
+1. Render runs the new migrations by itself when the new container starts (`RUN_MIGRATIONS=true`); check the deploy log once.
+2. Optional: set `MARKETING_DAILY_LIMIT` on Render (default 60 emails/day for newsletter + back-in-stock; Resend free is 100/day shared with sign-in codes).
+3. Try once on the live site: footer newsletter sign-up → confirm email; record one test refund as store credit.
 
 ## Next (pick one)
-1. The low security items left (ROADMAP Phase 6 list), as one small batch.
-2. Stock history + restock entries (needs one new table: ask first).
-3. Customer notes/tags/lifetime value, resend verification.
-4. Tests & quality: E2E sign-up + verify + return, accessibility audit, load test script.
+1. Strict delete + Trash (books, authors, categories, series, publishers), rebuilt from main.
+2. Staff permissions, sessions and login history, rebuilt from main.
+3. Our list: sign-in page (Facebook, phone number, bot code) with Telegram order updates.
 
 ## Owner's open steps
 - Healthchecks.io for the missed-backup check, if not done (backend `docs/DEPLOYMENT.md` → "Missed-backup check").

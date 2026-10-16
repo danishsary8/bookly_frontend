@@ -389,3 +389,17 @@ Owner's choices: no typing (one tap), "Continue with Telegram" on sign-in, Faceb
 - [x] Ignore local env files (2026-10-15, branch `chore/ignore-env-files`, commit `7885269`): added `.env`, `.env.local`, `.env.*.local` to `.gitignore`. Committed `.env` and `.env.production` remain tracked without exposing local overrides. Verified: lint 0, typecheck, git status clean.
 - [x] Invoice riel per line (2026-10-15, branch `fix/invoice-riel-per-line`, commit `4ce8008`): displayed `≈ ៛…` under each line item's USD amount using `doc.khr.rate` (the exchange rate at order date). Shows nothing when no rate was set at order date. Tests: 2 new in `src/features/orders/documents/OrderSheets.test.tsx` (shown failing first). Verified: lint 0, typecheck, vitest 312 passed, build; browser pass: not yet verified (local dev server not running).
 - [x] E2E journeys + accessibility on every page (2026-10-15, branch `chore/e2e-journeys-and-a11y`): `e2e/journeys.spec.ts` (sign-up with the email code read from `E2E_MAIL_LOG`; return of a delivered printed book with staff approve + refund, order set up through the API) and `e2e/a11y.spec.ts` extended to the customer account and staff area (45 pages × light/dark × desktop/phone). The settled-page axe helper moved to `e2e/axe.ts` (shared). CI's E2E job now runs all files (timeout 25 min; about 6 min). Found and fixed: the shelves' "See all" link had no text when a page gave no label (home, About); `BookShelf` falls back to "See all" (unit test shown failing first). The sign-up journey runs with reduced motion (JavaScript fade-ins were caught half-visible on CI). Note: the E2E workflow runs on pull requests, pushes to main and by hand, not on branch pushes.
+
+## 2026-10-16: overnight batch reviewed and corrected (`feature/overnight-batch-fixes`)
+The overnight branches passed their own tests but did not follow the agreed plan in several places (its report also
+described tables and values that were not in the code). Reviewed line by line against the plan; tasks 1-9 corrected on one
+branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 11 (staff permissions) left out (partly built).
+- Refunds: method required (cash / bank transfer / store credit), reference only for bank transfer, refund record box
+  (how, code, who, when; "Not recorded" for older refunds); store credit list with used/expired; coupons show "Store credit for".
+- Books: CSV import screen matches the API (it crashed before), filter by new/update/error, schedule in Cambodia time
+  (`src/lib/shopTime.ts`), a passed schedule can be kept when editing, bulk edit shows what changed and refuses >100 formats.
+- Newsletter footer sends the Turnstile token (sign-ups failed on the live site without it), real progress "X of Y sent",
+  daily limit from the API; account cards translated, error state for stock alerts; `/api/report` counts bytes.
+- Verified: lint, typecheck, 368 unit tests, build; browser check against the local API (refund flow, coupons, account
+  store credits light/dark 390 px, CSV import, schedule with the browser in New York time, newsletter admin, footer
+  sign-up) with axe: all passed. Not verified: real Turnstile and Resend on the live site, Khmer wording (native review).
