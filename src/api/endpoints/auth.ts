@@ -80,6 +80,8 @@ export const authApi = {
     /** A signed-in customer confirms (or changes) their number. */
     /** A verified account with a password sends it: a new number is a new way in. */
     confirmPhone: (password?: string) => (password ? api.post<TelegramLink>("/auth/telegram/phone", { password }) : api.post<TelegramLink>("/auth/telegram/phone")),
+    /** Connects customer's Telegram chat for instant order delivery updates. */
+    orderUpdates: () => api.post<TelegramLink>("/auth/telegram/order-updates"),
     /** How it went: a sign-in starts the session; a confirmed number refreshes the stored profile. */
     status: async (key: string) => {
       const response = await api.post<TelegramStatus>("/auth/telegram/status", { key });

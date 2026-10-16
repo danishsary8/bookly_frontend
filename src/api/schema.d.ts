@@ -1163,6 +1163,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/telegram/order-updates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Connect Telegram for real-time order updates
+         * @description Generates a one-time link (10 minutes). Open `url` (t.me/<bot>?start=<code>) and tap Start. The bot links your Telegram chat to receive instant order placed, packing, shipping, and delivery notifications.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description url, key, expires_at */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["Unauthorized"];
+                /** @description The bot is off */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/telegram/status": {
         parameters: {
             query?: never;
@@ -1349,6 +1394,45 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/me/telegram": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Disconnect Telegram and disable order updates */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Customer */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Customer"];
+                        };
+                    };
+                };
+                401: components["responses"]["Unauthorized"];
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/me/password": {
@@ -7058,6 +7142,12 @@ export interface components {
              * @enum {string}
              */
             locale?: "en" | "km";
+            /** @description Telegram chat ID linked to this customer account */
+            telegram_chat_id?: number | null;
+            /** @description True if a Telegram chat ID has been linked */
+            telegram_connected?: boolean;
+            /** @description True if customer has enabled real-time order notifications on Telegram */
+            telegram_order_updates?: boolean;
             connected?: {
                 google?: boolean;
                 facebook?: boolean;

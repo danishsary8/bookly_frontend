@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, PackageCheck, Truck } from "lucide-react";
+import { CheckCircle2, PackageCheck, Send, Truck } from "lucide-react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { orderQueries } from "@/api/endpoints/orders";
 import { ApiError } from "@/api/errors";
@@ -77,6 +77,21 @@ export default function OrderConfirmationPage() {
 
         <OrderItemsCard order={o} totalLabel={k.totalOnDelivery} />
         <DeliveryAddressCard address={o.shipping_address} />
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5">
+          <div className="flex items-start sm:items-center gap-3">
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+              <Send className="size-5" aria-hidden="true" />
+            </span>
+            <div className="grid">
+              <span className="font-semibold text-foreground">Real-time Telegram notifications</span>
+              <span className="text-sm text-muted-foreground">Receive instant alerts when your books are being packed, dispatched, and delivered.</span>
+            </div>
+          </div>
+          <Link to="/account/profile" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            Manage
+          </Link>
+        </div>
 
         <section aria-labelledby="whats-next">
           <h2 id="whats-next" className="font-display text-[1.563rem] leading-tight">
