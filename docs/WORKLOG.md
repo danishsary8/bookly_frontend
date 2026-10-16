@@ -412,3 +412,25 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   - Added Trash navigation item in `adminNav` under Catalogue (admin-only).
   - Regenerated API schema types from backend OpenAPI contract.
   - Verified: `npm run typecheck`, `npm run lint`, `npx vitest run` (364 passed, 3 skipped), `npm run build`.
+
+## Phase 3 · Staff permissions, active sessions, and login history (branch `feature/staff-permissions-sessions`)
+- [x] Staff permissions, active sessions, and login history:
+  - Regenerated `src/api/schema.d.ts` from backend OpenAPI spec with all 6 new staff security endpoints and updated member payloads.
+  - Extended `src/api/endpoints/staff.ts` and `src/api/endpoints/staffOps.ts`:
+    - Defined permissions constants (`STAFF_PERMISSIONS`, `DEFAULT_STAFF_PERMISSIONS`, labels and groupings).
+    - Session management endpoints (`staffApi.sessions`, `revokeSession`, `revokeOtherSessions`, `revokeAllSessions`).
+    - Login history endpoints (`staffApi.loginHistory`, `opsApi.memberLoginHistory`).
+    - Member update/invite payloads with optional granular `permissions?: string[]`.
+  - Added dedicated `/admin/security` (`StaffSecurityPage`) with:
+    - Account protection & 2FA status summary.
+    - Active sessions card: device/browser name, IP address, last active relative time, "Current device" badge, individual session revoke.
+    - Bulk session revocation: "Sign out other sessions" and "Sign out everywhere" (with automatic sign-out and redirect to sign-in).
+    - Sign-in history card: status badges (successful, 2FA required, invalid credentials, locked out, inactive, throttled), failure reason notes, and pagination.
+  - Enhanced `/admin/members` (`MembersAdminPage`):
+    - Granular permission checkboxes in `MemberDialog` for staff members with select all / clear shortcuts (admins display a full-access badge).
+    - Member dropdown action "View sign-in history" opening `MemberLoginHistoryDialog` modal with IP, user agent, timestamp, and status badges.
+  - Added "Security & sessions" link to `UserMenu` in `AdminShell`.
+  - Registered route `/admin/security` with lazy loading in `routes/index.tsx`.
+  - Comprehensive Vitest test suite (`src/pages/admin/staff-security.test.tsx`, 6 tests covering all flows).
+  - Verified: `npm run typecheck`, `npm run lint` (0 errors, 0 warnings), vitest (all passed), `npm run build` (production build clean).
+

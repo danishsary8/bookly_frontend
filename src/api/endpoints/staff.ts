@@ -12,13 +12,57 @@ import type { Author, BookFormat, Category, Paginated, Publisher, Resource, Seri
 
 export type StaffRole = "admin" | "staff";
 
+export const DEFAULT_STAFF_PERMISSIONS = [
+  "orders:view",
+  "orders:manage",
+  "catalog:view",
+  "catalog:manage",
+  "customers:view",
+  "customers:manage",
+  "reviews:manage",
+] as const;
+
+export const ADMIN_ONLY_PERMISSIONS = [
+  "reports:view",
+  "members:manage",
+  "settings:manage",
+  "newsletter:manage",
+] as const;
+
+export const ALL_STAFF_PERMISSIONS = [
+  ...DEFAULT_STAFF_PERMISSIONS,
+  ...ADMIN_ONLY_PERMISSIONS,
+] as const;
+
+export type StaffPermission = (typeof ALL_STAFF_PERMISSIONS)[number];
+
 export interface StaffUser {
   id: number;
   name: string;
   email: string;
   role: StaffRole;
   two_factor_enabled: boolean;
+  permissions?: string[];
   created_at?: string;
+}
+
+export interface StaffSession {
+  id: number;
+  device: string;
+  ip_address: string | null;
+  last_used_at: string | null;
+  created_at: string | null;
+  is_current: boolean;
+}
+
+export interface StaffLoginHistoryItem {
+  id: number;
+  staff_user_id: number;
+  ip_address: string | null;
+  user_agent: string | null;
+  device: string | null;
+  status: "success" | "failed_password" | "failed_2fa" | "deactivated";
+  created_at: string;
 }
 
 interface IssuedToken {
@@ -298,6 +342,8 @@ export const staffKeys = {
   stockHistory: (variantId: number, params: object) => ["staff", "variants", variantId, "history", toQueryParams(params)] as const,
   trash: (params: object) => ["staff", "trash", toQueryParams(params)] as const,
   notifications: () => ["staff", "notifications"] as const,
+  sessions: () => ["staff", "sessions"] as const,
+  loginHistory: (params: object = {}) => ["staff", "login-history", toQueryParams(params)] as const,
 };
 
 export const staffAuthApi = {
@@ -362,6 +408,13 @@ export const staffApi = {
   restoreTrash: (type: string, id: number) =>
     api.post<{ message: string; item: { id: number; type: string; name: string } }>(`/staff/trash/${type}/${id}/restore`, {}),
 
+  sessions: () => api.get<Resource<StaffSession[]>>("/staff/sessions").then((r) => r.data),
+  revokeSession: (id: number) => api.delete<{ message: string }>(`/staff/sessions/${id}`),
+  revokeOtherSessions: () => api.post<{ message: string; revoked_count: number }>("/staff/sessions/revoke-others", {}),
+  revokeAllSessions: () => api.post<{ message: string; revoked_count: number }>("/staff/sessions/revoke-all", {}),
+  loginHistory: (params: { page?: number; per_page?: number } = {}) =>
+    api.get<Paginated<StaffLoginHistoryItem>>("/staff/login-history", { params: toQueryParams(params) }),
+
   createLookup: <K extends LookupKind>(kind: K, input: LookupInputOf<K>) => api.post<Resource<LookupOf<K>>>(`/staff/${kind}`, input).then((r) => r.data),
   updateLookup: <K extends LookupKind>(kind: K, id: number, input: LookupInputOf<K>) =>
     api.patch<Resource<LookupOf<K>>>(`/staff/${kind}/${id}`, input).then((r) => r.data),
@@ -386,4 +439,7 @@ export const staffQueries = {
     queryOptions({ queryKey: staffKeys.stockHistory(variantId, params), queryFn: () => staffApi.stockHistory(variantId, params), placeholderData: keepPreviousData }),
   trash: (params: Parameters<typeof staffApi.trash>[0] = {}) =>
     queryOptions({ queryKey: staffKeys.trash(params), queryFn: () => staffApi.trash(params), placeholderData: keepPreviousData }),
+  sessions: () => queryOptions({ queryKey: staffKeys.sessions(), queryFn: () => staffApi.sessions() }),
+  loginHistory: (params: Parameters<typeof staffApi.loginHistory>[0] = {}) =>
+    queryOptions({ queryKey: staffKeys.loginHistory(params), queryFn: () => staffApi.loginHistory(params), placeholderData: keepPreviousData }),
 };
