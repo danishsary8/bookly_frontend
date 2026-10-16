@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { contact, policy } from "@/content/shop";
 import { renderWithProviders } from "@/test/render";
 import { dismissToast } from "@/stores/toast";
+import { setLanguage } from "@/i18n";
 import AboutPage from "./AboutPage";
 import ContactPage from "./ContactPage";
 import FaqPage from "./FaqPage";
@@ -117,6 +118,26 @@ describe("legal pages", () => {
   it("terms has the review rules the FAQ links to", () => {
     app("/terms");
     expect(document.getElementById("reviews")).toHaveTextContent("We may hide reviews that");
+  });
+
+  it("renders policy and legal pages in Khmer when language is switched", () => {
+    act(() => setLanguage("km"));
+    try {
+      app("/shipping");
+      expect(screen.getByRole("heading", { level: 1, name: "ការដឹកជញ្ជូន និងការប្រគល់ទំនិញ" })).toBeInTheDocument();
+      expect(screen.getAllByText(/រាជធានីភ្នំពេញ/)[0]).toBeInTheDocument();
+
+      app("/returns-policy");
+      expect(screen.getByRole("heading", { level: 1, name: "គោលការណ៍ប្តូរ និងសងត្រឡប់" })).toBeInTheDocument();
+
+      app("/terms");
+      expect(screen.getByRole("heading", { level: 1, name: "លក្ខខណ្ឌនៃការលក់" })).toBeInTheDocument();
+
+      app("/privacy");
+      expect(screen.getByRole("heading", { level: 1, name: "គោលការណ៍ភាពឯកជន" })).toBeInTheDocument();
+    } finally {
+      act(() => setLanguage("en"));
+    }
   });
 });
 

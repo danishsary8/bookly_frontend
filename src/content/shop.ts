@@ -13,9 +13,10 @@ export const shop = {
 } as const;
 
 export const policy = {
-  shippingFeesUsd: { phnomPenh: "1.50", provinces: "3.00" },
+  shippingFeesUsd: { phnomPenh: "1.50", provinces: "3.00", kandal: "2.00", remote: "3.50" },
   freeShippingThresholdUsd: "50.00",
-  returnWindowDays: 3,
+  returnWindowDays: 7,
+  accountEraseDays: 30,
   timezone: "Asia/Phnom_Penh",
 } as const;
 
@@ -35,8 +36,10 @@ export const contact = {
 
 export const delivery = {
   areas: [
-    { area: "Phnom Penh", time: "1 working day", feeUsd: policy.shippingFeesUsd.phnomPenh },
-    { area: "Other provinces", time: "2 to 3 working days", feeUsd: policy.shippingFeesUsd.provinces },
+    { area: "Phnom Penh", areaKm: "រាជធានីភ្នំពេញ", time: "1 working day", timeKm: "១ ថ្ងៃធ្វើការ", feeUsd: policy.shippingFeesUsd.phnomPenh },
+    { area: "Kandal Province", areaKm: "ខេត្តកណ្តាល", time: "1 to 2 working days", timeKm: "១ ទៅ ២ ថ្ងៃធ្វើការ", feeUsd: policy.shippingFeesUsd.kandal },
+    { area: "Other Provinces (22 provinces)", areaKm: "ខេត្តដទៃទៀត (២២ ខេត្ត)", time: "2 to 3 working days", timeKm: "២ ទៅ ៣ ថ្ងៃធ្វើការ", feeUsd: policy.shippingFeesUsd.provinces },
+    { area: "Remote Provinces (Mondulkiri, Ratanakiri)", areaKm: "ខេត្តដាច់ស្រយាល (មណ្ឌលគិរី, រតនគិរី)", time: "3 to 4 working days", timeKm: "៣ ទៅ ៤ ថ្ងៃធ្វើការ", feeUsd: policy.shippingFeesUsd.remote },
   ],
 } as const;
 

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, PackageCheck, Truck } from "lucide-react";
+import { CheckCircle2, PackageCheck, Send, Truck } from "lucide-react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { orderQueries } from "@/api/endpoints/orders";
 import { ApiError } from "@/api/errors";
@@ -66,10 +66,10 @@ export default function OrderConfirmationPage() {
           <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
             <OrderStatusBadge status={o.status} />
             {o.placed_at ? <span>{k.placed(new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(o.placed_at)))}</span> : null}
-            {o.estimated_delivery ? (
+            {o.estimated_delivery?.formatted ? (
               <span className="flex items-center gap-1.5 font-medium text-foreground">
                 <Truck className="size-4 text-primary" aria-hidden="true" />
-                Est. delivery: {o.estimated_delivery.formatted}
+                {k.estDelivery(o.estimated_delivery.formatted)}
               </span>
             ) : null}
           </div>
@@ -77,6 +77,21 @@ export default function OrderConfirmationPage() {
 
         <OrderItemsCard order={o} totalLabel={k.totalOnDelivery} />
         <DeliveryAddressCard address={o.shipping_address} />
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5">
+          <div className="flex items-start sm:items-center gap-3">
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+              <Send className="size-5" aria-hidden="true" />
+            </span>
+            <div className="grid">
+              <span className="font-semibold text-foreground">{k.telegramUpdatesTitle}</span>
+              <span className="text-sm text-muted-foreground">{k.telegramUpdatesDesc}</span>
+            </div>
+          </div>
+          <Link to="/account/profile" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            {k.manage}
+          </Link>
+        </div>
 
         <section aria-labelledby="whats-next">
           <h2 id="whats-next" className="font-display text-[1.563rem] leading-tight">

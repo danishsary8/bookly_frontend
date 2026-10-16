@@ -49,7 +49,7 @@ const ICONS: Record<Provider, ReactNode> = {
   ),
 };
 
-const TELEGRAM_ICON = (
+export const TELEGRAM_ICON = (
   <svg viewBox="0 0 24 24" className="size-[18px]" aria-hidden="true">
     <circle cx="12" cy="12" r="12" fill="#229ED9" />
     <path

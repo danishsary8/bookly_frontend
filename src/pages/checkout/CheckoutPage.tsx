@@ -289,7 +289,7 @@ export default function CheckoutPage() {
                         {k.delivery}{data.delivery_area ? ` (${data.delivery_area === "phnom_penh" ? k.phnomPenh : k.provinces})` : ""}
                         {data.is_free_shipping ? (
                           <span className="ml-2 inline-flex items-center rounded bg-success-tint px-1.5 py-0.5 text-xs font-semibold uppercase text-success">
-                            Free
+                            {k.freeBadge}
                           </span>
                         ) : null}
                       </span>
@@ -302,10 +302,10 @@ export default function CheckoutPage() {
                   <dd className="text-2xl font-semibold tabular-nums">{formatMoney(data.total?.usd, data.total?.khr, currency)}</dd>
                 </div>
               </dl>
-              {data.estimated_delivery ? (
+              {data.estimated_delivery?.formatted ? (
                 <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Truck className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
-                  <span>Est. delivery: {data.estimated_delivery.formatted}</span>
+                  <span>{k.estDelivery(data.estimated_delivery.formatted)}</span>
                 </p>
               ) : null}
               <p className="text-sm text-muted-foreground">{k.payCourier}</p>

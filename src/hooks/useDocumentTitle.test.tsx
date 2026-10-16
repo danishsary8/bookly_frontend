@@ -26,4 +26,27 @@ describe("useDocumentTitle", () => {
     expect(head('link[rel="canonical"]', "href")).toBeNull();
     expect(head('meta[property="og:image"]')).not.toBe("https://cdn.example/emma.jpg");
   });
+
+  it("sets og:type, twitter cards, and product price tags when provided", () => {
+    render(
+      <Page
+        title="The Great Gatsby"
+        meta={{
+          description: "A classic novel by F. Scott Fitzgerald.",
+          image: "https://cdn.example/gatsby.jpg",
+          type: "book",
+          price: { amount: "19.99", currency: "USD" },
+        }}
+      />,
+    );
+
+    expect(head('meta[property="og:type"]')).toBe("book");
+    expect(head('meta[property="og:site_name"]')).toBe("Bookly");
+    expect(head('meta[name="twitter:card"]')).toBe("summary_large_image");
+    expect(head('meta[name="twitter:title"]')).toBe("The Great Gatsby · Bookly");
+    expect(head('meta[name="twitter:image"]')).toBe("https://cdn.example/gatsby.jpg");
+    expect(head('meta[property="og:price:amount"]')).toBe("19.99");
+    expect(head('meta[property="og:price:currency"]')).toBe("USD");
+    expect(head('meta[property="product:price:amount"]')).toBe("19.99");
+  });
 });

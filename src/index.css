@@ -1047,6 +1047,22 @@
   }
 }
 
+/* Khmer typography: relaxed line-height for diacritics and cluster sub-consonants,
+   automatic word breaking without horizontal clipping, and phrase-level wrapping on 390px screens. */
+:lang(km) {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+:lang(km) h1,
+:lang(km) h2,
+:lang(km) h3,
+:lang(km) h4,
+:lang(km) .font-display {
+  line-height: 1.45;
+  overflow-wrap: break-word;
+}
+
 /* Khmer letters join into clusters: the wide tracking of small labels pulls them apart, so Khmer text keeps normal
    spacing (only letter-spacing changes; fonts and sizes stay as designed). Unlayered so it wins over the tracking utilities. */
 :lang(km)[class*="tracking-"],

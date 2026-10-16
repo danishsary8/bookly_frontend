@@ -1,7 +1,7 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { api } from "../client";
 import { toQueryParams } from "./catalog";
-import type { Author, BookFormat, Category, Paginated, Publisher, Resource, Series } from "../types";
+import type { Author, BookFormat, Category, Paginated, Publisher, Resource, Series, UploadedMedia } from "../types";
 
 /*
  * Staff API (/staff/*). The API client sends the staff token for these paths
@@ -395,6 +395,14 @@ export const staffApi = {
   createVariant: (bookId: number, input: VariantInput) => api.post<Resource<StaffVariant>>(`/staff/books/${bookId}/variants`, input).then((r) => r.data),
   updateVariant: (id: number, input: VariantInput) => api.patch<Resource<StaffVariant>>(`/staff/variants/${id}`, input).then((r) => r.data),
   deleteVariant: (id: number) => api.delete(`/staff/variants/${id}`),
+
+  uploadMedia: (file: File) => {
+    const fd = new FormData();
+    fd.append("image", file);
+    return api.post<UploadedMedia>("/staff/media/upload", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
 
   stock: (params: { status?: "low" | "out"; q?: string; page?: number; per_page?: number } = {}) =>
     api.get<Paginated<StockItem>>("/staff/stock", { params: toQueryParams(params) }),

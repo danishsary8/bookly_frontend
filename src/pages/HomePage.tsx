@@ -9,6 +9,7 @@ import { HomeHero } from "@/components/home/HomeHero";
 import { SeriesSpotlight } from "@/components/home/SeriesSpotlight";
 import AnimatedContent from "@/components/AnimatedContent";
 import { Button } from "@/components/ui/button";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { clearRecentlyViewed, useRecentlyViewed } from "@/stores/recentlyViewed";
 import { useT } from "@/i18n";
@@ -53,8 +54,26 @@ export default function HomePage() {
   const authors = useQuery(catalogQueries.authors({ per_page: 6 }));
   const recent = useRecentlyViewed();
 
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BookStore",
+    name: "Bookly",
+    description:
+      "Bookly is an online bookshop in Cambodia: paperbacks, hardcovers and ebooks, prices in dollars or riel, delivered to your door with cash on delivery.",
+    url: typeof window !== "undefined" ? window.location.origin : "https://bookly.com",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${typeof window !== "undefined" ? window.location.origin : ""}/search?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <div className="overflow-x-clip">
+      <JsonLd data={websiteJsonLd} />
       <div className="container-shell grid gap-20 pb-8 pt-6 lg:pt-10">
         <HomeHero
           featured={rated.data?.data.slice(0, 5)}
