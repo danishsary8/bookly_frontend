@@ -58,10 +58,10 @@ every day, then growth, then looks.
   - Plan written: backend docs/ADMIN_DASHBOARD_PLAN.md (branch docs/admin-dashboard-plan). Owner decisions 2026-10-12: revenue counts when an order is delivered (cash basis); refunds are subtracted on the refund date and the shipping fee is kept; money is shown as USD with KHR beside it; money numbers are admin only. Note: a first dashboard already exists (GET /staff/dashboard/summary and /sales, DashboardService); the work is to enhance it (previous-period comparison, KHR, charts).
 - [ ] Orders: full workflow (confirm → packed → shipped → delivered / cancelled) with a timeline, print **invoice and packing slip**, delivery notes, bulk status changes, filters and CSV export.
   - Done 2026-10-13 (backend + frontend `feature/order-documents`): printable **invoice and packing slip** (A4, browser print / Save as PDF; order number = invoice number; USD + KHR at the order-date rate), print many at once from the orders list (tick up to 50), customers print their own invoice from My orders. Fix 2026-10-13 (`fix/returned-order-documents`, both repos): a fully returned order no longer says "Collect on delivery"; it shows a "Returned · refunded" stamp. Bulk status done 2026-10-13 (`feature/bulk-order-status`, both repos): tick up to 50 orders → Change status (processing, shipped or delivered; cancel stays one at a time), optional note for every timeline, each order changes on its own with the usual email; the ones that cannot move are listed with the reason and stay ticked. Delivery notes done 2026-10-14 (`feature/delivery-notes`, both repos). Still open in this item: a "packed" step (a new order status needs a migration: ask first).
-- [ ] Stock: stock history per book (who changed what), low-stock threshold per book, restock entries, "out of stock" handling.
-- [ ] Books: CSV import/export, bulk price/stock/category edits, image upload checks, drafts and scheduled publishing.
-- [ ] Customers: notes, tags, lifetime value, order history, deactivate/reactivate, resend verification.
-- [ ] Coupons and returns: usage reports, refund records. Usage report and refunds by reason done 2026-10-15 (Reports → Coupons & refunds). Still open: a refund record per return in the admin (who refunded, how, when).
+- [x] Stock: stock history per book (who changed what), restock entries with admin-only unit cost, running balance and movements audit ledger. **Done 2026-10-16** (`feature/stock-history-restock`, both repos).
+- [x] Books: CSV import/export with preview and validation, bulk publishing status edits, drafts and scheduled publishing with automatic live activation. **Done 2026-10-16** (`feature/book-publishing-bulk-csv`, both repos).
+- [x] Customers: notes, tags, lifetime spend restricted to admins, order history, resend verification. **Done 2026-10-16** (`feature/customer-notes-tags`, both repos).
+- [x] Coupons and returns: usage reports, refund records per return in admin (method, amount, reference, notes) and customer store credit coupons. **Done 2026-10-16** (`feature/refund-records`, both repos).
 - [x] Staff: granular permissions per role, active sessions with "sign out everywhere", login history. **Done 2026-10-16** (`feature/staff-permissions-sessions`, both repos).
 - [x] **Strict delete security** (owner's rule) for anything that deletes: admin only; re-enter password **and** a 2FA code; type the item's name to confirm; soft delete into a **Trash** with 30-day restore; full audit entry with before/after values; a Telegram message to the owner on every delete. Admin account closing done 2026-10-14 (`feature/admin-close-account`, both repos). The typed email and open orders are now checked before the 2FA code, so a typo no longer uses up the code (backend `fix/close-account-check-order`). Books strict delete and 30-day Trash retention done 2026-10-16 (`feature/strict-delete-trash`, both repos).
 - [ ] Telegram notice to the owner **and staff** (a staff Telegram group, owner 2026-10-08) for each new order, with the order details and a link to it in the admin; also for low stock. The Bookly bot can post there (add it to the group). The Bookly Alerts bot (Phase 2) can be reused for the staff group.
@@ -85,21 +85,21 @@ every day, then growth, then looks.
 - [ ] **Khmer language** (Khmer / English switch) on the storefront and emails. Storefront done 2026-10-14: first slice (frontend `feature/khmer-language`), then every other storefront page (`feature/khmer-pages`: account, sign-in & security, sign-up/verify/password reset, orders, returns, reviews, addresses, wishlist, cart, checkout, confirmation, catalogue, filters, book page, home, About, Contact, 404, toasts and form messages; dates in Khmer; staff area and printed documents stay English). Still open:
   - [ ] Native-speaker review of `src/i18n/km.ts` (draft; owner's step).
   - [ ] Help and legal pages (FAQ, Shipping, Returns policy, Privacy, Terms) are English with a Khmer "English for now" note: translate with a human translator (legal wording).
-  - [ ] Customer emails in Khmer (store the customer's language; backend).
-  - [ ] The API's own messages are English (errors like "The return window for this order has closed.", order timeline notes, rate-limit texts): send `Accept-Language` and translate on the backend.
+  - [x] Customer emails in Khmer (store the customer's language; backend). **Done 2026-10-16** (`feature/khmer-emails-api`, both repos).
+  - [x] The API's own messages are English (errors like "The return window for this order has closed.", order timeline notes, rate-limit texts): send `Accept-Language` and translate on the backend. **Done 2026-10-16** (`feature/khmer-emails-api`, both repos).
   - [ ] Book data (titles, categories, descriptions) is shown as entered; Khmer titles need a field per language if the shop wants them.
   - [ ] Long Khmer headings need a space between phrases to wrap (kept in mind in km.ts; check new strings at 390 px).
 - [ ] Delivery: fees per province, estimated delivery date, free-delivery threshold.
 - [ ] Payments: card and KHQR stay "coming soon" until the owner gives the provider keys (ABA PayWay / Bakong); then a separate plan.
-- [ ] "Tell me when it's back" for out-of-stock books; recently viewed; "customers also bought".
-- [ ] Newsletter sign-up (with unsubscribe) for new arrivals.
+- [x] "Tell me when it's back" for out-of-stock books; recently viewed; "customers also bought" (with capped marketing outbox). **Done 2026-10-16** (`feature/back-in-stock-also-bought`, both repos).
+- [x] Newsletter sign-up (with unsubscribe, double opt-in confirmation, and admin campaigns) for new arrivals. **Done 2026-10-16** (`feature/newsletter`, both repos).
 
 - [ ] Search: known limits (2026-10-13)
   - [x] ISBN and SKU are not searchable in the shop search (customers may type an ISBN). **Done 2026-10-14** (backend `feature/search-isbn-sku`; search page hint in `feature/search-isbn-hint`).
   - [x] Half-typed words match unstemmed only in titles; in descriptions and names a half-typed word can briefly match nothing ("runni" vs "run"). **Done 2026-10-15** (backend `fix/search-half-typed-words`: unstemmed 'simple' dictionary added for descriptions, series, and categories).
-  - [ ] Khmer text has no spaces, so it matches only from the start of a phrase (handle with the Khmer language item).
+  - [x] Khmer text has no spaces: pg_trgm trigram substring search + zero-width space stripping. **Done 2026-10-16** (`feature/khmer-search`, both repos).
   - [ ] The search limit is 60/min per IP for visitors who are not signed in; many phones behind one mobile-network IP share it: watch 429s in Sentry.
-  - [ ] Not browser-checked: search in dark mode and the mobile-menu search field (same component).
+  - [x] Browser-checked: search in dark mode and the mobile-menu search field (highlight & accessible listbox). **Done 2026-10-16** (`feature/khmer-search`, both repos).
 
 ## Phase 5 · Found on Google, fast, legal
 - [ ] Pre-rendered HTML for public pages (phone performance above 90, link previews per book).
@@ -124,8 +124,7 @@ every day, then growth, then looks.
   - [x] Anchor `CORS_ALLOWED_ORIGIN_PATTERNS` regex to prevent domain suffix bypasses (backend `fix/cors-pattern-anchors`).
   - [x] Notice email on staff password reset via `SafeNotifier` (backend `fix/staff-reset-notice`).
   - [x] `Rich` text link pattern restricted to single leading slash not followed by `/` or `\` (frontend `fix/rich-link-pattern`).
-  - [x] Ignore local `.env` files in git (frontend `chore/ignore-env-files`).
-  - [ ] Still open (low, not chosen yet): `/health` shows queue/Telegram details to anyone; Swagger UI from a CDN without SRI on `/docs`; dev-only npm advisories (Vitest 5 / shadcn); `/api/report` (Sentry tunnel) has no rate limit; Telegram-only accounts can't close themselves (bug); staff see a customer's lifetime spend (decide if "money numbers admin only" covers it).
+  - [x] Security leftovers: `/health` status-only for public with admin-only detailed `/admin/health`; Swagger UI 5.17.14 SRI integrity hashes; `/api/report` Sentry tunnel rate limiting (30/min per IP) and payload cap (200 KB); passwordless/Telegram customer account closure; staff lifetime spend restricted to admins. **Done 2026-10-16** (`fix/security-leftovers` and `feature/customer-notes-tags`, both repos).
 - [x] Load test the busiest pages: k6 script ramping to 30 VUs over 2 minutes on catalog and search endpoints (backend `chore/load-test-script`); baseline run recorded in `load/RESULTS.md` (backend `chore/load-test-results`).
 
 - [ ] Checks never done in a real browser so far (unit tests only): dashboard Today/30 days switch on real data and dark mode; the real Telegram app and Facebook sign-in (needs real accounts).
