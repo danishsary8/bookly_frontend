@@ -32,6 +32,7 @@ import { ConfirmDialog } from "@/components/ui/dialog";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { StrictDeleteDialog } from "@/features/admin/StrictDeleteDialog";
 import { AuthorPicker } from "@/features/admin/books/AuthorPicker";
 import {
   bookDefaults,
@@ -551,24 +552,9 @@ function DangerZone({ book }: { book: StaffBook }) {
     else
       void queryClient.invalidateQueries({ queryKey: staffKeys.book(book.id) });
     void queryClient.invalidateQueries({ queryKey: ["staff", "books"] });
+    void queryClient.invalidateQueries({ queryKey: ["staff", "trash"] });
     void queryClient.invalidateQueries({ queryKey: ["catalog"] });
   };
-  const remove = useMutation({
-    mutationFn: () => staffApi.deleteBook(book.id),
-    onSuccess: () => {
-      toast.success({
-        title: `"${book.title}" deleted`,
-        description: "It's in Deleted books if you need it back.",
-      });
-      done();
-    },
-    onError: (error) =>
-      toast.error({
-        title: "Couldn't delete the book",
-        description: ApiError.from(error).message,
-      }),
-    onSettled: () => setConfirm(false),
-  });
   const restore = useMutation({
     mutationFn: () => staffApi.restoreBook(book.id),
     onSuccess: (saved) => {
@@ -602,8 +588,8 @@ function DangerZone({ book }: { book: StaffBook }) {
       ) : (
         <>
           <p className="text-[15px] text-muted-foreground">
-            Removes the book from the shop. Past orders keep it, and you can
-            restore it later.
+            Moves the book to the Trash for 30 days. Past orders keep it, and you can
+            restore it at any time.
           </p>
           <Button
             variant="outline"
@@ -614,14 +600,21 @@ function DangerZone({ book }: { book: StaffBook }) {
           </Button>
         </>
       )}
-      <ConfirmDialog
+      <StrictDeleteDialog
         open={confirm}
         onOpenChange={setConfirm}
-        title={`Delete "${book.title}"?`}
-        description="It disappears from the shop straight away. Past orders keep it, and an admin can restore it from Deleted books."
-        confirmLabel="Delete book"
-        loading={remove.isPending}
-        onConfirm={() => remove.mutate()}
+        title={`Strict delete "${book.title}"`}
+        itemName={book.title}
+        entityLabel="book"
+        description="Moves the book to the Trash for 30 days. To prevent accidental deletion, verify your administrator identity below."
+        onConfirm={(payload) => staffApi.deleteBook(book.id, payload)}
+        onSuccess={() => {
+          toast.success({
+            title: `"${book.title}" moved to trash`,
+            description: "It can be restored from the Trash for 30 days.",
+          });
+          done();
+        }}
       />
     </Panel>
   );

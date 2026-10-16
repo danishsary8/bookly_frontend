@@ -3402,6 +3402,81 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff/trash": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** (admin) List items in trash with 30-day restore countdown */
+        get: {
+            parameters: {
+                query?: {
+                    type?: "books" | "authors" | "categories" | "publishers" | "series";
+                    page?: number;
+                    per_page?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Trashed catalog items */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/trash/{type}/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** (admin) Restore a soft-deleted catalog item from trash */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    type: string;
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Restored successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/staff/books/{id}/variants": {
         parameters: {
             query?: never;
@@ -6199,7 +6274,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** (admin) List newsletter campaigns */
+        /**
+         * (admin) List newsletter campaigns
+         * @description Paginated, newest first. Each campaign has `status` (draft|sending|sent), `recipients_total` and `sent_count` (emails that have really gone out; the outbox sends at most MARKETING_DAILY_LIMIT a day). A campaign becomes `sent` when its last email has gone out.
+         */
         get: {
             parameters: {
                 query?: never;

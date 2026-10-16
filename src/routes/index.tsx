@@ -57,6 +57,7 @@ const MembersAdminPage = lazy(() => import("../pages/admin/MembersAdminPage"));
 const ExchangeRatesPage = lazy(() => import("../pages/admin/ExchangeRatesPage"));
 const AuditLogPage = lazy(() => import("../pages/admin/AuditLogPage"));
 const NewsletterAdminPage = lazy(() => import("../pages/admin/NewsletterAdminPage"));
+const TrashAdminPage = lazy(() => import("../pages/admin/TrashAdminPage"));
 const NewsletterConfirmPage = lazy(() => import("../pages/NewsletterConfirmPage"));
 const NewsletterUnsubscribePage = lazy(() => import("../pages/NewsletterUnsubscribePage"));
 const ShippingPage = lazy(() => import("../pages/content/ShippingPage"));
@@ -195,6 +196,7 @@ const AppRoutes = () => {
                 <Route path="members" element={<MembersAdminPage />} />
                 <Route path="exchange-rates" element={<ExchangeRatesPage />} />
                 <Route path="audit-log" element={<AuditLogPage />} />
+                <Route path="trash" element={<TrashAdminPage />} />
               </Route>
             </Route>
           </Route>

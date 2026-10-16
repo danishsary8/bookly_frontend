@@ -218,6 +218,20 @@ export type SeriesInput = { name?: string; description?: string | null };
 type LookupOf<K extends LookupKind> = K extends "authors" ? Author : K extends "categories" ? Category : K extends "publishers" ? Publisher : Series;
 type LookupInputOf<K extends LookupKind> = K extends "authors" ? AuthorInput : K extends "categories" ? CategoryInput : K extends "publishers" ? PublisherInput : SeriesInput;
 
+export interface StrictDeletePayload {
+  confirm: string;
+  password: string;
+  code: string;
+}
+
+export interface TrashItem {
+  id: number;
+  type: "book" | "author" | "category" | "publisher" | "series";
+  name: string;
+  deleted_at: string;
+  days_until_purge: number;
+}
+
 export interface StockItem {
   id: number;
   book_id: number;
@@ -282,6 +296,7 @@ export const staffKeys = {
   book: (id: number) => ["staff", "book", id] as const,
   stock: (params: object) => ["staff", "stock", toQueryParams(params)] as const,
   stockHistory: (variantId: number, params: object) => ["staff", "variants", variantId, "history", toQueryParams(params)] as const,
+  trash: (params: object) => ["staff", "trash", toQueryParams(params)] as const,
   notifications: () => ["staff", "notifications"] as const,
 };
 
@@ -312,7 +327,8 @@ export const staffApi = {
   book: (id: number) => api.get<Resource<StaffBook>>(`/staff/books/${id}`).then((r) => r.data),
   createBook: (input: BookInput) => api.post<Resource<StaffBook>>("/staff/books", input).then((r) => r.data),
   updateBook: (id: number, input: BookInput) => api.patch<Resource<StaffBook>>(`/staff/books/${id}`, input).then((r) => r.data),
-  deleteBook: (id: number) => api.delete(`/staff/books/${id}`),
+  deleteBook: (id: number, payload?: StrictDeletePayload) =>
+    api.delete(`/staff/books/${id}`, { data: payload }),
   restoreBook: (id: number) => api.post<Resource<StaffBook>>(`/staff/books/${id}/restore`, {}).then((r) => r.data),
   bulkUpdateBooks: (input: BulkBooksInput) =>
     api.post<Resource<{ updated_count: number; items: Array<{ id: number; title: string; status: BookStatus; success: boolean }> }>>("/staff/books/bulk", input).then((r) => r.data),
@@ -341,10 +357,16 @@ export const staffApi = {
   stockHistory: (variantId: number, params: { page?: number; per_page?: number } = {}) =>
     api.get<Paginated<InventoryMovementItem>>(`/staff/variants/${variantId}/stock-history`, { params: toQueryParams(params) }),
 
+  trash: (params: { type?: string; page?: number; per_page?: number } = {}) =>
+    api.get<Paginated<TrashItem>>("/staff/trash", { params: toQueryParams(params) }),
+  restoreTrash: (type: string, id: number) =>
+    api.post<{ message: string; item: { id: number; type: string; name: string } }>(`/staff/trash/${type}/${id}/restore`, {}),
+
   createLookup: <K extends LookupKind>(kind: K, input: LookupInputOf<K>) => api.post<Resource<LookupOf<K>>>(`/staff/${kind}`, input).then((r) => r.data),
   updateLookup: <K extends LookupKind>(kind: K, id: number, input: LookupInputOf<K>) =>
     api.patch<Resource<LookupOf<K>>>(`/staff/${kind}/${id}`, input).then((r) => r.data),
-  deleteLookup: (kind: LookupKind, id: number) => api.delete(`/staff/${kind}/${id}`),
+  deleteLookup: (kind: LookupKind, id: number, payload?: StrictDeletePayload) =>
+    api.delete(`/staff/${kind}/${id}`, { data: payload }),
 };
 
 export const staffQueries = {
@@ -362,4 +384,6 @@ export const staffQueries = {
     queryOptions({ queryKey: staffKeys.stock(params), queryFn: () => staffApi.stock(params), placeholderData: keepPreviousData }),
   stockHistory: (variantId: number, params: Parameters<typeof staffApi.stockHistory>[1] = {}) =>
     queryOptions({ queryKey: staffKeys.stockHistory(variantId, params), queryFn: () => staffApi.stockHistory(variantId, params), placeholderData: keepPreviousData }),
+  trash: (params: Parameters<typeof staffApi.trash>[0] = {}) =>
+    queryOptions({ queryKey: staffKeys.trash(params), queryFn: () => staffApi.trash(params), placeholderData: keepPreviousData }),
 };

@@ -379,7 +379,11 @@ describe("lookups", () => {
     expect(await screen.findByText("Author added")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Delete Arthur Conan Doyle" }));
-    await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Delete author" }));
+    const deleteDialog = screen.getByRole("dialog");
+    await user.type(within(deleteDialog).getByLabelText(/Type .* to confirm/), "Arthur Conan Doyle");
+    await user.type(within(deleteDialog).getByLabelText("Your password"), "admin-password");
+    await user.type(within(deleteDialog).getByLabelText("Two-step authentication code"), "123456");
+    await user.click(within(deleteDialog).getByRole("button", { name: "Strict delete" }));
     expect(await screen.findByText(/linked to 5 book/)).toBeInTheDocument();
   });
 });
