@@ -597,8 +597,8 @@ export const km: Translations = {
     verifiedPurchase: "ការទិញដែលបានផ្ទៀងផ្ទាត់",
   },
   signin: {
-    welcomeBack: "សូមស្វាគមន៍ការត្រឡប់មកវិញ",
-    welcomeBackName: (name: string) => `សូមស្វាគមន៍ការត្រឡប់មកវិញ ${name}`,
+    welcomeBack: "សូមស្វាគមន៍ ការត្រឡប់មកវិញ",
+    welcomeBackName: (name: string) => `សូមស្វាគមន៍ ការត្រឡប់មកវិញ ${name}`,
     welcome: "សូមស្វាគមន៍មកកាន់ Bookly",
     welcomeName: (name: string) => `សូមស្វាគមន៍ ${name}`,
     loginLead: "បន្តពីកន្លែងដែលអ្នកបានឈប់៖ កន្ត្រក សៀវភៅដែលបានរក្សាទុក និងការបញ្ជាទិញរបស់អ្នក។",
@@ -1214,7 +1214,7 @@ export const km: Translations = {
     backToHome: "ត្រឡប់ទៅទំព័រដើម",
   },
   telegramUpdates: {
-    title: "ការជូនដំណឹងការបញ្ជាទិញតាម Telegram",
+    title: "ការជូនដំណឹង ការបញ្ជាទិញតាម Telegram",
     lead: "ទទួលបានការជូនដំណឹងភ្លាមៗតាម Telegram ពេលសៀវភៅរបស់អ្នកត្រូវបានរៀបចំ បញ្ជូនចេញ ឬប្រគល់ជូន។",
     connected: "បានភ្ជាប់ជាមួយ Telegram",
     notConnected: "មិនទាន់បានភ្ជាប់",
