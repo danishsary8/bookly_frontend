@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { EmptyState } from "@/components/EmptyState";
 import { CartGate } from "@/features/cart/CartGate";
 import { CartLineItem } from "@/features/cart/CartLineItem";
+import { FreeShippingBar } from "@/components/cart/FreeShippingBar";
 import { useCartMutations, useUsableCart } from "@/features/cart/useCart";
 import { buttonVariants } from "@/components/ui/button";
 import { Drawer, DrawerBody, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -74,6 +75,7 @@ function CartSummary() {
 
   return (
     <DrawerFooter className="grid gap-4">
+      <FreeShippingBar subtotalUsd={cart.data.subtotal_usd} />
       <div className="flex items-baseline justify-between">
         <span className="font-semibold">{t.subtotal}</span>
         <span className="text-lg font-semibold tabular-nums">{formatMoney(cart.data.subtotal_usd, cart.data.subtotal_khr, currency)}</span>

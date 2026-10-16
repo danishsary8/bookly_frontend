@@ -37,6 +37,9 @@ export type OrderItem = NonNullable<Order["items"]>[number];
 export type ReturnRequest = Schemas["Return"];
 /** What an invoice or packing slip prints (KHR at the rate in force when the order was placed). */
 export type OrderDocument = Schemas["OrderDocument"];
+export type EstimatedDelivery = Schemas["EstimatedDelivery"];
+export type DeliveryProvince = Schemas["DeliveryProvince"];
+export type DeliveryOptionsData = Schemas["DeliveryOptionsData"];
 
 /** Laravel resource collection with pagination. */
 export interface Paginated<T> {
