@@ -921,7 +921,7 @@ export const en = {
     cod: "Cash on delivery",
     codLead: "Pay when it arrives",
     delivery: "Delivery in Cambodia",
-    deliveryLead: "Fee shown at checkout",
+    deliveryLead: "1–2 days Phnom Penh · 2–3 days provinces (free over $50)",
     returns: "Easy returns",
     returnsLead: "On printed books",
     notFoundDoc: "Book not found",

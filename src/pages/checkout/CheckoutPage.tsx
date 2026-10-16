@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Lock, TicketPercent } from "lucide-react";
+import { AlertTriangle, Lock, TicketPercent, Truck } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { accountQueries } from "@/api/endpoints/account";
 import { cartApi, cartKeys, cartQueries } from "@/api/endpoints/cart";
@@ -8,6 +8,7 @@ import { newIdempotencyKey } from "@/api/client";
 import { ApiError } from "@/api/errors";
 import type { Amount, Order } from "@/api/types";
 import { PageHeader } from "@/components/catalog/PageHeader";
+import { FreeShippingBar } from "@/components/cart/FreeShippingBar";
 import { CoverThumb } from "@/components/CoverThumb";
 import { CtaGlare } from "@/components/CtaGlare";
 import { FormAlert } from "@/components/form/FormAlert";
@@ -171,6 +172,22 @@ export default function CheckoutPage() {
           <Step n={1} title={shipsSomething ? dict.checkout.deliveryAddress : k.contactAddress}>
             {!shipsSomething ? <p className="-mt-2 text-sm text-muted-foreground">{k.digitalOnly}</p> : null}
             {addresses.isError ? <ErrorState error={addresses.error} onRetry={() => addresses.refetch()} headingLevel="h3" showHomeLink={false} /> : <AddressPicker addresses={list} value={addressId} onChange={setChosenAddress} />}
+            {shipsSomething && data?.estimated_delivery ? (
+              <div className="mt-3 flex items-center gap-2.5 rounded-lg border border-border bg-surface-1 px-3 py-2 text-sm text-foreground">
+                <Truck className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                <div>
+                  <span className="font-semibold">
+                    {data.province_name ? `${data.province_name} · ` : ""}
+                    {data.estimated_delivery.formatted}
+                  </span>
+                  {data.is_free_shipping ? (
+                    <span className="ml-2 inline-flex items-center rounded bg-success-tint px-1.5 py-0.5 text-xs font-semibold uppercase text-success">
+                      Free delivery
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
             <TextAreaField
               label={k.deliveryNote}
               optional
@@ -246,6 +263,13 @@ export default function CheckoutPage() {
               </p>
             )}
 
+            {data ? (
+              <FreeShippingBar
+                subtotalUsd={Number(data.subtotal?.usd || 0) - Number(data.discount?.usd || 0)}
+                thresholdUsd={data.free_shipping_threshold?.usd}
+              />
+            ) : null}
+
             {preview.isPending || (preview.isFetching && !data) ? (
               <SkeletonGroup label={k.workingOut} className="grid gap-2">
                 <Skeleton className="h-5" />
@@ -263,6 +287,11 @@ export default function CheckoutPage() {
                     label={
                       <span className="text-muted-foreground">
                         {k.delivery}{data.delivery_area ? ` (${data.delivery_area === "phnom_penh" ? k.phnomPenh : k.provinces})` : ""}
+                        {data.is_free_shipping ? (
+                          <span className="ml-2 inline-flex items-center rounded bg-success-tint px-1.5 py-0.5 text-xs font-semibold uppercase text-success">
+                            Free
+                          </span>
+                        ) : null}
                       </span>
                     }
                     amount={data.shipping_fee}
@@ -273,6 +302,12 @@ export default function CheckoutPage() {
                   <dd className="text-2xl font-semibold tabular-nums">{formatMoney(data.total?.usd, data.total?.khr, currency)}</dd>
                 </div>
               </dl>
+              {data.estimated_delivery ? (
+                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Truck className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
+                  <span>Est. delivery: {data.estimated_delivery.formatted}</span>
+                </p>
+              ) : null}
               <p className="text-sm text-muted-foreground">{k.payCourier}</p>
               </>
             ) : null}

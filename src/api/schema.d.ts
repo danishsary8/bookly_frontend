@@ -598,6 +598,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/delivery/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Delivery policy, free delivery threshold and Cambodia provinces rates */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Delivery options */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["DeliveryOptionsData"];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/register": {
         parameters: {
             query?: never;
@@ -6845,6 +6883,62 @@ export interface components {
                 [key: string]: number;
             };
         };
+        EstimatedDelivery: {
+            /** @example 1 */
+            days_min?: number;
+            /** @example 2 */
+            days_max?: number;
+            /** @example 1 working day */
+            delivery_time_en?: string;
+            /** @example ១ ថ្ងៃធ្វើការ */
+            delivery_time_km?: string;
+            /**
+             * Format: date
+             * @example 2026-10-17
+             */
+            earliest_date?: string;
+            /**
+             * Format: date
+             * @example 2026-10-19
+             */
+            latest_date?: string;
+            /** @example 1 working day (Sat, 17 Oct) */
+            formatted?: string;
+        };
+        DeliveryProvince: {
+            /** @example phnom_penh */
+            code?: string;
+            /** @example Phnom Penh */
+            name_en?: string;
+            /** @example ភ្នំពេញ */
+            name_km?: string;
+            /** @enum {string} */
+            area?: "phnom_penh" | "provinces";
+            fee_usd?: components["schemas"]["Money"];
+            fee_khr?: components["schemas"]["Riel"];
+            /** @example 1 */
+            days_min?: number;
+            /** @example 2 */
+            days_max?: number;
+            /** @example 1 working day */
+            delivery_time_en?: string;
+            /** @example ១ ថ្ងៃធ្វើការ */
+            delivery_time_km?: string;
+        };
+        DeliveryOptionsData: {
+            free_shipping?: {
+                threshold_usd?: components["schemas"]["Money"];
+                threshold_khr?: components["schemas"]["Riel"];
+                is_active?: boolean;
+            };
+            shipping_fees?: {
+                phnom_penh_usd?: components["schemas"]["Money"];
+                phnom_penh_khr?: components["schemas"]["Riel"];
+                provinces_usd?: components["schemas"]["Money"];
+                provinces_khr?: components["schemas"]["Riel"];
+            };
+            provinces?: components["schemas"]["DeliveryProvince"][];
+        };
         CheckoutPreview: {
             subtotal?: components["schemas"]["Amount"];
             discount?: components["schemas"]["Amount"];
@@ -6860,6 +6954,12 @@ export interface components {
              */
             delivery_area?: "phnom_penh" | "provinces" | null;
             can_checkout?: boolean;
+            is_free_shipping?: boolean;
+            free_shipping_threshold?: components["schemas"]["Amount"];
+            amount_needed_for_free_shipping?: components["schemas"]["Amount"];
+            province_code?: string | null;
+            province_name?: string | null;
+            estimated_delivery?: components["schemas"]["EstimatedDelivery"];
         };
         CouponCheck: {
             code?: string;
@@ -7044,6 +7144,8 @@ export interface components {
             shipping_address?: components["schemas"]["AddressInput"];
             can_cancel?: boolean;
             delivery_note?: string | null;
+            is_free_shipping?: boolean;
+            estimated_delivery?: components["schemas"]["EstimatedDelivery"];
             status_history?: {
                 status?: string;
                 note?: string | null;
@@ -7267,6 +7369,9 @@ export type SchemaPublisher = components['schemas']['Publisher'];
 export type SchemaSeries = components['schemas']['Series'];
 export type SchemaSeriesDetail = components['schemas']['SeriesDetail'];
 export type SchemaRatingSummary = components['schemas']['RatingSummary'];
+export type SchemaEstimatedDelivery = components['schemas']['EstimatedDelivery'];
+export type SchemaDeliveryProvince = components['schemas']['DeliveryProvince'];
+export type SchemaDeliveryOptionsData = components['schemas']['DeliveryOptionsData'];
 export type SchemaCheckoutPreview = components['schemas']['CheckoutPreview'];
 export type SchemaCouponCheck = components['schemas']['CouponCheck'];
 export type SchemaTokenResponse = components['schemas']['TokenResponse'];

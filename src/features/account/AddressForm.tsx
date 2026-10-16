@@ -8,6 +8,7 @@ import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { applyApiErrors } from "@/lib/forms";
+import { CAMBODIA_PROVINCES } from "@/lib/provinces";
 import { addressSchema, type AddressValues } from "./schemas";
 import { useT } from "@/i18n";
 
@@ -55,7 +56,7 @@ type Props = {
 export function AddressForm({ address, defaults, hideDefaultToggle, onSaved, onCancel, submitLabel }: Props) {
   const [formError, setFormError] = useState<string | null>(null);
   const alertRef = useRef<HTMLDivElement>(null);
-  const { dict } = useT();
+  const { dict, lang } = useT();
   const t = dict.addresses;
   const { register, control, handleSubmit, setError, formState } = useForm<AddressValues>({
     resolver: zodResolver(addressSchema),
@@ -91,7 +92,24 @@ export function AddressForm({ address, defaults, hideDefaultToggle, onSaved, onC
       <TextField label={t.line2} optional autoComplete="shipping address-line2" error={errors.address_line2?.message} {...register("address_line2")} />
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField label={t.city} autoComplete="shipping address-level2" placeholder={t.cityPlaceholder} error={errors.city?.message} {...register("city")} />
-        <TextField label={t.state} optional autoComplete="shipping address-level1" error={errors.state?.message} {...register("state")} />
+        <div>
+          <TextField
+            label={t.state}
+            optional
+            autoComplete="shipping address-level1"
+            list="cambodia-provinces"
+            placeholder="Phnom Penh, Siem Reap..."
+            error={errors.state?.message}
+            {...register("state")}
+          />
+          <datalist id="cambodia-provinces">
+            {CAMBODIA_PROVINCES.map((p) => (
+              <option key={p.code} value={lang === "km" ? p.nameKm : p.nameEn}>
+                {p.nameEn} ({p.nameKm})
+              </option>
+            ))}
+          </datalist>
+        </div>
         <TextField label={t.postal} optional autoComplete="shipping postal-code" inputMode="numeric" error={errors.postal_code?.message} {...register("postal_code")} />
         <TextField label={t.country} autoComplete="shipping country-name" error={errors.country?.message} {...register("country")} />
       </div>

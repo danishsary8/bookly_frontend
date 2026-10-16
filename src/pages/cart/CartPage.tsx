@@ -3,6 +3,7 @@ import { AlertTriangle, ArrowRight, ShoppingBag, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { CouponCheck } from "@/api/types";
 import { BookShelf } from "@/components/catalog/BookShelf";
+import { FreeShippingBar } from "@/components/cart/FreeShippingBar";
 import { PageHeader } from "@/components/catalog/PageHeader";
 import { CtaGlare } from "@/components/CtaGlare";
 import { EmptyState } from "@/components/EmptyState";
@@ -46,6 +47,7 @@ function Summary() {
       <h2 id="summary-title" className="font-display text-[1.563rem] leading-tight">
         {c.summary}
       </h2>
+      <FreeShippingBar subtotalUsd={discount ? discount.total_before_shipping_usd : data.subtotal_usd} />
       <CouponField cartVersion={cartVersion} onChecked={setCheck} />
       <dl className="grid gap-2 border-t border-border pt-4 text-[15px]">
         <div className="flex justify-between gap-4">

@@ -66,6 +66,12 @@ export default function OrderConfirmationPage() {
           <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
             <OrderStatusBadge status={o.status} />
             {o.placed_at ? <span>{k.placed(new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(o.placed_at)))}</span> : null}
+            {o.estimated_delivery ? (
+              <span className="flex items-center gap-1.5 font-medium text-foreground">
+                <Truck className="size-4 text-primary" aria-hidden="true" />
+                Est. delivery: {o.estimated_delivery.formatted}
+              </span>
+            ) : null}
           </div>
         </header>
 

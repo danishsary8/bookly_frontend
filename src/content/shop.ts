@@ -14,6 +14,7 @@ export const shop = {
 
 export const policy = {
   shippingFeesUsd: { phnomPenh: "1.50", provinces: "3.00" },
+  freeShippingThresholdUsd: "50.00",
   returnWindowDays: 3,
   timezone: "Asia/Phnom_Penh",
 } as const;

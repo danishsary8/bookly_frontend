@@ -434,3 +434,21 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   - Comprehensive Vitest test suite (`src/pages/admin/staff-security.test.tsx`, 6 tests covering all flows).
   - Verified: `npm run typecheck`, `npm run lint` (0 errors, 0 warnings), vitest (all passed), `npm run build` (production build clean).
 
+## Phase 4 · Delivery fees per province, estimated delivery date, and free-delivery threshold (branch `feature/delivery-province-fees`)
+- [x] Delivery fees per province, estimated delivery date range, and free delivery threshold:
+  - Regenerated `src/api/schema.d.ts` and `src/api/types.ts` from backend OpenAPI spec (`EstimatedDelivery`, `DeliveryProvince`, `DeliveryOptionsData`, updated `CheckoutPreview` and `Order`).
+  - Added `src/api/endpoints/delivery.ts` with `deliveryApi.options()` and `deliveryQueries.options()` for public options lookup.
+  - Added `src/lib/provinces.ts` defining all 25 provinces/capital of Cambodia with English & Khmer names, aliases, delivery time ranges, and `findProvince()` lookup helper.
+  - Added `src/components/cart/FreeShippingBar.tsx`: visual animated progress bar indicating remaining amount needed to reach free delivery threshold ("Add $X.XX more for FREE delivery") or celebratory badge when unlocked ("You've unlocked FREE delivery! 🎉"), localized in English and Khmer.
+  - Integrated `FreeShippingBar` into both `CartDrawer` and `CartPage`.
+  - Added province datalist autocomplete to `AddressForm` for all 25 provinces in the State/Province field.
+  - Enhanced `CheckoutPage`:
+    - Shows `FreeShippingBar` in order summary.
+    - Displays estimated delivery card in Step 1 (province name, business day window, date range, free delivery badge).
+    - Displays estimated delivery timeline in the order summary sidebar.
+  - Enhanced `OrderConfirmationPage`: displays estimated arrival date/time badge in header.
+  - Updated English and Khmer i18n copy (`deliveryLead`) highlighting free delivery over $50.
+  - Added comprehensive test suite `src/pages/checkout/delivery-province-fees.test.tsx` (4 tests verifying provinces metadata, progress bar states, checkout with free delivery & dates, and order confirmation).
+  - Verified: `npm run typecheck`, `npm run lint` (0 errors, 0 warnings), vitest (all passed), `npm run build` (production build clean).
+
+
