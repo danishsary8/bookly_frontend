@@ -2,7 +2,7 @@ import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { api } from "../client";
 import { toQueryParams } from "./catalog";
 import type { Order, OrderDocument, OrderStatus, Paginated, Resource, ReturnRequest } from "../types";
-import type { StaffRole, StaffUser } from "./staff";
+import type { StaffLoginHistoryItem, StaffRole, StaffUser } from "./staff";
 
 /*
  * Staff operations (phase 9b): orders, returns, reviews, coupons, customers, staff
@@ -157,6 +157,7 @@ export const opsKeys = {
   customerNotes: (id: number) => ["staff", "customer", id, "notes"] as const,
   customerTags: (q?: string) => ["staff", "customer-tags", q ?? ""] as const,
   members: (f: object) => ["staff", "members", toQueryParams(f)] as const,
+  memberLoginHistory: (id: number, params: object = {}) => ["staff", "members", id, "login-history", toQueryParams(params)] as const,
   rates: (page: number) => ["staff", "rates", page] as const,
   audit: (f: object) => ["staff", "audit", toQueryParams(f)] as const,
 };
@@ -222,12 +223,16 @@ export const opsApi = {
     api.post<Resource<StaffCustomer>>(`/staff/customers/${id}/${active ? "activate" : "deactivate"}`, {}).then((r) => r.data),
 
   members: (f: MemberFilters = {}) => api.get<Paginated<StaffMember>>("/staff/members", { params: toQueryParams({ ...f, active: bool(f.active) }) }),
-  inviteMember: (input: { name: string; email: string; role: StaffRole }) => api.post<Resource<StaffMember>>("/staff/members", input).then((r) => r.data),
-  updateMember: (id: number, input: { name?: string; role?: StaffRole }) => api.patch<Resource<StaffMember>>(`/staff/members/${id}`, input).then((r) => r.data),
+  inviteMember: (input: { name: string; email: string; role: StaffRole; permissions?: string[] }) =>
+    api.post<Resource<StaffMember>>("/staff/members", input).then((r) => r.data),
+  updateMember: (id: number, input: { name?: string; role?: StaffRole; permissions?: string[] }) =>
+    api.patch<Resource<StaffMember>>(`/staff/members/${id}`, input).then((r) => r.data),
   setMemberActive: (id: number, active: boolean) =>
     api.post<Resource<StaffMember>>(`/staff/members/${id}/${active ? "activate" : "deactivate"}`, {}).then((r) => r.data),
   resetMemberTwoFactor: (id: number) => api.post<Resource<StaffMember>>(`/staff/members/${id}/reset-two-factor`, {}).then((r) => r.data),
   resendInvitation: (id: number) => api.post<{ message: string }>(`/staff/members/${id}/resend-invitation`, {}),
+  memberLoginHistory: (id: number, params: { page?: number; per_page?: number } = {}) =>
+    api.get<Paginated<StaffLoginHistoryItem>>(`/staff/members/${id}/login-history`, { params: toQueryParams(params) }),
 
   rates: (page = 1) => api.get<{ data: ExchangeRate[]; meta: Meta & { current_rate: string | null } }>("/staff/exchange-rates", { params: { page } }),
   addRate: (rate: string, effective_at?: string) => api.post<Resource<ExchangeRate>>("/staff/exchange-rates", { rate, ...(effective_at ? { effective_at } : {}) }).then((r) => r.data),
@@ -249,6 +254,8 @@ export const opsQueries = {
   customerNotes: (id: number) => queryOptions({ queryKey: opsKeys.customerNotes(id), queryFn: () => opsApi.customerNotes(id) }),
   customerTagSuggestions: (q?: string) => queryOptions({ queryKey: opsKeys.customerTags(q), queryFn: () => opsApi.customerTagSuggestions(q) }),
   members: (f: MemberFilters) => queryOptions({ queryKey: opsKeys.members(f), queryFn: () => opsApi.members(f), placeholderData: keepPreviousData }),
+  memberLoginHistory: (id: number, params: { page?: number; per_page?: number } = {}) =>
+    queryOptions({ queryKey: opsKeys.memberLoginHistory(id, params), queryFn: () => opsApi.memberLoginHistory(id, params), placeholderData: keepPreviousData }),
   rates: (page: number) => queryOptions({ queryKey: opsKeys.rates(page), queryFn: () => opsApi.rates(page), placeholderData: keepPreviousData }),
   audit: (f: AuditFilters) => queryOptions({ queryKey: opsKeys.audit(f), queryFn: () => opsApi.audit(f), placeholderData: keepPreviousData }),
 };
