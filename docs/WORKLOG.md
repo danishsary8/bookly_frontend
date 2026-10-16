@@ -469,3 +469,20 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
     - Added test in `content-pages.test.tsx` verifying Khmer translation rendering without missing key fallbacks.
   - Verification:
     - Full test suite: 391 tests passing in Vitest; ESLint 0 errors 0 warnings; TypeScript clean; production Vite build clean.
+
+- [x] Sign-in Phone Toggle UI, Packing Slip Polish, Khmer Typography, & Static HTML Pre-rendering (2026-10-16, branch `feature/shop-completeness-and-seo`):
+  - Sign-in Phone Toggle UI:
+    - Replaced top bulky "Continue with Telegram" button in `LoginPage.tsx` with clean inline toggle under the form switching between email+password and phone number mode.
+    - Added localized strings `signInWithPhone`, `signInWithEmail`, and `phoneSignInLead` in `en.ts` and `km.ts`.
+    - Preserved bottom 'coming soon' social buttons fallback when social login providers are not configured.
+  - Packing Slip Visibility Polish:
+    - In `OrderAdminPage.tsx`, restricted packing slip print button to active fulfillment orders only (hidden for `cancelled`, `delivered`, and `returned` orders).
+    - Updated `admin-ops.test.tsx` testing that non-active orders hide the button while active processing orders show it.
+  - Khmer Mobile Typography & Word-Break:
+    - Added `:lang(km)` styles in `src/index.css` for `overflow-wrap: break-word`, `word-break: break-word`, and line-height on headings (`h1`–`h4`, `.font-display`) preventing horizontal overflow on 390px viewports.
+    - Inserted phrase spaces into long Khmer headings in `km.ts` for clean wrapping.
+  - Static Pre-rendered HTML Snapshots:
+    - In `scripts/seo.ts`, added Vite post-bundle hook (`closeBundle()`) to generate static HTML snapshots for `/shipping`, `/returns-policy`, `/terms`, `/privacy`, `/about`, `/contact`, and `/faq`.
+    - Injects route-specific titles, meta descriptions, OpenGraph tags, canonical links, and semantic `<main>` articles into `#root` for search crawler indexing without JS.
+  - Verification:
+    - TypeScript clean (`npm run typecheck`), ESLint clean (0 errors, 0 warnings), Vitest clean (391 tests passing), production build clean (`npm run build`).
