@@ -449,6 +449,23 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   - Enhanced `OrderConfirmationPage`: displays estimated arrival date/time badge in header.
   - Updated English and Khmer i18n copy (`deliveryLead`) highlighting free delivery over $50.
   - Added comprehensive test suite `src/pages/checkout/delivery-province-fees.test.tsx` (4 tests verifying provinces metadata, progress bar states, checkout with free delivery & dates, and order confirmation).
-  - Verified: `npm run typecheck`, `npm run lint` (0 errors, 0 warnings), vitest (all passed), `npm run build` (production build clean).
-
-
+  - Verified: `npm run typecheck`, `npm run lint` (0 errors, 0 warnings), vitest (all passed), `npm run build` (production build clean).- [x] Shop completeness, SEO, image upload processing, customer Telegram updates, and policy alignment (2026-10-16, branch `feature/shop-completeness-and-seo`):
+  - SEO, Dynamic OpenGraph Meta, Twitter Cards, and JSON-LD Structured Data:
+    - Added `JsonLd.tsx` structured data injector rendering Schema.org compliant schemas (`WebSite`, `Organization`, `Book`, `Product`, `Person`, `BreadcrumbList`).
+    - Added OpenGraph & Twitter Cards meta tags dynamically across catalog, book details, author pages, and marketing screens via `useDocumentTitle`.
+  - Image Upload Validation & Processing with Dropzone:
+    - Built reusable `ImageUploadField.tsx` with drag-and-drop file upload, client-side dimension pre-validation (100x100 to 4000x4000), 5MB size limit, progress bar, cover preview, and manual URL fallback.
+    - Integrated into `VariantDialog.tsx` for book variant covers.
+    - Unit tests in `src/lib/imageValidation.test.ts` (10 tests passing).
+  - Customer Real-Time Order Updates via Telegram Bot:
+    - Regenerated `src/api/schema.d.ts` from backend OpenAPI spec.
+    - Added `TelegramOrderUpdatesCard.tsx` on Profile page with real-time status polling when linking bot, notification preference toggle, and disconnect option.
+    - Added Telegram order updates callout prompt on `OrderConfirmationPage`.
+    - Added localized strings in English and Khmer (`src/i18n/en.ts`, `src/i18n/km.ts`).
+    - Component unit tests in `src/features/account/TelegramOrderUpdatesCard.test.tsx` (4 tests passing).
+  - Bilingual Legal & Policy Pages:
+    - Updated `src/content/shop.ts` policies: return window set to 7 days, account erasure set to 30 days, delivery rules documented across all 25 provinces.
+    - Converted `ShippingPage.tsx`, `ReturnsPolicyPage.tsx`, `TermsPage.tsx`, and `PrivacyPage.tsx` to 100% bilingual English and Khmer, removing the temporary "English for now" notice.
+    - Added test in `content-pages.test.tsx` verifying Khmer translation rendering without missing key fallbacks.
+  - Verification:
+    - Full test suite: 391 tests passing in Vitest; ESLint 0 errors 0 warnings; TypeScript clean; production Vite build clean.
