@@ -4368,6 +4368,56 @@ export interface paths {
         };
         trace?: never;
     };
+    "/staff/media/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload and securely validate a media image (book cover, author photo)
+         * @description Validates file format (JPEG, PNG, WebP), magic bytes, dimensions (100x100 to 4000x4000), and file size (max 5 MB). Returns public URL and dimensions.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /**
+                         * Format: binary
+                         * @description Image file (max 5 MB)
+                         */
+                        image: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Uploaded media */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UploadedMedia"];
+                    };
+                };
+                422: components["responses"]["Validation"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/staff/orders": {
         parameters: {
             query?: never;
@@ -6834,6 +6884,16 @@ export interface components {
             to?: number | null;
             path?: string;
         };
+        UploadedMedia: {
+            /** Format: uri */
+            url: string;
+            path: string;
+            filename: string;
+            width: number;
+            height: number;
+            size_bytes: number;
+            mime: string;
+        };
         PageLinks: {
             first?: string | null;
             last?: string | null;
@@ -7361,6 +7421,7 @@ export type SchemaValidationError = components['schemas']['ValidationError'];
 export type SchemaMoney = components['schemas']['Money'];
 export type SchemaRiel = components['schemas']['Riel'];
 export type SchemaPageMeta = components['schemas']['PageMeta'];
+export type SchemaUploadedMedia = components['schemas']['UploadedMedia'];
 export type SchemaPageLinks = components['schemas']['PageLinks'];
 export type SchemaAmount = components['schemas']['Amount'];
 export type SchemaAuthor = components['schemas']['Author'];

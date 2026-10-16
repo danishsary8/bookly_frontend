@@ -40,6 +40,7 @@ export type OrderDocument = Schemas["OrderDocument"];
 export type EstimatedDelivery = Schemas["EstimatedDelivery"];
 export type DeliveryProvince = Schemas["DeliveryProvince"];
 export type DeliveryOptionsData = Schemas["DeliveryOptionsData"];
+export type UploadedMedia = Schemas["UploadedMedia"];
 
 /** Laravel resource collection with pagination. */
 export interface Paginated<T> {

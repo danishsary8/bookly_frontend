@@ -7,8 +7,10 @@ import { SelectField, TextField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ImageUploadField } from "@/components/ui/ImageUploadField";
 import { Switch } from "@/components/ui/switch";
 import { FORMATS } from "@/lib/catalog";
+import { validateImageUrl } from "@/lib/imageValidation";
 
 const DIGITAL = new Set(["ebook", "audiobook"]);
 type Values = { format: string; sku: string; isbn: string; price_usd: string; stock_quantity: string; low_stock_threshold: string; cover_image_url: string; is_active: boolean };
@@ -35,7 +37,10 @@ function check(v: Values, digital: boolean): Errors {
     if (!/^\d+$/.test(v.stock_quantity.trim())) e.stock_quantity = "Enter a whole number, 0 or more.";
     if (!/^\d+$/.test(v.low_stock_threshold.trim())) e.low_stock_threshold = "Enter a whole number, 0 or more.";
   }
-  if (v.cover_image_url.trim() && !/^https?:\/\/\S+$/.test(v.cover_image_url.trim())) e.cover_image_url = "Enter a full web address starting with https://.";
+  if (v.cover_image_url.trim()) {
+    const check = validateImageUrl(v.cover_image_url);
+    if (!check.ok) e.cover_image_url = check.error;
+  }
   return e;
 }
 
@@ -140,7 +145,13 @@ export function VariantDialog({
               </>
             )}
           </div>
-          <TextField label="Cover image URL" optional type="url" value={values.cover_image_url} onChange={(e) => set({ cover_image_url: e.target.value })} error={errors.cover_image_url} />
+          <ImageUploadField
+            label="Cover image"
+            optional
+            value={values.cover_image_url}
+            onChange={(url) => set({ cover_image_url: url })}
+            error={errors.cover_image_url}
+          />
           <label className="flex min-h-11 items-center justify-between gap-4 rounded-md border border-border px-4 py-2">
             <span className="grid">
               <span className="font-semibold">On sale</span>
