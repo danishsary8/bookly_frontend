@@ -486,3 +486,18 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
     - Injects route-specific titles, meta descriptions, OpenGraph tags, canonical links, and semantic `<main>` articles into `#root` for search crawler indexing without JS.
   - Verification:
     - TypeScript clean (`npm run typecheck`), ESLint clean (0 errors, 0 warnings), Vitest clean (391 tests passing), production build clean (`npm run build`).
+
+- [x] Full-Stack Code Review & Quality Audit (2026-10-17, branch `feature/shop-completeness-and-seo`):
+  - Checkout & Order Confirmation Complete Localization:
+    - In `src/i18n/en.ts` and `src/i18n/km.ts`, added `estDelivery`, `telegramUpdatesTitle`, `telegramUpdatesDesc`, `manage`, and `freeBadge` keys under `checkoutPage`.
+    - Localized "Free" delivery badge in `CheckoutPage.tsx` order summary.
+    - Localized estimated delivery dates in `CheckoutPage.tsx` and `OrderConfirmationPage.tsx`.
+    - Localized Telegram instant order notifications promo banner and "Manage" button in `OrderConfirmationPage.tsx`.
+  - Type Safety:
+    - Added guarded parameter handling in `estDelivery` for `string | undefined`.
+  - Verification:
+    - TypeScript clean (`npm run typecheck` - 0 errors).
+    - ESLint clean (`npm run lint` - 0 errors, 0 warnings).
+    - Vitest clean (391 passed across 61 test files).
+    - Production build clean (`npm run build` - 0 errors).
+
