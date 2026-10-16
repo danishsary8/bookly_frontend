@@ -12,6 +12,10 @@ export type PageMeta = {
   image?: string | null;
   /** Keep the page out of search results (search results, private pages). */
   noindex?: boolean;
+  /** OpenGraph type (e.g. "website", "book", "profile"). Defaults to "website". */
+  type?: "website" | "book" | "article" | "profile";
+  /** Optional price information for products/books in link previews. */
+  price?: { amount: string | number; currency: string } | null;
 };
 
 /** Sets an attribute on a <meta>/<link> in <head>, creating it if needed; null removes the tag. */
@@ -36,26 +40,56 @@ const clip = (text: string) => {
 
 /**
  * Sets the tab title to "{title} · Bookly" (pass "Bookly" for Home) while the page is shown,
- * plus the description, canonical link and share tags. Search engines run the app and read
- * these; link previews in chat apps don't run it and use the defaults in index.html.
- * On leaving, it resets the title only if it is still this page's: during a page transition the
- * next page has usually set its own title before this one unmounts.
+ * plus the description, canonical link and share tags (OpenGraph and Twitter Cards).
  */
-export function useDocumentTitle(title: string | null | undefined, { description, image, noindex = false }: PageMeta = {}) {
+export function useDocumentTitle(
+  title: string | null | undefined,
+  { description, image, noindex = false, type = "website", price }: PageMeta = {},
+) {
   useEffect(() => {
     if (!title) return;
     const own = title === SITE ? DEFAULT_TITLE : `${title} · ${SITE}`;
     const text = description ? clip(description) : DEFAULT_DESCRIPTION;
+    const url = window.location.origin + window.location.pathname;
+
     document.title = own;
     setHead("meta", "name", "description", "content", text);
     setHead("meta", "property", "og:title", "content", own);
     setHead("meta", "property", "og:description", "content", text);
-    if (defaultImage === undefined) defaultImage = document.head.querySelector('meta[property="og:image"]')?.getAttribute("content") ?? null;
-    setHead("meta", "property", "og:image", "content", image ?? defaultImage);
+    setHead("meta", "property", "og:type", "content", type);
+    setHead("meta", "property", "og:site_name", "content", SITE);
+    setHead("meta", "property", "og:url", "content", url);
+
+    if (defaultImage === undefined) {
+      defaultImage = document.head.querySelector('meta[property="og:image"]')?.getAttribute("content") ?? null;
+    }
+    const finalImage = image ?? defaultImage;
+    setHead("meta", "property", "og:image", "content", finalImage);
+
+    // Twitter Card metadata
+    setHead("meta", "name", "twitter:card", "content", finalImage ? "summary_large_image" : "summary");
+    setHead("meta", "name", "twitter:title", "content", own);
+    setHead("meta", "name", "twitter:description", "content", text);
+    setHead("meta", "name", "twitter:image", "content", finalImage);
+
+    // Optional price metadata for book / product shares
+    if (price && price.amount) {
+      setHead("meta", "property", "product:price:amount", "content", String(price.amount));
+      setHead("meta", "property", "product:price:currency", "content", price.currency);
+      setHead("meta", "property", "og:price:amount", "content", String(price.amount));
+      setHead("meta", "property", "og:price:currency", "content", price.currency);
+    } else {
+      setHead("meta", "property", "product:price:amount", "content", null);
+      setHead("meta", "property", "product:price:currency", "content", null);
+      setHead("meta", "property", "og:price:amount", "content", null);
+      setHead("meta", "property", "og:price:currency", "content", null);
+    }
+
     setHead("meta", "name", "robots", "content", noindex ? "noindex" : null);
-    setHead("link", "rel", "canonical", "href", noindex ? null : window.location.origin + window.location.pathname);
+    setHead("link", "rel", "canonical", "href", noindex ? null : url);
+
     return () => {
       if (document.title === own) document.title = DEFAULT_TITLE;
     };
-  }, [title, description, image, noindex]);
+  }, [title, description, image, noindex, type, price]);
 }

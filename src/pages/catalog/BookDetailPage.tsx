@@ -24,6 +24,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
 import { withNext } from "@/lib/forms";
@@ -314,11 +315,55 @@ export default function BookDetailPage() {
   const showSkeleton = useSkeletonVisible(query.isPending && !shown);
   const recentOthers = useRecentlyViewed(bookId);
   const alsoBought = useQuery({ ...catalogQueries.alsoBought(bookId), enabled: valid });
+  const primaryVariant = book?.variants?.[0];
   useDocumentTitle(shown?.title ?? (query.isError ? b.notFoundDoc : null), {
     description: book ? book.description || b.metaBy(book.title ?? "", (book.authors ?? []).map((a) => a.name).join(", ")) : null,
     image: shown?.cover_image_url,
     noindex: query.isError,
+    type: "book",
+    price: primaryVariant?.price_usd ? { amount: primaryVariant.price_usd, currency: "USD" } : null,
   });
+
+  const jsonLdData = book
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Book",
+        name: book.title,
+        description: book.description || undefined,
+        image: shown?.cover_image_url || undefined,
+        author: (book.authors ?? []).map((a) => ({
+          "@type": "Person",
+          name: a.name,
+        })),
+        isbn: primaryVariant?.isbn || undefined,
+        numberOfPages: book.page_count || undefined,
+        bookFormat:
+          primaryVariant?.format === "hardcover"
+            ? "https://schema.org/Hardcover"
+            : primaryVariant?.format === "ebook"
+              ? "https://schema.org/EBook"
+              : "https://schema.org/Paperback",
+        ...(book.rating_avg && book.review_count
+          ? {
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: book.rating_avg,
+                reviewCount: book.review_count,
+              },
+            }
+          : {}),
+        offers: {
+          "@type": "Offer",
+          price: primaryVariant?.price_usd ?? book.price_from_usd ?? "0.00",
+          priceCurrency: "USD",
+          availability:
+            primaryVariant && primaryVariant.in_stock !== false
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+          url: typeof window !== "undefined" ? window.location.href : undefined,
+        },
+      }
+    : null;
 
   const firstAuthor = book?.authors?.[0];
   const byAuthor = useQuery({ ...catalogQueries.books({ author_id: firstAuthor?.id, per_page: 9 }), enabled: Boolean(firstAuthor?.id) });
@@ -369,6 +414,8 @@ export default function BookDetailPage() {
           { label: shown?.title ?? b.book },
         ]}
       />
+
+      {jsonLdData ? <JsonLd data={jsonLdData} /> : null}
 
       {!shown ? (
         showSkeleton ? (

@@ -7,6 +7,7 @@ import { CatalogBrowser } from "@/components/catalog/CatalogBrowser";
 import { NotFoundState } from "@/components/catalog/NotFoundState";
 import { PageHeader } from "@/components/catalog/PageHeader";
 import { ErrorState } from "@/components/ui/error-state";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useT } from "@/i18n";
 
@@ -16,7 +17,21 @@ export default function AuthorPage() {
   const author = useQuery({ ...catalogQueries.author(id), enabled: valid });
   const { dict } = useT();
   const p = dict.pages;
-  useDocumentTitle(author.data?.name, { description: author.data?.bio || (author.data ? p.authorMeta(author.data.name ?? "") : null), image: author.data?.photo_url });
+  useDocumentTitle(author.data?.name, {
+    description: author.data?.bio || (author.data ? p.authorMeta(author.data.name ?? "") : null),
+    image: author.data?.photo_url,
+    type: "profile",
+  });
+
+  const jsonLdData = author.data
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        name: author.data.name,
+        description: author.data.bio || undefined,
+        image: author.data.photo_url || undefined,
+      }
+    : null;
 
   if (!valid || (author.isError && ApiError.from(author.error).kind === "not_found")) {
     return <NotFoundState what={p.whatAuthor} backTo="/authors" backLabel={p.allAuthors} />;
@@ -26,6 +41,7 @@ export default function AuthorPage() {
   const name = author.data?.name;
   return (
     <div className="container-shell pb-16">
+      {jsonLdData ? <JsonLd data={jsonLdData} /> : null}
       <PageHeader
         crumbs={[{ label: p.home, to: "/" }, { label: p.authors, to: "/authors" }, { label: name ?? p.author }]}
         eyebrow={p.author}
