@@ -400,6 +400,6 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   (`src/lib/shopTime.ts`), a passed schedule can be kept when editing, bulk edit shows what changed and refuses >100 formats.
 - Newsletter footer sends the Turnstile token (sign-ups failed on the live site without it), real progress "X of Y sent",
   daily limit from the API; account cards translated, error state for stock alerts; `/api/report` counts bytes.
-- Verified: lint, typecheck, 368 unit tests, build; browser check against the local API (refund flow, coupons, account
+- Verified: lint, typecheck, 364 unit tests (3 skipped), build; browser check against the local API (refund flow, coupons, account
   store credits light/dark 390 px, CSV import, schedule with the browser in New York time, newsletter admin, footer
   sign-up) with axe: all passed. Not verified: real Turnstile and Resend on the live site, Khmer wording (native review).
