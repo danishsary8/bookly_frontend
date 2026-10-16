@@ -121,9 +121,15 @@ describe("orders", () => {
     await waitFor(() => expect(set).toHaveBeenCalledWith(7, "shipped", "Via J&T"));
   });
 
-  it("opens the packing slip and invoice in a new tab, but no packing slip for a cancelled order", async () => {
+  it("opens the packing slip and invoice in a new tab, but hides packing slip for cancelled, delivered, or returned orders", async () => {
     signIn(staff);
-    vi.spyOn(opsApi, "order").mockResolvedValueOnce(order).mockResolvedValueOnce({ ...order, id: 8, status: "cancelled", allowed_next_statuses: [] } as StaffOrder);
+    vi.spyOn(opsApi, "order")
+      .mockResolvedValueOnce(order)
+      .mockResolvedValueOnce({ ...order, id: 8, status: "cancelled", allowed_next_statuses: [] } as StaffOrder)
+      .mockResolvedValueOnce({ ...order, id: 9, status: "delivered", allowed_next_statuses: [] } as StaffOrder)
+      .mockResolvedValueOnce({ ...order, id: 10, status: "returned", allowed_next_statuses: [] } as StaffOrder);
+
+    // Active order (processing): shows packing slip and invoice
     const first = app("/admin/orders/7");
     const slip = await screen.findByRole("link", { name: "Packing slip" });
     expect(slip).toHaveAttribute("href", "/admin/print?doc=packing-slip&ids=7&autoprint=1");
@@ -131,7 +137,20 @@ describe("orders", () => {
     expect(screen.getByRole("link", { name: "Invoice" })).toHaveAttribute("href", "/admin/print?doc=invoice&ids=7&autoprint=1");
     first.unmount();
 
-    app("/admin/orders/8");
+    // Cancelled order: no packing slip
+    const second = app("/admin/orders/8");
+    expect(await screen.findByRole("link", { name: "Invoice" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Packing slip" })).not.toBeInTheDocument();
+    second.unmount();
+
+    // Delivered order: no packing slip
+    const third = app("/admin/orders/9");
+    expect(await screen.findByRole("link", { name: "Invoice" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Packing slip" })).not.toBeInTheDocument();
+    third.unmount();
+
+    // Returned order: no packing slip
+    app("/admin/orders/10");
     expect(await screen.findByRole("link", { name: "Invoice" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Packing slip" })).not.toBeInTheDocument();
   });

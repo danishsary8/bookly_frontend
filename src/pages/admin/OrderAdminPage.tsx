@@ -219,8 +219,8 @@ export default function OrderAdminPage() {
               <Ban aria-hidden="true" /> Cancel order
             </Button>
           ) : null}
-          {/* Open in a new tab: the sheet prints from there and this page stays as it was. */}
-          {o.status !== "cancelled" ? (
+          {/* Packing slips are for active fulfillment: hidden for cancelled, delivered, and returned orders. */}
+          {o.status !== "cancelled" && o.status !== "delivered" && o.status !== "returned" ? (
             <Link to={staffPrintPath("packing-slip", [o.id!])} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline" })}>
               <Printer aria-hidden="true" /> Packing slip
             </Link>
