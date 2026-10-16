@@ -403,3 +403,12 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
 - Verified: lint, typecheck, 364 unit tests (3 skipped), build; browser check against the local API (refund flow, coupons, account
   store credits light/dark 390 px, CSV import, schedule with the browser in New York time, newsletter admin, footer
   sign-up) with axe: all passed. Not verified: real Turnstile and Resend on the live site, Khmer wording (native review).
+
+## Phase 3 · Strict delete security & 30-day Trash retention (branch `feature/strict-delete-trash`)
+- [x] Strict delete security and 30-day trash retention for catalog entities (books, authors, categories, publishers, series):
+  - Universal `StrictDeleteDialog` modal enforcing admin-only deletion: requires matching the item's name, confirming current admin password, and entering a 6-digit TOTP code.
+  - Integrated into `BookEditPage` (Danger Zone) and `LookupPage` (authors, categories, publishers, series deletion).
+  - Dedicated `/admin/trash` page (`TrashAdminPage`) with filtering tabs (all items, books, authors, categories, publishers, series), 30-day countdown retention badges, empty states, and one-click restore.
+  - Added Trash navigation item in `adminNav` under Catalogue (admin-only).
+  - Regenerated API schema types from backend OpenAPI contract.
+  - Verified: `npm run typecheck`, `npm run lint`, `npx vitest run` (364 passed, 3 skipped), `npm run build`.

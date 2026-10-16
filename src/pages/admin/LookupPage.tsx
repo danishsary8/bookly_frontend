@@ -9,11 +9,12 @@ import { EmptyState } from "@/components/EmptyState";
 import { TextAreaField, TextField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog, Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ErrorState } from "@/components/ui/error-state";
 import { Pagination } from "@/components/ui/pagination";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { StrictDeleteDialog } from "@/features/admin/StrictDeleteDialog";
 import { LOOKUPS, type LookupRow } from "@/features/admin/lookups";
 import { useStaff } from "@/features/admin/staffSession";
 import { rangeSummary } from "@/lib/pagination";
@@ -149,16 +150,6 @@ export default function LookupPage({ kind }: { kind: LookupKind }) {
     placeholderData: (previous) => previous,
   });
 
-  const remove = useMutation({
-    mutationFn: (row: LookupRow) => staffApi.deleteLookup(kind, row.id),
-    onSuccess: (_r, row) => {
-      toast.success(`"${row.name}" deleted`);
-      void queryClient.invalidateQueries({ queryKey: ["catalog"] });
-    },
-    onError: (error) => toast.error({ title: `Couldn't delete the ${config.singular.toLowerCase()}`, description: ApiError.from(error).message }),
-    onSettled: () => setDeleting(null),
-  });
-
   const meta = list.data?.meta;
   const rows = list.data?.rows ?? [];
   const search = (event: FormEvent) => {
@@ -254,14 +245,22 @@ export default function LookupPage({ kind }: { kind: LookupKind }) {
       {meta ? <Pagination page={meta.current_page ?? 1} lastPage={meta.last_page ?? 1} hrefFor={hrefFor} /> : null}
 
       {editing ? <LookupDialog key={editing === "new" ? "new" : editing.id} kind={kind} row={editing === "new" ? null : editing} onClose={() => setEditing(null)} /> : null}
-      <ConfirmDialog
+      <StrictDeleteDialog
         open={Boolean(deleting)}
         onOpenChange={(open) => !open && setDeleting(null)}
-        title={`Delete "${deleting?.name ?? ""}"?`}
-        description={`Only ${config.title.toLowerCase()} that no book uses can be deleted, including hidden and deleted books.`}
-        confirmLabel={`Delete ${config.singular.toLowerCase()}`}
-        loading={remove.isPending}
-        onConfirm={() => deleting && remove.mutate(deleting)}
+        title={`Strict delete "${deleting?.name ?? ""}"`}
+        itemName={deleting?.name ?? ""}
+        entityLabel={config.singular.toLowerCase()}
+        description={`Moves this ${config.singular.toLowerCase()} to the Trash for 30 days. Only ${config.title.toLowerCase()} that no book uses can be deleted.`}
+        onConfirm={(payload) => (deleting ? staffApi.deleteLookup(kind, deleting.id, payload) : Promise.resolve())}
+        onSuccess={() => {
+          if (deleting) {
+            toast.success(`"${deleting.name}" moved to trash`);
+            void queryClient.invalidateQueries({ queryKey: ["catalog"] });
+            void queryClient.invalidateQueries({ queryKey: ["staff", "trash"] });
+            setDeleting(null);
+          }
+        }}
       />
     </AdminPage>
   );
