@@ -6,6 +6,8 @@ export interface NewsletterSummary {
   pending: number;
   unsubscribed: number;
   total: number;
+  /** Newsletter + back-in-stock emails sent per day at most (MARKETING_DAILY_LIMIT). */
+  daily_limit: number;
 }
 
 export interface NewsletterCampaign {
@@ -23,6 +25,8 @@ export interface NewsletterCampaign {
     email: string;
   } | null;
   recipients_total: number;
+  /** Emails of this campaign that have really gone out (the list endpoint only). */
+  sent_count?: number;
   sent_at: string | null;
   created_at: string;
   updated_at: string;

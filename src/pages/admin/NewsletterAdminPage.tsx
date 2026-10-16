@@ -44,25 +44,28 @@ export default function NewsletterAdminPage() {
 
   // Summary
   const { data: summary, isLoading: isSummaryLoading } = useQuery(
-    newsletterQueries.summary()
+    newsletterQueries.summary(),
   );
 
   // Campaigns list
   const { data: campaignsData, isLoading: isCampaignsLoading } = useQuery(
-    newsletterQueries.campaigns(page)
+    newsletterQueries.campaigns(page),
   );
 
   // Modal states
   const [editorOpen, setEditorOpen] = useState(false);
-  const [editingCampaign, setEditingCampaign] = useState<NewsletterCampaign | null>(null);
+  const [editingCampaign, setEditingCampaign] =
+    useState<NewsletterCampaign | null>(null);
 
   // Send confirm dialog
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
-  const [campaignToSend, setCampaignToSend] = useState<NewsletterCampaign | null>(null);
+  const [campaignToSend, setCampaignToSend] =
+    useState<NewsletterCampaign | null>(null);
 
   // Delete confirm dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [campaignToDelete, setCampaignToDelete] = useState<NewsletterCampaign | null>(null);
+  const [campaignToDelete, setCampaignToDelete] =
+    useState<NewsletterCampaign | null>(null);
 
   // Mutations
   const testSendMutation = useMutation({
@@ -97,7 +100,11 @@ export default function NewsletterAdminPage() {
   });
 
   const confirmedCount = summary?.confirmed ?? 0;
-  const estimatedDays = Math.ceil(confirmedCount / 60) || 1;
+  const dailyLimit = summary?.daily_limit ?? 60;
+  const estimatedDays = Math.max(
+    1,
+    Math.ceil(confirmedCount / Math.max(1, dailyLimit)),
+  );
 
   return (
     <AdminPage
@@ -123,7 +130,7 @@ export default function NewsletterAdminPage() {
             <span className="text-sm font-medium text-muted-foreground">
               Confirmed subscribers
             </span>
-            <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400" />
+            <CheckCircle2 className="size-5 text-success" aria-hidden="true" />
           </div>
           <div className="mt-3 text-2xl font-bold tracking-tight text-foreground">
             {isSummaryLoading ? "…" : summary?.confirmed.toLocaleString()}
@@ -138,7 +145,7 @@ export default function NewsletterAdminPage() {
             <span className="text-sm font-medium text-muted-foreground">
               Pending confirmation
             </span>
-            <Clock className="size-5 text-amber-600 dark:text-amber-400" />
+            <Clock className="size-5 text-warning" aria-hidden="true" />
           </div>
           <div className="mt-3 text-2xl font-bold tracking-tight text-foreground">
             {isSummaryLoading ? "…" : summary?.pending.toLocaleString()}
@@ -185,7 +192,8 @@ export default function NewsletterAdminPage() {
           <h2 className="text-lg font-semibold text-foreground">Campaigns</h2>
           {campaignsData?.total !== undefined && (
             <span className="text-xs text-muted-foreground">
-              {campaignsData.total} {campaignsData.total === 1 ? "campaign" : "campaigns"}
+              {campaignsData.total}{" "}
+              {campaignsData.total === 1 ? "campaign" : "campaigns"}
             </span>
           )}
         </div>
@@ -197,26 +205,41 @@ export default function NewsletterAdminPage() {
           </div>
         ) : !campaignsData?.data?.length ? (
           <div className="rounded-xl border border-border bg-card p-12 text-center text-sm text-muted-foreground">
-            No newsletter campaigns created yet. Click &ldquo;New campaign&rdquo; to draft one.
+            No newsletter campaigns created yet. Click &ldquo;New
+            campaign&rdquo; to draft one.
           </div>
         ) : (
           <TableCard minWidth={640}>
             <thead className={thead}>
               <tr>
-                <th scope="col" className={th}>Subject</th>
-                <th scope="col" className={th}>Status</th>
-                <th scope="col" className={th}>Recipients</th>
-                <th scope="col" className={th}>Created</th>
-                <th scope="col" className={th}>Actions</th>
+                <th scope="col" className={th}>
+                  Subject
+                </th>
+                <th scope="col" className={th}>
+                  Status
+                </th>
+                <th scope="col" className={th}>
+                  Recipients
+                </th>
+                <th scope="col" className={th}>
+                  Created
+                </th>
+                <th scope="col" className={th}>
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {campaignsData.data.map((c: NewsletterCampaign) => (
                 <tr key={c.id} className="hover:bg-muted/30">
                   <td className={td}>
-                    <div className="font-medium text-foreground">{c.subject_en}</div>
+                    <div className="font-medium text-foreground">
+                      {c.subject_en}
+                    </div>
                     {c.subject_km && (
-                      <div className="text-xs text-muted-foreground">{c.subject_km}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {c.subject_km}
+                      </div>
                     )}
                   </td>
                   <td className={td}>
@@ -236,7 +259,7 @@ export default function NewsletterAdminPage() {
                   <td className={td}>
                     {c.status === "draft"
                       ? `Est. ${confirmedCount} subscribers`
-                      : `${c.recipients_total} sent`}
+                      : `${c.sent_count ?? 0} of ${c.recipients_total} sent`}
                   </td>
                   <td className={td}>
                     <span className="text-xs text-muted-foreground">
@@ -297,7 +320,9 @@ export default function NewsletterAdminPage() {
                         </>
                       )}
                       {c.status !== "draft" && (
-                        <span className="text-xs text-muted-foreground">Sent</span>
+                        <span className="text-xs text-muted-foreground">
+                          Sent
+                        </span>
                       )}
                     </div>
                   </td>
@@ -315,7 +340,9 @@ export default function NewsletterAdminPage() {
           onOpenChange={setEditorOpen}
           campaign={editingCampaign}
           onSaved={() => {
-            void queryClient.invalidateQueries({ queryKey: newsletterKeys.all });
+            void queryClient.invalidateQueries({
+              queryKey: newsletterKeys.all,
+            });
             setEditorOpen(false);
           }}
         />
@@ -327,7 +354,8 @@ export default function NewsletterAdminPage() {
           <DialogHeader>
             <DialogTitle>Send newsletter campaign</DialogTitle>
             <DialogDescription>
-              Are you sure you want to broadcast this campaign to confirmed subscribers?
+              Are you sure you want to broadcast this campaign to confirmed
+              subscribers?
             </DialogDescription>
           </DialogHeader>
 
@@ -337,15 +365,24 @@ export default function NewsletterAdminPage() {
                 {campaignToSend?.subject_en}
               </div>
               <div className="mt-2 text-xs text-muted-foreground">
-                Recipients: <span className="font-semibold text-foreground">{confirmedCount}</span> confirmed subscribers.
+                Recipients:{" "}
+                <span className="font-semibold text-foreground">
+                  {confirmedCount}
+                </span>{" "}
+                confirmed subscribers.
               </div>
               <div className="mt-1 text-xs text-muted-foreground">
-                Daily marketing limit: <span className="font-semibold text-foreground">60</span> emails/day.
+                Daily marketing limit:{" "}
+                <span className="font-semibold text-foreground">
+                  {dailyLimit}
+                </span>{" "}
+                emails/day (sign-in codes and order emails are not counted).
               </div>
-              <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+              <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-warning">
                 <AlertTriangle className="size-4 shrink-0" />
                 <span>
-                  About {estimatedDays} {estimatedDays === 1 ? "day" : "days"} to reach everyone at the 60/day limit.
+                  About {estimatedDays} {estimatedDays === 1 ? "day" : "days"}{" "}
+                  to reach everyone at the {dailyLimit}/day limit.
                 </span>
               </div>
             </div>
@@ -364,7 +401,9 @@ export default function NewsletterAdminPage() {
             </Button>
             <Button
               variant="default"
-              onClick={() => campaignToSend && sendMutation.mutate(campaignToSend.id)}
+              onClick={() =>
+                campaignToSend && sendMutation.mutate(campaignToSend.id)
+              }
               disabled={sendMutation.isPending}
               className="gap-2"
             >
@@ -390,7 +429,8 @@ export default function NewsletterAdminPage() {
           <DialogHeader>
             <DialogTitle>Delete draft campaign</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &ldquo;{campaignToDelete?.subject_en}&rdquo;?
+              Are you sure you want to delete &ldquo;
+              {campaignToDelete?.subject_en}&rdquo;?
             </DialogDescription>
           </DialogHeader>
 
@@ -404,7 +444,9 @@ export default function NewsletterAdminPage() {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => campaignToDelete && deleteMutation.mutate(campaignToDelete.id)}
+              onClick={() =>
+                campaignToDelete && deleteMutation.mutate(campaignToDelete.id)
+              }
               disabled={deleteMutation.isPending}
             >
               {deleteMutation.isPending ? "Deleting…" : "Delete campaign"}
@@ -437,7 +479,7 @@ function CampaignEditorDialog({
   const [bodyEn, setBodyEn] = useState(campaign?.body_en ?? "");
   const [bodyKm, setBodyKm] = useState(campaign?.body_km ?? "");
   const [selectedBookIds, setSelectedBookIds] = useState<number[]>(
-    campaign?.book_ids ?? []
+    campaign?.book_ids ?? [],
   );
 
   // Book search
@@ -482,9 +524,13 @@ function CampaignEditorDialog({
 
   const handleAddBook = (book: { id?: number; title?: string }) => {
     if (!book.id || !book.title) return;
-    if (selectedBookIds.includes(book.id) || selectedBookIds.length >= 12) return;
+    if (selectedBookIds.includes(book.id) || selectedBookIds.length >= 12)
+      return;
     setSelectedBookIds([...selectedBookIds, book.id]);
-    setSelectedBooksMap([...selectedBooksMap, { id: book.id, title: book.title }]);
+    setSelectedBooksMap([
+      ...selectedBooksMap,
+      { id: book.id, title: book.title },
+    ]);
     setSearchQuery("");
   };
 
@@ -497,9 +543,12 @@ function CampaignEditorDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit campaign" : "New campaign"}</DialogTitle>
+          <DialogTitle>
+            {isEditing ? "Edit campaign" : "New campaign"}
+          </DialogTitle>
           <DialogDescription>
-            Compose campaign content in English (required) and Khmer (optional fallback to English).
+            Compose campaign content in English (required) and Khmer (optional
+            fallback to English).
           </DialogDescription>
         </DialogHeader>
 
@@ -507,7 +556,10 @@ function CampaignEditorDialog({
           {/* Subjects */}
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="grid gap-1.5">
-              <label htmlFor="campaign-subject-en" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <label
+                htmlFor="campaign-subject-en"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              >
                 Subject (English) <span className="text-destructive">*</span>
               </label>
               <input
@@ -515,21 +567,28 @@ function CampaignEditorDialog({
                 type="text"
                 required
                 value={subjectEn}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setSubjectEn(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setSubjectEn(e.target.value)
+                }
                 placeholder="e.g. New Arrivals & Monthly Recommendations"
                 className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
 
             <div className="grid gap-1.5">
-              <label htmlFor="campaign-subject-km" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <label
+                htmlFor="campaign-subject-km"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              >
                 Subject (Khmer)
               </label>
               <input
                 id="campaign-subject-km"
                 type="text"
                 value={subjectKm}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setSubjectKm(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setSubjectKm(e.target.value)
+                }
                 placeholder="ចំណងជើងជាភាសាខ្មែរ (ស្រេចចិត្ត)"
                 className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
@@ -539,7 +598,10 @@ function CampaignEditorDialog({
           {/* Bodies */}
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="grid gap-1.5">
-              <label htmlFor="campaign-body-en" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <label
+                htmlFor="campaign-body-en"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              >
                 Body (English) <span className="text-destructive">*</span>
               </label>
               <textarea
@@ -547,21 +609,28 @@ function CampaignEditorDialog({
                 required
                 rows={6}
                 value={bodyEn}
-                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setBodyEn(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                  setBodyEn(e.target.value)
+                }
                 placeholder="Write plain paragraphs. Separate paragraphs with blank lines."
                 className="w-full rounded-md border border-input bg-background p-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
 
             <div className="grid gap-1.5">
-              <label htmlFor="campaign-body-km" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <label
+                htmlFor="campaign-body-km"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              >
                 Body (Khmer)
               </label>
               <textarea
                 id="campaign-body-km"
                 rows={6}
                 value={bodyKm}
-                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setBodyKm(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                  setBodyKm(e.target.value)
+                }
                 placeholder="សរសេរកថាខណ្ឌជាភាសាខ្មែរ (បើទទេ នឹងប្រើភាសាអង់គ្លេស)"
                 className="w-full rounded-md border border-input bg-background p-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
@@ -570,7 +639,10 @@ function CampaignEditorDialog({
 
           {/* Chosen Books Picker */}
           <div className="grid gap-2">
-            <label htmlFor="search-books" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <label
+              htmlFor="search-books"
+              className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            >
               Featured Books ({selectedBookIds.length}/12)
             </label>
 
@@ -607,7 +679,9 @@ function CampaignEditorDialog({
                   id="search-books"
                   type="search"
                   value={searchQuery}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setSearchQuery(e.target.value)
+                  }
                   placeholder="Type book title to search and add up to 12 books…"
                   className="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
@@ -628,13 +702,25 @@ function CampaignEditorDialog({
                         <button
                           key={b.id}
                           type="button"
-                          disabled={b.id !== undefined && selectedBookIds.includes(b.id)}
-                          onClick={() => handleAddBook({ id: b.id, title: b.title ?? `Book #${b.id}` })}
+                          disabled={
+                            b.id !== undefined && selectedBookIds.includes(b.id)
+                          }
+                          onClick={() =>
+                            handleAddBook({
+                              id: b.id,
+                              title: b.title ?? `Book #${b.id}`,
+                            })
+                          }
                           className="flex w-full items-center justify-between rounded-sm px-2.5 py-1.5 text-left text-xs hover:bg-accent disabled:opacity-50"
                         >
-                          <span className="truncate font-medium">{b.title}</span>
+                          <span className="truncate font-medium">
+                            {b.title}
+                          </span>
                           <span className="shrink-0 text-muted-foreground">
-                            {b.id !== undefined && selectedBookIds.includes(b.id) ? "Added" : "+ Add"}
+                            {b.id !== undefined &&
+                            selectedBookIds.includes(b.id)
+                              ? "Added"
+                              : "+ Add"}
                           </span>
                         </button>
                       ))
@@ -656,7 +742,9 @@ function CampaignEditorDialog({
             </Button>
             <Button
               type="submit"
-              disabled={mutation.isPending || !subjectEn.trim() || !bodyEn.trim()}
+              disabled={
+                mutation.isPending || !subjectEn.trim() || !bodyEn.trim()
+              }
             >
               {mutation.isPending
                 ? "Saving…"

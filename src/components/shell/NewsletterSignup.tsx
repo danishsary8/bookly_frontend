@@ -5,19 +5,29 @@ import { ApiError } from "@/api/errors";
 import { useT } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle } from "lucide-react";
+import { useTurnstile } from "@/features/auth/turnstile";
 
 export function NewsletterSignup() {
   const { dict, lang } = useT();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The bot check loads only once someone starts on the form, not on every page with the footer.
+  const [engaged, setEngaged] = useState(false);
+  const turnstile = useTurnstile("newsletter", engaged);
 
   const mutation = useMutation({
-    mutationFn: (subEmail: string) =>
-      newsletterApi.subscribe({
-        email: subEmail,
-        locale: lang === "km" ? "km" : "en",
-      }),
+    mutationFn: async (subEmail: string) => {
+      try {
+        return await newsletterApi.subscribe({
+          email: subEmail,
+          locale: lang === "km" ? "km" : "en",
+          turnstile_token: await turnstile.getToken(),
+        });
+      } finally {
+        turnstile.reset();
+      }
+    },
     onSuccess: () => {
       setSubmitted(true);
       setError(null);
@@ -49,13 +59,17 @@ export function NewsletterSignup() {
         <div
           role="status"
           aria-live="polite"
-          className="flex items-start gap-2 rounded-md border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-800 dark:border-emerald-400/20 dark:text-emerald-300"
+          className="flex items-start gap-2 rounded-md bg-success-tint p-3 text-sm text-success"
         >
-          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <span>{dict.newsletter.subscribedSuccess}</span>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="grid gap-2">
+        <form
+          onSubmit={handleSubmit}
+          onFocus={() => setEngaged(true)}
+          className="grid gap-2"
+        >
           <div className="flex flex-col gap-2 sm:flex-row">
             <label htmlFor="newsletter-email" className="sr-only">
               {dict.newsletter.emailPlaceholder}
@@ -65,7 +79,9 @@ export function NewsletterSignup() {
               type="email"
               required
               value={email}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setEmail(e.target.value)
+              }
               placeholder={dict.newsletter.emailPlaceholder}
               disabled={mutation.isPending}
               className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -75,13 +91,20 @@ export function NewsletterSignup() {
               disabled={mutation.isPending || !email.trim()}
               className="h-10 shrink-0 font-medium"
             >
-              {mutation.isPending ? dict.newsletter.subscribing : dict.newsletter.subscribeButton}
+              {mutation.isPending
+                ? dict.newsletter.subscribing
+                : dict.newsletter.subscribeButton}
             </Button>
           </div>
 
+          {turnstile.widget}
+
           {error && (
-            <p role="alert" className="flex items-center gap-1.5 text-xs text-destructive">
-              <AlertCircle className="size-3.5 shrink-0" />
+            <p
+              role="alert"
+              className="flex items-center gap-1.5 text-xs text-destructive"
+            >
+              <AlertCircle className="size-3.5 shrink-0" aria-hidden="true" />
               <span>{error}</span>
             </p>
           )}

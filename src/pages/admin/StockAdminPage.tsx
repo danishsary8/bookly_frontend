@@ -93,7 +93,7 @@ export default function StockAdminPage() {
                   : "text-muted-foreground hover:bg-secondary hover:text-foreground"
               )}
             >
-              All formats
+              All
             </button>
             <button
               type="button"

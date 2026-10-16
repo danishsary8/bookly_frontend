@@ -10,7 +10,9 @@ export default function NewsletterUnsubscribePage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
 
-  const [status, setStatus] = useState<"loading" | "success" | "error">(token ? "loading" : "error");
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    token ? "loading" : "error",
+  );
   const [message, setMessage] = useState<string>("");
   const calledRef = useRef(false);
 
@@ -26,7 +28,9 @@ export default function NewsletterUnsubscribePage() {
       })
       .catch((err) => {
         setStatus("error");
-        setMessage(err?.response?.data?.message || dict.newsletter.unsubscribeError);
+        setMessage(
+          err?.response?.data?.message || dict.newsletter.unsubscribeError,
+        );
       });
   }, [token, dict]);
 
@@ -44,7 +48,7 @@ export default function NewsletterUnsubscribePage() {
 
         {status === "success" && (
           <div className="flex flex-col items-center gap-4 py-4">
-            <div className="flex size-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <div className="flex size-12 items-center justify-center rounded-full bg-success-tint text-success">
               <CheckCircle2 className="size-8" />
             </div>
             <h1 className="font-serif text-2xl font-bold text-foreground">

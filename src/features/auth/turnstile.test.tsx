@@ -5,10 +5,17 @@ import { Route, Routes } from "react-router-dom";
 import { api } from "@/api/client";
 import { clearSession } from "@/api/session";
 import LoginPage from "@/pages/auth/LoginPage";
+import { NewsletterSignup } from "@/components/shell/NewsletterSignup";
 import { renderWithProviders } from "@/test/render";
 import { resetTurnstileForTests } from "./turnstile";
 
-type Options = { callback: (token: string) => void; "error-callback": () => void; sitekey: string; action: string; appearance: string };
+type Options = {
+  callback: (token: string) => void;
+  "error-callback": () => void;
+  sitekey: string;
+  action: string;
+  appearance: string;
+};
 
 const app = () =>
   renderWithProviders(
@@ -22,11 +29,19 @@ const app = () =>
 async function signIn() {
   const user = userEvent.setup();
   await user.type(screen.getByLabelText("Email"), "dara@example.com");
-  await user.type(screen.getByLabelText("Password", { selector: "input" }), "reading123");
+  await user.type(
+    screen.getByLabelText("Password", { selector: "input" }),
+    "reading123",
+  );
   await user.click(screen.getByRole("button", { name: "Sign in" }));
 }
 
-const customer = { id: 5, name: "Sok Dara", email: "dara@example.com", email_verified: true };
+const customer = {
+  id: 5,
+  name: "Sok Dara",
+  email: "dara@example.com",
+  email_verified: true,
+};
 
 beforeEach(() => clearSession("customer"));
 afterEach(() => {
@@ -34,16 +49,27 @@ afterEach(() => {
   vi.restoreAllMocks();
   delete window.turnstile;
   resetTurnstileForTests();
-  document.head.querySelectorAll('script[src*="challenges.cloudflare.com"]').forEach((s) => s.remove());
+  document.head
+    .querySelectorAll('script[src*="challenges.cloudflare.com"]')
+    .forEach((s) => s.remove());
 });
 
 describe("Turnstile", () => {
   it("is off without a site key: no script, no token", async () => {
-    const post = vi.spyOn(api, "post").mockResolvedValue({ token: "tok", expires_at: null, customer });
+    const post = vi
+      .spyOn(api, "post")
+      .mockResolvedValue({ token: "tok", expires_at: null, customer });
     app();
     await signIn();
-    await waitFor(() => expect(post).toHaveBeenCalledWith("/auth/login", { email: "dara@example.com", password: "reading123" }));
-    expect(document.head.querySelector('script[src*="challenges.cloudflare.com"]')).toBeNull();
+    await waitFor(() =>
+      expect(post).toHaveBeenCalledWith("/auth/login", {
+        email: "dara@example.com",
+        password: "reading123",
+      }),
+    );
+    expect(
+      document.head.querySelector('script[src*="challenges.cloudflare.com"]'),
+    ).toBeNull();
   });
 
   it("sends the token with sign-in, then asks Cloudflare for a fresh one", async () => {
@@ -58,17 +84,27 @@ describe("Turnstile", () => {
       reset,
       remove: vi.fn(),
     };
-    const post = vi.spyOn(api, "post").mockResolvedValue({ token: "tok", expires_at: null, customer });
+    const post = vi
+      .spyOn(api, "post")
+      .mockResolvedValue({ token: "tok", expires_at: null, customer });
     app();
     await waitFor(() => expect(options).toBeDefined());
-    expect(options).toMatchObject({ sitekey: "site-key", action: "login", appearance: "always" });
+    expect(options).toMatchObject({
+      sitekey: "site-key",
+      action: "login",
+      appearance: "always",
+    });
 
     // Submitting before the check finishes waits for its token.
     await signIn();
     expect(post).not.toHaveBeenCalled();
     options!.callback("cf-token");
     await waitFor(() =>
-      expect(post).toHaveBeenCalledWith("/auth/login", { email: "dara@example.com", password: "reading123", turnstile_token: "cf-token" }),
+      expect(post).toHaveBeenCalledWith("/auth/login", {
+        email: "dara@example.com",
+        password: "reading123",
+        turnstile_token: "cf-token",
+      }),
     );
     await waitFor(() => expect(reset).toHaveBeenCalledWith("w1"));
   });
@@ -77,11 +113,49 @@ describe("Turnstile", () => {
     vi.stubEnv("VITE_TURNSTILE_SITE_KEY", "site-key");
     app();
     const script = await waitFor(() => {
-      const s = document.head.querySelector<HTMLScriptElement>('script[src*="challenges.cloudflare.com"]');
+      const s = document.head.querySelector<HTMLScriptElement>(
+        'script[src*="challenges.cloudflare.com"]',
+      );
       expect(s).not.toBeNull();
       return s!;
     });
     script.dispatchEvent(new Event("error"));
-    expect(await screen.findByText(/The security check didn't load/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/The security check didn't load/),
+    ).toBeInTheDocument();
+  });
+
+  it("the footer newsletter form loads the check only once used, and sends its token", async () => {
+    vi.stubEnv("VITE_TURNSTILE_SITE_KEY", "site-key");
+    let options: Options | undefined;
+    window.turnstile = {
+      render: vi.fn((_el, o) => {
+        options = o as Options;
+        return "w2";
+      }),
+      reset: vi.fn(),
+      remove: vi.fn(),
+    };
+    const post = vi
+      .spyOn(api, "post")
+      .mockResolvedValue({ message: "Check your inbox to confirm." });
+    renderWithProviders(<NewsletterSignup />);
+    expect(window.turnstile.render).not.toHaveBeenCalled();
+
+    const user = userEvent.setup();
+    await user.type(screen.getByRole("textbox"), "reader@example.com");
+    await waitFor(() =>
+      expect(options).toMatchObject({ action: "newsletter" }),
+    );
+    options!.callback("cf-news");
+    await user.click(screen.getByRole("button", { name: /subscribe/i }));
+
+    await waitFor(() =>
+      expect(post).toHaveBeenCalledWith("/newsletter/subscribe", {
+        email: "reader@example.com",
+        locale: "en",
+        turnstile_token: "cf-news",
+      }),
+    );
   });
 });

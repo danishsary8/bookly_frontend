@@ -32,9 +32,11 @@ afterEach(() => {
 describe("NewsletterSignup", () => {
   it("renders input and submits email successfully", async () => {
     const user = userEvent.setup();
-    const subscribeSpy = vi.spyOn(newsletterApi, "subscribe").mockResolvedValue({
-      message: "If that email is valid, a confirmation link has been sent.",
-    });
+    const subscribeSpy = vi
+      .spyOn(newsletterApi, "subscribe")
+      .mockResolvedValue({
+        message: "If that email is valid, a confirmation link has been sent.",
+      });
 
     renderWithProviders(<NewsletterSignup />);
 
@@ -45,7 +47,10 @@ describe("NewsletterSignup", () => {
     await user.click(button);
 
     await waitFor(() => {
-      expect(subscribeSpy).toHaveBeenCalledWith({ email: "reader@example.com", locale: "en" });
+      expect(subscribeSpy).toHaveBeenCalledWith({
+        email: "reader@example.com",
+        locale: "en",
+      });
       expect(screen.getByText(/check your inbox/i)).toBeInTheDocument();
     });
   });
@@ -53,7 +58,10 @@ describe("NewsletterSignup", () => {
   it("handles api errors gracefully during subscription", async () => {
     const user = userEvent.setup();
     vi.spyOn(newsletterApi, "subscribe").mockRejectedValue(
-      new ApiError({ kind: "rate_limited", message: "Too many requests. Please wait." })
+      new ApiError({
+        kind: "rate_limited",
+        message: "Too many requests. Please wait.",
+      }),
     );
 
     renderWithProviders(<NewsletterSignup />);
@@ -72,10 +80,14 @@ describe("NewsletterSignup", () => {
 
 describe("NewsletterConfirmPage", () => {
   it("shows invalid token message if token param is missing", async () => {
-    renderWithProviders(<NewsletterConfirmPage />, { route: "/newsletter/confirm" });
+    renderWithProviders(<NewsletterConfirmPage />, {
+      route: "/newsletter/confirm",
+    });
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid or expired confirmation link/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/invalid or expired confirmation link/i),
+      ).toBeInTheDocument();
     });
   });
 
@@ -91,7 +103,7 @@ describe("NewsletterConfirmPage", () => {
     await waitFor(() => {
       expect(confirmSpy).toHaveBeenCalledWith("valid-token-123");
       expect(
-        screen.getByText(/thank you for confirming your subscription!/i)
+        screen.getByText(/thank you for confirming your subscription!/i),
       ).toBeInTheDocument();
     });
   });
@@ -104,7 +116,9 @@ describe("NewsletterUnsubscribePage", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid or expired unsubscribe link/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/invalid or expired unsubscribe link/i),
+      ).toBeInTheDocument();
     });
   });
 
@@ -119,7 +133,9 @@ describe("NewsletterUnsubscribePage", () => {
 
     await waitFor(() => {
       expect(unsubSpy).toHaveBeenCalledWith("unsub-token-456");
-      expect(screen.getByText(/you have been successfully unsubscribed/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/you have been successfully unsubscribed/i),
+      ).toBeInTheDocument();
     });
   });
 });
@@ -132,12 +148,14 @@ describe("NewsletterToggle", () => {
       status: "unsubscribed",
       locale: "en",
     });
-    const updateSpy = vi.spyOn(newsletterApi, "updateCustomerStatus").mockResolvedValue({
-      message: "Subscribed successfully.",
-      subscribed: true,
-      status: "confirmed",
-      locale: "en",
-    });
+    const updateSpy = vi
+      .spyOn(newsletterApi, "updateCustomerStatus")
+      .mockResolvedValue({
+        message: "Subscribed successfully.",
+        subscribed: true,
+        status: "confirmed",
+        locale: "en",
+      });
 
     renderWithProviders(<NewsletterToggle customer={mockCustomer} />);
 
@@ -159,6 +177,7 @@ describe("NewsletterAdminPage", () => {
       confirmed: 120,
       pending: 20,
       unsubscribed: 10,
+      daily_limit: 40,
     });
     const listSpy = vi.spyOn(newsletterApi, "listCampaigns").mockResolvedValue({
       data: [
@@ -176,17 +195,35 @@ describe("NewsletterAdminPage", () => {
           created_at: "2026-10-16T00:00:00Z",
           updated_at: "2026-10-16T00:00:00Z",
         },
+        {
+          id: 2,
+          subject_en: "September picks",
+          subject_km: null,
+          body_en: "Read these",
+          body_km: null,
+          book_ids: [],
+          status: "sending",
+          created_by_staff_id: 1,
+          recipients_total: 120,
+          sent_count: 40,
+          sent_at: null,
+          created_at: "2026-09-16T00:00:00Z",
+          updated_at: "2026-09-16T00:00:00Z",
+        },
       ],
       current_page: 1,
       last_page: 1,
       total: 1,
     });
 
-    renderWithProviders(<NewsletterAdminPage />, { route: "/admin/newsletter" });
+    renderWithProviders(<NewsletterAdminPage />, {
+      route: "/admin/newsletter",
+    });
 
     expect(await screen.findByText("120")).toBeInTheDocument();
     expect(await screen.findByText("October Highlights")).toBeInTheDocument();
     expect(await screen.findByText("draft")).toBeInTheDocument();
+    expect(screen.getByText("40 of 120 sent")).toBeInTheDocument();
     expect(listSpy).toHaveBeenCalled();
   });
 });

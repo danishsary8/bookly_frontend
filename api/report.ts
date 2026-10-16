@@ -23,7 +23,10 @@ export function clientIp(request: Request): string {
   return request.headers.get("x-real-ip")?.trim() || "unknown";
 }
 
-export function checkRateLimit(ip: string, now: number = Date.now()): { limited: boolean; retryAfter?: number } {
+export function checkRateLimit(
+  ip: string,
+  now: number = Date.now(),
+): { limited: boolean; retryAfter?: number } {
   if (ipLimits.size > 10_000) {
     for (const [key, val] of ipLimits.entries()) {
       if (val.resetAt <= now) ipLimits.delete(key);
@@ -66,7 +69,10 @@ export function parseDsn(dsn: string | undefined): Target | null {
 
 /** The envelope's first line names the DSN it was written for; it must be ours. */
 export function envelopeTarget(envelope: string): Target | null {
-  const firstLine = envelope.slice(0, envelope.indexOf("\n") === -1 ? undefined : envelope.indexOf("\n"));
+  const firstLine = envelope.slice(
+    0,
+    envelope.indexOf("\n") === -1 ? undefined : envelope.indexOf("\n"),
+  );
   try {
     const header = JSON.parse(firstLine) as { dsn?: string };
     return parseDsn(header.dsn);
@@ -88,18 +94,29 @@ export async function POST(request: Request): Promise<Response> {
   const ours = parseDsn(process.env.VITE_SENTRY_DSN);
   if (!ours) return new Response("Not configured", { status: 503 });
 
+  // Refuse a declared-too-big body before reading it; then count real bytes (Khmer text is 3 bytes a character).
+  if (Number(request.headers.get("content-length") ?? 0) > MAX_BYTES)
+    return new Response("Too large", { status: 413 });
   const body = await request.text();
-  if (body.length > MAX_BYTES) return new Response("Too large", { status: 413 });
+  if (new TextEncoder().encode(body).length > MAX_BYTES)
+    return new Response("Too large", { status: 413 });
 
   const target = envelopeTarget(body);
-  if (!target || target.host !== ours.host || target.projectId !== ours.projectId) {
+  if (
+    !target ||
+    target.host !== ours.host ||
+    target.projectId !== ours.projectId
+  ) {
     return new Response("Unknown project", { status: 400 });
   }
 
-  const forwarded = await fetch(`https://${ours.host}/api/${ours.projectId}/envelope/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-sentry-envelope" },
-    body,
-  });
+  const forwarded = await fetch(
+    `https://${ours.host}/api/${ours.projectId}/envelope/`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-sentry-envelope" },
+      body,
+    },
+  );
   return new Response(null, { status: forwarded.ok ? 200 : forwarded.status });
 }
