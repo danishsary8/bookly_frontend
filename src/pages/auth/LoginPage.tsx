@@ -32,6 +32,7 @@ export default function LoginPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [mode, setMode] = useState<"email" | "phone">("email");
   const alertRef = useRef<HTMLDivElement>(null);
+  const buttonsOnTop = anySocialEnabled();
 
   const { register, handleSubmit, setError, resetField, control, formState } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -95,7 +96,7 @@ export default function LoginPage() {
       <div className="grid gap-5">
         {state?.notice && !formError && !telegramError ? <FormAlert tone="success">{state.notice}</FormAlert> : null}
         {formError || telegramError ? <FormAlert ref={alertRef} title={formError ?? telegramError ?? undefined} /> : null}
-        {anySocialEnabled() ? <SocialButtons next={next} /> : null}
+        {buttonsOnTop ? <SocialButtons next={next} /> : null}
 
         {mode === "email" ? (
           <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid gap-5">
@@ -134,6 +135,8 @@ export default function LoginPage() {
                 </button>
               </div>
             ) : null}
+
+            {buttonsOnTop ? null : <SocialButtons next={next} />}
           </form>
         ) : (
           <div className="grid gap-4">
@@ -173,6 +176,8 @@ export default function LoginPage() {
                 {s.signInWithEmail}
               </button>
             </div>
+
+            {buttonsOnTop ? null : <SocialButtons next={next} />}
           </div>
         )}
       </div>
