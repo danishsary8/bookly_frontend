@@ -52,6 +52,8 @@ export interface Coupon {
   starts_at: string | null;
   expires_at: string | null;
   is_active: boolean;
+  /** Set for store credit (a refund paid as a coupon): only this customer can use it. */
+  store_credit_for?: { id: number; name: string | null } | null;
 }
 export type CouponInput = Partial<{
   code: string;
@@ -159,6 +161,11 @@ export const opsKeys = {
   audit: (f: object) => ["staff", "audit", toQueryParams(f)] as const,
 };
 
+/** How a refund was paid back. */
+export type RefundMethod = "cash" | "bank_transfer" | "store_credit";
+
+export const REFUND_METHOD_LABELS: Record<RefundMethod, string> = { cash: "Cash", bank_transfer: "Bank transfer", store_credit: "Store credit" };
+
 export const opsApi = {
   orders: (f: OrderFilters = {}) => api.get<Paginated<StaffOrder>>("/staff/orders", { params: toQueryParams(f) }),
   order: (id: number) => api.get<Resource<StaffOrder>>(`/staff/orders/${id}`).then((r) => r.data),
@@ -177,10 +184,8 @@ export const opsApi = {
   return: (id: number) => api.get<Resource<StaffReturn>>(`/staff/returns/${id}`).then((r) => r.data),
   approveReturn: (id: number, note?: string) => api.post<Resource<StaffReturn>>(`/staff/returns/${id}/approve`, note ? { note } : {}).then((r) => r.data),
   rejectReturn: (id: number, note: string) => api.post<Resource<StaffReturn>>(`/staff/returns/${id}/reject`, { note }).then((r) => r.data),
-  refundReturn: (id: number, input?: { method?: "store_credit" | "manual_offline"; reference?: string; note?: string } | string) => {
-    const body = typeof input === "string" ? { note: input } : input || {};
-    return api.post<Resource<StaffReturn>>(`/staff/returns/${id}/refund`, body).then((r) => r.data);
-  },
+  refundReturn: (id: number, input: { method: RefundMethod; reference?: string; note?: string }) =>
+    api.post<Resource<StaffReturn>>(`/staff/returns/${id}/refund`, input).then((r) => r.data),
 
   reviews: (f: ReviewFilters = {}) => api.get<Paginated<StaffReview>>("/staff/reviews", { params: toQueryParams({ ...f, visible: bool(f.visible) }) }),
   hideReview: (id: number) => api.post<Resource<StaffReview>>(`/staff/reviews/${id}/hide`, {}).then((r) => r.data),

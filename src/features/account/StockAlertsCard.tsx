@@ -10,7 +10,13 @@ import { formatName, useT } from "@/i18n";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { toast } from "@/stores/toast";
 
-function AlertItem({ alert, onRemove }: { alert: StockAlert; onRemove: (id: number) => void }) {
+function AlertItem({
+  alert,
+  onRemove,
+}: {
+  alert: StockAlert;
+  onRemove: (id: number) => void;
+}) {
   const { dict } = useT();
   const currency = useCurrency();
   const book = alert.book;
@@ -20,7 +26,10 @@ function AlertItem({ alert, onRemove }: { alert: StockAlert; onRemove: (id: numb
 
   return (
     <li className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-border bg-surface-1 p-3 sm:p-4">
-      <Link to={`/books/${book.id}`} className="flex min-w-0 flex-1 items-center gap-3 group outline-none">
+      <Link
+        to={`/books/${book.id}`}
+        className="flex min-w-0 flex-1 items-center gap-3 group outline-none"
+      >
         <div className="w-12 shrink-0">
           <BookCover
             title={book.title ?? ""}
@@ -65,15 +74,45 @@ export function StockAlertsCard() {
       toast.success(dict.account.alertRemoved);
     },
     onError: () => {
-      toast.error("Failed to remove stock alert");
+      toast.error(dict.account.removeAlertFailed);
     },
   });
 
   if (alerts.isPending) {
     return (
-      <SkeletonGroup label="Loading stock alerts…" className="grid gap-2">
+      <SkeletonGroup
+        label={dict.account.loadingStockAlerts}
+        className="grid gap-2"
+      >
         <Skeleton className="h-20 rounded-xl" />
       </SkeletonGroup>
+    );
+  }
+
+  if (alerts.isError) {
+    return (
+      <section
+        aria-labelledby="stock-alerts-heading"
+        className="rounded-xl border border-border bg-card p-5 sm:p-6"
+      >
+        <h2
+          id="stock-alerts-heading"
+          className="font-display text-[1.375rem] leading-tight"
+        >
+          {dict.account.stockAlerts}
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {dict.account.stockAlertsLoadFailed}
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-3"
+          onClick={() => alerts.refetch()}
+        >
+          {dict.ui.tryAgain}
+        </Button>
+      </section>
     );
   }
 
@@ -81,13 +120,19 @@ export function StockAlertsCard() {
   if (items.length === 0) return null;
 
   return (
-    <section aria-labelledby="stock-alerts-heading" className="rounded-xl border border-border bg-card p-5 sm:p-6">
+    <section
+      aria-labelledby="stock-alerts-heading"
+      className="rounded-xl border border-border bg-card p-5 sm:p-6"
+    >
       <div className="flex items-start gap-3">
         <span className="grid size-10 shrink-0 place-items-center rounded-full bg-lapis-tint text-primary">
           <Bell className="size-5" aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 id="stock-alerts-heading" className="font-display text-[1.375rem] leading-tight">
+          <h2
+            id="stock-alerts-heading"
+            className="font-display text-[1.375rem] leading-tight"
+          >
             {dict.account.stockAlerts}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">

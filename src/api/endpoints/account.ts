@@ -12,15 +12,14 @@ export const accountKeys = {
   storeCredits: () => ["account", "store-credits"] as const,
 };
 
+/** A refund paid as a one-use coupon that only this customer can use. */
 export interface StoreCredit {
   id: number;
   code: string;
-  value_usd: string;
-  type: string;
-  used_count: number;
-  max_uses: number | null;
-  starts_at: string | null;
+  amount_usd: string;
   expires_at: string | null;
+  used: boolean;
+  expired: boolean;
   created_at: string;
 }
 

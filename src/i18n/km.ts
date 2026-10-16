@@ -236,6 +236,14 @@ export const km: Translations = {
     codeCopied: "បានចម្លង!",
     expiresOn: (date: string) => `ផុតកំណត់ ${date}`,
     noStoreCredits: "គ្មានឥណទានហាងទេ",
+    // draft
+    copyFailed: "មិនអាចចម្លងកូដបានទេ។ សូមជ្រើសរើស ហើយចម្លងដោយដៃ។",
+    loadingStoreCredits: "កំពុងផ្ទុកឥណទានហាង…",
+    creditUsed: "បានប្រើ",
+    creditExpired: "ផុតកំណត់",
+    loadingStockAlerts: "កំពុងផ្ទុកការជូនដំណឹងស្តុក…",
+    removeAlertFailed: "មិនអាចលុបការជូនដំណឹងបានទេ។ សូមព្យាយាមម្តងទៀត។",
+    stockAlertsLoadFailed: "យើងមិនអាចផ្ទុកការជូនដំណឹងស្តុករបស់អ្នកបានទេ។",
     // draft - Stock alerts
     stockAlerts: "ការជូនដំណឹងអំពីស្តុក",
     stockAlertsLead: "យើងនឹងផ្ញើអ៊ីមែលទៅអ្នកភ្លាមៗនៅពេលសៀវភៅទាំងនេះមានក្នុងស្តុកឡើងវិញ។",

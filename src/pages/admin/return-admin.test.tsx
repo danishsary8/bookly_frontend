@@ -11,7 +11,13 @@ import { renderWithProviders } from "@/test/render";
 import ReturnAdminPage from "./ReturnAdminPage";
 import { StoreCreditsCard } from "@/features/account/StoreCreditsCard";
 
-const admin = { id: 1, name: "Demo Admin", email: "admin@bookly.test", role: "admin" as const, two_factor_enabled: true };
+const admin = {
+  id: 1,
+  name: "Demo Admin",
+  email: "admin@bookly.test",
+  role: "admin" as const,
+  two_factor_enabled: true,
+};
 const customer = { id: 10, name: "Sok Dara", email: "dara@example.com" };
 
 const approvedReturn: StaffReturn = {
@@ -46,7 +52,12 @@ const refundedReturn: StaffReturn = {
   is_refund_final: true,
   refund_amount_usd: "25.00",
   refund_method: "store_credit",
-  refund_reference: "CREDIT-ABCD-1234",
+  refund_reference: null,
+  store_credit: {
+    code: "CREDIT-K7M2Q9XA",
+    amount_usd: "25.00",
+    expires_at: "2027-10-16T16:59:59Z",
+  },
   refunded_at: "2026-10-16T08:00:00Z",
   refunded_by: { id: 1, name: "Demo Admin" },
   resolved_at: "2026-10-16T08:00:00Z",
@@ -59,12 +70,9 @@ describe("Return Admin & Store Credits", () => {
     vi.restoreAllMocks();
   });
 
-  it("shows Record refund button on approved returns and submits store credit refund", async () => {
+  const renderReturn = (data: StaffReturn) => {
     setSession("staff", { token: "t", expiresAt: null, user: admin });
-    vi.spyOn(opsApi, "return").mockResolvedValue(approvedReturn);
-    const refundSpy = vi.spyOn(opsApi, "refundReturn").mockResolvedValue(refundedReturn);
-
-    const user = userEvent.setup();
+    vi.spyOn(opsApi, "return").mockResolvedValue(data);
     renderWithProviders(
       <>
         <Routes>
@@ -76,130 +84,124 @@ describe("Return Admin & Store Credits", () => {
       </>,
       { route: "/admin/returns/42" },
     );
+  };
 
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Return #42" })).toBeInTheDocument();
-    });
+  it("makes staff choose how the money was returned before recording the refund", async () => {
+    const refundSpy = vi
+      .spyOn(opsApi, "refundReturn")
+      .mockResolvedValue(refundedReturn);
+    renderReturn(approvedReturn);
+    const user = userEvent.setup();
 
-    const refundButton = screen.getByRole("button", { name: /record refund/i });
-    expect(refundButton).toBeInTheDocument();
+    await user.click(
+      await screen.findByRole("button", { name: /record refund/i }),
+    );
+    const select = screen.getByLabelText(/how was the money returned/i);
+    expect(select).toHaveValue("");
+    expect(
+      [...(select as HTMLSelectElement).options].map((o) => o.textContent),
+    ).toEqual(["Choose…", "Cash", "Bank transfer", "Store credit"]);
 
-    await user.click(refundButton);
+    await user.click(screen.getByRole("button", { name: /^record refund$/i }));
+    expect(
+      screen.getByText("Choose how the money was returned."),
+    ).toBeInTheDocument();
+    expect(refundSpy).not.toHaveBeenCalled();
 
-    expect(screen.getByRole("heading", { name: /record refund return #42\?/i })).toBeInTheDocument();
-    expect(screen.getByText("Calculated refund amount:")).toBeInTheDocument();
-    expect(screen.getAllByText("$25.00").length).toBeGreaterThanOrEqual(1);
-
-    // Default method is store credit
-    const select = screen.getByLabelText(/refund method/i);
-    expect(select).toHaveValue("store_credit");
-
-    // Add optional note and submit
-    const noteField = screen.getByLabelText(/note for the customer/i);
-    await user.type(noteField, "Store credit issued for return");
-
-    const confirmBtn = screen.getByRole("button", { name: /^record refund$/i });
-    await user.click(confirmBtn);
+    await user.selectOptions(select, "store_credit");
+    expect(screen.queryByLabelText(/reference/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /one-use code for \$25\.00 that only this customer can use, valid for 12 months/i,
+      ),
+    ).toBeInTheDocument();
+    await user.type(
+      screen.getByLabelText(/note for the customer/i),
+      "Sorry about the cover",
+    );
+    await user.click(screen.getByRole("button", { name: /^record refund$/i }));
 
     expect(refundSpy).toHaveBeenCalledWith(42, {
       method: "store_credit",
       reference: undefined,
-      note: "Store credit issued for return",
+      note: "Sorry about the cover",
     });
   });
 
-  it("requires reference when selecting manual offline refund", async () => {
-    setSession("staff", { token: "t", expiresAt: null, user: admin });
-    vi.spyOn(opsApi, "return").mockResolvedValue(approvedReturn);
-    const refundSpy = vi.spyOn(opsApi, "refundReturn").mockResolvedValue({
-      ...refundedReturn,
-      refund_method: "manual_offline",
-      refund_reference: "ABA-TX-998877",
-    });
-
+  it("asks for an optional reference only for a bank transfer", async () => {
+    const refundSpy = vi
+      .spyOn(opsApi, "refundReturn")
+      .mockResolvedValue({
+        ...refundedReturn,
+        refund_method: "bank_transfer",
+        refund_reference: "ABA-1",
+        store_credit: null,
+      });
+    renderReturn(approvedReturn);
     const user = userEvent.setup();
-    renderWithProviders(
-      <>
-        <Routes>
-          <Route element={<RequireStaff />}>
-            <Route path="/admin/returns/:id" element={<ReturnAdminPage />} />
-          </Route>
-        </Routes>
-        <Toaster />
-      </>,
-      { route: "/admin/returns/42" },
+
+    await user.click(
+      await screen.findByRole("button", { name: /record refund/i }),
     );
-
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /record refund/i })).toBeInTheDocument();
-    });
-
-    await user.click(screen.getByRole("button", { name: /record refund/i }));
-
-    const select = screen.getByLabelText(/refund method/i);
-    await user.selectOptions(select, "manual_offline");
-
-    // Reference field should now appear
-    const refInput = screen.getByLabelText(/payment reference \/ receipt/i);
-    expect(refInput).toBeInTheDocument();
-
-    // Submitting without reference triggers validation
-    await user.click(screen.getByRole("button", { name: /^record refund$/i }));
-    expect(screen.getByText(/payment reference is required/i)).toBeInTheDocument();
-    expect(refundSpy).not.toHaveBeenCalled();
-
-    // Fill reference and submit
-    await user.type(refInput, "ABA-TX-998877");
+    const select = screen.getByLabelText(/how was the money returned/i);
+    await user.selectOptions(select, "cash");
+    expect(screen.queryByLabelText(/reference/i)).not.toBeInTheDocument();
+    await user.selectOptions(select, "bank_transfer");
+    await user.type(screen.getByLabelText(/reference/i), "ABA-TX-998877");
     await user.click(screen.getByRole("button", { name: /^record refund$/i }));
 
     expect(refundSpy).toHaveBeenCalledWith(42, {
-      method: "manual_offline",
+      method: "bank_transfer",
       reference: "ABA-TX-998877",
       note: undefined,
     });
   });
 
-  it("displays refund badge and details when return is already refunded", async () => {
-    setSession("staff", { token: "t", expiresAt: null, user: admin });
-    vi.spyOn(opsApi, "return").mockResolvedValue(refundedReturn);
+  it("shows the refund record: how, the store-credit code, who and when", async () => {
+    renderReturn(refundedReturn);
 
-    renderWithProviders(
-      <>
-        <Routes>
-          <Route element={<RequireStaff />}>
-            <Route path="/admin/returns/:id" element={<ReturnAdminPage />} />
-          </Route>
-        </Routes>
-      </>,
-      { route: "/admin/returns/42" },
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText(/Refunded \(\$25\.00 via Store Credit - CREDIT-ABCD-1234\)/i)).toBeInTheDocument();
-    });
-
-    // In summary section
-    expect(screen.getByText("Refund record")).toBeInTheDocument();
-    expect(screen.getByText("Store Credit")).toBeInTheDocument();
-    expect(screen.getByText(/Ref: CREDIT-ABCD-1234/)).toBeInTheDocument();
-    expect(screen.getByText(/by Demo Admin/)).toBeInTheDocument();
-
-    // No Record refund button should be shown
-    expect(screen.queryByRole("button", { name: /record refund/i })).not.toBeInTheDocument();
+    expect(await screen.findByText("Refund record")).toBeInTheDocument();
+    expect(screen.getByText("Store credit")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "CREDIT-K7M2Q9XA" }),
+    ).toHaveAttribute("href", "/admin/coupons?q=CREDIT-K7M2Q9XA");
+    expect(screen.getByText(/By Demo Admin/)).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /record refund/i }),
+    ).not.toBeInTheDocument();
   });
 
-  it("StoreCreditsCard displays active customer credits with copy button", async () => {
+  it("says Not recorded for refunds made before records were kept", async () => {
+    renderReturn({
+      ...refundedReturn,
+      refund_method: null,
+      store_credit: null,
+      refunded_by: null,
+      refunded_at: null,
+    });
+
+    expect(await screen.findByText(/Not recorded/)).toBeInTheDocument();
+  });
+
+  it("StoreCreditsCard lists credits, with copy only for ones that can still be used", async () => {
     const credits: StoreCredit[] = [
       {
         id: 1,
         code: "CREDIT-ABCD-1234",
-        value_usd: "25.00",
-        type: "fixed",
-        used_count: 0,
-        max_uses: 1,
-        starts_at: "2026-10-16T08:00:00Z",
+        amount_usd: "25.00",
         expires_at: "2027-10-16T08:00:00Z",
+        used: false,
+        expired: false,
         created_at: "2026-10-16T08:00:00Z",
+      },
+      {
+        id: 2,
+        code: "CREDIT-USED-0001",
+        amount_usd: "5.00",
+        expires_at: "2027-01-01T08:00:00Z",
+        used: true,
+        expired: false,
+        created_at: "2026-01-01T08:00:00Z",
       },
     ];
 
@@ -213,11 +215,19 @@ describe("Return Admin & Store Credits", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Store credits" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "Store credits" }),
+      ).toBeInTheDocument();
     });
 
     expect(screen.getByText("CREDIT-ABCD-1234")).toBeInTheDocument();
     expect(screen.getByText("$25.00")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /copy code CREDIT-ABCD-1234/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /copy code CREDIT-ABCD-1234/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /copy code CREDIT-USED-0001/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Used")).toBeInTheDocument();
   });
 });

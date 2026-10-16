@@ -231,6 +231,13 @@ export const en = {
     codeCopied: "Copied!",
     expiresOn: (date: string) => `Expires ${date}`,
     noStoreCredits: "No store credits available",
+    copyFailed: "Couldn't copy the code. Select it and copy it by hand.",
+    loadingStoreCredits: "Loading store credits…",
+    creditUsed: "Used",
+    creditExpired: "Expired",
+    loadingStockAlerts: "Loading stock alerts…",
+    removeAlertFailed: "Couldn't remove the alert. Please try again.",
+    stockAlertsLoadFailed: "We couldn't load your stock alerts.",
     // Stock alerts
     stockAlerts: "Stock alerts",
     stockAlertsLead: "We'll email you as soon as these books are back in stock.",

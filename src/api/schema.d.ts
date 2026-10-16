@@ -1567,8 +1567,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Active store credits for the signed-in customer
-         * @description Lists active, unexpired, and unused store credit coupons bound to the current customer.
+         * Store credits of the signed-in customer (refunds paid as a coupon)
+         * @description Newest first, including used and expired ones.
          */
         get: {
             parameters: {
@@ -1588,18 +1588,13 @@ export interface paths {
                         "application/json": {
                             data?: {
                                 id?: number;
-                                /** @example CREDIT-ABCD-1234 */
+                                /** @example CREDIT-K7M2Q9XA */
                                 code?: string;
-                                /** @example 25.00 */
-                                value_usd?: string;
-                                /** @example fixed */
-                                type?: string;
-                                used_count?: number;
-                                max_uses?: number | null;
-                                /** Format: date-time */
-                                starts_at?: string | null;
+                                amount_usd?: components["schemas"]["Money"];
                                 /** Format: date-time */
                                 expires_at?: string | null;
+                                used?: boolean;
+                                expired?: boolean;
                                 /** Format: date-time */
                                 created_at?: string;
                             }[];
@@ -3167,7 +3162,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** (admin) Preview CSV book import (file) */
+        /**
+         * (admin) Preview CSV book import: nothing is written
+         * @description Same columns as the export (book_id ignored), one row per format; only `sku` is a required column. A row updates the format with the same SKU (any case), else the same ISBN (digits/X compared); otherwise it creates a new book + format (needs title, format, sku, price_usd; new books are drafts unless `status` says otherwise; rows with the same title and authors become one book). On an update a blank cell keeps the current value. Categories must exist; authors, publisher and series are created. `publish_at` is read in shop time. Max 2 MB and 2000 rows; quoted cells may span lines.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -3175,14 +3173,34 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file: string;
+                    };
+                };
+            };
             responses: {
                 /** @description Preview */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            data?: {
+                                preview_token?: string;
+                                totals?: {
+                                    total?: number;
+                                    new?: number;
+                                    update?: number;
+                                    error?: number;
+                                };
+                                rows?: components["schemas"]["BookImportRow"][];
+                            };
+                        };
+                    };
                 };
             };
         };
@@ -3201,7 +3219,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** (admin) Confirm CSV book import (preview_token) */
+        /**
+         * (admin) Apply a previewed import
+         * @description Checks every row again against the catalog as it is now, then applies the valid rows in one transaction (stock changes are logged as adjustments). The token works once, for 30 minutes, for the admin who made it.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -3209,14 +3230,29 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        preview_token: string;
+                    };
+                };
+            };
             responses: {
                 /** @description Imported */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            data?: {
+                                created?: number;
+                                updated?: number;
+                                skipped?: number;
+                                errors?: components["schemas"]["BookImportRow"][];
+                            };
+                        };
+                    };
                 };
             };
         };
@@ -4454,7 +4490,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Mark refunded: books back in stock, issue store credit or record manual offline refund */
+        /**
+         * Mark refunded: books back in stock and the refund record saved (how, who, when)
+         * @description store_credit makes a one-use fixed coupon CREDIT-XXXXXXXX for the refund amount, usable only by this customer, valid until 23:59:59 shop time on the same day 12 months later (for anyone else it answers like an unknown code).
+         */
         post: {
             parameters: {
                 query?: never;
@@ -4467,12 +4506,9 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
-                        /**
-                         * @default manual_offline
-                         * @enum {string}
-                         */
-                        method?: "store_credit" | "manual_offline";
-                        /** @description Required for manual_offline: receipt or transaction ref */
+                        /** @enum {string} */
+                        method: "cash" | "bank_transfer" | "store_credit";
+                        /** @description Optional; only allowed for bank_transfer */
                         reference?: string;
                         note?: string;
                     };
@@ -6797,17 +6833,37 @@ export interface components {
             refund_amount_usd?: components["schemas"]["Money"];
             /** @description false while the amount is an estimate */
             is_refund_final?: boolean;
-            /** @enum {string|null} */
-            refund_method?: "store_credit" | "manual_offline" | null;
+            /**
+             * @description null before the refund and for refunds made before methods were recorded
+             * @enum {string|null}
+             */
+            refund_method?: "cash" | "bank_transfer" | "store_credit" | null;
+            /** @description bank transfer reference */
             refund_reference?: string | null;
             /** Format: date-time */
             refunded_at?: string | null;
+            store_credit?: {
+                code?: string;
+                amount_usd?: components["schemas"]["Money"];
+                /** Format: date-time */
+                expires_at?: string;
+            } | null;
             staff_note?: string | null;
             /** Format: date-time */
             requested_at?: string;
             /** Format: date-time */
             resolved_at?: string | null;
             can_withdraw?: boolean;
+        };
+        BookImportRow: {
+            /** @description Data rows start at 2 (row 1 is the header) */
+            row_number?: number;
+            /** @enum {string} */
+            action?: "new" | "update" | "error";
+            title?: string;
+            format?: string;
+            sku?: string;
+            messages?: string[];
         };
         Review: {
             id?: number;
@@ -6935,6 +6991,7 @@ export type SchemaCart = components['schemas']['Cart'];
 export type SchemaOrder = components['schemas']['Order'];
 export type SchemaOrderDocument = components['schemas']['OrderDocument'];
 export type SchemaReturn = components['schemas']['Return'];
+export type SchemaBookImportRow = components['schemas']['BookImportRow'];
 export type SchemaReview = components['schemas']['Review'];
 export type SchemaOwnReview = components['schemas']['OwnReview'];
 export type SchemaStockAlert = components['schemas']['StockAlert'];
