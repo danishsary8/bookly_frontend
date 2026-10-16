@@ -913,6 +913,11 @@ export const en = {
     step3Text: "Pay the courier in cash when the books arrive.",
     keepBrowsing: "Keep browsing",
     viewOrder: "View your order",
+    estDelivery: (date?: string) => `Est. delivery: ${date ?? ""}`,
+    telegramUpdatesTitle: "Real-time Telegram notifications",
+    telegramUpdatesDesc: "Receive instant alerts when your books are being packed, dispatched, and delivered.",
+    manage: "Manage",
+    freeBadge: "Free",
   },
   book: {
     loading: "Loading book…",

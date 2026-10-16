@@ -66,10 +66,10 @@ export default function OrderConfirmationPage() {
           <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
             <OrderStatusBadge status={o.status} />
             {o.placed_at ? <span>{k.placed(new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(o.placed_at)))}</span> : null}
-            {o.estimated_delivery ? (
+            {o.estimated_delivery?.formatted ? (
               <span className="flex items-center gap-1.5 font-medium text-foreground">
                 <Truck className="size-4 text-primary" aria-hidden="true" />
-                Est. delivery: {o.estimated_delivery.formatted}
+                {k.estDelivery(o.estimated_delivery.formatted)}
               </span>
             ) : null}
           </div>
@@ -84,12 +84,12 @@ export default function OrderConfirmationPage() {
               <Send className="size-5" aria-hidden="true" />
             </span>
             <div className="grid">
-              <span className="font-semibold text-foreground">Real-time Telegram notifications</span>
-              <span className="text-sm text-muted-foreground">Receive instant alerts when your books are being packed, dispatched, and delivered.</span>
+              <span className="font-semibold text-foreground">{k.telegramUpdatesTitle}</span>
+              <span className="text-sm text-muted-foreground">{k.telegramUpdatesDesc}</span>
             </div>
           </div>
           <Link to="/account/profile" className={buttonVariants({ variant: "outline", size: "sm" })}>
-            Manage
+            {k.manage}
           </Link>
         </div>
 

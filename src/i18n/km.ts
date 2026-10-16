@@ -919,6 +919,11 @@ export const km: Translations = {
     step3Text: "បង់ប្រាក់ឱ្យអ្នកដឹកជញ្ជូនជាសាច់ប្រាក់ ពេលសៀវភៅមកដល់។",
     keepBrowsing: "បន្តមើល",
     viewOrder: "មើលការបញ្ជាទិញរបស់អ្នក",
+    estDelivery: (date?: string) => `ការប៉ាន់ស្មានដឹកជញ្ជូន៖ ${date ?? ""}`,
+    telegramUpdatesTitle: "ការជូនដំណឹងតាម Telegram ភ្លាមៗ",
+    telegramUpdatesDesc: "ទទួលបានការជូនដំណឹងភ្លាមៗ ពេលសៀវភៅរបស់អ្នកកំពុងរៀបចំ ដឹកចេញ និងមកដល់។",
+    manage: "គ្រប់គ្រង",
+    freeBadge: "ឥតគិតថ្លៃ",
   },
   book: {
     loading: "កំពុងផ្ទុកសៀវភៅ…",
