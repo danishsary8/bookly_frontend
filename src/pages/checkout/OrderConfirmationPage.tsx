@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, PackageCheck, Send, Truck } from "lucide-react";
+import { CheckCircle2, FileText, PackageCheck, Send, Truck } from "lucide-react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { orderQueries } from "@/api/endpoints/orders";
 import { ApiError } from "@/api/errors";
@@ -117,6 +117,17 @@ export default function OrderConfirmationPage() {
           <Link to={`/account/orders/${o.id}`} className={buttonVariants({ variant: "outline" })}>
             {k.viewOrder}
           </Link>
+          {o.status !== "cancelled" ? (
+            <Link
+              to={`/account/orders/${o.id}/invoice?autoprint=1`}
+              target="_blank"
+              rel="noopener"
+              className={buttonVariants({ variant: "outline" })}
+            >
+              <FileText className="size-4" aria-hidden="true" />
+              {dict.orders.printReceipt}
+            </Link>
+          ) : null}
         </div>
       </div>
     </div>

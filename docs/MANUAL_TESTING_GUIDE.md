@@ -129,6 +129,22 @@ npm run dev
 
 ---
 
+### Test 10: Official Order Invoice / Receipt & Verification QR Code
+- [ ] **Instant Receipt Access on Order Confirmation Page**:
+  - Place a test order through `/checkout`.
+  - On the order success page (`/checkout/success/{id}`):
+    - Verify the new **"Print receipt"** / **"Print invoice"** action button is displayed next to "View order".
+    - Click it: verify it opens the branded A4 printable invoice/receipt (`/account/orders/{id}/invoice?autoprint=1`) in a new tab with the print dialog automatically prompted.
+- [ ] **Verification QR Code on Invoice Sheet**:
+  - Look at the bottom footer of the printable A4 invoice sheet:
+    - Verify the **"Verify Order"** vector QR code is cleanly rendered.
+    - Scan the QR code using your smartphone camera: verify it immediately opens the online order details page (`/account/orders/{id}`).
+- [ ] **Customer Order Detail Access**:
+  - In `/account/orders/{id}`, verify the **"Print invoice"** / **"Print receipt"** button is visible for all non-cancelled orders.
+  - Verify you can easily save as PDF from your browser's print preview dialog.
+
+---
+
 ## 3. Owner Setup: Connecting the Staff Telegram Group (Do Whenever You're Free)
 
 When you're ready to connect your team's Telegram group to receive real-time order alerts:

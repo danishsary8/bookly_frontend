@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { OrderDocument } from "@/api/types";
 import { contact, policy, shop } from "@/content/shop";
 import { formatLabel } from "@/lib/catalog";
@@ -211,10 +211,58 @@ export function InvoiceSheet({ doc }: { doc: Doc }) {
         </div>
       </div>
 
-      <footer className="border-t border-border pt-4 text-sm text-muted-foreground">
-        Thank you for shopping at Bookly. Printed books can be returned within {policy.returnWindowDays} days of delivery: see {location.host}/returns-policy. Questions: {contact.phone} or Telegram {contact.telegram}.
+      <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4 text-sm text-muted-foreground">
+        <p className="max-w-md">
+          Thank you for shopping at Bookly. Printed books can be returned within {policy.returnWindowDays} days of delivery: see {location.host}/returns-policy. Questions: {contact.phone} or Telegram {contact.telegram}.
+        </p>
+        <InvoiceQrCode doc={doc} />
       </footer>
     </Sheet>
+  );
+}
+
+function InvoiceQrCode({ doc }: { doc: Doc }) {
+  const [svg, setSvg] = useState<string>("");
+
+  useEffect(() => {
+    let cancelled = false;
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://bookly.test";
+    const url = `${origin}/account/orders/${doc.id}`;
+
+    void import("qrcode")
+      .then((QRCode) =>
+        QRCode.toString(url, {
+          type: "svg",
+          margin: 0,
+          width: 56,
+          errorCorrectionLevel: "M",
+          color: { dark: "#0E1335", light: "#00000000" },
+        })
+      )
+      .then((res) => {
+        if (!cancelled) setSvg(res);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [doc.id]);
+
+  if (!svg) return null;
+
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        className="size-14 shrink-0 [&>svg]:size-full"
+        dangerouslySetInnerHTML={{ __html: svg }}
+        aria-hidden="true"
+      />
+      <div className="text-[11px] leading-tight text-muted-foreground">
+        <span className="block font-semibold text-foreground">Verify Order</span>
+        <span>Scan QR to verify authenticity</span>
+      </div>
+    </div>
   );
 }
 
