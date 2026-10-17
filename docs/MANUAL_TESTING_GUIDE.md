@@ -99,3 +99,18 @@ npm run dev
 - [ ] In the admin portal, navigate to `http://localhost:5173/admin/orders`:
   - For an active order (status: `processing` or `pending`), verify the **Print Packing Slip** button is enabled and visible.
   - For a completed order (status: `delivered`, `cancelled`, or `returned`), verify the packing slip button is cleanly hidden.
+
+---
+
+## 3. Owner Setup: Connecting the Staff Telegram Group (Do Whenever You're Free)
+
+When you're ready to connect your team's Telegram group to receive real-time order alerts:
+
+1. **Create Group**: In Telegram, create a group (e.g. "Bookly Staff Operations"), add your staff, and add your Bookly Alerts bot.
+2. **Get Chat ID**: Send a message in the group, open `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates` in your browser, and copy the negative group ID (e.g. `-1002345678901`).
+3. **Save Setting**:
+   - In `.env` (or Render / Railway environment settings):
+     `OPS_STAFF_CHAT_ID=-1002345678901`
+     `SHOP_URL=https://bookly-frontend-five.vercel.app` (or `http://localhost:5173`)
+4. **Verify**: Run `php artisan ops:test-alert` in backend terminal to confirm instant delivery!
+
