@@ -185,6 +185,31 @@ npm run dev
 
 ---
 
+### Test 13: Book Social Share & QR Code Modal
+- [ ] **Share Button on Book Detail Page**:
+  - Visit any book detail page (e.g. `http://localhost:5173/books/1` or click any book on the homepage).
+  - Next to the wishlist heart icon, verify the new **Share** button (`Share2` icon).
+  - Click the Share button:
+    - Verify the interactive modal opens with the book cover preview, title, and author.
+- [ ] **Social & Direct Link Sharing**:
+  - On the **"Social & Link"** tab:
+    - **Telegram Button**: Click the Telegram button with the Telegram paper plane icon; verify it opens a new tab directed to `t.me/share/url?url=...&text=...` with the prefilled book title and URL.
+    - **Facebook Button**: Click the Facebook button; verify it opens Facebook's sharer dialog in a new tab.
+    - **Copy Link**: Verify the input field shows the book's direct URL. Click "Copy link":
+      - Verify the button smoothly flips to green with a checkmark icon and text "Copied!".
+      - Verify the success toast "Link copied to clipboard!" ("បានចម្លងតំណភ្ជាប់!") appears.
+      - Paste into your address bar to verify the copied URL.
+- [ ] **Mobile QR Code Scanning & Download**:
+  - Click the **"QR Code"** tab:
+    - Verify the high-contrast vector QR code renders in the crisp white framed card.
+    - Test scanning the screen with your phone's camera: verify your phone prompts to open the book on Bookly!
+    - Click **"Download QR"**: verify an SVG file named `bookly-qr-<slug>.svg` downloads to your computer.
+- [ ] **Bilingual Khmer Support**:
+  - Switch the language toggle to Khmer:
+    - Verify the share modal header ("ចែករំលែកសៀវភៅនេះ"), description, tabs, and copy/download buttons display in natural Khmer.
+
+---
+
 ## 3. Owner Setup: Connecting the Staff Telegram Group (Do Whenever You're Free)
 
 When you're ready to connect your team's Telegram group to receive real-time order alerts:

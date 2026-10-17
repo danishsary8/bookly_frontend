@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, BookX, Heart, RotateCcw, ShoppingBag, Truck, Wallet } from "lucide-react";
+import { Bell, BookX, Heart, RotateCcw, Share2, ShoppingBag, Truck, Wallet } from "lucide-react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { stockAlertQueries, stockAlertsApi } from "@/api/endpoints/stockAlerts";
@@ -9,6 +9,7 @@ import { useSession } from "@/api/session";
 import type { BookCard, BookDetail, Customer } from "@/api/types";
 import { BookCover } from "@/components/catalog/BookCover";
 import { BookShelf } from "@/components/catalog/BookShelf";
+import { BookShareModal } from "@/components/catalog/BookShareModal";
 import { FormatPicker } from "@/components/catalog/FormatPicker";
 import { ReviewsSection } from "@/components/catalog/ReviewsSection";
 import { YourReview } from "@/features/reviews/YourReview";
@@ -87,6 +88,7 @@ function Purchase({ book }: { book: BookDetail }) {
   const variants = book.variants ?? [];
   const [variantId, setVariantId] = useState<number | undefined>(() => pickVariant(variants)?.id ?? variants[0]?.id);
   const [quantity, setQuantity] = useState(1);
+  const [shareOpen, setShareOpen] = useState(false);
   const variant = variants.find((v) => v.id === variantId);
   const digital = DIGITAL.has(variant?.format ?? "");
   const buyable = Boolean(variant && variant.in_stock !== false);
@@ -217,6 +219,9 @@ function Purchase({ book }: { book: BookDetail }) {
         <Button variant="outline" size="icon-lg" onClick={() => wishlist.toggle(book)} aria-pressed={saved} aria-label={b.saveToWishlist(book.title ?? "")} className={cn(saved && "text-accent-text")}>
           <Heart className={cn(saved && "fill-current")} aria-hidden="true" />
         </Button>
+        <Button variant="outline" size="icon-lg" onClick={() => setShareOpen(true)} aria-label={b.shareBook} title={b.shareBook}>
+          <Share2 className="size-5" aria-hidden="true" />
+        </Button>
       </div>
 
       <ul className="grid gap-3 rounded-xl border border-border bg-card p-4 text-sm sm:grid-cols-3">
@@ -296,6 +301,12 @@ function Purchase({ book }: { book: BookDetail }) {
           )}
         </div>
       </div>
+
+      <BookShareModal
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        book={book}
+      />
     </div>
   );
 }
