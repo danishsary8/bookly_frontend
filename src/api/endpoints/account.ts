@@ -2,7 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { api } from "../client";
 import { updateSessionUser } from "../session";
 import { toQueryParams } from "./catalog";
-import type { Address, AddressInput, BookCard, Customer, MessageResponse, Paginated, Resource } from "../types";
+import type { Address, AddressInput, Customer, MessageResponse, Resource, WishlistPageData, WishlistReadingStatus } from "../types";
 
 export const accountKeys = {
   all: ["account"] as const,
@@ -78,9 +78,12 @@ export const accountApi = {
   updateAddress: (id: number, input: Partial<AddressPayload>) => api.patch<Resource<Address>>(`/addresses/${id}`, input).then((r) => r.data),
   deleteAddress: (id: number) => api.delete(`/addresses/${id}`),
 
-  wishlist: (params: { page?: number; per_page?: number } = {}) =>
-    api.get<Paginated<BookCard>>("/wishlist", { params: toQueryParams(params) }),
-  addToWishlist: (bookId: number) => api.post<MessageResponse & { book_id: number }>("/wishlist", { book_id: bookId }),
+  wishlist: (params: { page?: number; per_page?: number; status?: WishlistReadingStatus } = {}) =>
+    api.get<WishlistPageData>("/wishlist", { params: toQueryParams(params) }),
+  addToWishlist: (bookId: number, status?: WishlistReadingStatus) =>
+    api.post<MessageResponse & { book_id: number; status?: WishlistReadingStatus }>("/wishlist", { book_id: bookId, ...(status ? { status } : {}) }),
+  updateWishlistStatus: (bookId: number, status: WishlistReadingStatus) =>
+    api.patch<MessageResponse & { book_id: number; status: WishlistReadingStatus }>(`/wishlist/${bookId}`, { status }),
   removeFromWishlist: (bookId: number) => api.delete(`/wishlist/${bookId}`),
 
   storeCredits: () => api.get<Resource<StoreCredit[]>>("/me/store-credits").then((r) => r.data),

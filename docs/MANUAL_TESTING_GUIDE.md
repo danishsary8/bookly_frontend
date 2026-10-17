@@ -157,7 +157,31 @@ npm run dev
   - Click the **"✕"** dismiss button on the right edge.
   - Verify the announcement bar smoothly dismisses.
   - Refresh the browser (`F5`): verify the announcement bar remains dismissed (persisted in `localStorage`).
-  - Clear localStorage or open an Incognito window: verify the banner re-appears cleanly.
+---
+
+### Test 12: Customer Wishlist Reading Statuses & Organization
+- [ ] **Saved Books Reading Status Tabs**:
+  - Sign in as a customer and navigate to `http://localhost:5173/account/wishlist`:
+    - Verify the reading status filter tabs at the top:
+      - **"All"** (ទាំងអស់) with total saved count badge
+      - **"Want to read"** (ចង់អាន) with count badge
+      - **"Currently reading"** (កំពុងអាន) with count badge
+      - **"Finished"** (បានអានរួចរាល់) with count badge
+    - Click each tab: verify the URL updates with `?status=...` and only books with that status are shown.
+- [ ] **Interactive Status Changing**:
+  - On any saved book card:
+    - Click the reading status badge pill (e.g. "Want to read").
+    - Select **"Currently reading"** or **"Finished"**:
+      - Verify the badge immediately reflects the new status with the appropriate tone/icon.
+      - Verify the success toast "Reading status updated" ("បានផ្លាស់ប្តូរស្ថានភាពអាន") appears.
+      - Switch between tabs and verify the book moved to the correct status tab!
+- [ ] **Remove & Undo**:
+  - Click the heart icon on any saved book:
+    - Verify it is removed and a toast appears with an **"Undo"** action.
+    - Click **"Undo"**: verify the book is restored to your wishlist with its status preserved.
+- [ ] **Bilingual Khmer Support**:
+  - Switch language to Khmer (`km`):
+    - Verify all tabs, badge labels, and empty states render in authentic Khmer typography.
 
 ---
 

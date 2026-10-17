@@ -58,6 +58,24 @@ export interface BookReviewsPage extends Paginated<Review> {
   meta: PageMeta & { rating_summary: RatingSummary };
 }
 
+export type WishlistReadingStatus = "want_to_read" | "reading" | "finished";
+
+export interface WishlistCounts {
+  all: number;
+  want_to_read: number;
+  reading: number;
+  finished: number;
+}
+
+export interface WishlistBookCard extends BookCard {
+  wishlist_status?: WishlistReadingStatus;
+  wishlist_saved_at?: string;
+}
+
+export interface WishlistPageData extends Paginated<WishlistBookCard> {
+  meta: PageMeta & { counts?: WishlistCounts };
+}
+
 export interface LoginResponse extends TokenResponse {
   customer: Customer;
 }
