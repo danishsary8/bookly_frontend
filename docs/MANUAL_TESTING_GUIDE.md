@@ -114,6 +114,21 @@ npm run dev
 
 ---
 
+### Test 9: Related Books & Cart Recommendations
+- [ ] **Book Detail Page**:
+  - Visit any book detail page (`http://localhost:5173/books/{id}`).
+  - Scroll down below description and reviews:
+    - Verify the **"Readers also enjoyed"** / **"Customers also bought"** bookshelf displays related titles.
+    - Verify that only active, in-stock/digital books appear (no out-of-stock physical items).
+    - Verify the current book is excluded from recommendations.
+- [ ] **Cart Page Recommendations**:
+  - Navigate to `http://localhost:5173/cart`:
+    - When your cart is empty: verify the recommendation shelf displays **"Popular in bookstore"** ("សៀវភៅពេញនិយមប្រចាំបណ្ណាគារ").
+    - Add a book to your cart (e.g. from Fiction or History): return to `/cart` and verify the shelf adapts dynamically to show **"Recommended with your order"** ("សៀវភៅណែនាំសម្រាប់ការបញ្ជាទិញរបស់អ្នក") featuring matching categories/authors, while excluding books already in your cart!
+  - Switch language to Khmer (`km`) and verify the Khmer translations render cleanly.
+
+---
+
 ## 3. Owner Setup: Connecting the Staff Telegram Group (Do Whenever You're Free)
 
 When you're ready to connect your team's Telegram group to receive real-time order alerts:

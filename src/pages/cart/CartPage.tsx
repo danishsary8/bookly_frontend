@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { AlertTriangle, ArrowRight, ShoppingBag, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { catalogQueries } from "@/api/endpoints/catalog";
 import type { CouponCheck } from "@/api/types";
 import { BookShelf } from "@/components/catalog/BookShelf";
 import { FreeShippingBar } from "@/components/cart/FreeShippingBar";
@@ -167,6 +169,35 @@ function CartContents() {
   );
 }
 
+function CartRecommendations() {
+  const { dict } = useT();
+  const { cart } = useUsableCart();
+  const items = cart.data?.items ?? [];
+  const bookIds = items.map((i) => i.book?.id).filter((id): id is number => typeof id === "number" && id > 0);
+  const cartIdsParam = bookIds.join(",");
+
+  const recommendations = useQuery(
+    catalogQueries.recommendations({
+      cart_ids: cartIdsParam || undefined,
+      limit: 6,
+    })
+  );
+
+  const books = recommendations.data ?? [];
+  if (!books.length && !recommendations.isPending) return null;
+
+  return (
+    <BookShelf
+      id="cart-recommendations"
+      eyebrow={dict.cartPage.recommendedEyebrow}
+      title={bookIds.length ? dict.cartPage.recommendedWithOrder : dict.cartPage.popularPicks}
+      books={books}
+      loading={recommendations.isPending}
+      className="mt-16"
+    />
+  );
+}
+
 export default function CartPage() {
   const { dict } = useT();
   useDocumentTitle(dict.cart.title);
@@ -177,7 +208,10 @@ export default function CartPage() {
       <CartGate headingLevel="h2">
         <CartContents />
       </CartGate>
-      <BookShelf id="cart-recent" eyebrow={dict.cartPage.yourHistory} title={dict.cartPage.recentlyViewed} books={recent.slice(0, 8)} className="mt-20" />
+      <CartRecommendations />
+      {recent.length > 0 ? (
+        <BookShelf id="cart-recent" eyebrow={dict.cartPage.yourHistory} title={dict.cartPage.recentlyViewed} books={recent.slice(0, 8)} className="mt-16" />
+      ) : null}
     </div>
   );
 }

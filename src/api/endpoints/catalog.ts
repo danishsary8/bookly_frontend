@@ -48,6 +48,9 @@ export const catalogKeys = {
   books: (filters: BookFilters) => ["catalog", "books", toQueryParams(filters)] as const,
   book: (id: number) => ["catalog", "book", id] as const,
   alsoBought: (id: number) => ["catalog", "book", id, "also-bought"] as const,
+  related: (id: number, limit = 6) => ["catalog", "book", id, "related", limit] as const,
+  recommendations: (params: { cart_ids?: string; exclude_ids?: string; limit?: number }) =>
+    ["catalog", "recommendations", toQueryParams(params)] as const,
   bookReviews: (id: number, params: object) => ["catalog", "book", id, "reviews", toQueryParams(params)] as const,
   authors: (params: object) => ["catalog", "authors", toQueryParams(params)] as const,
   author: (id: number) => ["catalog", "author", id] as const,
@@ -61,6 +64,9 @@ export const catalogApi = {
   books: (filters: BookFilters = {}) => api.get<Paginated<BookCard>>("/books", { params: toQueryParams(filters) }),
   book: (id: number) => api.get<Resource<BookDetail>>(`/books/${id}`).then((r) => r.data),
   alsoBought: (id: number) => api.get<Resource<BookCard[]>>(`/books/${id}/also-bought`).then((r) => r.data),
+  related: (id: number, limit = 6) => api.get<Resource<BookCard[]>>(`/books/${id}/related`, { params: { limit } }).then((r) => r.data),
+  recommendations: (params: { cart_ids?: string; exclude_ids?: string; limit?: number } = {}) =>
+    api.get<Resource<BookCard[]>>("/catalog/recommendations", { params: toQueryParams(params) }).then((r) => r.data),
   bookReviews: (id: number, params: { sort?: "newest" | "highest" | "lowest"; rating?: number; page?: number; per_page?: number } = {}) =>
     api.get<BookReviewsPage>(`/books/${id}/reviews`, { params: toQueryParams(params) }),
   authors: (params: { q?: string; page?: number; per_page?: number } = {}) =>
@@ -81,6 +87,10 @@ export const catalogQueries = {
   book: (id: number) => queryOptions({ queryKey: catalogKeys.book(id), queryFn: () => catalogApi.book(id) }),
   alsoBought: (id: number) =>
     queryOptions({ queryKey: catalogKeys.alsoBought(id), queryFn: () => catalogApi.alsoBought(id), enabled: id > 0 }),
+  related: (id: number, limit = 6) =>
+    queryOptions({ queryKey: catalogKeys.related(id, limit), queryFn: () => catalogApi.related(id, limit), enabled: id > 0 }),
+  recommendations: (params: Parameters<typeof catalogApi.recommendations>[0] = {}) =>
+    queryOptions({ queryKey: catalogKeys.recommendations(params), queryFn: () => catalogApi.recommendations(params) }),
   bookReviews: (id: number, params: Parameters<typeof catalogApi.bookReviews>[1] = {}) =>
     queryOptions({ queryKey: catalogKeys.bookReviews(id, params), queryFn: () => catalogApi.bookReviews(id, params), placeholderData: keepPreviousData }),
   authors: (params: Parameters<typeof catalogApi.authors>[0] = {}) =>
