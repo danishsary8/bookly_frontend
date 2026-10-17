@@ -102,6 +102,18 @@ npm run dev
 
 ---
 
+### Test 8: Branded HTML Email Templates & "View your order" Button
+- [ ] In `.env` on backend, ensure `MAIL_MAILER=log` (or your Mailtrap/SMTP credentials).
+- [ ] Place an order on the storefront or update an order's status to `shipped` in the admin panel.
+- [ ] Check the generated email (in `storage/logs/laravel.log` or your Mailtrap inbox):
+  - Verify branded header with Bookly book icon and warm serif styling.
+  - Verify clean responsive card layout with warm cream background (`#f8f7f5`).
+  - Verify styled dark charcoal **"View your order"** action button linking to the frontend customer order page (`/account/orders/{id}`).
+  - Verify Khmer language support: switch account language to Khmer (`km`), place an order, and verify the button reads **"មើលការបញ្ជាទិញរបស់អ្នក"**.
+  - Verify branded footer: `Bookly · Phnom Penh, Cambodia`.
+
+---
+
 ## 3. Owner Setup: Connecting the Staff Telegram Group (Do Whenever You're Free)
 
 When you're ready to connect your team's Telegram group to receive real-time order alerts:
