@@ -145,6 +145,22 @@ npm run dev
 
 ---
 
+### Test 11: Storefront Smart Promotional Announcement Bar
+- [ ] **Storefront Top Bar Display**:
+  - Open `http://localhost:5173/`:
+    - Verify the warm branded promotional bar appears at the very top: *"🚚 Flat $1.50 Delivery in Phnom Penh · Free delivery on orders over $25! Shop books →"*.
+    - Click **"Shop books"**: verify it navigates directly to `/books`.
+- [ ] **Bilingual Language Switch**:
+  - Toggle language to Khmer (`km`):
+    - Verify the announcement immediately switches to Khmer: *"🚚 តម្លៃដឹកជញ្ជូន 1.50$ ក្នុងរាជធានីភ្នំពេញ · ឥតគិតថ្លៃសម្រាប់ការបញ្ជាទិញចាប់ពី 25$ ឡើងទៅ! ទិញសៀវភៅ →"*.
+- [ ] **Dismissal & Persistence**:
+  - Click the **"✕"** dismiss button on the right edge.
+  - Verify the announcement bar smoothly dismisses.
+  - Refresh the browser (`F5`): verify the announcement bar remains dismissed (persisted in `localStorage`).
+  - Clear localStorage or open an Incognito window: verify the banner re-appears cleanly.
+
+---
+
 ## 3. Owner Setup: Connecting the Staff Telegram Group (Do Whenever You're Free)
 
 When you're ready to connect your team's Telegram group to receive real-time order alerts:

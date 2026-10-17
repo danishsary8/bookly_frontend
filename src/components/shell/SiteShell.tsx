@@ -4,6 +4,7 @@ import { RouteErrorBoundary } from "@/components/ErrorBoundary";
 import { PageTransition } from "@/components/motion/PageTransition";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { closeShellPanel, useShellPanel, type ShellPanel } from "@/stores/shell";
+import { AnnouncementBar } from "./AnnouncementBar";
 import { OfflineBanner } from "./OfflineBanner";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
@@ -66,6 +67,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
       >
         {dict.nav.skipToContent}
       </a>
+      <AnnouncementBar />
       <SiteHeader />
       <OfflineBanner />
       {/* At least a screen tall: the footer stays below the fold while a page or its data loads, so it never jumps (layout shift). */}
