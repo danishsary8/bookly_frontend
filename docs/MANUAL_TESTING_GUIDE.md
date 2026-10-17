@@ -210,6 +210,33 @@ npm run dev
 
 ---
 
+### Test 14: Search Discovery Hub & Recent Searches
+- [ ] **Search Discovery Hub (`/search` with no query)**:
+  - Visit `http://localhost:5173/search`:
+    - Verify that instead of an empty white screen, you see:
+      - **"Popular searches"** (ការស្វែងរកពេញនិយម) with trending pills ("Khmer History", "Business & Leadership", "Personal Finance", "Self-Help", "English Learning", "Coding & Tech", "Fiction").
+      - **"Browse by category"** (ស្វែងរកតាមប្រភេទ) featuring interactive category cards with book counts.
+- [ ] **Popular Tag One-Click Search**:
+  - Click any popular tag (e.g. "Khmer History" or "Personal Finance"):
+    - Verify the search input immediately populates with that tag.
+    - Verify the URL updates to `?q=...` and matching books render instantly.
+- [ ] **Recent Searches History & Persistence**:
+  - Search for a custom title (e.g. "Cambodia" or "Microservices"):
+    - Now clear the search field or visit `http://localhost:5173/search`:
+    - Verify **"Recent searches"** (ការស្វែងរកថ្មីៗ) appears with a Clock icon above popular searches.
+    - Verify your recent search queries appear as rounded chip pills.
+    - Click any chip: verify it searches that query again.
+    - Click the small `×` on any chip: verify only that item is removed from history.
+    - Click **"Clear all"** (សម្អាតទាំងអស់): verify all recent search history is cleared.
+- [ ] **Live Search Header Sync**:
+  - In the sticky top navigation header, type a search into the live search bar and press Enter (or click "See all results").
+  - Go back to `/search`: verify that query was also automatically captured into your recent searches.
+- [ ] **Bilingual Khmer Support**:
+  - Switch the language toggle to Khmer:
+    - Verify headings, popular search chips, and category cards render in Khmer typography.
+
+---
+
 ## 3. Owner Setup: Connecting the Staff Telegram Group (Do Whenever You're Free)
 
 When you're ready to connect your team's Telegram group to receive real-time order alerts:

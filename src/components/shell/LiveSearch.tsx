@@ -12,6 +12,7 @@ import { highlightParts } from "@/lib/highlight";
 import { cn } from "@/lib/utils";
 import { searchPath } from "./nav";
 import { formatMoney, useCurrency } from "@/stores/currency";
+import { addRecentSearch } from "@/stores/recentSearches";
 import { useT } from "@/i18n";
 
 /*
@@ -105,6 +106,7 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
     const q = query.trim();
     if (!q) return;
     if (active >= 0 && active < books.length && books[active].id) return go(`/books/${books[active].id}`);
+    addRecentSearch(q);
     go(searchPath(q));
   };
 
@@ -260,7 +262,10 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
                 role="option"
                 aria-selected={active === books.length}
                 onPointerMove={() => setActive(books.length)}
-                onClick={() => go(searchPath(query))}
+                onClick={() => {
+                  addRecentSearch(query.trim());
+                  go(searchPath(query));
+                }}
                 className={cn(
                   "mt-1 flex cursor-pointer items-center justify-between gap-3 rounded-lg border-t border-border px-3 py-3 text-sm font-semibold text-primary",
                   active === books.length && "bg-secondary",
