@@ -513,3 +513,5 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
     plain constant, not state set in an effect); Khmer-dictionary test allows the brand name "Facebook"; E2E a11y on `/account/wishlist`
     (reading-status tabs had no tab panel, so the selected tab's `aria-controls` pointed at nothing; the list is now the active `TabsContent`).
     Reproduced the a11y failure locally, then 4/4 signed-in a11y specs pass with the fix.
+
+- [x] Dependency security fixes (2026-10-30, branch `chore/dependency-audit`): `npm audit fix` (no major upgrades), lockfile only. Advisories 14 → 6; `npm audit --omit=dev` (what ships to users) → 0. The 6 left are dev tools only and need major upgrades: Vitest 3 → 5 (`@vitest/mocker`, `tinypool`) and the shadcn CLI 3 → 1.x line (its own old `zod` 3.25.76 and `deepmerge`; the app uses zod 4.6.7, already patched). Verified: lint, typecheck, 416 tests, build; runtime on Vite + local API: /, /books, /books/1, /cart, /login, /admin/login load; demo sign-in → /account/orders shows 3 orders; no console errors.
