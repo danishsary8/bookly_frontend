@@ -71,7 +71,7 @@ describe("Khmer storefront", () => {
 
   it("has no English left in the Khmer dictionary", () => {
     // Names and codes that stay the same in Khmer.
-    const same = /^(Telegram|ISBN|Bakong KHQR|English|ភាសាខ្មែរ|Visa, Mastercard.*|.*\bDELETE\b.*|.*\bORD-.*)$/;
+    const same = /^(Telegram|Facebook|ISBN|Bakong KHQR|English|ភាសាខ្មែរ|Visa, Mastercard.*|.*\bDELETE\b.*|.*\bORD-.*)$/;
     const leftovers: string[] = [];
     const visit = (a: unknown, b: unknown, path: string) => {
       if (typeof a === "function" && typeof b === "function") return visit(a("7", "8", "X", "Y"), b("7", "8", "X", "Y"), path);
