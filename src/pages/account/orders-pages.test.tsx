@@ -5,7 +5,7 @@ import { Route, Routes, useLocation } from "react-router-dom";
 import { ordersApi } from "@/api/endpoints/orders";
 import { ApiError } from "@/api/errors";
 import { clearSession, setSession } from "@/api/session";
-import type { Customer, Order, OwnReview, Paginated, ReturnableItems, ReturnRequest } from "@/api/types";
+import type { Cart, Customer, Order, OwnReview, Paginated, ReturnableItems, ReturnRequest } from "@/api/types";
 import { Toaster } from "@/components/ui/toaster";
 import { YourReview } from "@/features/reviews/YourReview";
 import LegacyOrderRedirect from "@/routes/LegacyOrderRedirect";
@@ -95,6 +95,7 @@ const app = (route: string) =>
         <Route path="/orders/:id" element={<LegacyOrderRedirect />} />
         <Route path="/books/:id" element={<YourReview bookId={6} />} />
         <Route path="/login" element={<p>sign in</p>} />
+        <Route path="/cart" element={<p>cart page</p>} />
       </Routes>
       <Where />
       <Toaster />
@@ -174,6 +175,42 @@ describe("OrderDetailPage", () => {
     app("/account/orders/8");
     expect(await screen.findByText("The return window for this order has closed.")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Request a return/ })).not.toBeInTheDocument();
+  });
+
+  it("buys a delivered order again and opens the cart", async () => {
+    const user = userEvent.setup();
+    const reorder = vi.spyOn(ordersApi, "reorder").mockResolvedValue({
+      added: [{ book_variant_id: 60, title: "The Hound of the Baskervilles", quantity: 2 }],
+      skipped: [{ book_variant_id: 90, title: "Meditations", reason: "This item is out of stock." }],
+      cart: { items: [], item_count: 2 } as unknown as Cart,
+    });
+    const { queryClient } = app("/account/orders/8");
+    await user.click(await screen.findByRole("button", { name: "Buy again" }));
+    expect(reorder).toHaveBeenCalledWith(8);
+    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/cart"));
+    expect(screen.getByText("2 books added to your cart")).toBeInTheDocument();
+    expect(screen.getByText("1 book couldn't be added")).toBeInTheDocument();
+    expect(screen.getByText(/Meditations: This item is out of stock\./)).toBeInTheDocument();
+    expect(queryClient.getQueryData(["cart"])).toMatchObject({ item_count: 2 });
+  });
+
+  it("stays on the order when none of the books can be bought", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(ordersApi, "reorder").mockResolvedValue({
+      added: [],
+      skipped: [{ book_variant_id: 60, title: "The Hound of the Baskervilles", reason: "This item is no longer available." }],
+      cart: { items: [], item_count: 0 } as unknown as Cart,
+    });
+    app("/account/orders/8");
+    await user.click(await screen.findByRole("button", { name: "Buy again" }));
+    expect(await screen.findByText("None of these books can be bought right now")).toBeInTheDocument();
+    expect(screen.getByTestId("where")).toHaveTextContent("/account/orders/8");
+  });
+
+  it("does not offer Buy again while the order is still pending", async () => {
+    app("/account/orders/7");
+    expect(await screen.findByRole("heading", { level: 1, name: "Order ORD-7" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Buy again" })).not.toBeInTheDocument();
   });
 
   it("is reachable from the old /orders/:id links", async () => {

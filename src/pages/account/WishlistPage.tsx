@@ -10,7 +10,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
 import { Pagination } from "@/components/ui/pagination";
 import { SkeletonGroup } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AccountSection } from "@/features/account/AccountSection";
 import { WishlistCard } from "@/features/account/WishlistCard";
 import { useAddToCart } from "@/components/catalog/useCatalogActions";
@@ -101,9 +101,9 @@ export default function WishlistPage() {
           : a.wishlistLead
       }
     >
-      {/* Reading Status Filter Tabs */}
-      <Tabs value={currentStatus} onValueChange={handleTabChange} className="mb-6">
-        <TabsList>
+      {/* Reading status filter tabs; the list below is the active tab's panel, so each tab points at real content. */}
+      <Tabs value={currentStatus} onValueChange={handleTabChange}>
+        <TabsList className="mb-6">
           <TabsTrigger value="all">
             <span>{a.readingStatusAll}</span>
             {counts?.all !== undefined ? (
@@ -140,81 +140,83 @@ export default function WishlistPage() {
             ) : null}
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value={currentStatus}>
+        {wishlistQuery.isError && !wishlistQuery.data ? (
+          <ErrorState
+            error={wishlistQuery.error}
+            onRetry={() => wishlistQuery.refetch()}
+            headingLevel="h2"
+            showHomeLink={false}
+          />
+        ) : wishlistQuery.isPending && showSkeleton ? (
+          <SkeletonGroup
+            label={dict.cards.loadingBooks}
+            className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-3"
+          >
+            {Array.from({ length: 6 }, (_, i) => (
+              <BookCardSkeleton key={i} />
+            ))}
+          </SkeletonGroup>
+        ) : books.length === 0 ? (
+          <EmptyState
+            icon={Heart}
+            title={
+              currentStatus === "all"
+                ? a.wishlistEmpty
+                : a.readingStatusEmpty(
+                    currentStatus === "want_to_read"
+                      ? a.readingStatusWantToRead
+                      : currentStatus === "reading"
+                        ? a.readingStatusReading
+                        : a.readingStatusFinished,
+                  )
+            }
+            description={currentStatus === "all" ? a.wishlistEmptyLead : a.wishlistLead}
+            action={
+              <Link to="/books" className={buttonVariants()}>
+                {a.discoverBooks}
+              </Link>
+            }
+            className="rounded-xl border border-dashed border-border"
+          />
+        ) : (
+          <Stagger
+            as="ul"
+            key={`${currentStatus}-${books.map((b) => b.id).join(",")}`}
+            className={cn(
+              "grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-3 transition-opacity duration-150",
+              wishlistQuery.isPlaceholderData && "opacity-60",
+            )}
+          >
+            {books.map((book, index) => (
+              <StaggerItem as="li" key={book.id} index={index}>
+                <WishlistCard
+                  book={book}
+                  onRemove={handleRemove}
+                  onAddToCart={cart.add}
+                  onStatusChange={handleStatusChange}
+                  adding={cart.pendingBookId === book.id}
+                />
+              </StaggerItem>
+            ))}
+          </Stagger>
+        )}
+
+        <Pagination
+          page={meta?.current_page ?? 1}
+          lastPage={meta?.last_page ?? 1}
+          hrefFor={(p) => {
+            const next = new URLSearchParams(params);
+            if (p > 1) next.set("page", String(p));
+            else next.delete("page");
+            const s = next.toString();
+            return s ? `?${s}` : "?";
+          }}
+          className="mt-6"
+        />
+        </TabsContent>
       </Tabs>
-
-      {wishlistQuery.isError && !wishlistQuery.data ? (
-        <ErrorState
-          error={wishlistQuery.error}
-          onRetry={() => wishlistQuery.refetch()}
-          headingLevel="h2"
-          showHomeLink={false}
-        />
-      ) : wishlistQuery.isPending && showSkeleton ? (
-        <SkeletonGroup
-          label={dict.cards.loadingBooks}
-          className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-3"
-        >
-          {Array.from({ length: 6 }, (_, i) => (
-            <BookCardSkeleton key={i} />
-          ))}
-        </SkeletonGroup>
-      ) : books.length === 0 ? (
-        <EmptyState
-          icon={Heart}
-          title={
-            currentStatus === "all"
-              ? a.wishlistEmpty
-              : a.readingStatusEmpty(
-                  currentStatus === "want_to_read"
-                    ? a.readingStatusWantToRead
-                    : currentStatus === "reading"
-                      ? a.readingStatusReading
-                      : a.readingStatusFinished,
-                )
-          }
-          description={currentStatus === "all" ? a.wishlistEmptyLead : a.wishlistLead}
-          action={
-            <Link to="/books" className={buttonVariants()}>
-              {a.discoverBooks}
-            </Link>
-          }
-          className="rounded-xl border border-dashed border-border"
-        />
-      ) : (
-        <Stagger
-          as="ul"
-          key={`${currentStatus}-${books.map((b) => b.id).join(",")}`}
-          className={cn(
-            "grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-3 transition-opacity duration-150",
-            wishlistQuery.isPlaceholderData && "opacity-60",
-          )}
-        >
-          {books.map((book, index) => (
-            <StaggerItem as="li" key={book.id} index={index}>
-              <WishlistCard
-                book={book}
-                onRemove={handleRemove}
-                onAddToCart={cart.add}
-                onStatusChange={handleStatusChange}
-                adding={cart.pendingBookId === book.id}
-              />
-            </StaggerItem>
-          ))}
-        </Stagger>
-      )}
-
-      <Pagination
-        page={meta?.current_page ?? 1}
-        lastPage={meta?.last_page ?? 1}
-        hrefFor={(p) => {
-          const next = new URLSearchParams(params);
-          if (p > 1) next.set("page", String(p));
-          else next.delete("page");
-          const s = next.toString();
-          return s ? `?${s}` : "?";
-        }}
-        className="mt-6"
-      />
     </AccountSection>
   );
 }

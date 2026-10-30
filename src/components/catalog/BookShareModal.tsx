@@ -28,7 +28,8 @@ export function BookShareModal({ open, onOpenChange, book, url: explicitUrl }: B
   const b = dict.book;
   const [copied, setCopied] = useState(false);
   const [qrSvg, setQrSvg] = useState<string>("");
-  const [hasNativeShare, setHasNativeShare] = useState(false);
+  // The browser's own share sheet (mostly phones); known at render time, so no state is needed.
+  const hasNativeShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
   const [activeTab, setActiveTab] = useState<"share" | "qr">("share");
 
   // Compute the current book URL
@@ -43,12 +44,6 @@ export function BookShareModal({ open, onOpenChange, book, url: explicitUrl }: B
           .filter(Boolean)
           .join(", ")
       : book.author_name) || "";
-
-  useEffect(() => {
-    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-      setHasNativeShare(true);
-    }
-  }, []);
 
   // Generate QR Code dynamically when opened
   useEffect(() => {
