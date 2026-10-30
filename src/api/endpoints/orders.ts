@@ -1,7 +1,7 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { api } from "../client";
 import { toQueryParams } from "./catalog";
-import type { OrderStatus, Order, OrderDocument, OwnReview, Paginated, Resource, ReturnableItems, ReturnRequest } from "../types";
+import type { Cart, OrderStatus, Order, OrderDocument, OwnReview, Paginated, Resource, ReturnableItems, ReturnRequest } from "../types";
 
 export interface ReturnLineInput {
   order_item_id: number;
@@ -12,6 +12,13 @@ export interface ReturnLineInput {
 export interface ReviewInput {
   rating: number;
   comment?: string | null;
+}
+
+/** POST /orders/{id}/reorder: what went back into the cart, what could not (with the API's reason), and the new cart. */
+export interface ReorderResult {
+  added: { book_variant_id: number; title: string | null; quantity: number }[];
+  skipped: { book_variant_id: number | null; title: string | null; reason: string }[];
+  cart: Cart;
 }
 
 export const orderKeys = {
@@ -29,6 +36,7 @@ export const ordersApi = {
   order: (id: number) => api.get<Resource<Order>>(`/orders/${id}`).then((r) => r.data),
   invoice: (id: number) => api.get<Resource<OrderDocument>>(`/orders/${id}/invoice`).then((r) => r.data),
   cancel: (id: number, reason?: string) => api.post<Resource<Order>>(`/orders/${id}/cancel`, reason ? { reason } : {}).then((r) => r.data),
+  reorder: (id: number) => api.post<Resource<ReorderResult>>(`/orders/${id}/reorder`).then((r) => r.data),
 
   returnable: (orderId: number) => api.get<Resource<ReturnableItems>>(`/orders/${orderId}/returnable-items`).then((r) => r.data),
   requestReturn: (orderId: number, reason: string, items: ReturnLineInput[]) =>

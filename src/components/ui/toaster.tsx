@@ -57,7 +57,7 @@ function ToastCard({ toast }: { toast: Toast }) {
       </span>
       <div className="min-w-0 flex-1 pt-1">
         <p className="text-[15px] font-semibold leading-5">{toast.title}</p>
-        {toast.description ? <p className="mt-1 text-sm leading-5 text-muted-foreground">{toast.description}</p> : null}
+        {toast.description ? <p className="mt-1 whitespace-pre-line text-sm leading-5 text-muted-foreground">{toast.description}</p> : null}
         {toast.action ? (
           toast.action.href ? (
             <Link

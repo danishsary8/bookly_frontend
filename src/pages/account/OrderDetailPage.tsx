@@ -10,6 +10,7 @@ import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ErrorState, InlineError } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
+import { BuyAgainButton } from "@/features/orders/BuyAgainButton";
 import { CancelOrderDialog } from "@/features/orders/CancelOrderDialog";
 import { DeliveryAddressCard, OrderItemsCard } from "@/features/orders/OrderSummary";
 import { OrderTimeline } from "@/features/orders/OrderTimeline";
@@ -47,7 +48,8 @@ function ReturnEntry({ order }: { order: Order }) {
 /*
  * /account/orders/:id: one order: lines and totals, delivery address, payment,
  * the status timeline, Cancel while it's pending, and the way into a return
- * once it's delivered. Delivered lines link to the book's review form.
+ * once it's delivered. Delivered lines link to the book's review form. Once an order
+ * has left "pending", Buy again refills the cart from it.
  */
 export default function OrderDetailPage() {
   const id = Number(useParams().id);
@@ -93,6 +95,7 @@ export default function OrderDetailPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
+            {o.status !== "pending" ? <BuyAgainButton order={o} /> : null}
             {o.status !== "cancelled" ? (
               <Link to={`/account/orders/${o.id}/invoice?autoprint=1`} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline" })}>
                 <FileText aria-hidden="true" /> {o.payment_status === "succeeded" && o.status === "delivered" ? t.printReceipt : t.printInvoice}
