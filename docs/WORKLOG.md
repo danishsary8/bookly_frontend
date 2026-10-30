@@ -501,3 +501,11 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
     - Vitest clean (391 passed across 61 test files).
     - Production build clean (`npm run build` - 0 errors).
 
+
+- [x] Buy again on the order page (2026-10-30, branch `feature/buy-again`; needs backend `POST /orders/{id}/reorder`, merged in backend PR #94):
+  - `BuyAgainButton` (`src/features/orders`): shown once an order has left `pending`; the returned cart replaces the cached one
+    (header badge updates), then goes to `/cart`. Skipped books are listed with the API's reason; if nothing could be added it stays on the order.
+  - `ordersApi.reorder` + `ReorderResult` type (hand-written: the OpenAPI entry has no response schema). EN + KM strings. Toast descriptions keep line breaks.
+  - Verified: typecheck, build, 3 new page tests (orders-pages 16/16). Runtime (Playwright against local API + DemoSeeder): all added → cart with 2 books,
+    badge 2, toast; one out-of-stock book → skipped toast with reason; pending order shows no button; Khmer label shows.
+  - Already failing on `main`, not touched: lint `BookShareModal.tsx:49` (set-state-in-effect), test "no English left in the Khmer dictionary" (`km.book.shareFacebook`).
