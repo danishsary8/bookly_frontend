@@ -509,3 +509,7 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   - Verified: typecheck, build, 3 new page tests (orders-pages 16/16). Runtime (Playwright against local API + DemoSeeder): all added → cart with 2 books,
     badge 2, toast; one out-of-stock book → skipped toast with reason; pending order shows no button; Khmer label shows.
   - Already failing on `main`, not touched: lint `BookShareModal.tsx:49` (set-state-in-effect), test "no English left in the Khmer dictionary" (`km.book.shareFacebook`).
+  - Also fixed on this branch so CI is green (both failing on `main` since 2026-10-17): lint in `BookShareModal` (native-share flag is now a
+    plain constant, not state set in an effect); Khmer-dictionary test allows the brand name "Facebook"; E2E a11y on `/account/wishlist`
+    (reading-status tabs had no tab panel, so the selected tab's `aria-controls` pointed at nothing; the list is now the active `TabsContent`).
+    Reproduced the a11y failure locally, then 4/4 signed-in a11y specs pass with the fix.
