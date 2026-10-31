@@ -552,3 +552,19 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
     → error gone, hint back, no request sent; Profile hint shows and its link opens Sign-in & security; no page or hint overflow; no console errors.
   - Not verified: a real code sent by the live Telegram bot (not part of this change).
   - Follow-up found (not changed here): Profile in Khmer at 390 px, the account tab row is cut at the right edge ("អាសយដ្ឋា…"); it scrolls sideways and existed before.
+- [x] "You may also like" on the book page (2026-10-31, branch `feature/better-similar-books`; backend branch of the same name
+  improves the list but is not required: `/books/{id}/related?limit=12` already exists on today's API):
+  - `BookDetailPage.tsx`: the "Customers also bought" row (`/also-bought`, 6 books) is now `SimilarBooks`: `/related?limit=12`,
+    minus the current book and every book the series row and the "More by" row already show. Recently viewed is not removed
+    (it is history, not a suggestion, and would empty the row for people who browse a lot).
+  - Shelf skeleton while the list or the rows it depends on load; once loaded with fewer than 2 books left, nothing renders
+    (no heading, no gap). Existing `BookShelf` and styles.
+  - Strings: `book.similarEyebrow` "More like this" / "សៀវភៅស្រដៀងគ្នា", `book.similarTitle` "You may also like" / "អ្នកប្រហែលជាចូលចិត្ត"
+    (same Khmer as the cart's "You may also like"); the old `alsoBought*` keys and their `// draft` mark are gone.
+  - Tests (`catalog-pages.test.tsx`, 4 new): repeats removed + asks 12; row hidden with < 2 left; skeleton while loading, then
+    nothing when empty; fewer than 12 from the API shown in the API's order.
+  - Verified: lint 0, typecheck, 444 passed / 3 skipped, build. Browser (Playwright/Chromium, Vite :5173 + local API :8000 on the
+    backend branch, demo data), EN + KM at 1280 and 390 px: Holmes #2 → series row 4, 6, author row 6, 4, "You may also like"
+    1, 2, 3, 16, 15, 14, 13, 11, 10, 20 (no repeats, not itself); Meditations → 12 books; cart (demo customer, Holmes #1) → 5, 6, …;
+    Khmer eyebrow/title show; no horizontal overflow. Console: only failed cover images from external photo hosts (no internet here).
+  - Not verified: against the live API (Render) in a browser; the Khmer wording by a native speaker.

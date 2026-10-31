@@ -1018,9 +1018,8 @@ export const km: Translations = {
     aboutAuthor: "អំពីអ្នកនិពន្ធ",
     yourHistory: "ប្រវត្តិរបស់អ្នក",
     recentlyViewed: "បានមើលថ្មីៗ",
-    // draft
-    alsoBoughtEyebrow: "អតិថិជនក៏បានទិញផងដែរ",
-    alsoBought: "អ្នកអានក៏ចូលចិត្ត",
+    similarEyebrow: "សៀវភៅស្រដៀងគ្នា",
+    similarTitle: "អ្នកប្រហែលជាចូលចិត្ត",
     tellMeWhenBack: "ប្រាប់ខ្ញុំពេលមានស្តុកវិញ",
     weWillEmailYou: "យើងនឹងផ្ញើអ៊ីមែលពេលមានស្តុក",
     undoAlert: "មិនធ្វើវិញ",
