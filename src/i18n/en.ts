@@ -551,6 +551,14 @@ export const en = {
     keepIt: "Keep it",
     disconnectName: (name: string) => `Disconnect ${name}`,
   },
+  downloadData: {
+    title: "Download my data",
+    lead: "Get a copy of everything your account holds: profile, addresses, orders, returns, reviews and wishlist, as one file.",
+    button: "Download my data",
+    started: "Your data file is downloading.",
+    unavailable: "Data download isn't available yet. Please try again later.",
+    failed: "Couldn't download your data",
+  },
   closeAccount: {
     title: "Delete my account",
     lead: "You're signed out everywhere, and your reviews, wishlist and cart are removed straight away. Your name, email, phone number and addresses are erased after 30 days. We keep order records the law requires.",
