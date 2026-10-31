@@ -60,8 +60,11 @@ export const catalogKeys = {
   series: (id: number) => ["catalog", "series", id] as const,
 };
 
+/** A page of books; `search.typo_tolerant` is true when nothing matched exactly and the API matched similar spellings. */
+export type BookList = Paginated<BookCard> & { search?: { typo_tolerant?: boolean } };
+
 export const catalogApi = {
-  books: (filters: BookFilters = {}) => api.get<Paginated<BookCard>>("/books", { params: toQueryParams(filters) }),
+  books: (filters: BookFilters = {}) => api.get<BookList>("/books", { params: toQueryParams(filters) }),
   book: (id: number) => api.get<Resource<BookDetail>>(`/books/${id}`).then((r) => r.data),
   alsoBought: (id: number) => api.get<Resource<BookCard[]>>(`/books/${id}/also-bought`).then((r) => r.data),
   related: (id: number, limit = 6) => api.get<Resource<BookCard[]>>(`/books/${id}/related`, { params: { limit } }).then((r) => r.data),

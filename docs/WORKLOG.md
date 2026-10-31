@@ -513,3 +513,5 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
     plain constant, not state set in an effect); Khmer-dictionary test allows the brand name "Facebook"; E2E a11y on `/account/wishlist`
     (reading-status tabs had no tab panel, so the selected tab's `aria-controls` pointed at nothing; the list is now the active `TabsContent`).
     Reproduced the a11y failure locally, then 4/4 signed-in a11y specs pass with the fix.
+
+- [x] Typo search notice (2026-10-31, branch `feature/typo-search-notice`): when `GET /books` answers `search.typo_tolerant: true` (backend `feature/typo-tolerant-search`), the results show "No exact match for "…". Showing books with a similar spelling." above the list (CatalogBrowser: /search and /books?q=); EN + KM text; `BookList` type for the books response. Safe before the backend merge: without the field nothing shows. 2 tests; lint, typecheck, 418 tests, build; runtime with the typo backend (frankenstien → notice + Frankenstein; frankenstein, xqzvwk → no notice) and with the current backend (no notice, no errors).

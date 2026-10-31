@@ -70,6 +70,30 @@ describe("BooksPage", () => {
     expect(await screen.findByRole("button", { name: "Remove filter: Classics" })).toBeInTheDocument();
   });
 
+  it("says when results are close spellings, not exact matches", async () => {
+    vi.spyOn(catalogApi, "books").mockResolvedValue({ ...page([card(5, "Frankenstein")]), search: { typo_tolerant: true } });
+    renderWithProviders(
+      <Routes>
+        <Route path="/books" element={<BooksPage />} />
+      </Routes>,
+      { route: "/books?q=frankenstien" },
+    );
+    expect(await screen.findByRole("link", { name: "Frankenstein" })).toBeInTheDocument();
+    expect(screen.getByText('No exact match for "frankenstien". Showing books with a similar spelling.')).toBeInTheDocument();
+  });
+
+  it("shows no spelling notice for exact matches", async () => {
+    vi.spyOn(catalogApi, "books").mockResolvedValue({ ...page([card(5, "Frankenstein")]), search: { typo_tolerant: false } });
+    renderWithProviders(
+      <Routes>
+        <Route path="/books" element={<BooksPage />} />
+      </Routes>,
+      { route: "/books?q=frankenstein" },
+    );
+    expect(await screen.findByRole("link", { name: "Frankenstein" })).toBeInTheDocument();
+    expect(screen.queryByText(/No exact match/)).not.toBeInTheDocument();
+  });
+
   it("writes a filter change to the URL and resets the page", async () => {
     const user = userEvent.setup();
     vi.spyOn(catalogApi, "books").mockResolvedValue(page([card(1, "Emma")]));
