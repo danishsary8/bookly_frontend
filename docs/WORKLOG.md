@@ -404,6 +404,13 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   store credits light/dark 390 px, CSV import, schedule with the browser in New York time, newsletter admin, footer
   sign-up) with axe: all passed. Not verified: real Turnstile and Resend on the live site, Khmer wording (native review).
 
+## 2026-10-31: Download my data (`feature/download-my-data`)
+- [x] Account → Sign-in & security → **Download my data** (`DownloadMyData`): calls backend `GET /me/export`
+  (branch `feature/customer-data-export`) and saves `bookly-my-data-YYYY-MM-DD.json`. Before that backend is merged the
+  API answers 404 and the page says "Data download isn't available yet" (no error, nothing reported); 429 shows the API's
+  message. EN + KM text. 3 tests; lint, typecheck, 419 tests, build; runtime: with the export backend the demo account's
+  file downloads (11 sections, 3 orders); with the current backend the friendly message shows; no console errors.
+
 ## Phase 3 · Strict delete security & 30-day Trash retention (branch `feature/strict-delete-trash`)
 - [x] Strict delete security and 30-day trash retention for catalog entities (books, authors, categories, publishers, series):
   - Universal `StrictDeleteDialog` modal enforcing admin-only deletion: requires matching the item's name, confirming current admin password, and entering a 6-digit TOTP code.

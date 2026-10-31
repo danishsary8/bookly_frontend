@@ -10,6 +10,7 @@ import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { AccountSection } from "@/features/account/AccountSection";
 import { CloseAccount } from "@/features/account/CloseAccount";
+import { DownloadMyData } from "@/features/account/DownloadMyData";
 import { SignInMethods } from "@/features/account/SignInMethods";
 import { passwordSchema, type PasswordValues } from "@/features/account/schemas";
 import { PasswordChecklist } from "@/features/auth/PasswordChecklist";
@@ -34,6 +35,7 @@ export default function SecurityPage() {
     <AccountSection title={dict.account.security} lead={dict.account.securityLead}>
       <SignInMethods customer={customer} />
       <PasswordForm key={String(hasPassword)} hasPassword={hasPassword} />
+      <DownloadMyData />
       <CloseAccount customer={customer} />
     </AccountSection>
   );
