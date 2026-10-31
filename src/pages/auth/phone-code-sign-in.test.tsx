@@ -7,6 +7,7 @@ import { ApiError } from "@/api/errors";
 import { clearSession, getSession } from "@/api/session";
 import type { Customer } from "@/api/types";
 import { RESEND_SECONDS } from "@/features/auth/PhoneCodeSignIn";
+import { setLanguage } from "@/i18n";
 import { GuestOnly } from "@/routes/guards";
 import { renderWithProviders } from "@/test/render";
 import LoginPage from "./LoginPage";
@@ -84,6 +85,42 @@ describe("Sign in with a code from Telegram", () => {
     await openPhoneSignIn();
     expect(screen.getByText("No message from the bot? Sign in with one tap instead:")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Continue with Telegram" })).toBeInTheDocument();
+  });
+
+  it("explains under the field that codes only go to a confirmed number, and how to confirm it", async () => {
+    await openPhoneSignIn();
+    expect(screen.getByLabelText("Phone number")).toHaveAccessibleDescription(
+      "Codes only go to a confirmed number. Not confirmed yet? Use Continue with Telegram below, or confirm it in Account → Sign-in & security → Phone → Confirm.",
+    );
+  });
+
+  it("clears the error and brings the hint back once a wrong number is fixed, without pressing Send again", async () => {
+    const post = vi.spyOn(api, "post");
+    const user = await openPhoneSignIn();
+    const field = screen.getByLabelText("Phone number");
+
+    await user.type(field, "123");
+    await user.click(screen.getByRole("button", { name: "Send code in Telegram" }));
+    expect(field).toHaveAttribute("aria-invalid", "true");
+    expect(field).toHaveAccessibleDescription("Enter a Cambodian phone number, like 012 345 678.");
+
+    await user.clear(field);
+    await user.type(field, "012 345 678");
+    expect(field).not.toHaveAttribute("aria-invalid");
+    expect(field).toHaveAccessibleDescription(/^Codes only go to a confirmed number\./);
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("shows the hint in Khmer", async () => {
+    setLanguage("km");
+    try {
+      app();
+      const toggle = await screen.findByRole("button", { name: "ចូលដោយប្រើលេខទូរសព្ទ?" });
+      await userEvent.setup({ advanceTimers: vi.advanceTimersByTime }).click(toggle);
+      expect(screen.getByLabelText("លេខទូរសព្ទ")).toHaveAccessibleDescription(/^លេខកូដផ្ញើទៅតែលេខដែលបានបញ្ជាក់ប៉ុណ្ណោះ។/);
+    } finally {
+      setLanguage("en");
+    }
   });
 
   it("checks the number before asking the API", async () => {

@@ -64,6 +64,14 @@ describe("ProfilePage", () => {
     expect(await notifications().findByText("Profile saved")).toBeInTheDocument();
   });
 
+  it("says the phone is for couriers and where to confirm it for sign-in", async () => {
+    app("/account/profile");
+    const phone = await screen.findByLabelText("Phone", { exact: false });
+    expect(phone).toHaveAccessibleDescription(/^Couriers call this number\. To sign in with it, it must be confirmed in Sign-in & security/);
+    const hint = document.getElementById(phone.getAttribute("aria-describedby") ?? "") as HTMLElement;
+    expect(within(hint).getByRole("link", { name: "Sign-in & security" })).toHaveAttribute("href", "/account/security");
+  });
+
   it("shows the email read-only", async () => {
     app("/account/profile");
     expect(await screen.findByDisplayValue("dara@example.com")).toHaveAttribute("readonly");

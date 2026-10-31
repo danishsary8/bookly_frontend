@@ -17,8 +17,9 @@ export const RESEND_SECONDS = 60;
 /*
  * Phone sign-in, step by step: the number → the Bookly Telegram bot sends a 6-digit code → the code signs in.
  * The API answers the same whether or not the number has an account (owner's choice), so the page always moves
- * on to the code and says "if this number has an account…". People who get nothing use the one-tap Telegram
- * button the sign-in page shows under this.
+ * on to the code and says "if this number has an account…". Codes only go to a confirmed number (one typed in
+ * Profile is a courier contact, not confirmed), so the field hint says how to confirm it; people who get nothing
+ * use the one-tap Telegram button the sign-in page shows under this (it confirms the number too).
  */
 export function PhoneCodeSignIn({ onSignedIn }: { onSignedIn: (customer: Customer) => void }) {
   const { dict } = useT();
@@ -28,6 +29,9 @@ export function PhoneCodeSignIn({ onSignedIn }: { onSignedIn: (customer: Custome
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [phoneError, setPhoneError] = useState<string>();
+  // After the first "Send code", the number is checked on every key press (like the other forms), so a fixed
+  // number clears the error and brings the hint back without pressing Send again.
+  const [phoneChecked, setPhoneChecked] = useState(false);
   const [codeError, setCodeError] = useState<string>();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -60,11 +64,22 @@ export function PhoneCodeSignIn({ onSignedIn }: { onSignedIn: (customer: Custome
     }
   };
 
+  const checkPhone = (value: string) => {
+    const parsed = cambodianPhone.safeParse(value);
+    setPhoneError(parsed.success ? undefined : parsed.error.issues[0]?.message);
+    return parsed;
+  };
+
   const submitPhone = (event: FormEvent) => {
     event.preventDefault();
-    const parsed = cambodianPhone.safeParse(phone);
-    setPhoneError(parsed.success ? undefined : parsed.error.issues[0]?.message);
+    setPhoneChecked(true);
+    const parsed = checkPhone(phone);
     if (parsed.success) void send(parsed.data);
+  };
+
+  const changePhone = (value: string) => {
+    setPhone(value);
+    if (phoneChecked) checkPhone(value);
   };
 
   const submitCode = async (event: FormEvent) => {
@@ -99,8 +114,9 @@ export function PhoneCodeSignIn({ onSignedIn }: { onSignedIn: (customer: Custome
             inputMode="tel"
             autoComplete="tel"
             placeholder="012 345 678"
+            hint={s.phoneCodeHint}
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => changePhone(e.target.value)}
             error={phoneError}
           />
           <CtaGlare block>
