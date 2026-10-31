@@ -179,6 +179,7 @@ describe("BookDetailPage", () => {
 
   beforeEach(() => {
     vi.spyOn(catalogApi, "books").mockResolvedValue(page([]));
+    vi.spyOn(catalogApi, "related").mockResolvedValue([]);
     vi.spyOn(catalogApi, "bookReviews").mockResolvedValue({ data: [], meta: { current_page: 1, last_page: 1, per_page: 5, total: 0, rating_summary: { average: null, count: 0, distribution: {} } } } as never);
   });
 
@@ -205,6 +206,62 @@ describe("BookDetailPage", () => {
     await user.click(screen.getByRole("button", { name: "Add to cart" }));
     expect(add).toHaveBeenCalledWith(72, 2);
     expect(await within(screen.getByRole("region", { name: "Notifications" })).findByRole("status")).toHaveTextContent("Added to cart");
+  });
+
+  describe("You may also like", () => {
+    const inSeries: BookDetail = { ...detail, series: { id: 4, name: "Bennet Family", order: 2 } as BookDetail["series"] };
+    const similarShelf = () => screen.queryByRole("region", { name: "You may also like" });
+    const titlesIn = (shelf: HTMLElement) => within(shelf).getAllByRole("listitem").map((li) => within(li).getAllByRole("link")[0].textContent);
+
+    const setup = (related: BookCard[] | Promise<BookCard[]>, book: BookDetail = inSeries) => {
+      vi.spyOn(catalogApi, "book").mockResolvedValue(book);
+      vi.spyOn(catalogApi, "series").mockResolvedValue({ id: 4, name: "Bennet Family", books: [card(7, "Pride and Prejudice"), card(8, "Series Two")] } as never);
+      vi.spyOn(catalogApi, "books").mockResolvedValue(page([card(7, "Pride and Prejudice"), card(10, "By The Author")]));
+      return vi.spyOn(catalogApi, "related").mockImplementation(() => (related instanceof Promise ? related : Promise.resolve(related)));
+    };
+
+    it("asks for 12 books and leaves out the book itself and books the series and author rows show", async () => {
+      const related = setup([card(8, "Series Two"), card(7, "Pride and Prejudice"), card(10, "By The Author"), card(11, "Persuasion"), card(12, "Emma")]);
+      renderDetail();
+      await screen.findByRole("heading", { level: 1, name: "Pride and Prejudice" });
+      const shelf = await screen.findByRole("region", { name: "You may also like" });
+      expect(await within(shelf).findByRole("link", { name: "Persuasion" })).toBeInTheDocument();
+      expect(within(shelf).getAllByRole("listitem")).toHaveLength(2);
+      expect(within(shelf).queryByRole("link", { name: "Series Two" })).not.toBeInTheDocument();
+      expect(within(shelf).queryByRole("link", { name: "By The Author" })).not.toBeInTheDocument();
+      expect(within(shelf).getByText("More like this")).toBeInTheDocument();
+      expect(related).toHaveBeenCalledWith(7, 12);
+      // The rows above still show their books.
+      expect(within(screen.getByRole("region", { name: "Bennet Family" })).getByRole("link", { name: "Series Two" })).toBeInTheDocument();
+    });
+
+    it("hides the whole row when fewer than 2 books are left after removing repeats", async () => {
+      setup([card(8, "Series Two"), card(10, "By The Author"), card(11, "Persuasion")]);
+      renderDetail();
+      await screen.findByRole("heading", { level: 1, name: "Pride and Prejudice" });
+      await screen.findByRole("region", { name: "Bennet Family" });
+      await waitFor(() => expect(screen.queryByText("Loading you may also like…")).not.toBeInTheDocument());
+      expect(similarShelf()).not.toBeInTheDocument();
+      expect(screen.queryByText("More like this")).not.toBeInTheDocument();
+    });
+
+    it("shows the shelf skeleton while the list is loading, then nothing if it comes back empty", async () => {
+      let finish: (books: BookCard[]) => void = () => {};
+      setup(new Promise<BookCard[]>((resolve) => (finish = resolve)));
+      renderDetail();
+      await screen.findByRole("heading", { level: 1, name: "Pride and Prejudice" });
+      expect(await screen.findByText("Loading you may also like…")).toBeInTheDocument();
+      finish([]);
+      await waitFor(() => expect(similarShelf()).not.toBeInTheDocument());
+    });
+
+    it("shows what there is when the API returns fewer than 12, in the API's order", async () => {
+      setup([card(12, "Emma"), card(11, "Persuasion"), card(13, "Sanditon")], { ...detail, authors: [] });
+      renderDetail();
+      const shelf = await screen.findByRole("region", { name: "You may also like" });
+      await within(shelf).findByRole("link", { name: "Emma" });
+      expect(titlesIn(shelf)).toEqual(["Emma", "Persuasion", "Sanditon"]);
+    });
   });
 
   it("shows a not-found page for a missing book", async () => {

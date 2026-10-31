@@ -311,6 +311,36 @@ function Purchase({ book }: { book: BookDetail }) {
   );
 }
 
+/** Fewer than this many similar books left after removing repeats: the row is not worth showing. */
+const MIN_SIMILAR = 2;
+
+/*
+ * "You may also like": the API's similar books (series, bought together, topic, best sellers), minus the
+ * current book and every book the series and author rows above already show. Asks for 12 so enough stay
+ * after the repeats go. While this list or the rows it depends on are loading it shows the shelf skeleton;
+ * once loaded with fewer than 2 books left it renders nothing at all (no heading, no gap).
+ */
+function SimilarBooks({ bookId, alreadyShown, othersLoading }: { bookId: number; alreadyShown: BookCard[]; othersLoading: boolean }) {
+  const { dict } = useT();
+  const related = useQuery(catalogQueries.related(bookId, 12));
+  const loading = related.isPending || othersLoading;
+
+  const skip = new Set([bookId, ...alreadyShown.map((other) => other.id)]);
+  const books = (related.data ?? []).filter((other) => !skip.has(other.id));
+
+  if (!loading && books.length < MIN_SIMILAR) return null;
+
+  return (
+    <BookShelf
+      id="similar"
+      eyebrow={dict.book.similarEyebrow}
+      title={dict.book.similarTitle}
+      books={loading ? undefined : books}
+      loading={loading}
+    />
+  );
+}
+
 export default function BookDetailPage() {
   const { id } = useParams();
   const bookId = Number(id);
@@ -325,7 +355,6 @@ export default function BookDetailPage() {
   const shown: BookCard | undefined = book ?? (preview?.id === bookId ? preview : undefined);
   const showSkeleton = useSkeletonVisible(query.isPending && !shown);
   const recentOthers = useRecentlyViewed(bookId);
-  const alsoBought = useQuery({ ...catalogQueries.alsoBought(bookId), enabled: valid });
   const primaryVariant = book?.variants?.[0];
   useDocumentTitle(shown?.title ?? (query.isError ? b.notFoundDoc : null), {
     description: book ? book.description || b.metaBy(book.title ?? "", (book.authors ?? []).map((a) => a.name).join(", ")) : null,
@@ -550,12 +579,13 @@ export default function BookDetailPage() {
             seeAllLabel={b.aboutAuthor}
           />
         ) : null}
-        {alsoBought.data?.length ? (
-          <BookShelf
-            id="also-bought"
-            eyebrow={b.alsoBoughtEyebrow}
-            title={b.alsoBought}
-            books={alsoBought.data}
+        {valid ? (
+          <SimilarBooks
+            bookId={bookId}
+            alreadyShown={[...(book?.series ? otherInSeries : []), ...(firstAuthor ? otherByAuthor : [])]}
+            othersLoading={
+              query.isPending || (Boolean(book?.series?.id) && series.isPending) || (Boolean(firstAuthor?.id) && byAuthor.isPending)
+            }
           />
         ) : null}
         <BookShelf
