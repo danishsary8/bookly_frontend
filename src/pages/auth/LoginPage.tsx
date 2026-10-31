@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { authApi } from "@/api/endpoints/auth";
+import type { Customer } from "@/api/types";
 import { CtaGlare } from "@/components/CtaGlare";
 import { PasswordField, TextField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
@@ -15,6 +16,7 @@ import { loginSchema, type LoginValues } from "@/features/auth/schemas";
 import { useAfterSignIn } from "@/features/auth/useAfterSignIn";
 import { openTelegram, useTelegramLink } from "@/features/auth/telegram";
 import { TelegramWait } from "@/features/auth/TelegramWait";
+import { PhoneCodeSignIn } from "@/features/auth/PhoneCodeSignIn";
 import { useTelegramBot } from "@/features/auth/verification";
 import { applyApiErrors, withNext } from "@/lib/forms";
 import { useTurnstile } from "@/features/auth/turnstile";
@@ -43,10 +45,11 @@ export default function LoginPage() {
   const turnstile = useTurnstile("login");
   const telegram = useTelegramBot();
 
-  const telegramLink = useTelegramLink("login", (customer) => {
+  const welcome = (customer: Customer) => {
     const firstName = customer.name?.split(" ")[0];
     afterSignIn(customer, next, firstName ? s.welcomeBackName(firstName) : s.welcomeBack);
-  });
+  };
+  const telegramLink = useTelegramLink("login", welcome);
   const telegramState = telegramLink.state;
   const telegramError = telegramState.phase === "failed" ? telegramState.message : null;
 
@@ -140,8 +143,13 @@ export default function LoginPage() {
           </form>
         ) : (
           <div className="grid gap-4">
-            <div className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:p-5">
+            <div className="grid gap-4 rounded-xl border border-border bg-card p-4 sm:p-5">
               <p className="text-sm text-muted-foreground">{s.phoneSignInLead}</p>
+              <PhoneCodeSignIn onSignedIn={welcome} />
+            </div>
+
+            <div className="grid gap-3">
+              <p className="text-center text-sm text-muted-foreground">{s.noMessage}</p>
               {telegramState.phase === "waiting" ? (
                 <TelegramWait url={telegramState.link.url} signIn onCancel={telegramLink.cancel} />
               ) : (
