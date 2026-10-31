@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { SearchX, SlidersHorizontal } from "lucide-react";
+import { SearchX, SlidersHorizontal, SpellCheck } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import type { BookFilters, BookSort } from "@/api/endpoints/catalog";
 import { catalogQueries } from "@/api/endpoints/catalog";
@@ -84,6 +84,12 @@ export function CatalogBrowser({ locked = {}, noun: nounFor, empty }: Props) {
       </aside>
 
       <div className="grid min-w-0 content-start gap-6">
+        {filters.q && query.data?.search?.typo_tolerant ? (
+          <p className="flex items-start gap-2 rounded-lg border border-border bg-muted/50 px-4 py-3 text-[15px]" role="status">
+            <SpellCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <span>{t.similarSpelling(filters.q)}</span>
+          </p>
+        ) : null}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-[15px] text-muted-foreground" role="status" aria-live="polite">
             {meta ? rangeText(dict, meta.from, meta.to, meta.total ?? 0, noun(meta.total ?? 0)) : " "}

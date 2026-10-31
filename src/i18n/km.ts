@@ -1026,6 +1026,7 @@ export const km: Translations = {
     showResults: "បង្ហាញលទ្ធផល",
     sortBy: "តម្រៀបតាម",
     noMatchQuery: (q: string) => `គ្មានសៀវភៅត្រូវនឹង "${q}" ទេ`,
+    similarSpelling: (q: string) => `រកមិនឃើញ "${q}" ត្រឹមត្រូវទេ។ កំពុងបង្ហាញសៀវភៅដែលមានអក្ខរាវិរុទ្ធស្រដៀងគ្នា។`,
     noMatchFilters: "គ្មានសៀវភៅត្រូវនឹងតម្រងទាំងនេះទេ",
     noMatchLead: "សូមសាកល្បងចំណងជើងខ្លីជាងនេះ នាមត្រកូលអ្នកនិពន្ធ ឬសម្អាតតម្រងមួយ។",
     clearFilters: "សម្អាតតម្រង",
