@@ -539,3 +539,16 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
 
 - [x] Dependency security fixes (2026-10-30, branch `chore/dependency-audit`): `npm audit fix` (no major upgrades), lockfile only. Advisories 14 → 6; `npm audit --omit=dev` (what ships to users) → 0. The 6 left are dev tools only and need major upgrades: Vitest 3 → 5 (`@vitest/mocker`, `tinypool`) and the shadcn CLI 3 → 1.x line (its own old `zod` 3.25.76 and `deepmerge`; the app uses zod 4.6.7, already patched). Verified: lint, typecheck, 416 tests, build; runtime on Vite + local API: /, /books, /books/1, /cart, /login, /admin/login load; demo sign-in → /account/orders shows 3 orders; no console errors.
 - [x] Vitest 3 → 5.0.5 (same branch `chore/dependency-audit`, owner approved 2026-10-31): no test or config changes needed (Vite 7, Node 22 ok; CI uses Node 22). New advisories were published overnight (branch went 6 → 26): Vitest 5 removed both criticals and `npm audit fix` updated `follow-redirects` (axios). Result: shipped code 0 vulnerabilities; 22 left, all in dev/build tools and each needs its own major upgrade (typescript-eslint/ESLint chain, openapi-typescript, @sentry/vite-plugin, shadcn CLI). Verified: lint, typecheck, 416 tests, build; runtime: /, /books, /books/1, /cart, /login, /admin/login, demo sign-in → 3 orders, no console errors.
+- [x] Phone sign-in code hint (2026-10-31, branch `fix/phone-code-hint`; no backend change). Why: the API only sends a code to a
+  confirmed phone linked to the Telegram bot; a number typed in Profile is a courier contact and is not confirmed, so people got no code.
+  - Login → "Sign in with phone number?": hint under the field (`signin.phoneCodeHint`, EN + KM, via `TextField` `hint`, so it is the
+    field's accessible description): codes only go to a confirmed number; use Continue with Telegram, or Account → Sign-in & security → Phone → Confirm.
+  - After the first "Send code", the number is re-checked on every key press (owner choice B, like the react-hook-form forms): a fixed
+    number clears the error and the hint comes back without pressing Send again.
+  - Profile phone field hint (`account.phoneHint` + link to `/account/security`): couriers call this number; to sign in with it, confirm it in Sign-in & security.
+  - Tests: 4 new (hint EN, hint KM, error clears when fixed, Profile hint + link). Verified: lint 0, typecheck, 440 passed / 3 skipped, build.
+  - Browser (Playwright, Vite :5173 + local API :8000, demo customer; local API has no Telegram bot, so `/auth/options` was stubbed to
+    `telegram: true` in the browser only): EN + KM at 1280 and 390 px: hint shows; `123` → Send → error replaces hint; typing `012 345 678`
+    → error gone, hint back, no request sent; Profile hint shows and its link opens Sign-in & security; no page or hint overflow; no console errors.
+  - Not verified: a real code sent by the live Telegram bot (not part of this change).
+  - Follow-up found (not changed here): Profile in Khmer at 390 px, the account tab row is cut at the right edge ("អាសយដ្ឋា…"); it scrolls sideways and existed before.

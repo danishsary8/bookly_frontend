@@ -63,7 +63,25 @@ function ProfileForm({ customer }: { customer: Customer }) {
       <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid max-w-xl gap-5 rounded-xl border border-border bg-card p-5 sm:p-6">
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
         <TextField label={a.fullName} autoComplete="name" error={errors.name?.message} {...register("name")} />
-        <TextField label={a.phone} optional type="tel" inputMode="tel" autoComplete="tel" placeholder="012 345 678" error={errors.phone?.message} {...register("phone")} />
+        <TextField
+          label={a.phone}
+          optional
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder="012 345 678"
+          hint={
+            <>
+              {a.phoneHint}{" "}
+              <Link to="/account/security" className="font-medium text-primary underline-offset-4 hover:underline">
+                {a.phoneHintLink}
+              </Link>
+              {a.phoneHintEnd}
+            </>
+          }
+          error={errors.phone?.message}
+          {...register("phone")}
+        />
         <div className="grid gap-1.5">
           <label htmlFor="profile-email" className="text-sm font-semibold">
             {a.email}
