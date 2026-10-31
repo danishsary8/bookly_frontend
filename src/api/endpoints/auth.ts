@@ -55,6 +55,11 @@ export const authApi = {
   options: () => api.get<{ telegram: boolean }>("/auth/options"),
   login: (email: string, password: string, turnstileToken?: string) =>
     api.post<LoginResponse>("/auth/login", { email, password, ...withToken(turnstileToken) }).then(startSession),
+  /** Asks the Bookly Telegram bot to send a sign-in code. The answer is the same whether or not the number has an account. */
+  phoneCode: (phone: string, turnstileToken?: string) =>
+    api.post<{ message: string; expires_in_minutes: number }>("/auth/phone/code", { phone, ...withToken(turnstileToken) }),
+  /** Signs in with the phone number and the code from Telegram. */
+  phoneSignIn: (phone: string, code: string) => api.post<LoginResponse>("/auth/phone/verify", { phone, code }).then(startSession),
   /** Signs in (or up) with a Google / Facebook access token; the API checks it with the provider. */
   social: (provider: "google" | "facebook", accessToken: string, details?: FacebookDetails) =>
     api.post<SignUpResponse>(`/auth/social/${provider}`, { access_token: accessToken, ...details }).then(startSession),
