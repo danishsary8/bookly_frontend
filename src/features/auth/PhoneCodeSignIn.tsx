@@ -51,6 +51,8 @@ export function PhoneCodeSignIn({ onSignedIn }: { onSignedIn: (customer: Custome
     } catch (err) {
       const apiError = ApiError.from(err);
       if (apiError.fieldErrors?.phone) setPhoneError(apiError.fieldErrors.phone[0]);
+      // An API without code sign-in yet (the backend part not deployed): the one-tap button below still works.
+      else if (apiError.kind === "not_found") setError(s.codeSignInUnavailable);
       else setError(apiError.message);
     } finally {
       setBusy(false);

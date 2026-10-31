@@ -636,6 +636,7 @@ export const km: Translations = {
     codeLabel: "លេខកូដពី Telegram",
     wrongCode: "លេខកូដនេះខុស ឬផុតកំណត់ហើយ។ សូមពិនិត្យសារចុងក្រោយពីបូត Bookly ឬផ្ញើលេខកូដថ្មី។",
     changeNumber: "ប្រើលេខផ្សេង",
+    codeSignInUnavailable: "លេខកូដចូលមិនទាន់អាចប្រើបាននៅឡើយទេ។ សូមប្រើ «បន្តជាមួយ Telegram» ខាងក្រោម។",
     noMessage: "មិនបានទទួលសារពីបូតទេ? ចូលដោយចុចតែម្តងជំនួសវិញ៖",
     guest: "បន្តមើលជាភ្ញៀវ",
     signingIn: "កំពុងចូល…",

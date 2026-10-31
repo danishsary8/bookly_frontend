@@ -139,4 +139,14 @@ describe("Sign in with a code from Telegram", () => {
     expect(await screen.findByText("A code was just sent to this number. Please wait a minute before asking for another.")).toBeInTheDocument();
     expect(screen.queryByLabelText("Digit 1 of 6")).not.toBeInTheDocument();
   });
+
+  it("points to the one-tap button while the API has no code sign-in yet", async () => {
+    vi.spyOn(api, "post").mockRejectedValue(new ApiError({ kind: "not_found", status: 404, message: "Not found." }));
+    const user = await openPhoneSignIn();
+    await user.type(screen.getByLabelText("Phone number"), "012345678");
+    await user.click(screen.getByRole("button", { name: "Send code in Telegram" }));
+
+    expect(await screen.findByText("Sign-in codes aren't available yet. Use Continue with Telegram below.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue with Telegram" })).toBeInTheDocument();
+  });
 });

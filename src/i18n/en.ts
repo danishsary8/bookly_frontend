@@ -630,6 +630,7 @@ export const en = {
     codeLabel: "Code from Telegram",
     wrongCode: "That code is wrong or has expired. Check the latest message from the Bookly bot, or send a new code.",
     changeNumber: "Use another number",
+    codeSignInUnavailable: "Sign-in codes aren't available yet. Use Continue with Telegram below.",
     noMessage: "No message from the bot? Sign in with one tap instead:",
     guest: "Continue browsing as a guest",
     signingIn: "Signing in…",
