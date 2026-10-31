@@ -8,12 +8,14 @@ import type { OrderStatus } from "@/api/types";
 import { TextField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
+import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Pagination } from "@/components/ui/pagination";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { BulkStatusDialog } from "@/features/admin/orders/BulkStatusDialog";
+import { useIsNewOrder } from "@/features/admin/orders/newOrders";
 import { ListState, SearchBox, Segmented, TableCard, td, th, thead } from "@/features/admin/listKit";
 import { useStaff } from "@/features/admin/staffSession";
 import { useListParams } from "@/features/admin/useListParams";
@@ -123,6 +125,7 @@ function SelectionBar({ ids, onStatus, onClear }: { ids: number[]; onStatus: () 
  * /admin/orders: every order, newest first; search by order number or customer,
  * filter by status and by the day it was placed. All filters live in the URL.
  * Tick orders to change their status or print their packing slips or invoices together (up to 50).
+ * New orders appear by themselves (the admin shell checks every 30 s) with a "New" badge.
  */
 export default function OrdersAdminPage() {
   const session = useStaff();
@@ -134,6 +137,7 @@ export default function OrdersAdminPage() {
   const from = get("from");
   const to = get("to");
   const orders = useQuery(opsQueries.orders({ status, q: q || undefined, from: from || undefined, to: to || undefined, page, per_page: 20 }));
+  const isNew = useIsNewOrder();
   const [exporting, setExporting] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
   const [changing, setChanging] = useState(false);
@@ -223,6 +227,11 @@ export default function OrdersAdminPage() {
                   <Link to={`/admin/orders/${o.id}`} className="font-semibold tabular-nums underline-offset-4 hover:text-primary hover:underline">
                     {o.order_number}
                   </Link>
+                  {isNew(o.id) ? (
+                    <Badge tone="info" shape="solid" className="ml-2 h-5 px-1.5 align-middle tracking-normal">
+                      New
+                    </Badge>
+                  ) : null}
                   <span className="block text-sm text-muted-foreground">
                     {o.item_count} {o.item_count === 1 ? "item" : "items"}
                     {o.coupon_code ? ` · ${o.coupon_code}` : ""}

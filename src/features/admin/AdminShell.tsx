@@ -10,6 +10,7 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { navFor } from "./adminNav";
 import { NotificationsBell } from "./NotificationsBell";
+import { useNewOrderWatch } from "./orders/newOrders";
 import { useStaff, useStaffSignOut } from "./staffSession";
 
 const itemClass =
@@ -116,6 +117,8 @@ function PageFallback() {
 export function AdminShell() {
   // Links in the drawer close it themselves (Nav's onNavigate).
   const [menuOpen, setMenuOpen] = useState(false);
+  const session = useStaff();
+  useNewOrderWatch(session?.user);
 
   return (
     <div className="min-h-dvh bg-background lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)]">
