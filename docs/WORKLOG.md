@@ -170,6 +170,10 @@ Audit of V1: React 19 + TypeScript + Vite 7 + Tailwind 4, ~14k lines, 13 storefr
 - [x] Verified: lint (0 errors), typecheck, tests, build; browser pass: every footer link reaches a real page; all eight pages at 375 px dark and 1366 px light with no horizontal scroll or console errors; offline → banner → unloaded page shows the offline state → back online; phase 6–7 scripts re-run clean.
 - Known: the contact details, delivery areas/times and legal text need the owner's real values and a review before launch (`src/content/shop.ts`). Local runs need `VITE_API_BASE_URL=http://localhost:8000/api/v1` when starting Vite, or the app talks to the live API.
 
+## Staging bar (branch `feature/staging-banner`)
+- [x] `VITE_APP_ENV=staging` (set only on the staging site; setup in the backend's `docs/STAGING.md`) shows a thin bar on every page, storefront and admin: "Staging site: test data only. Orders and emails here are not real." (Khmer too), and labels Sentry reports `staging`. Empty on the live site, so nothing changes there. Code: `src/components/StagingBanner.tsx`, in `App.tsx`.
+- [x] Verified: lint, typecheck, 418 tests (new `StagingBanner.test.tsx`), build; browser: home and admin sign-in with the bar, Khmer text, 375 px no sideways scroll, a normal build has no bar.
+
 ## Phase 9a — Admin core (branch `feature/admin-core`)
 - [x] Owner decisions: Phase 9 is split into **9a** (this branch) and **9b**; the dashboard chart is **hand-built SVG** (no chart library); 2FA setup uses the **`qrcode`** library (MIT, ~25 KB, loaded only on the setup page).
 - [x] Staff API module (`src/api/endpoints/staff.ts`): auth, dashboard, notifications, books, formats and lookups, typed from the backend resources. The API client already sends the staff token to `/staff/*`.

@@ -148,6 +148,7 @@ export const en = {
     sending: "Sending…",
     edit: "Edit",
     delete: "Delete",
+    stagingBanner: "Staging site: test data only. Orders and emails here are not real.",
   },
   nouns: {
     order: (n: number): string => (n === 1 ? "order" : "orders"),

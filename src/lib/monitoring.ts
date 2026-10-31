@@ -53,7 +53,7 @@ export function initMonitoring() {
       S.init({
         dsn: DSN,
         release: import.meta.env.VITE_RELEASE || undefined,
-        environment: import.meta.env.VITE_SENTRY_ENVIRONMENT || import.meta.env.MODE,
+        environment: import.meta.env.VITE_SENTRY_ENVIRONMENT || import.meta.env.VITE_APP_ENV || import.meta.env.MODE,
         tracesSampleRate: 0,
         // Send reports through our own address (api/report.ts): blockers stop requests to sentry.io.
         ...(import.meta.env.PROD ? { tunnel: "/api/report" } : {}),
