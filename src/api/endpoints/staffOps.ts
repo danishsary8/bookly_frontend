@@ -104,6 +104,37 @@ export type OfferInput = Partial<{
 }>;
 export type OfferFilters = { q?: string; status?: OfferStatus; page?: number; per_page?: number };
 
+/** Seasonal collection, staff view (owner 2026-11-01; backend StaffCollectionResource). */
+export type BookCollectionStatus = "live" | "scheduled" | "hidden" | "ended";
+export interface StaffBookCollection {
+  id: number;
+  slug: string;
+  title_en: string;
+  title_km: string | null;
+  description_en: string | null;
+  description_km: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  is_active: boolean;
+  position: number;
+  status: BookCollectionStatus;
+  books: Array<{ id: number; title: string; in_trash: boolean }>;
+}
+export type BookCollectionInput = Partial<{
+  slug: string;
+  title_en: string;
+  title_km: string | null;
+  description_en: string | null;
+  description_km: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  is_active: boolean;
+  position: number;
+  /** The full ordered list of book ids. */
+  books: number[];
+}>;
+export type BookCollectionFilters = { q?: string; page?: number; per_page?: number };
+
 export interface CustomerNote {
   id: number;
   customer_id: number;
@@ -191,6 +222,7 @@ export const opsKeys = {
   reviews: (f: object) => ["staff", "reviews", toQueryParams(f)] as const,
   coupons: (f: object) => ["staff", "coupons", toQueryParams(f)] as const,
   offers: (f: object) => ["staff", "offers", toQueryParams(f)] as const,
+  collections: (f: object) => ["staff", "collections", toQueryParams(f)] as const,
   customers: (f: object) => ["staff", "customers", toQueryParams(f)] as const,
   customer: (id: number) => ["staff", "customer", id] as const,
   customerNotes: (id: number) => ["staff", "customer", id, "notes"] as const,
@@ -240,6 +272,10 @@ export const opsApi = {
   createOffer: (input: OfferInput) => api.post<Resource<Offer>>("/staff/offers", input).then((r) => r.data),
   updateOffer: (id: number, input: OfferInput) => api.patch<Resource<Offer>>(`/staff/offers/${id}`, input).then((r) => r.data),
   deleteOffer: (id: number) => api.delete(`/staff/offers/${id}`),
+  collections: (f: BookCollectionFilters = {}) => api.get<Paginated<StaffBookCollection>>("/staff/collections", { params: toQueryParams(f) }),
+  createCollection: (input: BookCollectionInput) => api.post<Resource<StaffBookCollection>>("/staff/collections", input).then((r) => r.data),
+  updateCollection: (id: number, input: BookCollectionInput) => api.patch<Resource<StaffBookCollection>>(`/staff/collections/${id}`, input).then((r) => r.data),
+  deleteCollection: (id: number) => api.delete(`/staff/collections/${id}`),
 
   customers: (f: CustomerFilters = {}) =>
     api.get<StaffCustomerPage>("/staff/customers", { params: toQueryParams({ ...f, active: bool(f.active), verified: bool(f.verified), closed: f.closed ? 1 : undefined }) }),
@@ -294,6 +330,7 @@ export const opsQueries = {
   reviews: (f: ReviewFilters) => queryOptions({ queryKey: opsKeys.reviews(f), queryFn: () => opsApi.reviews(f), placeholderData: keepPreviousData }),
   coupons: (f: CouponFilters) => queryOptions({ queryKey: opsKeys.coupons(f), queryFn: () => opsApi.coupons(f), placeholderData: keepPreviousData }),
   offers: (f: OfferFilters) => queryOptions({ queryKey: opsKeys.offers(f), queryFn: () => opsApi.offers(f), placeholderData: keepPreviousData }),
+  collections: (f: BookCollectionFilters) => queryOptions({ queryKey: opsKeys.collections(f), queryFn: () => opsApi.collections(f), placeholderData: keepPreviousData, retry: false }),
   customers: (f: CustomerFilters) => queryOptions({ queryKey: opsKeys.customers(f), queryFn: () => opsApi.customers(f), placeholderData: keepPreviousData }),
   customer: (id: number) => queryOptions({ queryKey: opsKeys.customer(id), queryFn: () => opsApi.customer(id) }),
   customerNotes: (id: number) => queryOptions({ queryKey: opsKeys.customerNotes(id), queryFn: () => opsApi.customerNotes(id) }),
