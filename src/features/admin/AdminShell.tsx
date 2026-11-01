@@ -9,6 +9,8 @@ import { Drawer, DrawerBody, DrawerContent, DrawerHeader, DrawerTitle } from "@/
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { navFor } from "./adminNav";
+import { COUNT_FOR, badgeText, useMenuCounts } from "./menuCounts";
+import { QuickJump } from "./QuickJump";
 import { NotificationsBell } from "./NotificationsBell";
 import { useNewOrderWatch } from "./orders/newOrders";
 import { useStaff, useStaffSignOut } from "./staffSession";
@@ -27,6 +29,7 @@ function Wordmark() {
 
 function Nav({ onNavigate }: { onNavigate?: () => void }) {
   const session = useStaff();
+  const counts = useMenuCounts(Boolean(session)).data;
   return (
     <nav aria-label="Admin" className="grid gap-6">
       {navFor(session?.user.role).map((group) => (
@@ -47,6 +50,16 @@ function Nav({ onNavigate }: { onNavigate?: () => void }) {
             >
               <Icon className="size-[18px] shrink-0" aria-hidden="true" />
               {label}
+              {(() => {
+                const badge = COUNT_FOR[to];
+                const n = badge && counts ? counts[badge.key] : 0;
+                return n > 0 ? (
+                  <span className="ml-auto min-w-6 rounded-full bg-accent px-1.5 py-0.5 text-center text-xs font-bold tabular-nums text-accent-foreground">
+                    <span aria-hidden="true">{badgeText(n)}</span>
+                    <span className="sr-only">, {badge.label(n)}</span>
+                  </span>
+                ) : null;
+              })()}
             </NavLink>
           ))}
         </div>
@@ -145,6 +158,7 @@ export function AdminShell() {
           <div className="lg:hidden">
             <Wordmark />
           </div>
+          <QuickJump />
           <div className="ml-auto flex items-center gap-1">
             <NotificationsBell />
             <UserMenu />
