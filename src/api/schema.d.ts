@@ -133,6 +133,73 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/demo/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * One-click demo sign-in: a 2-hour customer token for the shared demo account (10 per hour per IP)
+         * @description Used by the **Sign in as demo customer** button on this page. No password needed and no way to choose the account:
+         *     it only ever signs in `demo@bookly.test`. The demo account can't change its password, email or linked logins and is tidied every hour.
+         *     Real sign-ins use `POST /auth/login` (with the bot check when enabled).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Token for the demo customer */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /**
+                         * @example {
+                         *       "customer": {
+                         *         "id": 1,
+                         *         "name": "Demo Customer",
+                         *         "email": "demo@bookly.test"
+                         *       },
+                         *       "token": "12|abc…",
+                         *       "token_type": "Bearer",
+                         *       "expires_at": "2026-10-30T12:00:00+00:00"
+                         *     }
+                         */
+                        "application/json": unknown;
+                    };
+                };
+                /** @description The demo account is not set up on this server */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Too many demo sign-ins from this IP (10 per hour) */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/books": {
         parameters: {
             query?: never;
@@ -140,11 +207,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List, search, filter and sort books */
+        /**
+         * List, search, filter and sort books
+         * @description Public, no token needed. Full-text search (`q`) matches every word as a prefix across title, description, authors, series and categories. Paginated: `data`, `links`, `meta`.
+         */
         get: {
             parameters: {
                 query?: {
-                    /** @description Search as you type: every word must match the title, description, an author, the series or a category name; words match as prefixes */
+                    /** @description Search as you type: every word must match the title, description, an author, the series or a category name; words match as prefixes. When nothing matches, the search is retried tolerating typos ("frankenstien", "sherlok") and the answer has search.typo_tolerant = true */
                     q?: string;
                     category_id?: number;
                     author_id?: number;
@@ -172,6 +242,40 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        /**
+                         * @example {
+                         *       "data": [
+                         *         {
+                         *           "id": 1,
+                         *           "title": "Pride and Prejudice",
+                         *           "language": "English",
+                         *           "authors": [
+                         *             {
+                         *               "id": 1,
+                         *               "name": "Jane Austen"
+                         *             }
+                         *           ],
+                         *           "cover_image_url": "https://picsum.photos/seed/bookly-1/400/600",
+                         *           "price_from_usd": "8.99",
+                         *           "price_from_khr": "36859",
+                         *           "formats": [
+                         *             "hardcover",
+                         *             "ebook",
+                         *             "paperback"
+                         *           ],
+                         *           "in_stock": true,
+                         *           "rating_avg": 5,
+                         *           "review_count": 1
+                         *         }
+                         *       ],
+                         *       "meta": {
+                         *         "current_page": 1,
+                         *         "last_page": 1,
+                         *         "per_page": 20,
+                         *         "total": 1
+                         *       }
+                         *     }
+                         */
                         "application/json": {
                             data?: components["schemas"]["BookCard"][];
                             links?: components["schemas"]["PageLinks"];
@@ -238,10 +342,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Up to 6 recommended books bought together with this book, fallback to category best sellers */
+        /**
+         * Same list as /books/{id}/related (kept for older clients)
+         * @description Same order, caching and stock rules as `GET /books/{id}/related`.
+         */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    limit?: number;
+                };
                 header?: never;
                 path: {
                     id: components["parameters"]["Id"];
@@ -262,6 +371,123 @@ export interface paths {
                     };
                 };
                 404: components["responses"]["NotFound"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/books/{id}/related": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * "You may also like": up to 12 books similar to this one
+         * @description Filled up to `limit` in this order:
+         *     1. Same series: the next books first (reading order), then the earlier ones.
+         *     2. Bought together with this book in at least 2 orders.
+         *     3. Same category and same author (best sellers first).
+         *     4. Same categories (best sellers first).
+         *     5. Same authors (highest rated first).
+         *     6. Store best sellers.
+         *
+         *     Never the book itself, no duplicates, only visible books that can be bought (an active format in stock,
+         *     or an ebook/audiobook). Best sellers and "bought together" count only orders that are not pending,
+         *     cancelled, returned or deleted (processing and shipped count).
+         *
+         *     Caching: the list (12 ids) is cached for 1 hour per catalogue version. Any staff change to a book
+         *     (create, edit, delete, restore, authors, categories, series, bulk edit, CSV import) starts fresh lists
+         *     for every book. Stock and visibility are checked again on every read, so a sold-out or hidden book never
+         *     shows; the list can then be shorter than `limit`.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Recommended book cards */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["BookCard"][];
+                        };
+                    };
+                };
+                404: components["responses"]["NotFound"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recommended books based on cart contents or store popularity
+         * @description With `cart_ids`, filled up to `limit` in this order:
+         *     1. Series in the cart: the books after the furthest one in the cart (reading order), then the earlier ones.
+         *        With several series they take turns, so the next book of every series comes first.
+         *     2. Same categories as the cart (best sellers first).
+         *     3. Same authors (newest first).
+         *     4. Store best sellers.
+         *
+         *     Without `cart_ids`: store best sellers. Never a cart book or an `exclude_ids` book, no duplicates, only
+         *     visible books that can be bought. Best sellers count only orders that are not pending, cancelled,
+         *     returned or deleted (processing and shipped count). Not cached.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Comma-separated book IDs currently in cart */
+                    cart_ids?: string;
+                    /** @description Comma-separated book IDs to exclude */
+                    exclude_ids?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Recommended book cards */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["BookCard"][];
+                        };
+                    };
+                };
             };
         };
         put?: never;
@@ -658,6 +884,14 @@ export interface paths {
             };
             requestBody: {
                 content: {
+                    /**
+                     * @example {
+                     *       "name": "Sok Dara",
+                     *       "email": "dara@example.com",
+                     *       "password": "a-long-passphrase",
+                     *       "password_confirmation": "a-long-passphrase"
+                     *     }
+                     */
                     "application/json": {
                         name: string;
                         /**
@@ -751,7 +985,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Log in with email and password */
+        /**
+         * Log in with email and password
+         * @description Returns a customer Bearer token (valid 7 days) with the `customer` ability. Send it as `Authorization: Bearer <token>`. Wrong credentials and rate limits answer with JSON, never a redirect.
+         *
+         *     **Try it:** use the *Sign in as demo customer* button at the top of `/docs` (no password needed).
+         */
         post: {
             parameters: {
                 query?: never;
@@ -761,6 +1000,12 @@ export interface paths {
             };
             requestBody: {
                 content: {
+                    /**
+                     * @example {
+                     *       "email": "demo@bookly.test",
+                     *       "password": "Password123!"
+                     *     }
+                     */
                     "application/json": {
                         email: string;
                         password: string;
@@ -776,6 +1021,22 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        /**
+                         * @example {
+                         *       "customer": {
+                         *         "id": 1,
+                         *         "name": "Demo Customer",
+                         *         "email": "demo@bookly.test",
+                         *         "email_verified": true,
+                         *         "verified": true,
+                         *         "has_password": true,
+                         *         "locale": "en"
+                         *       },
+                         *       "token": "10|FYJNQVFV2…",
+                         *       "token_type": "Bearer",
+                         *       "expires_at": "2026-11-06T07:33:58+00:00"
+                         *     }
+                         */
                         "application/json": components["schemas"]["TokenResponse"];
                     };
                 };
@@ -784,7 +1045,14 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        /**
+                         * @example {
+                         *       "message": "Invalid email or password."
+                         *     }
+                         */
+                        "application/json": unknown;
+                    };
                 };
                 /** @description Account deactivated */
                 403: {
@@ -1255,6 +1523,130 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/phone/code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a sign-in code to a phone number through the Bookly Telegram bot
+         * @description Works for numbers whose owner opened the Bookly bot before (signed in or confirmed the number with Telegram); others use POST /auth/telegram once. Always the same 202 answer, whether or not the number belongs to an account, so the page cannot be used to find out who shops at Bookly (the code is made and sent after the response). Limits: per number 1 a minute and 5 an hour; per IP 10 per 10 minutes; Turnstile when on.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @example 012 345 678 */
+                        phone: string;
+                        turnstile_token?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description message, expires_in_minutes (10) */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not a Cambodian (+855) number */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Too many codes for this number or device (Retry-After) */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description The Telegram bot is off */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in with the phone number and the code from Telegram
+         * @description Codes last 10 minutes; a new code cancels the old one; 5 wrong guesses throw a code away. On success the bot confirms the sign-in in the chat with a "Sign me out everywhere" button (24 hours), and a verified email gets a security notice.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        phone: string;
+                        code: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description customer, token, token_type, expires_at */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Wrong or expired code (same answer for an unknown number) */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Too many guesses (5 a minute per number and IP) */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/reset-password": {
         parameters: {
             query?: never;
@@ -1299,6 +1691,84 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download my data: one JSON file with everything your account shows (5 per hour)
+         * @description Profile, addresses, cart, wishlist, orders (with status history), returns, reviews, stock alerts, store credits and
+         *     newsletter status. Sent as a file download (`Content-Disposition: attachment`). Internal data (password hash,
+         *     tokens, staff notes and tags) is never included.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The export file */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /**
+                         * @example {
+                         *       "exported_at": "2026-10-30T10:00:00+07:00",
+                         *       "profile": {
+                         *         "id": 1,
+                         *         "name": "Sok Dara",
+                         *         "email": "dara@example.com"
+                         *       },
+                         *       "addresses": [],
+                         *       "cart": {
+                         *         "items": []
+                         *       },
+                         *       "wishlist": [],
+                         *       "orders": [],
+                         *       "returns": [],
+                         *       "reviews": [],
+                         *       "stock_alerts": [],
+                         *       "store_credits": [],
+                         *       "newsletter": {
+                         *         "status": "none"
+                         *       }
+                         *     }
+                         */
+                        "application/json": unknown;
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description More than 5 exports in an hour */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1955,7 +2425,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Cart with current prices and per-line issues */
+        /**
+         * Cart with current prices and per-line issues
+         * @description Needs a verified customer token. Prices are always today's; a line whose price, stock or availability changed since it was added carries an `issues` entry instead of changing silently. `pricing` adds the automatic offer (discount, which lines, a nudge such as "add 1 more to save 10%") and the free-delivery numbers from the API.
+         */
         get: {
             parameters: {
                 query?: never;
@@ -1971,6 +2444,57 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
+                        /**
+                         * @example {
+                         *       "data": {
+                         *         "id": 4,
+                         *         "items": [
+                         *           {
+                         *             "id": 28,
+                         *             "book_variant_id": 1,
+                         *             "book": {
+                         *               "id": 1,
+                         *               "title": "Pride and Prejudice"
+                         *             },
+                         *             "format": "paperback",
+                         *             "quantity": 1,
+                         *             "unit_price_usd": "12.99",
+                         *             "unit_price_khr": "53259",
+                         *             "line_total_usd": "12.99",
+                         *             "line_total_khr": "53259",
+                         *             "issues": [],
+                         *             "in_offer": false
+                         *           }
+                         *         ],
+                         *         "item_count": 1,
+                         *         "subtotal_usd": "12.99",
+                         *         "subtotal_khr": "53259",
+                         *         "can_checkout": true,
+                         *         "pricing": {
+                         *           "subtotal_usd": "12.99",
+                         *           "subtotal_khr": "53259",
+                         *           "discount_usd": "0.00",
+                         *           "discount_khr": "0",
+                         *           "total_before_shipping_usd": "12.99",
+                         *           "total_before_shipping_khr": "53259",
+                         *           "offer": null,
+                         *           "nudge": {
+                         *             "offer_id": 3,
+                         *             "add_quantity": 1,
+                         *             "percent_off": "10.00",
+                         *             "target_label": null
+                         *           },
+                         *           "free_shipping": {
+                         *             "threshold_usd": "50.00",
+                         *             "threshold_khr": "205000",
+                         *             "amount_needed_usd": "37.01",
+                         *             "amount_needed_khr": "151741",
+                         *             "is_free": false
+                         *           }
+                         *         }
+                         *       }
+                         *     }
+                         */
                         "application/json": {
                             data?: components["schemas"]["Cart"];
                         };
@@ -2023,6 +2547,12 @@ export interface paths {
             };
             requestBody: {
                 content: {
+                    /**
+                     * @example {
+                     *       "book_variant_id": 1,
+                     *       "quantity": 1
+                     *     }
+                     */
                     "application/json": {
                         book_variant_id: number;
                         /** @default 1 */
@@ -2036,14 +2566,56 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        /**
+                         * @example {
+                         *       "data": {
+                         *         "id": 4,
+                         *         "items": [
+                         *           {
+                         *             "id": 28,
+                         *             "book_variant_id": 1,
+                         *             "book": {
+                         *               "id": 1,
+                         *               "title": "Pride and Prejudice"
+                         *             },
+                         *             "format": "paperback",
+                         *             "quantity": 1,
+                         *             "unit_price_usd": "12.99",
+                         *             "unit_price_khr": "53259",
+                         *             "line_total_usd": "12.99",
+                         *             "line_total_khr": "53259",
+                         *             "issues": []
+                         *           }
+                         *         ],
+                         *         "item_count": 1,
+                         *         "subtotal_usd": "12.99",
+                         *         "subtotal_khr": "53259",
+                         *         "can_checkout": true
+                         *       }
+                         *     }
+                         */
+                        "application/json": unknown;
+                    };
                 };
                 /** @description Not available, out of stock or over the limit */
                 422: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        /**
+                         * @example {
+                         *       "message": "This item is out of stock.",
+                         *       "errors": {
+                         *         "quantity": [
+                         *           "This item is out of stock."
+                         *         ]
+                         *       }
+                         *     }
+                         */
+                        "application/json": unknown;
+                    };
                 };
             };
         };
@@ -2167,17 +2739,21 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Saved books (newest first) */
+        /** Saved books (newest first, filterable by reading status) */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description Optional reading status filter */
+                    status?: "want_to_read" | "reading" | "finished";
+                    per_page?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
             };
             requestBody?: never;
             responses: {
-                /** @description Book cards */
+                /** @description Book cards with reading status and category counts */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -2193,7 +2769,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** Save a book */
+        /** Save a book with optional reading status */
         post: {
             parameters: {
                 query?: never;
@@ -2204,7 +2780,9 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        book_id?: number;
+                        book_id: number;
+                        /** @enum {string} */
+                        status?: "want_to_read" | "reading" | "finished";
                     };
                 };
             };
@@ -2258,7 +2836,41 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        patch?: never;
+        /** Update reading status for a saved book */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        status: "want_to_read" | "reading" | "finished";
+                    };
+                };
+            };
+            responses: {
+                /** @description Status updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Book not found in wishlist */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         trace?: never;
     };
     "/checkout/preview": {
@@ -2328,7 +2940,7 @@ export interface paths {
         put?: never;
         /**
          * Place a cash-on-delivery order from the cart
-         * @description Prices are re-checked at today's price, stock is taken out of stock, the coupon is applied and the cart is emptied. Repeating a request with the same Idempotency-Key returns the same order.
+         * @description Prices are re-checked at today's price, stock is taken out of stock, the better of the coupon and the automatic offer is applied (never both) and the cart is emptied. Repeating a request with the same Idempotency-Key returns the same order (uses are not counted twice).
          */
         post: {
             parameters: {
@@ -2342,12 +2954,21 @@ export interface paths {
             };
             requestBody: {
                 content: {
+                    /**
+                     * @example {
+                     *       "address_id": 1,
+                     *       "payment_method": "cod",
+                     *       "coupon_code": "WELCOME10"
+                     *     }
+                     */
                     "application/json": {
                         address_id: number;
                         /** @enum {string} */
                         payment_method: "cod";
                         coupon_code?: string;
                         delivery_note?: string;
+                        /** @description The offer shown in the preview. If it no longer applies, 422 on offer_id and nothing is placed. Leave it out to accept whatever wins now. */
+                        offer_id?: number;
                     };
                 };
             };
@@ -2370,7 +2991,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Cart empty or has issues, bad address, coupon or key */
+                /** @description Cart empty or has issues, bad address, coupon or key, or offer_id sent and that offer no longer applies (nothing placed) */
                 422: {
                     headers: {
                         [name: string]: unknown;
@@ -2471,7 +3092,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Cancel while pending (stock and coupon use are given back) */
+        /** Cancel while pending (stock, the coupon use and the offer use are given back) */
         post: {
             parameters: {
                 query?: never;
@@ -2497,6 +3118,89 @@ export interface paths {
                     };
                     content?: never;
                 };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/{id}/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Buy again: add the order items to the cart (items that cannot be bought now are skipped with a reason); 10/min */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description data.added (book_variant_id, title, quantity), data.skipped (book_variant_id, title, reason), data.cart (Cart) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /**
+                         * @example {
+                         *       "data": {
+                         *         "added": [
+                         *           {
+                         *             "book_variant_id": 1,
+                         *             "title": "Pride and Prejudice",
+                         *             "quantity": 1
+                         *           }
+                         *         ],
+                         *         "skipped": [
+                         *           {
+                         *             "book_variant_id": 23,
+                         *             "title": "Treasure Island",
+                         *             "reason": "This item is out of stock."
+                         *           }
+                         *         ],
+                         *         "cart": {
+                         *           "id": 4,
+                         *           "items": [
+                         *             {
+                         *               "id": 28,
+                         *               "book_variant_id": 1,
+                         *               "book": {
+                         *                 "id": 1,
+                         *                 "title": "Pride and Prejudice"
+                         *               },
+                         *               "format": "paperback",
+                         *               "quantity": 1,
+                         *               "unit_price_usd": "12.99",
+                         *               "unit_price_khr": "53259",
+                         *               "line_total_usd": "12.99",
+                         *               "line_total_khr": "53259",
+                         *               "issues": []
+                         *             }
+                         *           ],
+                         *           "item_count": 1,
+                         *           "subtotal_usd": "12.99",
+                         *           "subtotal_khr": "53259",
+                         *           "can_checkout": true
+                         *         }
+                         *       }
+                         *     }
+                         */
+                        "application/json": unknown;
+                    };
+                };
+                404: components["responses"]["NotFound"];
             };
         };
         delete?: never;
@@ -4448,6 +5152,139 @@ export interface paths {
                     content?: never;
                 };
                 403: components["responses"]["Forbidden"];
+            };
+        };
+        trace?: never;
+    };
+    "/staff/offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List automatic offers (q = name, status = live|scheduled|paused|ended|used_up|no_books, per_page). Staff with catalog:view and admins */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Offers: all columns, status, targets [{type, id, label, in_trash}], orders_count */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /** (admin) Create (name, applies_to all|selected, min_quantity 2-20, percent_off 0.01-50, starts_at?, ends_at? after starts_at, max_orders?, is_active?, targets [{type book|category|series, id}] 1-200 for selected, refused for all). Audited; the live-offers cache is cleared */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                403: components["responses"]["Forbidden"];
+                422: components["responses"]["Validation"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/offers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One offer */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Offer */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** (admin) Delete if never used, else 409 (pause it instead) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                204: components["responses"]["NoContent"];
+                /** @description Used on an order */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** (admin) Update any field; pause/resume with is_active; targets replace the list when sent; switching to all drops them. used_count is read-only */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                403: components["responses"]["Forbidden"];
+                422: components["responses"]["Validation"];
             };
         };
         trace?: never;
@@ -7089,7 +7926,15 @@ export interface components {
             shipping_fee?: components["schemas"]["Amount"];
             tax?: components["schemas"]["Amount"];
             total?: components["schemas"]["Amount"];
+            /** @description Set only when the coupon won against the offer. */
             coupon_code?: string | null;
+            /**
+             * @description Which discount `discount` and `total` use (never both; bigger wins; tie -> offer).
+             * @enum {string|null}
+             */
+            applied?: "offer" | "coupon" | null;
+            offer?: components["schemas"]["CartOffer"];
+            coupon_not_used?: components["schemas"]["CouponNotUsed"];
             /** @description false when the cart only has ebooks/audiobooks */
             requires_shipping?: boolean;
             /**
@@ -7115,7 +7960,50 @@ export interface components {
             discount_khr?: components["schemas"]["Riel"];
             total_before_shipping_usd?: components["schemas"]["Money"];
             total_before_shipping_khr?: components["schemas"]["Riel"];
+            /**
+             * @description The discount the customer gets (the fields above are the coupon alone).
+             * @enum {string}
+             */
+            applied?: "offer" | "coupon";
+            offer?: components["schemas"]["CartOffer"];
+            coupon_not_used?: components["schemas"]["CouponNotUsed"];
+            best_discount_usd?: components["schemas"]["Money"];
+            best_discount_khr?: components["schemas"]["Riel"];
+            best_total_before_shipping_usd?: components["schemas"]["Money"];
+            best_total_before_shipping_khr?: components["schemas"]["Riel"];
+            free_shipping?: components["schemas"]["CartFreeShipping"];
         };
+        /** @description The best live offer for the cart (tie -> lower id); null when none applies. */
+        CartOffer: {
+            id?: number;
+            /** @enum {string} */
+            type?: "buy_n_percent";
+            /** @example 2 */
+            min_quantity?: number;
+            /** @example 15.00 */
+            percent_off?: string;
+            /** Format: date-time */
+            ends_at?: string | null;
+            /** @description Series or category name when the offer has exactly one such target; else null. */
+            target_label?: string | null;
+            discount_usd?: components["schemas"]["Money"];
+            discount_khr?: components["schemas"]["Riel"];
+        } | null;
+        /** @description Null when free delivery is off (FREE_SHIPPING_THRESHOLD empty or 0) or the cart has only ebooks/audiobooks. Judged on subtotal minus discount, like checkout. */
+        CartFreeShipping: {
+            threshold_usd?: components["schemas"]["Money"];
+            threshold_khr?: components["schemas"]["Riel"];
+            amount_needed_usd?: components["schemas"]["Money"];
+            amount_needed_khr?: components["schemas"]["Riel"];
+            is_free?: boolean;
+        } | null;
+        /** @description A valid coupon that was not used because the offer saves at least as much. */
+        CouponNotUsed: {
+            /** @example READ10 */
+            code?: string;
+            /** @enum {string} */
+            reason?: "offer_better";
+        } | null;
         TokenResponse: {
             token?: string;
             /** @example Bearer */
@@ -7176,7 +8064,20 @@ export interface components {
             in_stock?: boolean;
             rating_avg?: number | null;
             review_count?: number;
+            offer?: components["schemas"]["BookOffer"];
         };
+        /** @description The best live automatic offer covering this book (biggest percent; tie -> lower min_quantity, then lower id), or null. Live offers are cached 60 seconds; checkout always re-checks. */
+        BookOffer: {
+            id?: number;
+            /** @example 2 */
+            min_quantity?: number;
+            /** @example 15.00 */
+            percent_off?: string;
+            /** Format: date-time */
+            ends_at?: string | null;
+            /** @description Series or category name when the offer has exactly one such target; else null. */
+            target_label?: string | null;
+        } | null;
         Variant: {
             id?: number;
             /** @enum {string} */
@@ -7255,11 +8156,40 @@ export interface components {
                 line_total_usd?: components["schemas"]["Money"];
                 line_total_khr?: components["schemas"]["Riel"];
                 issues?: components["schemas"]["CartIssue"][];
+                /** @description True when the automatic offer in `pricing.offer` discounts this line. */
+                in_offer?: boolean;
             }[];
             item_count?: number;
             subtotal_usd?: components["schemas"]["Money"];
             subtotal_khr?: components["schemas"]["Riel"];
             can_checkout?: boolean;
+            pricing?: components["schemas"]["CartPricing"];
+        };
+        /**
+         * @description The automatic offer for this cart (no coupon: coupons are compared in POST /cart/coupon/check).
+         *     `subtotal_usd` is before any discount, like the cart's own `subtotal_usd`.
+         */
+        CartPricing: {
+            subtotal_usd?: components["schemas"]["Money"];
+            subtotal_khr?: components["schemas"]["Riel"];
+            discount_usd?: components["schemas"]["Money"];
+            discount_khr?: components["schemas"]["Riel"];
+            total_before_shipping_usd?: components["schemas"]["Money"];
+            total_before_shipping_khr?: components["schemas"]["Riel"];
+            offer?: components["schemas"]["CartOffer"];
+            /**
+             * @description At most one: an offer the cart has at least 1 covered book for but fewer than `min_quantity`; when an
+             *     offer already applies, only an offer with a higher percent. Fewest extra books first.
+             */
+            nudge?: {
+                offer_id?: number;
+                /** @example 1 */
+                add_quantity?: number;
+                /** @example 15.00 */
+                percent_off?: string;
+                target_label?: string | null;
+            } | null;
+            free_shipping?: components["schemas"]["CartFreeShipping"];
         };
         Order: {
             id?: number;
@@ -7283,6 +8213,8 @@ export interface components {
                 quantity?: number;
                 unit_price_usd?: components["schemas"]["Money"];
                 subtotal_usd?: components["schemas"]["Money"];
+                /** @description This line's share of the order discount; the lines add up to the order's discount_usd (0.00 on older orders). */
+                discount_usd?: components["schemas"]["Money"];
             }[];
             subtotal_usd?: components["schemas"]["Money"];
             discount_usd?: components["schemas"]["Money"];
@@ -7291,6 +8223,16 @@ export interface components {
             total_usd?: components["schemas"]["Money"];
             total_khr?: components["schemas"]["Riel"];
             coupon_code?: string | null;
+            /** @description The automatic offer used, copied at order time (id becomes null if the offer is deleted later). */
+            offer?: {
+                id?: number | null;
+                /** @example Buy 2 Sherlock Holmes */
+                name?: string;
+                /** @example 2 */
+                min_quantity?: number;
+                /** @example 15.00 */
+                percent_off?: string;
+            } | null;
             shipping_address?: components["schemas"]["AddressInput"];
             can_cancel?: boolean;
             delivery_note?: string | null;
@@ -7483,6 +8425,11 @@ export interface components {
                 [name: string]: unknown;
             };
             content: {
+                /**
+                 * @example {
+                 *       "message": "Not found."
+                 *     }
+                 */
                 "application/json": components["schemas"]["Error"];
             };
         };
@@ -7525,15 +8472,20 @@ export type SchemaDeliveryProvince = components['schemas']['DeliveryProvince'];
 export type SchemaDeliveryOptionsData = components['schemas']['DeliveryOptionsData'];
 export type SchemaCheckoutPreview = components['schemas']['CheckoutPreview'];
 export type SchemaCouponCheck = components['schemas']['CouponCheck'];
+export type SchemaCartOffer = components['schemas']['CartOffer'];
+export type SchemaCartFreeShipping = components['schemas']['CartFreeShipping'];
+export type SchemaCouponNotUsed = components['schemas']['CouponNotUsed'];
 export type SchemaTokenResponse = components['schemas']['TokenResponse'];
 export type SchemaCustomer = components['schemas']['Customer'];
 export type SchemaBookCard = components['schemas']['BookCard'];
+export type SchemaBookOffer = components['schemas']['BookOffer'];
 export type SchemaVariant = components['schemas']['Variant'];
 export type SchemaBookDetail = components['schemas']['BookDetail'];
 export type SchemaAddress = components['schemas']['Address'];
 export type SchemaAddressInput = components['schemas']['AddressInput'];
 export type SchemaCartIssue = components['schemas']['CartIssue'];
 export type SchemaCart = components['schemas']['Cart'];
+export type SchemaCartPricing = components['schemas']['CartPricing'];
 export type SchemaOrder = components['schemas']['Order'];
 export type SchemaOrderDocument = components['schemas']['OrderDocument'];
 export type SchemaReturn = components['schemas']['Return'];

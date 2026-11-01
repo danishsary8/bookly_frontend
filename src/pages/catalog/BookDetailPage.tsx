@@ -34,6 +34,7 @@ import { formatMoney, useCurrency } from "@/stores/currency";
 import { addRecentlyViewed, clearRecentlyViewed, useRecentlyViewed } from "@/stores/recentlyViewed";
 import { toast } from "@/stores/toast";
 import { formatName, useT } from "@/i18n";
+import { BookOfferLine } from "@/features/offers/offerText";
 
 /*
  * /books/:id. Layout (MASTER 5/7 split): cover panel | title, authors, rating,
@@ -173,6 +174,7 @@ function Purchase({ book }: { book: BookDetail }) {
         <p className={cn("text-sm", buyable ? "text-success" : "text-destructive")}>
           {!variant ? b.notAvailable : !buyable ? dict.bookDetail.outOfStock : digital ? b.download : dict.bookDetail.inStock}
         </p>
+        {buyable ? <BookOfferLine offer={book.offer} className="mt-1" /> : null}
       </div>
 
       <div ref={mainButton} className="flex flex-wrap items-center gap-3">

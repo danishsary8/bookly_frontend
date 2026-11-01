@@ -1301,6 +1301,19 @@ export const km: Translations = {
     disconnectedSuccess: "បានផ្តាច់ការជូនដំណឹងការបញ្ជាទិញតាម Telegram។",
     statusUpdated: "បានរក្សាទុកចំណូលចិត្តការជូនដំណឹង។",
   },
+  offers: {
+    badge: (n: number, pct: string) => `ទិញ ${n} សន្សំ ${pct}%`,
+    bookLine: (n: number, pct: string, label: string | null) =>
+      label ? `ទិញ ${n} ក្បាលពី ${label} សន្សំ ${pct}%។` : `ទិញចាប់ពី ${n} ក្បាលក្នុងការផ្តល់ជូននេះ សន្សំ ${pct}% លើក្បាលនីមួយៗ។`,
+    ends: (date: string) => `ផុតកំណត់ ${date}។`,
+    offerLine: (n: number, pct: string) => `ការផ្តល់ជូន៖ ទិញ ${n} សន្សំ ${pct}%`,
+    inOffer: "ក្នុងការផ្តល់ជូន",
+    nudge: (add: number, pct: string, label: string | null) =>
+      label ? `បន្ថែម ${add} ក្បាលទៀតពី ${label} ដើម្បីសន្សំ ${pct}%` : `បន្ថែម ${add} ក្បាលទៀតក្នុងការផ្តល់ជូននេះ ដើម្បីសន្សំ ${pct}%`,
+    seeBooks: "មើលសៀវភៅ",
+    couponNotUsed: (code: string) => `គូប៉ុង ${code} មិនត្រូវបានប្រើទេ៖ ការផ្តល់ជូនសន្សំបានច្រើនជាង។ គូប៉ុងនៅតែប្រើបានលើកក្រោយ។`,
+    offerEnded: "ការផ្តល់ជូននេះទើបតែបញ្ចប់។ សូមពិនិត្យតម្លៃសរុបថ្មី រួចបញ្ជាទិញ។",
+  },
   common: {
     loading: "កំពុងដំណើរការ…",
     error: "មានបញ្ហាកើតឡើង",

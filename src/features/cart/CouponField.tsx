@@ -79,7 +79,8 @@ export function CouponField({ cartVersion, onChecked }: { cartVersion: string; o
         <span className="flex items-center gap-2">
           <TicketPercent className="size-[18px]" aria-hidden="true" />
           <span>
-            <span className="font-bold uppercase tracking-wide">{check.data.code}</span> {c.applied} · −{formatMoney(check.data.discount_usd, check.data.discount_khr, currency)}
+            <span className="font-bold uppercase tracking-wide">{check.data.code}</span>{" "}
+            {check.data.applied === "offer" ? null : <>{c.applied} · −{formatMoney(check.data.discount_usd, check.data.discount_khr, currency)}</>}
           </span>
         </span>
         <Button variant="ghost" size="icon-sm" onClick={remove} aria-label={c.removeCoupon(check.data.code ?? "")} className="text-success hover:bg-card">

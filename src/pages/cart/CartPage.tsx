@@ -18,6 +18,9 @@ import { CartLineItem } from "@/features/cart/CartLineItem";
 import { CouponField } from "@/features/cart/CouponField";
 import { setCoupon, useCoupon } from "@/features/cart/couponStore";
 import { useCartMutations, useUsableCart } from "@/features/cart/useCart";
+import { cartTotals } from "@/features/offers/cartTotals";
+import { CouponNotUsedNote, OfferNudge } from "@/features/offers/offerText";
+import { percentLabel } from "@/features/offers/percent";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
@@ -28,7 +31,8 @@ import { useT } from "@/i18n";
  * /cart (MASTER 8/4 split): editable lines on the left; on the right a sticky
  * summary with the coupon, subtotal, discount and "Continue to checkout" (the
  * page's one vermilion CTA, disabled while an issue blocks checkout). Shipping
- * and the final total come from the checkout preview.
+ * and the final total come from the checkout preview. An automatic offer (offers spec 6.1) shows as
+ * one discount line (never stacked with a coupon), with a nudge above the summary.
  */
 
 function Summary() {
@@ -39,7 +43,8 @@ function Summary() {
   const coupon = useCoupon();
   const [check, setCheck] = useState<CouponCheck | null>(null);
   const data = cart.data!;
-  const discount = coupon && check ? check : null;
+  const totals = cartTotals(data, coupon && check ? check : null);
+  const discount = totals.discount;
   const blocked = data.can_checkout === false;
   // Changes whenever lines or quantities change, so the coupon is re-checked.
   const cartVersion = (data.items ?? []).map((i) => `${i.id}:${i.quantity}`).join(",") + `|${data.subtotal_usd}`;
@@ -49,8 +54,12 @@ function Summary() {
       <h2 id="summary-title" className="font-display text-[1.563rem] leading-tight">
         {c.summary}
       </h2>
-      <FreeShippingBar subtotalUsd={discount ? discount.total_before_shipping_usd : data.subtotal_usd} />
+      <OfferNudge nudge={data.pricing?.nudge} />
+      {totals.freeShipping === null ? null : (
+        <FreeShippingBar subtotalUsd={totals.totalBeforeShipping.usd} thresholdUsd={totals.freeShipping?.threshold_usd} />
+      )}
       <CouponField cartVersion={cartVersion} onChecked={setCheck} />
+      <CouponNotUsedNote code={totals.couponNotUsed} />
       <dl className="grid gap-2 border-t border-border pt-4 text-[15px]">
         <div className="flex justify-between gap-4">
           <dt className="text-muted-foreground">{c.subtotalItems(data.item_count ?? 0)}</dt>
@@ -58,8 +67,12 @@ function Summary() {
         </div>
         {discount ? (
           <div className="flex justify-between gap-4 text-success">
-            <dt>{c.discountCode(discount.code ?? "")}</dt>
-            <dd className="tabular-nums">−{formatMoney(discount.discount_usd, discount.discount_khr, currency)}</dd>
+            <dt>
+              {discount.kind === "offer"
+                ? dict.offers.offerLine(discount.offer.min_quantity ?? 0, percentLabel(discount.offer.percent_off))
+                : c.discountCode(discount.code)}
+            </dt>
+            <dd className="tabular-nums">−{formatMoney(discount.amount.usd, discount.amount.khr, currency)}</dd>
           </div>
         ) : null}
         <div className="flex justify-between gap-4">
@@ -68,11 +81,7 @@ function Summary() {
         </div>
         <div className="mt-2 flex items-baseline justify-between gap-4 border-t border-border pt-3">
           <dt className="font-semibold">{c.totalBeforeShipping}</dt>
-          <dd className="text-xl font-semibold tabular-nums">
-            {discount
-              ? formatMoney(discount.total_before_shipping_usd, discount.total_before_shipping_khr, currency)
-              : formatMoney(data.subtotal_usd, data.subtotal_khr, currency)}
-          </dd>
+          <dd className="text-xl font-semibold tabular-nums">{formatMoney(totals.totalBeforeShipping.usd, totals.totalBeforeShipping.khr, currency)}</dd>
         </div>
       </dl>
       {blocked ? (
