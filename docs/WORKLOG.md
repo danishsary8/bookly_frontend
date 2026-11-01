@@ -696,3 +696,9 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   yet". Checks: lint 0, typecheck, `npm test` 483 passed (6 new), build ok. Browser + axe (local API): 1280 light and 390
   dark: list + dialog axe 0; reorder + save changed the shop order; switch off/on; create + delete. Fixed before push:
   the dialog was wider than a phone (long book titles in a grid; now `grid-cols-1`) and the date boxes overlapped on desktop.
+- [x] Fix: tall dialogs could not scroll (2026-11-01, branch `fix/dialog-scroll`, `c817745`; found by the owner on the live
+  collections form). The scroll lock only allows scrolling inside the dialog, but the scroll box was outside it. Now the
+  dialog itself scrolls (`max-h-[calc(100dvh-2rem)] overflow-y-auto`). Reproduced first (Playwright, 1280x700 and 390x700,
+  mouse wheel: the Create button never moved on Collections and Offers), then fixed (reachable on all 4). axe 0 with the
+  dialog open (Collections, Offers, a confirm box; light 1280, dark 390); the page behind does not move. lint, typecheck,
+  488 tests, build ok. **Lesson:** browser checks must scroll tall dialogs to the end on a short screen.
