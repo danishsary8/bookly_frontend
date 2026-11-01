@@ -663,3 +663,13 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   (2 new), build ok. Browser (local API = backend `main`, 30 days): $5,361.83 stock value, $827.79 dead stock (Around the
   World in Eighty Days first), authors led by Conan Doyle, Phnom Penh 9 orders, offers 2 / coupons 2 / none 11; 1440 and
   390 px no overflow; no console errors.
+
+- [x] Fix: orders donut in the keyboard order (2026-11-01, branch `fix/dashboard-donut-focus`): the E2E accessibility check
+  (axe, `e2e/a11y.spec.ts` + `smoke.spec.ts`) failed on every PR after `feature/admin-dashboard-redesign` was merged:
+  `aria-hidden-focus` on the donut (Recharts makes the chart and the Pie focusable, `tabindex="0"`, inside the
+  `aria-hidden` picture). Fix: `accessibilityLayer={false}` on `PieChart` and `rootTabIndex={-1}` on `Pie`; the status
+  list beside it stays the accessible version. Verified with axe (same tags as CI: wcag2a/aa, 21a/aa) against the local
+  API, light + dark, 1280 + 390 px: `/admin` (before: 1 violation each, after: 0), `/admin` with Ctrl K open, `/admin/offers`,
+  `/admin/reports?tab=offers`, `/books?q=holmes`, `/books/5`, and `feature/admin-insights-widgets` + this fix: all 0.
+  lint 0, typecheck, `npm test` 473 passed, build ok.
+  **Lesson:** run axe on every changed page before pushing (the CI e2e job does; my Playwright checks did not include it).
