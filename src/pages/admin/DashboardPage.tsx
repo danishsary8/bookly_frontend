@@ -2,26 +2,60 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { AlertTriangle, ArrowRight } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
+import { insightsQueries, type TrendDay } from "@/api/endpoints/dashboardInsights";
 import { staffQueries } from "@/api/endpoints/staff";
-import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
-import type { OrderStatus } from "@/api/types";
 import { ErrorState, InlineError } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { IncomeChart } from "@/features/admin/dashboard/IncomeChart";
+import { Sparkline } from "@/features/admin/dashboard/Sparkline";
+import { StatusDonut } from "@/features/admin/dashboard/StatusDonut";
 import { SalesChart } from "@/features/admin/SalesChart";
 import { day, rangeFromParams, rangeToParams } from "@/features/admin/dashboardRange";
-import { Change, CustomRange, Khr, Panel, PeriodPicker, Tile } from "@/features/admin/reportKit";
+import { Change, CustomRange, Khr, Panel, PeriodPicker } from "@/features/admin/reportKit";
 import { SystemHealthCard } from "@/features/admin/SystemHealthCard";
 import { useStaff } from "@/features/admin/staffSession";
 import { formatLabel } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { formatUsd } from "@/stores/currency";
+import type { ReactNode } from "react";
+
+/** A KPI card (owner's sample): label, number, change vs the previous period, a trend line and a "View …" link. */
+function Kpi({ id, label, value, khr, detail, change, trend, view, hero }: {
+  id: string;
+  label: string;
+  value: ReactNode;
+  khr?: string | null;
+  detail?: string;
+  change?: ReactNode;
+  trend?: number[];
+  view: { to: string; label: string };
+  hero?: boolean;
+}) {
+  return (
+    <section aria-labelledby={id} className="grid content-start gap-2 rounded-xl border border-border bg-card p-5">
+      <h2 id={id} className="font-sans text-sm font-normal tracking-normal text-muted-foreground">
+        {label}
+      </h2>
+      <p className={cn("font-semibold leading-none tabular-nums", hero ? "text-[3.25rem]" : "text-[1.75rem]")}>{value}</p>
+      <Khr value={khr} className={hero ? "text-[15px]" : undefined} />
+      {change}
+      {detail ? <p className="text-sm text-muted-foreground tabular-nums">{detail}</p> : null}
+      {trend ? <Sparkline values={trend} className="mt-1" /> : null}
+      <Link to={view.to} className="mt-auto inline-flex items-center gap-1 justify-self-start pt-1 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+        {view.label} <ArrowRight className="size-4" aria-hidden="true" />
+      </Link>
+    </section>
+  );
+}
+
+const series = (days: TrendDay[] | undefined, pick: (d: TrendDay) => number) => (days?.length ? days.map(pick) : undefined);
 
 /*
  * /admin: how the shop is doing over today / 7 / 30 days or chosen days (Phnom Penh days, from
- * the API). Revenue counts delivered orders, less refunds. Net revenue is the one
- * hero figure; the rest are supporting tiles, the daily chart, best sellers, low
- * stock and today's order mix.
+ * the API). Revenue counts delivered orders, less refunds. KPI cards with a trend line, change vs the previous
+ * period and a "View" link; the income chart (this period solid, the previous one dashed, Income/Orders switch);
+ * best sellers, low stock, an orders-by-status donut and top categories (BI design 2026-11-01, branch 2).
  */
 export default function DashboardPage() {
   const session = useStaff();
@@ -32,6 +66,9 @@ export default function DashboardPage() {
   const active = picking ? "custom" : range.period;
   const summary = useQuery(staffQueries.summary(range));
   const sales = useQuery(staffQueries.sales(range));
+  // Trends and the previous-period line come from /staff/dashboard/insights; on an API without it they are left out.
+  const insights = useQuery(insightsQueries.get(range));
+  const trend = insights.data?.trend;
   const s = summary.data;
   const firstName = session?.user.name.split(" ")[0];
   const c = s?.comparison;
@@ -69,49 +106,63 @@ export default function DashboardPage() {
       ) : (
         <div className={cn("grid gap-6", summary.isPlaceholderData && "opacity-60 transition-opacity")}>
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)]">
-            <section aria-labelledby="net-revenue" className="grid content-start gap-2 rounded-xl border border-border bg-card p-5">
-              <h2 id="net-revenue" className="font-sans text-sm font-normal tracking-normal text-muted-foreground">
-                Net revenue
-              </h2>
-              <p className="text-[3.25rem] font-semibold leading-none">{formatUsd(s.revenue.net_usd)}</p>
-              <Khr value={s.revenue.net_khr} className="text-[15px]" />
-              {c ? <Change percent={c.change_percent.net_revenue} previous={Number(c.revenue.net_usd)} versus={versus} /> : null}
-              <p className="text-sm text-muted-foreground tabular-nums">
-                {formatUsd(s.revenue.gross_usd)} from {s.delivered_orders} delivered {s.delivered_orders === 1 ? "order" : "orders"}
-                {Number(s.revenue.refunds_usd) > 0 ? `, less ${formatUsd(s.revenue.refunds_usd)} refunded` : ""}
-              </p>
-            </section>
+            <Kpi
+              hero
+              id="net-revenue"
+              label="Net revenue"
+              value={formatUsd(s.revenue.net_usd)}
+              khr={s.revenue.net_khr}
+              change={c ? <Change percent={c.change_percent.net_revenue} previous={Number(c.revenue.net_usd)} versus={versus} /> : null}
+              detail={`${formatUsd(s.revenue.gross_usd)} from ${s.delivered_orders} delivered ${s.delivered_orders === 1 ? "order" : "orders"}${Number(s.revenue.refunds_usd) > 0 ? `, less ${formatUsd(s.revenue.refunds_usd)} refunded` : ""}`}
+              trend={series(trend, (d) => Number(d.net_revenue_usd))}
+              view={{ to: "/admin/reports", label: "View sales report" }}
+            />
             <div className="grid gap-4 sm:grid-cols-3">
-              <Tile
+              <Kpi
+                id="orders-placed"
                 label="Orders placed"
                 value={s.orders_placed}
                 change={c ? <Change percent={c.change_percent.orders_placed} previous={c.orders_placed} versus={versus} /> : null}
+                trend={series(trend, (d) => d.orders_placed)}
+                view={{ to: "/admin/orders", label: "View orders" }}
               />
-              <Tile
+              <Kpi
+                id="average-order"
                 label="Average order"
                 value={formatUsd(s.average_order_value_usd)}
                 khr={s.average_order_value_khr}
                 detail="delivered orders"
                 change={c ? <Change percent={c.change_percent.average_order_value} previous={Number(c.average_order_value_usd)} versus={versus} /> : null}
+                trend={series(trend, (d) => Number(d.average_order_usd))}
+                view={{ to: "/admin/reports?tab=orders", label: "View order report" }}
               />
-              <Tile
+              <Kpi
+                id="new-customers"
                 label="New customers"
                 value={s.new_customers}
                 detail="verified their account"
                 change={c ? <Change percent={c.change_percent.new_customers} previous={c.new_customers} versus={versus} /> : null}
+                trend={series(trend, (d) => d.new_customers)}
+                view={{ to: "/admin/customers", label: "View customers" }}
               />
             </div>
           </div>
 
-          <Panel id="sales-chart" title="Net revenue by day" action={<span className="text-sm text-muted-foreground">by delivery date, less refunds</span>}>
-            {sales.isError ? (
-              <InlineError error={sales.error} onRetry={() => sales.refetch()} />
-            ) : sales.data ? (
-              <SalesChart days={sales.data} />
-            ) : (
-              <Skeleton className="h-60 rounded-md" />
-            )}
-          </Panel>
+          {trend?.length ? (
+            <Panel id="sales-chart" title="Income report" action={<span className="text-sm text-muted-foreground">this period vs the previous one · by delivery date, less refunds</span>}>
+              <IncomeChart days={trend} />
+            </Panel>
+          ) : (
+            <Panel id="sales-chart" title="Net revenue by day" action={<span className="text-sm text-muted-foreground">by delivery date, less refunds</span>}>
+              {sales.isError ? (
+                <InlineError error={sales.error} onRetry={() => sales.refetch()} />
+              ) : sales.data ? (
+                <SalesChart days={sales.data} />
+              ) : (
+                <Skeleton className="h-60 rounded-md" />
+              )}
+            </Panel>
+          )}
 
           <div className="grid gap-6 lg:grid-cols-2">
             <Panel id="best-sellers" title="Best sellers">
@@ -181,15 +232,16 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <Panel id="order-mix" title="Orders placed by status" action={<span className="text-sm text-muted-foreground">{s.open_returns} open {s.open_returns === 1 ? "return" : "returns"}</span>}>
-              <ul className="flex flex-wrap gap-x-6 gap-y-3">
-                {Object.entries(s.orders_by_status).map(([status, n]) => (
-                  <li key={status} className="flex items-center gap-2 text-[15px] tabular-nums">
-                    <OrderStatusBadge status={status as OrderStatus} />
-                    <span className="font-semibold">{n}</span>
-                  </li>
-                ))}
-              </ul>
+            <Panel
+              id="order-mix"
+              title="Orders placed by status"
+              action={
+                <Link to="/admin/orders" className="inline-flex items-center gap-1 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+                  {s.open_returns} open {s.open_returns === 1 ? "return" : "returns"} · View orders <ArrowRight className="size-4" aria-hidden="true" />
+                </Link>
+              }
+            >
+              <StatusDonut counts={s.orders_by_status} />
             </Panel>
             <Panel id="top-categories" title="Top categories" action={<span className="text-sm text-muted-foreground">by copies in orders placed</span>}>
               {!s.top_categories || s.top_categories.length === 0 ? (
