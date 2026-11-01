@@ -8,6 +8,7 @@ import { ErrorState, InlineError } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { IncomeChart } from "@/features/admin/dashboard/IncomeChart";
+import { InsightsWidgets } from "@/features/admin/dashboard/InsightsWidgets";
 import { Sparkline } from "@/features/admin/dashboard/Sparkline";
 import { StatusDonut } from "@/features/admin/dashboard/StatusDonut";
 import { SalesChart } from "@/features/admin/SalesChart";
@@ -271,6 +272,10 @@ export default function DashboardPage() {
               )}
             </Panel>
           </div>
+
+          {insights.data?.dead_stock && insights.data.stock_value && insights.data.promotions && insights.data.repeat_customer_rate && insights.data.top_authors && insights.data.provinces ? (
+            <InsightsWidgets data={insights.data} />
+          ) : null}
 
           {session?.user.role === "admin" ? <SystemHealthCard /> : null}
         </div>
