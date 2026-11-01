@@ -681,3 +681,18 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   cancelled light grey. Checks: lint 0, typecheck, `npm test` 475 passed (2 new: bar EN + KM), build ok. Browser + axe
   (local API = `main`): `/account/profile` KM 390 fades both sides, `/account/wishlist` left only, EN 1280 none, no
   overflow; cart bar "Add $37.01 more…" EN and KM; axe 0 on `/account/profile` and `/cart` (EN 1280, KM 390).
+
+- [x] Seasonal collections, shop (2026-11-01, branch `feature/seasonal-collections-shop`, `f8622ab`; backend
+  `feature/seasonal-collections`): `collectionsApi` (`/collections/live`, `/collections/{slug}`), one `BookShelf` per live
+  collection above New arrivals (eyebrow "Seasonal pick", See all), page `/collections/:slug` (title, description, "Until
+  {date}", book grid, not-found state). Khmer title/description fall back to English. Checks: lint 0, typecheck,
+  `npm test` 482 passed (5 new), build ok. Browser + axe (local API on the backend branch, 2 live collections): EN 1280
+  light and KM 390 dark: home rows in API order, See all link, collection page (lead line, 9 cards), unknown slug shows
+  not found; axe 0, no sideways scroll.
+- [x] Seasonal collections, admin (2026-11-01, branch `feature/seasonal-collections-admin`, `1321156`): `/admin/collections`
+  in the menu after Offers. Table (title EN/KM, web address, books with "+N in trash", status, when, order, on/off switch,
+  shop link for live ones) and a dialog (titles + descriptions EN/KM, web address made from the English title if empty,
+  starts/ends, order, book search, ↑/↓/remove, on/off; new ones start off). Staff view only; 404 shows "not available
+  yet". Checks: lint 0, typecheck, `npm test` 483 passed (6 new), build ok. Browser + axe (local API): 1280 light and 390
+  dark: list + dialog axe 0; reorder + save changed the shop order; switch off/on; create + delete. Fixed before push:
+  the dialog was wider than a phone (long book titles in a grid; now `grid-cols-1`) and the date boxes overlapped on desktop.
