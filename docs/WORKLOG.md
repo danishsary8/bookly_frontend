@@ -568,3 +568,7 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
     1, 2, 3, 16, 15, 14, 13, 11, 10, 20 (no repeats, not itself); Meditations → 12 books; cart (demo customer, Holmes #1) → 5, 6, …;
     Khmer eyebrow/title show; no horizontal overflow. Console: only failed cover images from external photo hosts (no internet here).
   - Not verified: against the live API (Render) in a browser; the Khmer wording by a native speaker.
+
+- [x] Announcement bar free-delivery amount (2026-11-01, branch `fix/announcement-free-delivery`): the bar said "over $25",
+  the shop's rule is $50 (owner confirmed). `shell.announcementDelivery` in en + km. Checks: lint 0, typecheck clean,
+  `npm test` 444 passed, build ok; browser (home page, EN 1280 + KM 390): bar reads "$50" / "50$".
