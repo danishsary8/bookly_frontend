@@ -1314,6 +1314,14 @@ export const en = {
     unlocked: "You've unlocked FREE delivery! 🎉",
     addMore: (diff: string, threshold: string) => `Add ${diff} more for FREE delivery (orders over ${threshold})`,
   },
+  collections: {
+    eyebrow: "Seasonal pick",
+    pageEyebrow: (n: number) => `Seasonal pick · ${n} ${n === 1 ? "book" : "books"}`,
+    endsOn: (date: string) => `Until ${date}`,
+    what: "collection",
+    empty: "No books here right now",
+    seeAll: "See all",
+  },
   common: {
     loading: "Loading…",
     error: "An error occurred",

@@ -76,6 +76,7 @@ const AuthorsPage = lazy(() => import("../pages/catalog/AuthorsPage"));
 const AuthorPage = lazy(() => import("../pages/catalog/AuthorPage"));
 const SeriesListPage = lazy(() => import("../pages/catalog/SeriesListPage"));
 const SeriesPage = lazy(() => import("../pages/catalog/SeriesPage"));
+const CollectionPage = lazy(() => import("../pages/catalog/CollectionPage"));
 const CategoryPage = lazy(() => import("../pages/catalog/CategoryPage"));
 const PublisherPage = lazy(() => import("../pages/catalog/PublisherPage"));
 // Development-only reference page for the UI kit; not part of production builds.
@@ -113,6 +114,7 @@ const AppRoutes = () => {
           <Route path="/authors/:id" element={<AuthorPage />} />
           <Route path="/series" element={<SeriesListPage />} />
           <Route path="/series/:id" element={<SeriesPage />} />
+          <Route path="/collections/:slug" element={<CollectionPage />} />
           <Route path="/categories/:slug" element={<CategoryPage />} />
           <Route path="/publishers/:id" element={<PublisherPage />} />
           <Route path="/books/:id" element={<BookDetail />} />

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { AuthorAvatar } from "@/components/catalog/AuthorAvatar";
 import { BookShelf } from "@/components/catalog/BookShelf";
+import { collectionQueries, collectionText } from "@/api/endpoints/collections";
 import { CategoryTiles } from "@/components/home/CategoryTiles";
 import { HomeHero } from "@/components/home/HomeHero";
 import { SeriesSpotlight } from "@/components/home/SeriesSpotlight";
@@ -45,8 +46,10 @@ const promises = [
 
 export default function HomePage() {
   useDocumentTitle("Bookly");
-  const { dict } = useT();
+  const { dict, lang } = useT();
   const h = dict.homePage;
+  // Seasonal collections (owner 2026-11-01): up to 2 live ones, above New arrivals. None, or an older API: no row.
+  const collections = useQuery(collectionQueries.live());
   const newest = useQuery(catalogQueries.books({ sort: "newest", per_page: 10 }));
   const rated = useQuery(catalogQueries.books({ sort: "rating", per_page: 10 }));
   const categories = useQuery(catalogQueries.categories());
@@ -97,6 +100,21 @@ export default function HomePage() {
             </li>
           ))}
         </ul>
+
+        {(collections.data ?? []).map((c) => {
+          const text = collectionText(c, lang);
+          return (
+            <BookShelf
+              key={c.id}
+              id={`collection-${c.slug}`}
+              eyebrow={dict.collections.eyebrow}
+              title={text.title}
+              books={c.books}
+              seeAllHref={`/collections/${c.slug}`}
+              seeAllLabel={dict.collections.seeAll}
+            />
+          );
+        })}
 
         <BookShelf
           id="new-arrivals"

@@ -1319,6 +1319,14 @@ export const km: Translations = {
     unlocked: "អ្នកទទួលបានការដឹកជញ្ជូនឥតគិតថ្លៃ! 🎉",
     addMore: (diff: string, threshold: string) => `បន្ថែម ${diff} ទៀតដើម្បីទទួលបានការដឹកជញ្ជូនឥតគិតថ្លៃ (លើសពី ${threshold})`,
   },
+  collections: {
+    eyebrow: "ការជ្រើសរើសតាមរដូវ",
+    pageEyebrow: (n: number) => `ការជ្រើសរើសតាមរដូវ · ${n} ក្បាល`,
+    endsOn: (date: string) => `រហូតដល់ ${date}`,
+    what: "ការប្រមូលផ្តុំ",
+    empty: "មិនទាន់មានសៀវភៅនៅទីនេះទេ",
+    seeAll: "មើលទាំងអស់",
+  },
   common: {
     loading: "កំពុងដំណើរការ…",
     error: "មានបញ្ហាកើតឡើង",
