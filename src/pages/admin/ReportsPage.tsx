@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowDown, Download } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { reportQueries, reportsApi, type ReportGroup, type ReportName, type ReportRange } from "@/api/endpoints/reports";
+import { ApiError } from "@/api/errors";
 import type { OrderStatus } from "@/api/types";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ const TABS: Array<{ value: ReportName; label: string }> = [
   { value: "customers", label: "Customers" },
   { value: "funnel", label: "Funnel" },
   { value: "coupons", label: "Coupons & refunds" },
+  { value: "offers", label: "Offers" },
 ];
 const GROUPS: Array<{ value: ReportGroup; label: string }> = [
   { value: "day", label: "Day" },
@@ -502,6 +504,99 @@ function CouponsTab({ range }: { range: ReportRange }) {
   );
 }
 
+/** "$12.34" as cents, for adding rows up exactly. */
+const cents = (usd: string) => Math.round(Number(usd) * 100);
+
+function OffersTab({ range }: { range: ReportRange }) {
+  const query = useReport("offers", range);
+  // Before the backend with offers is deployed the report is a 404: say so instead of an error page.
+  if (query.isError && ApiError.from(query.error).status === 404) {
+    return (
+      <Panel id="offers-not-yet" title="Offers">
+        <Empty>The offers report is not available on this server yet. It appears once the backend update is deployed.</Empty>
+      </Panel>
+    );
+  }
+  return (
+    <State query={query}>
+      {() => {
+        const r = query.data!;
+        const w = r.without_offer;
+        const orders = r.offers.reduce((n, o) => n + o.orders, 0);
+        const units = r.offers.reduce((n, o) => n + o.units, 0);
+        const revenue = r.offers.reduce((n, o) => n + cents(o.revenue_usd), 0);
+        const discount = r.offers.reduce((n, o) => n + cents(o.discount_usd), 0);
+        const usd = (c: number) => formatUsd((c / 100).toFixed(2));
+        const all = orders + w.orders;
+        const rows = [
+          ...r.offers.map((o) => ({
+            key: `offer-${o.offer_id ?? o.name}`,
+            name: o.name,
+            rule: o.min_quantity ? `Buy ${o.min_quantity}, save ${Number(o.percent_off)}%` : "",
+            row: o as typeof w,
+          })),
+          { key: "without", name: "Orders without an offer", rule: "coupon orders included", row: w },
+        ];
+        return (
+          <>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <Tile
+                label="Books per order with an offer"
+                value={orders ? (units / orders).toFixed(2) : "–"}
+                detail={`Without an offer: ${w.orders ? w.books_per_order : "–"}`}
+              />
+              <Tile
+                label="Average order with an offer"
+                value={orders ? usd(Math.round(revenue / orders)) : "–"}
+                detail={`Without an offer: ${w.orders ? formatUsd(w.average_order_usd) : "–"}`}
+              />
+              <Tile label="Orders with an offer" value={count(orders)} detail={all ? `${percent((orders / all) * 100)} of ${count(all)} orders` : "No orders in this period"} />
+              <Tile label="Discount given by offers" value={usd(discount)} detail={`On ${usd(revenue)} of orders`} />
+            </div>
+            <Panel id="offers-table" title="What each offer sold" action={<span className="text-sm text-muted-foreground">orders placed, not cancelled</span>}>
+              {r.offers.length === 0 ? <Empty>No order used an offer in this period.</Empty> : null}
+              <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Offers table">
+                <table className="w-full min-w-[44rem] text-left text-[15px] tabular-nums">
+                  <thead className="text-sm text-muted-foreground">
+                    <tr>
+                      <th scope="col" className="pb-2 font-normal">Offer</th>
+                      <th scope="col" className="pb-2 pl-4 text-right font-normal">Orders</th>
+                      <th scope="col" className="pb-2 pl-4 text-right font-normal">Books (with the offer)</th>
+                      <th scope="col" className="pb-2 pl-4 text-right font-normal">Order totals</th>
+                      <th scope="col" className="pb-2 pl-4 text-right font-normal">Discount given</th>
+                      <th scope="col" className="pb-2 pl-4 text-right font-normal">Average order</th>
+                      <th scope="col" className="pb-2 pl-4 text-right font-normal">Books per order</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {rows.map(({ key, name, rule, row }) => (
+                      <tr key={key} className={cn(key === "without" && "text-muted-foreground")}>
+                        <th scope="row" className="py-2 pr-3 font-normal">
+                          <span className={cn(key !== "without" && "font-semibold text-foreground")}>{name}</span>
+                          {rule ? <span className="block text-sm text-muted-foreground">{rule}</span> : null}
+                        </th>
+                        <td className="py-2 pl-4 text-right">{count(row.orders)}</td>
+                        <td className="py-2 pl-4 text-right">
+                          {count(row.units)}
+                          {key !== "without" ? <span className="text-muted-foreground"> ({count(row.units_with_offer)})</span> : null}
+                        </td>
+                        <td className="whitespace-nowrap py-2 pl-4 text-right">{formatUsd(row.revenue_usd)}</td>
+                        <td className="whitespace-nowrap py-2 pl-4 text-right">{formatUsd(row.discount_usd)}</td>
+                        <td className="whitespace-nowrap py-2 pl-4 text-right">{formatUsd(row.average_order_usd)}</td>
+                        <td className="py-2 pl-4 text-right">{row.books_per_order}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Panel>
+          </>
+        );
+      }}
+    </State>
+  );
+}
+
 export default function ReportsPage() {
   const [params, setParams] = useSearchParams();
   const range = rangeFromParams(params);
@@ -579,6 +674,7 @@ export default function ReportsPage() {
         <TabsContent value="customers">{tab === "customers" ? <CustomersTab range={days} versus={versus} /> : null}</TabsContent>
         <TabsContent value="funnel">{tab === "funnel" ? <FunnelTab range={days} /> : null}</TabsContent>
         <TabsContent value="coupons">{tab === "coupons" ? <CouponsTab range={days} /> : null}</TabsContent>
+        <TabsContent value="offers">{tab === "offers" ? <OffersTab range={days} /> : null}</TabsContent>
       </Tabs>
     </AdminPage>
   );

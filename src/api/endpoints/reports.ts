@@ -7,7 +7,7 @@ import { api } from "../client";
  * the day they were delivered, less refunds on the day they were paid back.
  */
 
-export type ReportName = "sales" | "orders" | "products" | "customers" | "funnel" | "coupons";
+export type ReportName = "sales" | "orders" | "products" | "customers" | "funnel" | "coupons" | "offers";
 export type ReportGroup = "day" | "week" | "month";
 export type ReportRange = { from: string; to: string };
 
@@ -119,7 +119,27 @@ export interface CouponsReport {
   refunds: { count: number; amount_usd: Usd; amount_khr: Khr; by_reason: Array<{ reason: string | null; count: number; amount_usd: Usd; amount_khr: Khr }> };
 }
 
-type Reports = { sales: SalesReport; orders: OrdersReport; products: ProductsReport; customers: CustomersReport; funnel: FunnelReport; coupons: CouponsReport };
+/** One row of the offers report (orders placed, not cancelled): all books in those orders and the discounted ones. */
+export interface OfferReportRow {
+  orders: number;
+  units: number;
+  units_with_offer: number;
+  revenue_usd: Usd;
+  revenue_khr: Khr;
+  discount_usd: Usd;
+  discount_khr: Khr;
+  average_order_usd: Usd;
+  average_order_khr: Khr;
+  books_per_order: string;
+}
+
+export interface OffersReport {
+  period: Period;
+  offers: Array<OfferReportRow & { offer_id: number | null; name: string; min_quantity: number | null; percent_off: string | null }>;
+  without_offer: OfferReportRow;
+}
+
+type Reports = { sales: SalesReport; orders: OrdersReport; products: ProductsReport; customers: CustomersReport; funnel: FunnelReport; coupons: CouponsReport; offers: OffersReport };
 
 type Params = ReportRange & { group?: ReportGroup };
 
