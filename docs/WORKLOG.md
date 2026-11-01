@@ -630,3 +630,18 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
     $2.68 each; 1 without): Offers tab shows 2 orders, 5 books (4 with the offer), $54.59, $5.36 discount, average $27.30,
     2.50 books per order vs 1.83 without; the CSV download has the same two rows. 1280 and 390 px: no overflow; no
     console errors.
+
+- [x] Admin dashboard redesign (2026-11-01, branch `feature/admin-dashboard-redesign`; BI design spec
+  `bookly_backend_v2/docs/superpowers/specs/2026-11-01-bi-dashboard-design.md`, branch 2; owner choices 1A-6A):
+  - KPI cards (net revenue as the hero, orders placed, average order, new customers): number, change vs the previous
+    period, a sparkline from `/staff/dashboard/insights` `trend`, and a "View …" link (sales report, orders, order report,
+    customers). Income report: this period solid vs the previous period dashed (same day index), Income / Orders switch,
+    legend with both totals, "Show as a table". Orders by status: donut with the total in the middle + a text list (badge,
+    count, share). New files: `src/api/endpoints/dashboardInsights.ts`, `src/features/admin/dashboard/*`.
+  - Works alone: without the insights endpoint (404) the cards have no sparkline and the old daily bar chart shows.
+  - The donut ignores anything that is not a real count (a cache bug on the live API, fixed in backend
+    `fix/dashboard-status-cache`, printed `__PHP_Incomplete_Class_Name` in "Orders placed by status").
+  - Checks: lint 0, typecheck clean, `npm test` 469 passed / 3 skipped (5 new in `dashboard-redesign.test.tsx`), build ok.
+    Browser (Playwright, Vite :5173 + local API = backend `feature/dashboard-insights` + `fix/dashboard-status-cache`
+    merged locally, demo data, 30 days), 1440 and 390 px, two runs (the second from the file cache): 4 sparklines, legend
+    $198.46 vs $0.00 and 16 vs 0 orders after the switch, donut "16 in total", no horizontal overflow, no console errors.
