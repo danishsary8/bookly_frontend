@@ -4,6 +4,8 @@ import { EmptyState } from "@/components/EmptyState";
 import { CartGate } from "@/features/cart/CartGate";
 import { CartLineItem } from "@/features/cart/CartLineItem";
 import { FreeShippingBar } from "@/components/cart/FreeShippingBar";
+import { cartTotals } from "@/features/offers/cartTotals";
+import { percentLabel } from "@/features/offers/percent";
 import { useCartMutations, useUsableCart } from "@/features/cart/useCart";
 import { buttonVariants } from "@/components/ui/button";
 import { Drawer, DrawerBody, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -72,13 +74,23 @@ function CartSummary() {
   const { dict } = useT();
   const t = dict.shell;
   if (!session || !verified || !cart.data?.items?.length) return null;
+  // The offer only (no coupon here: the coupon is checked on the cart page). Older API: plain subtotal, as before.
+  const totals = cartTotals(cart.data, null);
 
   return (
     <DrawerFooter className="grid gap-4">
-      <FreeShippingBar subtotalUsd={cart.data.subtotal_usd} />
+      {totals.freeShipping === null ? null : (
+        <FreeShippingBar subtotalUsd={totals.totalBeforeShipping.usd} thresholdUsd={totals.freeShipping?.threshold_usd} />
+      )}
+      {totals.discount?.kind === "offer" ? (
+        <div className="flex items-baseline justify-between gap-3 text-sm text-success">
+          <span>{dict.offers.offerLine(totals.discount.offer.min_quantity ?? 0, percentLabel(totals.discount.offer.percent_off))}</span>
+          <span className="tabular-nums">−{formatMoney(totals.discount.amount.usd, totals.discount.amount.khr, currency)}</span>
+        </div>
+      ) : null}
       <div className="flex items-baseline justify-between">
-        <span className="font-semibold">{t.subtotal}</span>
-        <span className="text-lg font-semibold tabular-nums">{formatMoney(cart.data.subtotal_usd, cart.data.subtotal_khr, currency)}</span>
+        <span className="font-semibold">{totals.discount ? dict.cartPage.totalBeforeShipping : t.subtotal}</span>
+        <span className="text-lg font-semibold tabular-nums">{formatMoney(totals.totalBeforeShipping.usd, totals.totalBeforeShipping.khr, currency)}</span>
       </div>
       <p className="-mt-2 text-sm text-muted-foreground">
         {cart.data.can_checkout === false ? t.fixItems : t.worksOutAtCheckout}

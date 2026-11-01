@@ -12,6 +12,8 @@ export interface PlaceOrderInput {
   payment_method: "cod";
   coupon_code?: string;
   delivery_note?: string;
+  /** The automatic offer the preview showed; if it no longer applies the API answers 422 and places nothing. */
+  offer_id?: number;
 }
 
 const cartData = (response: Resource<Cart>) => response.data;
