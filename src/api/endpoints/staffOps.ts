@@ -66,6 +66,44 @@ export type CouponInput = Partial<{
   is_active: boolean;
 }>;
 
+/** Automatic offer (backend docs/superpowers/specs/2026-10-31-offers-design.md 6.7). */
+export type OfferStatus = "live" | "scheduled" | "paused" | "ended" | "used_up" | "no_books";
+export type OfferTargetType = "book" | "category" | "series";
+export interface OfferTarget {
+  type: OfferTargetType;
+  id: number;
+  label: string | null;
+  in_trash: boolean;
+}
+export interface Offer {
+  id: number;
+  name: string;
+  type: "buy_n_percent";
+  applies_to: "all" | "selected";
+  min_quantity: number;
+  percent_off: string;
+  starts_at: string | null;
+  ends_at: string | null;
+  max_orders: number | null;
+  used_count: number;
+  is_active: boolean;
+  status: OfferStatus;
+  targets: OfferTarget[];
+  orders_count: number;
+}
+export type OfferInput = Partial<{
+  name: string;
+  applies_to: "all" | "selected";
+  min_quantity: number;
+  percent_off: string;
+  starts_at: string | null;
+  ends_at: string | null;
+  max_orders: number | null;
+  is_active: boolean;
+  targets: Array<{ type: OfferTargetType; id: number }>;
+}>;
+export type OfferFilters = { q?: string; status?: OfferStatus; page?: number; per_page?: number };
+
 export interface CustomerNote {
   id: number;
   customer_id: number;
@@ -152,6 +190,7 @@ export const opsKeys = {
   return: (id: number) => ["staff", "return", id] as const,
   reviews: (f: object) => ["staff", "reviews", toQueryParams(f)] as const,
   coupons: (f: object) => ["staff", "coupons", toQueryParams(f)] as const,
+  offers: (f: object) => ["staff", "offers", toQueryParams(f)] as const,
   customers: (f: object) => ["staff", "customers", toQueryParams(f)] as const,
   customer: (id: number) => ["staff", "customer", id] as const,
   customerNotes: (id: number) => ["staff", "customer", id, "notes"] as const,
@@ -196,6 +235,11 @@ export const opsApi = {
   createCoupon: (input: CouponInput) => api.post<Resource<Coupon>>("/staff/coupons", input).then((r) => r.data),
   updateCoupon: (id: number, input: CouponInput) => api.patch<Resource<Coupon>>(`/staff/coupons/${id}`, input).then((r) => r.data),
   deleteCoupon: (id: number) => api.delete(`/staff/coupons/${id}`),
+
+  offers: (f: OfferFilters = {}) => api.get<Paginated<Offer>>("/staff/offers", { params: toQueryParams(f) }),
+  createOffer: (input: OfferInput) => api.post<Resource<Offer>>("/staff/offers", input).then((r) => r.data),
+  updateOffer: (id: number, input: OfferInput) => api.patch<Resource<Offer>>(`/staff/offers/${id}`, input).then((r) => r.data),
+  deleteOffer: (id: number) => api.delete(`/staff/offers/${id}`),
 
   customers: (f: CustomerFilters = {}) =>
     api.get<StaffCustomerPage>("/staff/customers", { params: toQueryParams({ ...f, active: bool(f.active), verified: bool(f.verified), closed: f.closed ? 1 : undefined }) }),
@@ -249,6 +293,7 @@ export const opsQueries = {
   return: (id: number) => queryOptions({ queryKey: opsKeys.return(id), queryFn: () => opsApi.return(id) }),
   reviews: (f: ReviewFilters) => queryOptions({ queryKey: opsKeys.reviews(f), queryFn: () => opsApi.reviews(f), placeholderData: keepPreviousData }),
   coupons: (f: CouponFilters) => queryOptions({ queryKey: opsKeys.coupons(f), queryFn: () => opsApi.coupons(f), placeholderData: keepPreviousData }),
+  offers: (f: OfferFilters) => queryOptions({ queryKey: opsKeys.offers(f), queryFn: () => opsApi.offers(f), placeholderData: keepPreviousData }),
   customers: (f: CustomerFilters) => queryOptions({ queryKey: opsKeys.customers(f), queryFn: () => opsApi.customers(f), placeholderData: keepPreviousData }),
   customer: (id: number) => queryOptions({ queryKey: opsKeys.customer(id), queryFn: () => opsApi.customer(id) }),
   customerNotes: (id: number) => queryOptions({ queryKey: opsKeys.customerNotes(id), queryFn: () => opsApi.customerNotes(id) }),
