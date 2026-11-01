@@ -79,7 +79,8 @@ function DialogContent({ className, children, size = "md", hideClose = false, on
               <m.div
                 data-slot="dialog-content"
                 className={cn(
-                  "pointer-events-auto relative w-full rounded-xl border border-border bg-card p-6 text-card-foreground shadow-overlay outline-none",
+                  // Scrolls inside itself when taller than the screen: the scroll lock only lets the dialog's own content scroll.
+                  "pointer-events-auto relative max-h-[calc(100dvh-2rem)] w-full overflow-y-auto overscroll-contain rounded-xl border border-border bg-card p-6 text-card-foreground shadow-overlay outline-none",
                   sizes[size],
                   className,
                 )}
