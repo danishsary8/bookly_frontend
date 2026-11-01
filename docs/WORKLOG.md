@@ -673,3 +673,11 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   `/admin/reports?tab=offers`, `/books?q=holmes`, `/books/5`, and `feature/admin-insights-widgets` + this fix: all 0.
   lint 0, typecheck, `npm test` 473 passed, build ok.
   **Lesson:** run axe on every changed page before pushing (the CI e2e job does; my Playwright checks did not include it).
+
+- [x] Small fixes (2026-11-01, branch `fix/small-cleanups`): (1) account link strip on phones: a soft fade on the edge that
+  has more links (both edges mid-row, only the left at the last link, none on desktop), so a cut Khmer word reads as
+  "scroll for more"; (2) free-delivery bar texts moved into `en.ts`/`km.ts` (`freeShipping`), incl. the region name;
+  (3) unused `catalogApi.alsoBought` removed; (4) donut colours: processing slate (was a green close to delivered),
+  cancelled light grey. Checks: lint 0, typecheck, `npm test` 475 passed (2 new: bar EN + KM), build ok. Browser + axe
+  (local API = `main`): `/account/profile` KM 390 fades both sides, `/account/wishlist` left only, EN 1280 none, no
+  overflow; cart bar "Add $37.01 more…" EN and KM; axe 0 on `/account/profile` and `/cart` (EN 1280, KM 390).
