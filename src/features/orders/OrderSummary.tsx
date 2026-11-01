@@ -3,6 +3,7 @@ import { MapPin, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Order, OrderItem } from "@/api/types";
 import { formatAddressLines } from "@/features/account/address";
+import { percentLabel } from "@/features/offers/percent";
 import { formatMoney, formatUsd, useCurrency } from "@/stores/currency";
 import { formatName, useT } from "@/i18n";
 
@@ -53,7 +54,11 @@ export function OrderItemsCard({
         </div>
         {Number(order.discount_usd) > 0 ? (
           <div className="flex justify-between text-success">
-            <dt>{t.discount}{order.coupon_code ? ` (${order.coupon_code})` : ""}</dt>
+            <dt>
+              {order.offer?.min_quantity
+                ? dict.offers.offerLine(order.offer.min_quantity, percentLabel(order.offer.percent_off))
+                : `${t.discount}${order.coupon_code ? ` (${order.coupon_code})` : ""}`}
+            </dt>
             <dd className="tabular-nums">−{formatUsd(order.discount_usd)}</dd>
           </div>
         ) : null}

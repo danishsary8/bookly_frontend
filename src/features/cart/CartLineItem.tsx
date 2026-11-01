@@ -1,4 +1,4 @@
-import { AlertTriangle, Info, Trash2 } from "lucide-react";
+import { AlertTriangle, Info, Tag, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { CartLine } from "@/api/types";
 import { CoverThumb } from "@/components/CoverThumb";
@@ -45,6 +45,11 @@ export function CartLineItem({ line, onQuantity, onRemove, busy, compact, onNavi
             <p className="mt-0.5 text-sm text-muted-foreground">
               {formatName(dict, line.format)} · <span className="tabular-nums">{formatMoney(line.unit_price_usd, line.unit_price_khr, currency)}</span> {c.each}
             </p>
+            {line.in_offer ? (
+              <p className="mt-1 inline-flex items-center gap-1 rounded bg-accent/10 px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-accent-text">
+                <Tag className="size-3" aria-hidden="true" /> {dict.offers.inOffer}
+              </p>
+            ) : null}
           </div>
           <p className={cn("shrink-0 font-semibold tabular-nums", blocked && "text-muted-foreground line-through")}>{formatMoney(line.line_total_usd, line.line_total_khr, currency)}</p>
         </div>

@@ -568,3 +568,27 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
     1, 2, 3, 16, 15, 14, 13, 11, 10, 20 (no repeats, not itself); Meditations → 12 books; cart (demo customer, Holmes #1) → 5, 6, …;
     Khmer eyebrow/title show; no horizontal overflow. Console: only failed cover images from external photo hosts (no internet here).
   - Not verified: against the live API (Render) in a browser; the Khmer wording by a native speaker.
+
+- [x] Automatic offers in the shop (2026-11-01, branch `feature/offers-storefront`; backend spec
+  `bookly_backend_v2/docs/superpowers/specs/2026-10-31-offers-design.md`; owner choices 1A 2A 3A 4A 5A):
+  - Book card: Sale-shaped tag "Buy 2, save 15%" at the bottom-left of the cover (clear of the heart; not on
+    out-of-stock books). Book page: "Buy 2 from Sherlock Holmes, save 15%. Ends 30 Nov 2026." under the price.
+  - Cart: "In offer" tag on covered lines; one discount line "Offer: buy 2, save 15%" (never stacked with a coupon);
+    nudge above the summary ("Add 1 more book from Sherlock Holmes to save 15%" + "See the books" -> `/books?q=…`);
+    a coupon that lost to the offer says so ("…wasn't used: the offer saves you more. It stays valid for next time.");
+    the free-delivery bar uses the API's threshold (no more fixed $50 from `shop.ts`) and hides for ebook-only carts.
+    Logic in `src/features/offers/cartTotals.ts` (coupon check `applied`/`best_*` -> cart `pricing` -> old fields).
+  - Cart drawer: offer line + total before delivery only (5A). Checkout: offer line, coupon note, sends `offer_id`
+    (O1: a just-ended offer answers 422 with the API's message, nothing placed). Order pages: "Offer: buy 2, save 15%".
+  - Works on an API without offers: every piece renders nothing and the old fields are used (tested).
+  - Types regenerated from the backend `feature/offers-engine` `openapi.yaml`. EN + KM strings in `offers` (KM to be
+    read by a native speaker).
+  - Checks: lint 0, typecheck clean, `npm test` 456 passed / 3 skipped (12 new in `src/pages/checkout/offers.test.tsx`),
+    build ok. Browser (Playwright, Vite :5173 + local API on `feature/offers-engine`, demo data, live offer "Buy 2
+    Holmes 15%"), EN at 1280 px and KM at 390 px: 3 badges on the Holmes list; book line with end date; nudge with 1
+    Holmes book; with 2 Holmes + 1 other: −$2.68 (2 × 15% of $8.99, rounded down per line), total before delivery $36.29,
+    checkout total $37.79, 2 "In offer" tags; no horizontal overflow; no app console errors.
+  - Found by the browser check: the backend cached offers as PHP objects, which the file cache refuses to read back
+    (`serializable_classes` false) -> fixed on the backend branch (`1373f5f`, with a file-cache test).
+  - Follow-up (not changed): the announcement bar says "Free delivery on orders over $25!" but the shop's threshold is
+    $50 (`shell.announcementDelivery` in en/km) — owner to confirm the right amount.

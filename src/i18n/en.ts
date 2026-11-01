@@ -1294,6 +1294,21 @@ export const en = {
     disconnectedSuccess: "Telegram order updates have been disconnected.",
     statusUpdated: "Order updates preference saved.",
   },
+  offers: {
+    badge: (n: number, pct: string) => `Buy ${n}, save ${pct}%`,
+    bookLine: (n: number, pct: string, label: string | null) =>
+      label ? `Buy ${n} from ${label}, save ${pct}%.` : `Buy ${n} or more books in this offer, save ${pct}% on each.`,
+    ends: (date: string) => `Ends ${date}.`,
+    offerLine: (n: number, pct: string) => `Offer: buy ${n}, save ${pct}%`,
+    inOffer: "In offer",
+    nudge: (add: number, pct: string, label: string | null) =>
+      label
+        ? `Add ${add} more ${add === 1 ? "book" : "books"} from ${label} to save ${pct}%`
+        : `Add ${add} more ${add === 1 ? "book" : "books"} in this offer to save ${pct}%`,
+    seeBooks: "See the books",
+    couponNotUsed: (code: string) => `Your coupon ${code} wasn't used: the offer saves you more. It stays valid for next time.`,
+    offerEnded: "This offer has just ended. Check your new total, then place the order.",
+  },
   common: {
     loading: "Loading…",
     error: "An error occurred",
