@@ -2,7 +2,8 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes, useLocation } from "react-router-dom";
-import { reportsApi, type CouponsReport, type OrdersReport, type ReportName, type SalesReport } from "@/api/endpoints/reports";
+import { reportsApi, type CouponsReport, type OffersReport, type OrdersReport, type ReportName, type SalesReport } from "@/api/endpoints/reports";
+import { ApiError } from "@/api/errors";
 import { clearSession, setSession } from "@/api/session";
 import type { StaffUser } from "@/api/endpoints/staff";
 import { navFor } from "@/features/admin/adminNav";
@@ -39,7 +40,17 @@ const coupons: CouponsReport = {
   coupons: [{ coupon_id: 1, code: "WELCOME10", type: "percentage", value: "10.00", times_used: 3, discount_usd: "4.50", discount_khr: null, revenue_usd: "40.50", revenue_khr: null }],
   refunds: { count: 1, amount_usd: "20.00", amount_khr: null, by_reason: [{ reason: "Damaged", count: 1, amount_usd: "20.00", amount_khr: null }] },
 };
-const reports: Partial<Record<ReportName, unknown>> = { sales, orders, coupons };
+const row = (orders: number, units: number, withOffer: number, revenue: string, discount: string, average: string, perOrder: string) => ({
+  orders, units, units_with_offer: withOffer, revenue_usd: revenue, revenue_khr: null, discount_usd: discount, discount_khr: null,
+  average_order_usd: average, average_order_khr: null, books_per_order: perOrder,
+});
+// Backend OfferReportTest numbers: 2 offer orders (example 1 + 2 Holmes books) and 1 order without an offer.
+const offers: OffersReport = {
+  period: { from: "2026-09-01", to: "2026-09-30", timezone: "Asia/Phnom_Penh" },
+  offers: [{ offer_id: 1, name: "Buy 2 Holmes", min_quantity: 2, percent_off: "15.00", ...row(2, 5, 4, "67.00", "6.00", "33.50", "2.50") }],
+  without_offer: row(1, 1, 0, "31.50", "0.00", "31.50", "1.00"),
+};
+const reports: Partial<Record<ReportName, unknown>> = { sales, orders, coupons, offers };
 
 function Where() {
   const { pathname, search } = useLocation();
@@ -124,6 +135,37 @@ describe("reports page", () => {
     await userEvent.click(screen.getByRole("button", { name: "Export CSV" }));
     await waitFor(() => expect(csv).toHaveBeenCalledWith("coupons", { from: "2026-09-01", to: "2026-09-30" }));
     expect(click).toHaveBeenCalled();
+  });
+
+  it("shows what each offer sold next to orders without an offer, and exports it", async () => {
+    setSession("staff", { token: "t", expiresAt: null, user: admin });
+    stubReports();
+    const csv = vi.spyOn(reportsApi, "csv").mockResolvedValue(new Blob(["a,b"]));
+    URL.createObjectURL = vi.fn(() => "blob:report");
+    URL.revokeObjectURL = vi.fn();
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+    open("/admin/reports?tab=offers&period=custom&from=2026-09-01&to=2026-09-30");
+
+    expect((await screen.findByText("Books per order with an offer")).parentElement).toHaveTextContent("2.50");
+    expect(screen.getByText("Average order with an offer").parentElement).toHaveTextContent("$33.50");
+    expect(screen.getByText("Without an offer: 1.00")).toBeInTheDocument();
+    expect(screen.getByText("Without an offer: $31.50")).toBeInTheDocument();
+    expect(screen.getByText("66.7% of 3 orders")).toBeInTheDocument();
+    const table = screen.getByRole("region", { name: "Offers table" });
+    const holmes = within(table).getByRole("rowheader", { name: /Buy 2 Holmes/ }).closest("tr")!;
+    expect(within(holmes).getByText("Buy 2, save 15%")).toBeInTheDocument();
+    expect(holmes).toHaveTextContent("$67.00");
+    expect(holmes).toHaveTextContent("(4)");
+    expect(within(table).getByRole("rowheader", { name: /Orders without an offer/ }).closest("tr")).toHaveTextContent("$31.50");
+    await userEvent.click(screen.getByRole("button", { name: "Export CSV" }));
+    await waitFor(() => expect(csv).toHaveBeenCalledWith("offers", { from: "2026-09-01", to: "2026-09-30" }));
+  });
+
+  it("says the offers report is not available yet on an API without offers", async () => {
+    setSession("staff", { token: "t", expiresAt: null, user: admin });
+    vi.spyOn(reportsApi, "get").mockRejectedValue(new ApiError({ kind: "not_found", status: 404, message: "Not found." }));
+    open("/admin/reports?tab=offers");
+    expect(await screen.findByText(/The offers report is not available on this server yet/)).toBeInTheDocument();
   });
 
   it("is in the admin menu for admins only", () => {
