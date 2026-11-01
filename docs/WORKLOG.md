@@ -568,3 +568,22 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
     1, 2, 3, 16, 15, 14, 13, 11, 10, 20 (no repeats, not itself); Meditations → 12 books; cart (demo customer, Holmes #1) → 5, 6, …;
     Khmer eyebrow/title show; no horizontal overflow. Console: only failed cover images from external photo hosts (no internet here).
   - Not verified: against the live API (Render) in a browser; the Khmer wording by a native speaker.
+
+- [x] Admin offers page (2026-11-01, branch `feature/offers-admin`; backend spec `docs/superpowers/specs/2026-10-31-offers-design.md`
+  6.7; owner choices 1A 2A 3A 4A 5A): `/admin/offers` next to Coupons in the menu.
+  - Table: name + "Buy 2, save 15%", books covered ("Series: Sherlock Holmes", "All books", "(in trash)"), status chip
+    (Live, Scheduled, Paused, Ended, Used up, No books), orders used / limit, end date, an on/off switch per row (turning ON
+    asks to confirm with what customers will get; pausing is immediate), edit and delete (409 message when used).
+    Search by name and a status filter.
+  - Dialog: name (staff only), N (2-20), percent (up to 50), "Chosen books" / "All books", ONE search box that finds series,
+    categories (catalogue lists) and books (`GET /staff/books?q=`) with removable chips, start/end dates, orders allowed,
+    a live preview of the badge and the book-page sentence, On switch. New offers start paused.
+  - Staff see the list only (switch disabled, no buttons); the API refuses changes too. On an API without offers (404)
+    the page says "Offers are not available yet" (works before the backend is merged).
+  - API helpers in `src/api/endpoints/staffOps.ts` (`offers`, `createOffer`, `updateOffer`, `deleteOffer`).
+  - Checks: lint 0, typecheck clean, `npm test` 450 passed / 3 skipped (6 new in `src/pages/admin/offers-admin.test.tsx`),
+    build ok. Browser (Playwright, Vite :5173 + local API on `feature/offers-engine`, demo admin), 1280 px: list shows the
+    live Holmes offer; created "Philosophy week" (3 books, 20%, Category: Philosophy) -> row Paused; preview "BUY 3, SAVE
+    20%" + "Buy 3 from Philosophy, save 20%."; switch ON -> confirm -> Live, and the shop API at once gives Meditations
+    that offer; pause -> Paused; delete -> gone. 390 px: no overflow on the page or the dialog. No console errors.
+    Fixed during the check: start/end date boxes overlapped in a 3-column row -> 2 columns.
