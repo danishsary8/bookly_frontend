@@ -1309,6 +1309,11 @@ export const en = {
     couponNotUsed: (code: string) => `Your coupon ${code} wasn't used: the offer saves you more. It stays valid for next time.`,
     offerEnded: "This offer has just ended. Check your new total, then place the order.",
   },
+  freeShipping: {
+    region: "Free delivery progress",
+    unlocked: "You've unlocked FREE delivery! 🎉",
+    addMore: (diff: string, threshold: string) => `Add ${diff} more for FREE delivery (orders over ${threshold})`,
+  },
   common: {
     loading: "Loading…",
     error: "An error occurred",
