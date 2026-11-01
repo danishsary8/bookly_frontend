@@ -610,3 +610,11 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
     20%" + "Buy 3 from Philosophy, save 20%."; switch ON -> confirm -> Live, and the shop API at once gives Meditations
     that offer; pause -> Paused; delete -> gone. 390 px: no overflow on the page or the dialog. No console errors.
     Fixed during the check: start/end date boxes overlapped in a 3-column row -> 2 columns.
+
+- [x] Announcement bar free-delivery amount (2026-11-01, branch `fix/announcement-free-delivery`): the bar said "over $25",
+  the shop's rule is $50 (owner confirmed). `shell.announcementDelivery` in en + km. Checks: lint 0, typecheck clean,
+  `npm test` 462 passed, build ok; browser (home page, EN 1280 + KM 390): bar reads "$50" / "50$".
+
+> **Notes rule (owner, 2026-11-01):** feature branches no longer edit this file. Every work-log entry goes on the
+> long-lived notes branch `docs/worklog-notes` (this repo) and `docs/handoff-notes` (backend: `WORKLOG.md`,
+> `HANDOFF.md`, `OWNER_TODO.md`). Merge the notes branches whenever you like; they never conflict with feature work.
