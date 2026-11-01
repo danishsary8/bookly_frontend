@@ -29,8 +29,11 @@ export function StatusDonut({ counts }: { counts: Record<string, number> }) {
     <div className="grid items-center gap-6 sm:grid-cols-[11rem_minmax(0,1fr)]">
       <div className="relative mx-auto size-44" aria-hidden="true">
         <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
+          {/* Nothing in this aria-hidden picture may take focus (axe aria-hidden-focus): Recharts makes the chart and the
+              pie focusable by default. The list beside it is the accessible version. */}
+          <PieChart accessibilityLayer={false}>
             <Pie
+              rootTabIndex={-1}
               data={shown.length ? shown : [{ status: "none", n: 1 }]}
               dataKey="n"
               nameKey="status"
