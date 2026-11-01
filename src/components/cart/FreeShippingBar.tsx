@@ -11,7 +11,8 @@ interface Props {
 
 export function FreeShippingBar({ subtotalUsd, thresholdUsd, className }: Props) {
   const currency = useCurrency();
-  const { lang } = useT();
+  const { dict } = useT();
+  const f = dict.freeShipping;
 
   const subtotal = Number(subtotalUsd || 0);
   const threshold = Number(thresholdUsd || policy.freeShippingThresholdUsd || 50);
@@ -25,15 +26,13 @@ export function FreeShippingBar({ subtotalUsd, thresholdUsd, className }: Props)
   const diffFormatted = formatMoney(diff.toFixed(2), null, currency);
   const thresholdFormatted = formatMoney(threshold.toFixed(2), null, currency);
 
-  const isKm = lang === "km";
-
   return (
     <div
       className={`rounded-lg border border-border p-3 transition-colors ${
         isUnlocked ? "bg-success-tint/40 border-success/30" : "bg-surface-1"
       } ${className ?? ""}`}
       role="region"
-      aria-label="Free delivery progress"
+      aria-label={f.region}
     >
       <div className="flex items-center gap-2 text-sm font-medium">
         {isUnlocked ? (
@@ -42,13 +41,7 @@ export function FreeShippingBar({ subtotalUsd, thresholdUsd, className }: Props)
           <Truck className="size-4 shrink-0 text-primary" aria-hidden="true" />
         )}
         <span className={isUnlocked ? "text-success font-semibold" : "text-foreground"}>
-          {isUnlocked
-            ? isKm
-              ? "អ្នកទទួលបានការដឹកជញ្ជូនឥតគិតថ្លៃ! 🎉"
-              : "You've unlocked FREE delivery! 🎉"
-            : isKm
-              ? `បន្ថែម ${diffFormatted} ទៀតដើម្បីទទួលបានការដឹកជញ្ជូនឥតគិតថ្លៃ (លើសពី ${thresholdFormatted})`
-              : `Add ${diffFormatted} more for FREE delivery (orders over ${thresholdFormatted})`}
+          {isUnlocked ? f.unlocked : f.addMore(diffFormatted, thresholdFormatted)}
         </span>
       </div>
 

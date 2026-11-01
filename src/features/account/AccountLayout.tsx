@@ -1,5 +1,5 @@
 import { Heart, KeyRound, LayoutDashboard, LogOut, MapPin, MessageSquareText, Package, RotateCcw, UserRound } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { FrozenOutlet } from "@/components/motion/FrozenOutlet";
 import { useSession } from "@/api/session";
@@ -33,6 +33,18 @@ export function AccountLayout() {
   const { pathname } = useLocation();
   const strip = useRef<HTMLUListElement>(null);
   const { dict } = useT();
+  // Phones: fade the edge that has more links, so a cut-off word reads as "scroll for more" (Khmer labels are long).
+  const [more, setMore] = useState({ left: false, right: false });
+  const measure = () => {
+    const list = strip.current;
+    if (!list) return;
+    setMore({ left: list.scrollLeft > 4, right: list.scrollLeft + list.clientWidth < list.scrollWidth - 4 });
+  };
+  useEffect(() => {
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [dict]);
 
   // On phones the links scroll sideways; bring the current one into view (horizontally only,
   // so the page itself doesn't jump).
@@ -42,6 +54,7 @@ export function AccountLayout() {
     if (!list || !active || list.scrollWidth <= list.clientWidth) return;
     const left = active.offsetLeft - (list.clientWidth - active.offsetWidth) / 2;
     list.scrollTo({ left: Math.max(0, left), behavior: "instant" as ScrollBehavior });
+    measure();
   }, [pathname]);
 
   return (
@@ -54,7 +67,8 @@ export function AccountLayout() {
 
       <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12">
         <nav aria-label={dict.account.nav} className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
-          <ul ref={strip} className="no-scrollbar relative -mx-4 flex gap-1 overflow-x-auto border-b border-border px-4 lg:mx-0 lg:grid lg:border-b-0 lg:px-0">
+          <div className="relative">
+          <ul ref={strip} onScroll={measure} className="no-scrollbar relative -mx-4 flex gap-1 overflow-x-auto border-b border-border px-4 lg:mx-0 lg:grid lg:border-b-0 lg:px-0">
             {accountSections.map(({ to, key, Icon, ...rest }) => (
               <li key={to} className="shrink-0">
                 <NavLink
@@ -75,6 +89,9 @@ export function AccountLayout() {
               </li>
             ))}
           </ul>
+          {more.left ? <span data-testid="strip-fade-left" aria-hidden="true" className="pointer-events-none absolute inset-y-0 -left-4 w-10 bg-gradient-to-r from-background to-transparent lg:hidden" /> : null}
+          {more.right ? <span data-testid="strip-fade-right" aria-hidden="true" className="pointer-events-none absolute inset-y-0 -right-4 w-10 bg-gradient-to-l from-background to-transparent lg:hidden" /> : null}
+          </div>
           <Button variant="ghost" onClick={() => void signOut()} className="mt-4 hidden w-full justify-start gap-3 px-3 font-medium text-muted-foreground lg:flex">
             <LogOut aria-hidden="true" /> {dict.account.signOut}
           </Button>

@@ -10,10 +10,10 @@ import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 const COLOURS: Record<string, string> = {
   pending: "var(--warning)",
   paid: "var(--chart-2)",
-  processing: "var(--chart-3)",
+  processing: "var(--chart-5)", // slate: chart-3 was a green too close to "delivered"
   shipped: "var(--primary)",
   delivered: "var(--success)",
-  cancelled: "var(--muted-foreground)",
+  cancelled: "color-mix(in oklab, var(--muted-foreground) 40%, transparent)", // light grey, apart from processing
   returned: "var(--destructive)",
 };
 
