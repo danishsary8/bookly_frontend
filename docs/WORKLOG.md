@@ -645,3 +645,21 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
     Browser (Playwright, Vite :5173 + local API = backend `feature/dashboard-insights` + `fix/dashboard-status-cache`
     merged locally, demo data, 30 days), 1440 and 390 px, two runs (the second from the file cache): 4 sparklines, legend
     $198.46 vs $0.00 and 16 vs 0 orders after the switch, donut "16 in total", no horizontal overflow, no console errors.
+
+- [x] Admin quick jump + menu badges (2026-11-01, branch `feature/admin-quick-jump`; BI spec branch 3, owner 5A):
+  "Search or jump to… Ctrl K" in the admin top bar (Ctrl K / Cmd K anywhere; arrows, Enter, Esc): admin pages at once,
+  and from 2 letters orders (number or customer), books (title) and customers (name, email, phone). Menu badges from
+  `GET /staff/dashboard/counts` (checked every minute): Orders = pending, Returns = open, Stock = low ("99+" above 99),
+  screen readers hear "Orders, 3 pending orders"; none on an API without counts. Files `src/features/admin/QuickJump.tsx`,
+  `menuCounts.ts`. Checks: lint 0, typecheck, `npm test` 473 passed / 3 skipped (4 new), build ok. Browser (local API =
+  backend `main`): badges 5 pending orders, 1 open return, 4 low stock; Ctrl K + "ord" lists the Orders page and 5 real
+  orders with customer names; "sign of" + Enter opens /admin/books/5; Cmd K opens, Esc closes (also on the book edit page);
+  390 px no overflow; no console errors.
+- [x] Dashboard extras (2026-11-01, branch `feature/admin-insights-widgets`; BI spec branch 4, owner 2A 3A 4A): tiles
+  Stock value (at selling price), Dead stock (no sale in 60 days), Repeat customers; panels Slow movers (top 10 by value,
+  last sold or "never sold", links to the book), Top authors and Orders by province (bars with the number first),
+  Offers and coupons (orders and discount, link to the Offers report). Shown only when all insights fields are there.
+  `src/features/admin/dashboard/InsightsWidgets.tsx`. Checks: lint 0, typecheck, `npm test` 471 passed / 3 skipped
+  (2 new), build ok. Browser (local API = backend `main`, 30 days): $5,361.83 stock value, $827.79 dead stock (Around the
+  World in Eighty Days first), authors led by Conan Doyle, Phnom Penh 9 orders, offers 2 / coupons 2 / none 11; 1440 and
+  390 px no overflow; no console errors.
