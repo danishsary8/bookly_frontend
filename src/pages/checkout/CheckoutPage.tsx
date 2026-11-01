@@ -24,6 +24,8 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { toast } from "@/stores/toast";
 import { formatName, getDict, useT } from "@/i18n";
+import { CouponNotUsedNote } from "@/features/offers/offerText";
+import { percentLabel } from "@/features/offers/percent";
 
 /*
  * /checkout (verified customers): 1) delivery address, 2) payment (cash on
@@ -109,6 +111,8 @@ export default function CheckoutPage() {
           payment_method: "cod",
           ...(coupon ? { coupon_code: coupon } : {}),
           ...(deliveryNote.trim() ? { delivery_note: deliveryNote.trim() } : {}),
+          // Offers spec O1: send the offer the customer saw, so a just-ended offer never silently raises the total.
+          ...(preview.data?.applied === "offer" && preview.data.offer?.id ? { offer_id: preview.data.offer.id } : {}),
         },
         idempotencyKey.current,
       ),
@@ -127,7 +131,7 @@ export default function CheckoutPage() {
       // API answered means no order was created, and the next attempt is a fresh one.
       if (!lost) idempotencyKey.current = newIdempotencyKey();
       const message =
-        apiError.field("cart") ?? apiError.field("address_id") ?? apiError.field("coupon_code") ?? apiError.field("payment_method") ?? apiError.message;
+        apiError.field("cart") ?? apiError.field("address_id") ?? apiError.field("coupon_code") ?? apiError.field("offer_id") ?? apiError.field("payment_method") ?? apiError.message;
       setFormError(lost ? getDict().checkoutPage.connectionDropped : message);
       if (!lost) {
         // The API turned the order down (stock, price, coupon…): show the cart as it is now.
@@ -254,6 +258,8 @@ export default function CheckoutPage() {
                   {k.remove}
                 </button>
               </p>
+            ) : data?.coupon_not_used?.code ? (
+              <CouponNotUsedNote code={data.coupon_not_used.code} />
             ) : (
               <p className="text-sm text-muted-foreground">
                 {k.haveCoupon}{" "}
@@ -282,7 +288,18 @@ export default function CheckoutPage() {
               <>
               <dl className="grid gap-2 text-[15px]" aria-busy={preview.isFetching || undefined}>
                 <Row label={<span className="text-muted-foreground">{k.subtotal}</span>} amount={data.subtotal} />
-                {Number(data.discount?.usd) > 0 ? <Row label={k.discount} amount={data.discount} negative className="text-success" /> : null}
+                {Number(data.discount?.usd) > 0 ? (
+                  <Row
+                    label={
+                      data.applied === "offer" && data.offer
+                        ? dict.offers.offerLine(data.offer.min_quantity ?? 0, percentLabel(data.offer.percent_off))
+                        : k.discount
+                    }
+                    amount={data.discount}
+                    negative
+                    className="text-success"
+                  />
+                ) : null}
                 {shipsSomething ? <Row
                     label={
                       <span className="text-muted-foreground">

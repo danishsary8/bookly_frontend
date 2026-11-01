@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import type { BookCard as Book } from "@/api/types";
 import { NewBadge, OutOfStockBadge } from "@/components/BookBadge";
 import { MorphCover } from "@/components/MorphCover";
+import { OfferBadge } from "@/features/offers/offerText";
 import SpotlightCard from "@/components/SpotlightCard";
 import { StarRating } from "@/components/StarRating";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,8 @@ import { formatName, useT } from "@/i18n";
 /*
  * MASTER §6.12: SpotlightCard shell → 2:3 cover (lift on hover) with up to two
  * badges and the wishlist heart → formats eyebrow → Gloock title → authors →
- * rating → price ("from" when formats differ) + add-to-cart. Title and cover
+ * rating → price ("from" when formats differ) + add-to-cart. An automatic offer adds
+ * a Sale-shaped tag ("Buy 2, save 15%") at the bottom-left of the cover (clear of the heart). Title and cover
  * link to /books/:id with the cover morph. Out of stock: muted cover and price,
  * no cart button.
  */
@@ -67,6 +69,11 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
         <div className="pointer-events-none absolute left-2 top-2 flex flex-col items-start gap-1.5">
           {outOfStock ? <OutOfStockBadge className="bg-card/95" /> : isNewRelease(book.publish_date) ? <NewBadge /> : null}
         </div>
+        {outOfStock ? null : (
+          <div className="pointer-events-none absolute bottom-2 left-2 right-2 flex">
+            <OfferBadge offer={book.offer} className="max-w-full overflow-hidden text-ellipsis tracking-[0.06em]" />
+          </div>
+        )}
 
         {onToggleWishlist ? (
           <Button
