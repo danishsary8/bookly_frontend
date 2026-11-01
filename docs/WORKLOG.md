@@ -618,3 +618,15 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
 > **Notes rule (owner, 2026-11-01):** feature branches no longer edit this file. Every work-log entry goes on the
 > long-lived notes branch `docs/worklog-notes` (this repo) and `docs/handoff-notes` (backend: `WORKLOG.md`,
 > `HANDOFF.md`, `OWNER_TODO.md`). Merge the notes branches whenever you like; they never conflict with feature work.
+
+- [x] Admin Reports: Offers tab (2026-11-01, branch `feature/offer-reports`, with the backend branch of the same name; backend
+  spec section 7): tiles "Books per order with an offer" vs without, "Average order with an offer" vs without, "Orders with
+  an offer" (share of all orders), "Discount given by offers"; table "What each offer sold" (orders, books (with the
+  offer), order totals, discount, average order, books per order) with an "Orders without an offer" row; Export CSV uses
+  the same report. A 404 (backend not deployed yet) says "not available on this server yet".
+  - Checks: lint 0, typecheck clean, `npm test` 464 passed / 3 skipped (2 new in `reports-page.test.tsx`), build ok.
+  - Browser (Playwright, Vite :5173 + local API on backend `feature/offer-reports`, demo data, live "Buy 2 Holmes 15%"):
+    first with no offer orders (tiles show "–", 0%); then 3 real checkouts (2 with the offer: $37.79 and $16.80, discount
+    $2.68 each; 1 without): Offers tab shows 2 orders, 5 books (4 with the offer), $54.59, $5.36 discount, average $27.30,
+    2.50 books per order vs 1.83 without; the CSV download has the same two rows. 1280 and 390 px: no overflow; no
+    console errors.
