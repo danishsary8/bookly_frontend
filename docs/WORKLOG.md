@@ -735,3 +735,15 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   Browser (local API on `main`): status changed through the API while pages were open: admin showed Shipped after 30 s
   and the customer after 56 s with no reload; while typing a staff note nothing reloaded and the text was kept, then it
   updated in 23 s; axe 0 (1280 light, 390 dark), no overflow, no console errors.
+
+## 2026-11-02: Site quality check (`fix/site-check-polish`)
+
+- Checked 65 routes (shop, account, admin) with Playwright + axe (wcag2a/2aa/21a/21aa) in en/km, light/dark, at 320,
+  360, 390 and 1280 px: sideways overflow, console/page errors, API errors, h1 count. Plus 13 dialogs at 390x640,
+  scrolled to the end.
+- Fixes: admin header gaps/padding on phones and the STAFF tag sr-only below 360 px; `grid-cols-1` on grids that set
+  columns only from a breakpoint (dashboard, reports, report panels, insights, collections, offers, coupons, newsletter,
+  orders filters, book edit, return, exchange rates, security, account overview); `TableCard label` makes a table with
+  no focusable content a focusable named region (sign-in history, active sessions, exchange rates, stock movements).
+- After: 0 overflow and axe 0 on all checked pages at 320/390/1280; lint, typecheck, 518 tests, build pass.
+- Not bugs: picsum images blocked by the sandbox proxy; 429s only when two runs shared one staff token (120/min/user).
