@@ -707,3 +707,14 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   "Fewer copies left for 1 book", or "Not everything could be added" with skipped books too); EN/KM texts. lint,
   typecheck, 489 tests (1 new), build ok. Browser + axe (local API on the backend branch, real order of 3, stock 2): cart
   2, toast EN 1280 light and KM 390 dark, axe 0, no overflow.
+- [x] KHQR payments, shop (2026-11-02, branch `feature/khqr-checkout`, `2cc21d8`; backend `feature/khqr-payments`):
+  payment choice from `/delivery/options` `payment_methods` (KHQR only when listed), "Place order and pay" -> new page
+  `/account/orders/:id/pay` (KHQR card drawn with `qrcode`, USD/KHR tabs, countdown from the API's `seconds_left`, polls
+  every 3 s while waiting, Simulate in test mode, Download QR, Paid / Expired / Cancelled screens, Buy again), "Pay now"
+  on the order list and page (`payment_due_at`), EN/KM `pay` group, API types regenerated. lint, typecheck, 499 tests
+  (10 new), build. Browser + axe: see backend HANDOFF 2026-11-02 (drawn QR = API string; full paid and expired flows).
+  Fixed before push: 429 (backend limits), long Khmer Simulate label widened the page at 390 px.
+- [x] KHQR payments, admin (2026-11-02, branch `feature/khqr-admin`, `b75d26a`): `OrderPaymentCard` (QR rows, how paid,
+  paid-after-cancel warning, admin "Mark as paid" with a required note), orders "Payment" filter (`pay=khqr`), "KHQR
+  payments" line on System health. Orders filters now fit a 390 px screen (`grid-cols-1`). lint, typecheck, 496 tests
+  (7 new), build. Browser + axe 390 dark / 1280 light: all 0; Mark as paid on a short screen reached by scrolling.
