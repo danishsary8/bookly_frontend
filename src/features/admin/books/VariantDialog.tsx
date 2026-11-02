@@ -16,14 +16,14 @@ const DIGITAL = new Set(["ebook", "audiobook"]);
 type Values = { format: string; sku: string; isbn: string; price_usd: string; stock_quantity: string; low_stock_threshold: string; cover_image_url: string; is_active: boolean };
 type Errors = Partial<Record<keyof Values | "form", string>>;
 
-const valuesFor = (variant: StaffVariant | null, format: string): Values => ({
+const valuesFor = (variant: StaffVariant | null, format: string, defaultCover = ""): Values => ({
   format: variant?.format ?? format,
   sku: variant?.sku ?? "",
   isbn: variant?.isbn ?? "",
   price_usd: variant?.price_usd ?? "",
   stock_quantity: String(variant?.stock_quantity ?? 0),
   low_stock_threshold: String(variant?.low_stock_threshold ?? 5),
-  cover_image_url: variant?.cover_image_url ?? "",
+  cover_image_url: variant ? (variant.cover_image_url ?? "") : defaultCover,
   is_active: variant?.is_active ?? true,
 });
 
@@ -56,7 +56,10 @@ export function VariantDialog({
   open,
   onOpenChange,
   onSaved,
+  defaultCover = "",
 }: {
+  /** A new format starts with the book's main cover (owner 2026-11-02). */
+  defaultCover?: string;
   bookId: number;
   variant: StaffVariant | null;
   usedFormats: string[];
@@ -65,7 +68,7 @@ export function VariantDialog({
   onSaved: (saved: StaffVariant) => void;
 }) {
   const free = FORMATS.filter((f) => !usedFormats.includes(f.value));
-  const [values, setValues] = useState<Values>(() => valuesFor(variant, free[0]?.value ?? "paperback"));
+  const [values, setValues] = useState<Values>(() => valuesFor(variant, free[0]?.value ?? "paperback", defaultCover));
   const [errors, setErrors] = useState<Errors>({});
   const alertRef = useRef<HTMLDivElement>(null);
   const digital = DIGITAL.has(values.format);
