@@ -11,7 +11,7 @@ import {
   RotateCcw,
   Trash2,
 } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import {
   staffApi,
@@ -42,6 +42,9 @@ import {
 } from "@/features/admin/books/bookSchema";
 import { BookState } from "@/features/admin/books/BookState";
 import { VariantDialog } from "@/features/admin/books/VariantDialog";
+import { BookCoverPanel } from "@/features/admin/books/BookCoverPanel";
+import { mainCover, pendingCover } from "@/features/admin/books/pendingCover";
+import { ImageUploadField } from "@/components/ui/ImageUploadField";
 import { StockHistoryDrawer } from "@/features/admin/stock/StockHistoryDrawer";
 import { useStaff } from "@/features/admin/staffSession";
 import { formatLabel, LANGUAGES } from "@/lib/catalog";
@@ -112,6 +115,9 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
   const language = useWatch({ control, name: "language" });
   const statusWatch = useWatch({ control, name: "status" });
 
+  // New book only: a cover chosen now goes to the first format (owner 2026-11-02).
+  const [newCover, setNewCover] = useState("");
+
   const submit = async (values: BookValues) => {
     setFormError(null);
     try {
@@ -130,7 +136,8 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
           title: "Book created",
           description: "Add a format with a price so it can go on sale.",
         });
-        navigate(`/admin/books/${saved.id}`, { replace: true });
+        pendingCover.set(saved.id, newCover);
+        navigate(`/admin/books/${saved.id}`, { replace: true, state: { addFormat: true, cover: newCover } });
       }
     } catch (error) {
       const message = applyApiErrors(error, setError, [
@@ -223,6 +230,15 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
         error={errors.title?.message}
         {...register("title")}
       />
+      {book ? null : (
+        <ImageUploadField
+          label="Cover"
+          optional
+          value={newCover}
+          onChange={setNewCover}
+          hint="Used by the first format you add (and any format without its own cover). JPEG, PNG or WebP up to 5 MB."
+        />
+      )}
       <Controller
         control={control}
         name="author_ids"
@@ -369,7 +385,10 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
 /** The book's formats with price, stock and on-sale state; add, edit and (admins, never-ordered only) delete. */
 function Formats({ book, isAdmin }: { book: StaffBook; isAdmin: boolean }) {
   const queryClient = useQueryClient();
-  const [editing, setEditing] = useState<StaffVariant | null | "new">(null);
+  const location = useLocation();
+  const justCreated = (location.state as { addFormat?: boolean; cover?: string } | null) ?? null;
+  // Just created: open "Add format" at once (price and stock make the book sellable).
+  const [editing, setEditing] = useState<StaffVariant | null | "new">(() => (justCreated?.addFormat && book.variants.length === 0 ? "new" : null));
   const [deleting, setDeleting] = useState<StaffVariant | null>(null);
   const [historyVariant, setHistoryVariant] = useState<StaffVariant | null>(
     null,
@@ -502,10 +521,12 @@ function Formats({ book, isAdmin }: { book: StaffBook; isAdmin: boolean }) {
           key={editing === "new" ? "new" : editing.id}
           bookId={book.id}
           variant={editing === "new" ? null : editing}
+          defaultCover={mainCover(book) || justCreated?.cover || ""}
           usedFormats={used}
           open
           onOpenChange={(open) => !open && setEditing(null)}
           onSaved={(saved) => {
+            if (saved.cover_image_url) pendingCover.set(book.id, "");
             toast.success(
               editing === "new"
                 ? `${formatLabel(saved.format)} added`
@@ -701,6 +722,7 @@ export default function BookEditPage() {
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <DetailsForm key={b.updated_at} book={b} />
         <div className="grid content-start gap-6">
+          <BookCoverPanel key={`${b.id}-${b.updated_at}-${b.variants.map((v) => v.cover_image_url ?? "").join("|")}`} book={b} />
           <Formats book={b} isAdmin={isAdmin} />
           {isAdmin ? <DangerZone book={b} /> : null}
         </div>

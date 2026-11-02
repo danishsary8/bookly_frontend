@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useId, useRef, useState } from "react";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
 import { staffApi } from "@/api/endpoints/staff";
 import { ApiError } from "@/api/errors";
@@ -27,13 +27,18 @@ export function ImageUploadField({
   const [isUploading, setIsUploading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [showUrlInput, setShowUrlInput] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const id = useId();
 
   const displayError = error || localError;
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (file) void uploadFile(file);
+  };
+
+  const uploadFile = async (file: File) => {
 
     setLocalError(null);
 
@@ -72,9 +77,10 @@ export function ImageUploadField({
   };
 
   return (
-    <div className={`grid gap-2 ${className}`}>
+    // grid-cols-1 + min-w-0: a long image address is cut with "…" instead of widening the page.
+    <div className={`grid min-w-0 grid-cols-1 gap-2 ${className}`}>
       <div className="flex items-center justify-between text-sm">
-        <label className="font-medium text-foreground">
+        <label htmlFor={`${id}-file`} className="font-medium text-foreground">
           {label}
           {optional ? <span className="ml-1 text-muted-foreground font-normal">(optional)</span> : null}
         </label>
@@ -90,7 +96,7 @@ export function ImageUploadField({
       {value ? (
         <div className="flex items-center gap-3 rounded-lg border border-border bg-surface-1 p-3">
           <div className="relative size-16 shrink-0 overflow-hidden rounded-md border border-border bg-surface-2">
-            <img src={value} alt="Preview" className="h-full w-full object-cover" />
+            <img src={value} alt={`${label} preview`} className="h-full w-full object-cover" />
           </div>
           <div className="min-w-0 flex-1 text-xs">
             <p className="truncate font-mono text-muted-foreground">{value}</p>
@@ -104,7 +110,7 @@ export function ImageUploadField({
               onChange("");
               setLocalError(null);
             }}
-            aria-label="Remove image"
+            aria-label={`Remove ${label.toLowerCase()}`}
           >
             <X className="size-4" />
           </Button>
@@ -112,9 +118,22 @@ export function ImageUploadField({
       ) : (
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="group relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border p-6 text-center transition-colors hover:border-primary/50 hover:bg-surface-1"
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragging(false);
+            const file = e.dataTransfer.files?.[0];
+            if (file && !isUploading) void uploadFile(file);
+          }}
+          className={`group relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:border-primary/50 hover:bg-surface-1 focus-within:ring-2 focus-within:ring-ring ${dragging ? "border-primary bg-surface-1" : "border-border"}`}
         >
           <input
+            id={`${id}-file`}
+            aria-describedby={displayError ? `${id}-error` : `${id}-hint`}
             ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
@@ -135,7 +154,7 @@ export function ImageUploadField({
               <p className="mt-2 text-sm font-medium">
                 <span className="text-primary font-semibold">Click to upload</span> or drag and drop
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+              <p id={`${id}-hint`} className="mt-1 text-xs text-muted-foreground">{hint}</p>
             </>
           )}
         </div>
@@ -156,7 +175,7 @@ export function ImageUploadField({
       ) : null}
 
       {displayError ? (
-        <p className="text-xs text-destructive" role="alert">
+        <p id={`${id}-error`} className="text-xs text-destructive" role="alert">
           {displayError}
         </p>
       ) : null}
