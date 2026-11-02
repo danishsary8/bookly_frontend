@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Banknote, FileText, RotateCcw, Star, XCircle } from "lucide-react";
+import { ArrowLeft, Banknote, FileText, RotateCcw, Star, XCircle, QrCode } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { orderQueries } from "@/api/endpoints/orders";
 import { ApiError } from "@/api/errors";
@@ -95,6 +95,11 @@ export default function OrderDetailPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
+            {o.payment_due_at ? (
+              <Link to={`/account/orders/${o.id}/pay`} className={buttonVariants()}>
+                <QrCode aria-hidden="true" /> {t.payNow}
+              </Link>
+            ) : null}
             {o.status !== "pending" ? <BuyAgainButton order={o} /> : null}
             {o.status !== "cancelled" ? (
               <Link to={`/account/orders/${o.id}/invoice?autoprint=1`} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline" })}>

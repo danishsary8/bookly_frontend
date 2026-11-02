@@ -4,6 +4,7 @@ import { AlertTriangle, Lock, TicketPercent, Truck } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { accountQueries } from "@/api/endpoints/account";
 import { cartApi, cartKeys, cartQueries } from "@/api/endpoints/cart";
+import { deliveryQueries } from "@/api/endpoints/delivery";
 import { newIdempotencyKey } from "@/api/client";
 import { ApiError } from "@/api/errors";
 import type { Amount, Order } from "@/api/types";
@@ -19,7 +20,7 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { setCoupon, useCoupon } from "@/features/cart/couponStore";
 import { useUsableCart } from "@/features/cart/useCart";
 import { AddressPicker } from "@/features/checkout/AddressPicker";
-import { PaymentOptions } from "@/features/checkout/PaymentOptions";
+import { PaymentOptions, type PaymentChoice } from "@/features/checkout/PaymentOptions";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { toast } from "@/stores/toast";
@@ -88,6 +89,11 @@ export default function CheckoutPage() {
     placeholderData: keepPreviousData,
   });
   const [deliveryNote, setDeliveryNote] = useState("");
+  // KHQR is offered only when the API lists it (KHQR payments design 2026-11-02).
+  const options = useQuery(deliveryQueries.options());
+  const khqr = options.data?.payment_methods?.find((m) => m.code === "khqr") ?? null;
+  const [chosenMethod, setChosenMethod] = useState<PaymentChoice>("cod");
+  const paymentMethod: PaymentChoice = chosenMethod === "khqr" && khqr ? "khqr" : "cod";
   const [formError, setFormError] = useState<string | null>(null);
   // Set when the last attempt lost its response: the order may exist even though the cart
   // now looks empty, so the page stays put and the retry (same key) returns that order.
@@ -108,7 +114,7 @@ export default function CheckoutPage() {
       cartApi.placeOrder(
         {
           address_id: addressId!,
-          payment_method: "cod",
+          payment_method: paymentMethod,
           ...(coupon ? { coupon_code: coupon } : {}),
           ...(deliveryNote.trim() ? { delivery_note: deliveryNote.trim() } : {}),
           // Offers spec O1: send the offer the customer saw, so a just-ended offer never silently raises the total.
@@ -121,7 +127,9 @@ export default function CheckoutPage() {
       queryClient.removeQueries({ queryKey: cartKeys.cart() });
       queryClient.removeQueries({ queryKey: ["cart", "preview"] });
       queryClient.removeQueries({ queryKey: ["orders"] });
-      navigate(`/checkout/success/${order.id}`, { replace: true, state: { order } });
+      // A KHQR order waits for payment: straight to its QR page.
+      if (order.payment_method === "khqr") navigate(`/account/orders/${order.id}/pay`, { replace: true });
+      else navigate(`/checkout/success/${order.id}`, { replace: true, state: { order } });
     },
     onError: (error) => {
       const apiError = ApiError.from(error);
@@ -210,7 +218,7 @@ export default function CheckoutPage() {
           </Step>
 
           <Step n={2} title={dict.checkout.paymentMethod}>
-            <PaymentOptions />
+            <PaymentOptions value={paymentMethod} onChange={setChosenMethod} khqr={khqr} />
           </Step>
 
           <Step
@@ -345,7 +353,7 @@ export default function CheckoutPage() {
 
             <CtaGlare block>
               <Button variant="cta" size="lg" className="w-full" onClick={() => { setFormError(null); place.mutate(); }} disabled={!ready} loading={place.isPending}>
-                {place.isPending ? dict.checkout.placingOrder : dict.checkout.placeOrder}
+                {place.isPending ? dict.checkout.placingOrder : paymentMethod === "khqr" ? k.placeAndPay : dict.checkout.placeOrder}
               </Button>
             </CtaGlare>
             <p className="flex items-center gap-2 text-sm text-muted-foreground">

@@ -9,7 +9,7 @@ export const cartKeys = {
 
 export interface PlaceOrderInput {
   address_id: number;
-  payment_method: "cod";
+  payment_method: "cod" | "khqr";
   coupon_code?: string;
   delivery_note?: string;
   /** The automatic offer the preview showed; if it no longer applies the API answers 422 and places nothing. */
