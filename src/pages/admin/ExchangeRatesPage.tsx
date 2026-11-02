@@ -54,7 +54,7 @@ function AddRateForm({ current }: { current: string | null }) {
   };
   const change = current && !rateError(rate) ? ((Number(rate.replace(/,/g, "")) - Number(current)) / Number(current)) * 100 : null;
   return (
-    <form onSubmit={submit} noValidate aria-labelledby="add-rate" className="grid content-start gap-4 rounded-xl border border-border bg-card p-5">
+    <form onSubmit={submit} noValidate aria-labelledby="add-rate" className="grid grid-cols-1 content-start gap-4 rounded-xl border border-border bg-card p-5">
       <h2 id="add-rate" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
         Set a new rate
       </h2>
@@ -127,7 +127,7 @@ export default function ExchangeRatesPage() {
               History
             </h2>
             <ListState query={rates} empty={{ when: list.length === 0, icon: ArrowLeftRight, title: "No rates yet", description: "Set the first one with the form." }}>
-              <TableCard stale={rates.isPlaceholderData} minWidth={320}>
+              <TableCard stale={rates.isPlaceholderData} minWidth={320} label="Exchange rate history">
                 <thead className={thead}>
                   <tr>
                     <th scope="col" className={`${th} text-right`}>Riel per dollar</th>

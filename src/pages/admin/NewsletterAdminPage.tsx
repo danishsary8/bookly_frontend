@@ -124,7 +124,7 @@ export default function NewsletterAdminPage() {
       }
     >
       {/* 1. Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-muted-foreground">
@@ -554,7 +554,7 @@ function CampaignEditorDialog({
 
         <form onSubmit={handleSubmit} className="grid gap-5 py-2">
           {/* Subjects */}
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="grid gap-1.5">
               <label
                 htmlFor="campaign-subject-en"
@@ -596,7 +596,7 @@ function CampaignEditorDialog({
           </div>
 
           {/* Bodies */}
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="grid gap-1.5">
               <label
                 htmlFor="campaign-body-en"

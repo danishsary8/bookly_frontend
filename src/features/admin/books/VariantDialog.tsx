@@ -130,7 +130,7 @@ export function VariantDialog({
               ))}
             </SelectField>
           )}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TextField label="SKU" value={values.sku} onChange={(e) => set({ sku: e.target.value })} error={errors.sku} autoComplete="off" />
             <TextField label="ISBN" optional value={values.isbn} onChange={(e) => set({ isbn: e.target.value })} error={errors.isbn} autoComplete="off" />
             <TextField label="Price (USD)" inputMode="decimal" value={values.price_usd} onChange={(e) => set({ price_usd: e.target.value })} error={errors.price_usd} hint="Riel prices follow the exchange rate." />

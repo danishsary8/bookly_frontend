@@ -69,7 +69,7 @@ export function Tile({ label, value, khr, detail, change }: { label: string; val
 
 export function Panel({ id, title, action, children, className }: { id: string; title: string; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section aria-labelledby={id} className={cn("grid content-start gap-4 rounded-xl border border-border bg-card p-5", className)}>
+    <section aria-labelledby={id} className={cn("grid grid-cols-1 content-start gap-4 rounded-xl border border-border bg-card p-5", className)}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id={id} className="font-sans text-[1.0625rem] font-semibold tracking-normal">
           {title}

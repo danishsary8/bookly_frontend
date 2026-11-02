@@ -60,7 +60,7 @@ const autoGroup = (range: ReportRange): ReportGroup => {
 function Loading() {
   return (
     <SkeletonGroup label="Loading report…" className="grid gap-4">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Skeleton className="h-28 rounded-xl" />
         <Skeleton className="h-28 rounded-xl" />
         <Skeleton className="h-28 rounded-xl" />
@@ -128,7 +128,7 @@ function SalesTab({ range, versus }: { range: ReportRange; versus: string }) {
         }));
         return (
           <>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Tile label="Net revenue" value={formatUsd(t.net_revenue_usd)} khr={t.net_revenue_khr} change={<Change percent={c.change_percent.net_revenue} previous={Number(c.totals.net_revenue_usd)} versus={versus} />} />
               <Tile label="Delivered orders" value={count(t.orders_count)} detail={`${count(t.orders_placed)} placed`} change={<Change percent={c.change_percent.orders_count} previous={c.totals.orders_count} versus={versus} />} />
               <Tile label="Average order" value={formatUsd(t.average_order_value_usd)} khr={t.average_order_value_khr} change={<Change percent={c.change_percent.average_order_value} previous={Number(c.totals.average_order_value_usd)} versus={versus} />} />
@@ -180,7 +180,7 @@ function OrdersTab({ range, versus }: { range: ReportRange; versus: string }) {
         const c = r.comparison;
         return (
           <>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Tile label="Orders placed" value={count(r.total_orders)} change={<Change percent={c.change_percent.total_orders} previous={c.total_orders} versus={versus} />} />
               <Tile label="Cancelled" value={percent(r.cancellation_rate)} detail="of orders placed" change={<Change percent={c.change_percent.cancellation_rate} previous={c.cancellation_rate} versus={versus} moreIsBetter={false} />} />
               <Tile
@@ -190,7 +190,7 @@ function OrdersTab({ range, versus }: { range: ReportRange; versus: string }) {
                 change={<Change percent={c.change_percent.average_delivery_hours} previous={c.average_delivery_hours ?? 0} versus={versus} moreIsBetter={false} />}
               />
             </div>
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <Panel id="orders-status" title="Orders placed by status">
                 {r.total_orders === 0 ? <Empty>No orders placed in this period.</Empty> : <ShareList label="Orders by status" rows={Object.entries(r.orders_by_status).map(([status, n]) => ({ key: status, name: <OrderStatusBadge status={status as OrderStatus} />, value: n }))} />}
               </Panel>
@@ -267,7 +267,7 @@ function ProductsTab({ range }: { range: ReportRange }) {
               </div>
               )}
             </Panel>
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <Panel id="products-categories" title="Sales by category">
                 {categories.length === 0 ? <Empty>No categorised sales in this period.</Empty> : <BarList points={categories} label="Sales by category" format={usd} />}
                 <DataTable caption="Sales by category" head={["Category", "Sales"]} rows={categories.map((c) => [c.label, usd(c.value)])} />
@@ -345,7 +345,7 @@ function CustomersTab({ range, versus }: { range: ReportRange; versus: string })
         const points = r.new_customers_series.map((p) => ({ label: shortDay.format(new Date(`${p.date}T00:00:00Z`)), value: p.new_customers }));
         return (
           <>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Tile label="New customers" value={count(r.total_new_customers)} detail="verified their account" change={<Change percent={c.change_percent.total_new_customers} previous={c.total_new_customers} versus={versus} />} />
               <Tile label="Came back" value={percent(r.returning_customer_rate)} detail="of customers in this period ordered more than once" change={<Change percent={c.change_percent.returning_customer_rate} previous={c.returning_customer_rate} versus={versus} />} />
             </div>
@@ -478,7 +478,7 @@ function CouponsTab({ range }: { range: ReportRange }) {
                 </div>
               )}
             </Panel>
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
               <Tile label="Refunded" value={formatUsd(r.refunds.amount_usd)} khr={r.refunds.amount_khr} detail={`${count(r.refunds.count)} ${r.refunds.count === 1 ? "return" : "returns"} paid back in this period`} />
               <Panel id="refund-reasons" title="Refunds by reason">
                 {r.refunds.by_reason.length === 0 ? (
@@ -539,7 +539,7 @@ function OffersTab({ range }: { range: ReportRange }) {
         ];
         return (
           <>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <Tile
                 label="Books per order with an offer"
                 value={orders ? (units / orders).toFixed(2) : "–"}

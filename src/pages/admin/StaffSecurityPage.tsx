@@ -133,7 +133,7 @@ export default function StaffSecurityPage() {
       title="Security & Active Sessions"
       lead="View and manage active devices connected to your staff account, and review sign-in attempts."
     >
-      <div className="grid gap-8">
+      <div className="grid grid-cols-1 gap-8">
         {/* Account Overview & 2FA Status */}
         <section className="rounded-xl border border-border bg-card p-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -195,7 +195,7 @@ export default function StaffSecurityPage() {
               description: "You have no active sessions recorded.",
             }}
           >
-            <TableCard minWidth={600}>
+            <TableCard minWidth={600} label="Active sessions">
               <thead className={thead}>
                 <tr>
                   <th scope="col" className={th}>
@@ -275,7 +275,7 @@ export default function StaffSecurityPage() {
               description: "No sign-in events have been recorded yet.",
             }}
           >
-            <TableCard stale={historyQuery.isPlaceholderData} minWidth={650}>
+            <TableCard stale={historyQuery.isPlaceholderData} minWidth={650} label="Sign-in history">
               <thead className={thead}>
                 <tr>
                   <th scope="col" className={th}>
