@@ -618,3 +618,103 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
 > **Notes rule (owner, 2026-11-01):** feature branches no longer edit this file. Every work-log entry goes on the
 > long-lived notes branch `docs/worklog-notes` (this repo) and `docs/handoff-notes` (backend: `WORKLOG.md`,
 > `HANDOFF.md`, `OWNER_TODO.md`). Merge the notes branches whenever you like; they never conflict with feature work.
+
+- [x] Admin Reports: Offers tab (2026-11-01, branch `feature/offer-reports`, with the backend branch of the same name; backend
+  spec section 7): tiles "Books per order with an offer" vs without, "Average order with an offer" vs without, "Orders with
+  an offer" (share of all orders), "Discount given by offers"; table "What each offer sold" (orders, books (with the
+  offer), order totals, discount, average order, books per order) with an "Orders without an offer" row; Export CSV uses
+  the same report. A 404 (backend not deployed yet) says "not available on this server yet".
+  - Checks: lint 0, typecheck clean, `npm test` 464 passed / 3 skipped (2 new in `reports-page.test.tsx`), build ok.
+  - Browser (Playwright, Vite :5173 + local API on backend `feature/offer-reports`, demo data, live "Buy 2 Holmes 15%"):
+    first with no offer orders (tiles show "–", 0%); then 3 real checkouts (2 with the offer: $37.79 and $16.80, discount
+    $2.68 each; 1 without): Offers tab shows 2 orders, 5 books (4 with the offer), $54.59, $5.36 discount, average $27.30,
+    2.50 books per order vs 1.83 without; the CSV download has the same two rows. 1280 and 390 px: no overflow; no
+    console errors.
+
+- [x] Admin dashboard redesign (2026-11-01, branch `feature/admin-dashboard-redesign`; BI design spec
+  `bookly_backend_v2/docs/superpowers/specs/2026-11-01-bi-dashboard-design.md`, branch 2; owner choices 1A-6A):
+  - KPI cards (net revenue as the hero, orders placed, average order, new customers): number, change vs the previous
+    period, a sparkline from `/staff/dashboard/insights` `trend`, and a "View …" link (sales report, orders, order report,
+    customers). Income report: this period solid vs the previous period dashed (same day index), Income / Orders switch,
+    legend with both totals, "Show as a table". Orders by status: donut with the total in the middle + a text list (badge,
+    count, share). New files: `src/api/endpoints/dashboardInsights.ts`, `src/features/admin/dashboard/*`.
+  - Works alone: without the insights endpoint (404) the cards have no sparkline and the old daily bar chart shows.
+  - The donut ignores anything that is not a real count (a cache bug on the live API, fixed in backend
+    `fix/dashboard-status-cache`, printed `__PHP_Incomplete_Class_Name` in "Orders placed by status").
+  - Checks: lint 0, typecheck clean, `npm test` 469 passed / 3 skipped (5 new in `dashboard-redesign.test.tsx`), build ok.
+    Browser (Playwright, Vite :5173 + local API = backend `feature/dashboard-insights` + `fix/dashboard-status-cache`
+    merged locally, demo data, 30 days), 1440 and 390 px, two runs (the second from the file cache): 4 sparklines, legend
+    $198.46 vs $0.00 and 16 vs 0 orders after the switch, donut "16 in total", no horizontal overflow, no console errors.
+
+- [x] Admin quick jump + menu badges (2026-11-01, branch `feature/admin-quick-jump`; BI spec branch 3, owner 5A):
+  "Search or jump to… Ctrl K" in the admin top bar (Ctrl K / Cmd K anywhere; arrows, Enter, Esc): admin pages at once,
+  and from 2 letters orders (number or customer), books (title) and customers (name, email, phone). Menu badges from
+  `GET /staff/dashboard/counts` (checked every minute): Orders = pending, Returns = open, Stock = low ("99+" above 99),
+  screen readers hear "Orders, 3 pending orders"; none on an API without counts. Files `src/features/admin/QuickJump.tsx`,
+  `menuCounts.ts`. Checks: lint 0, typecheck, `npm test` 473 passed / 3 skipped (4 new), build ok. Browser (local API =
+  backend `main`): badges 5 pending orders, 1 open return, 4 low stock; Ctrl K + "ord" lists the Orders page and 5 real
+  orders with customer names; "sign of" + Enter opens /admin/books/5; Cmd K opens, Esc closes (also on the book edit page);
+  390 px no overflow; no console errors.
+- [x] Dashboard extras (2026-11-01, branch `feature/admin-insights-widgets`; BI spec branch 4, owner 2A 3A 4A): tiles
+  Stock value (at selling price), Dead stock (no sale in 60 days), Repeat customers; panels Slow movers (top 10 by value,
+  last sold or "never sold", links to the book), Top authors and Orders by province (bars with the number first),
+  Offers and coupons (orders and discount, link to the Offers report). Shown only when all insights fields are there.
+  `src/features/admin/dashboard/InsightsWidgets.tsx`. Checks: lint 0, typecheck, `npm test` 471 passed / 3 skipped
+  (2 new), build ok. Browser (local API = backend `main`, 30 days): $5,361.83 stock value, $827.79 dead stock (Around the
+  World in Eighty Days first), authors led by Conan Doyle, Phnom Penh 9 orders, offers 2 / coupons 2 / none 11; 1440 and
+  390 px no overflow; no console errors.
+
+- [x] Fix: orders donut in the keyboard order (2026-11-01, branch `fix/dashboard-donut-focus`): the E2E accessibility check
+  (axe, `e2e/a11y.spec.ts` + `smoke.spec.ts`) failed on every PR after `feature/admin-dashboard-redesign` was merged:
+  `aria-hidden-focus` on the donut (Recharts makes the chart and the Pie focusable, `tabindex="0"`, inside the
+  `aria-hidden` picture). Fix: `accessibilityLayer={false}` on `PieChart` and `rootTabIndex={-1}` on `Pie`; the status
+  list beside it stays the accessible version. Verified with axe (same tags as CI: wcag2a/aa, 21a/aa) against the local
+  API, light + dark, 1280 + 390 px: `/admin` (before: 1 violation each, after: 0), `/admin` with Ctrl K open, `/admin/offers`,
+  `/admin/reports?tab=offers`, `/books?q=holmes`, `/books/5`, and `feature/admin-insights-widgets` + this fix: all 0.
+  lint 0, typecheck, `npm test` 473 passed, build ok.
+  **Lesson:** run axe on every changed page before pushing (the CI e2e job does; my Playwright checks did not include it).
+
+- [x] Small fixes (2026-11-01, branch `fix/small-cleanups`): (1) account link strip on phones: a soft fade on the edge that
+  has more links (both edges mid-row, only the left at the last link, none on desktop), so a cut Khmer word reads as
+  "scroll for more"; (2) free-delivery bar texts moved into `en.ts`/`km.ts` (`freeShipping`), incl. the region name;
+  (3) unused `catalogApi.alsoBought` removed; (4) donut colours: processing slate (was a green close to delivered),
+  cancelled light grey. Checks: lint 0, typecheck, `npm test` 475 passed (2 new: bar EN + KM), build ok. Browser + axe
+  (local API = `main`): `/account/profile` KM 390 fades both sides, `/account/wishlist` left only, EN 1280 none, no
+  overflow; cart bar "Add $37.01 more…" EN and KM; axe 0 on `/account/profile` and `/cart` (EN 1280, KM 390).
+
+- [x] Seasonal collections, shop (2026-11-01, branch `feature/seasonal-collections-shop`, `f8622ab`; backend
+  `feature/seasonal-collections`): `collectionsApi` (`/collections/live`, `/collections/{slug}`), one `BookShelf` per live
+  collection above New arrivals (eyebrow "Seasonal pick", See all), page `/collections/:slug` (title, description, "Until
+  {date}", book grid, not-found state). Khmer title/description fall back to English. Checks: lint 0, typecheck,
+  `npm test` 482 passed (5 new), build ok. Browser + axe (local API on the backend branch, 2 live collections): EN 1280
+  light and KM 390 dark: home rows in API order, See all link, collection page (lead line, 9 cards), unknown slug shows
+  not found; axe 0, no sideways scroll.
+- [x] Seasonal collections, admin (2026-11-01, branch `feature/seasonal-collections-admin`, `1321156`): `/admin/collections`
+  in the menu after Offers. Table (title EN/KM, web address, books with "+N in trash", status, when, order, on/off switch,
+  shop link for live ones) and a dialog (titles + descriptions EN/KM, web address made from the English title if empty,
+  starts/ends, order, book search, ↑/↓/remove, on/off; new ones start off). Staff view only; 404 shows "not available
+  yet". Checks: lint 0, typecheck, `npm test` 483 passed (6 new), build ok. Browser + axe (local API): 1280 light and 390
+  dark: list + dialog axe 0; reorder + save changed the shop order; switch off/on; create + delete. Fixed before push:
+  the dialog was wider than a phone (long book titles in a grid; now `grid-cols-1`) and the date boxes overlapped on desktop.
+- [x] Fix: tall dialogs could not scroll (2026-11-01, branch `fix/dialog-scroll`, `c817745`; found by the owner on the live
+  collections form). The scroll lock only allows scrolling inside the dialog, but the scroll box was outside it. Now the
+  dialog itself scrolls (`max-h-[calc(100dvh-2rem)] overflow-y-auto`). Reproduced first (Playwright, 1280x700 and 390x700,
+  mouse wheel: the Create button never moved on Collections and Offers), then fixed (reachable on all 4). axe 0 with the
+  dialog open (Collections, Offers, a confirm box; light 1280, dark 390); the page behind does not move. lint, typecheck,
+  488 tests, build ok. **Lesson:** browser checks must scroll tall dialogs to the end on a short screen.
+- [x] Buy again with low stock (2026-11-02, branch `feature/buy-again-partial-stock`, `be101ac`; owner: add what is
+  left). `BuyAgainButton`: lines with `quantity < requested_quantity` go in the info toast ("Emma: 2 of 3 added", title
+  "Fewer copies left for 1 book", or "Not everything could be added" with skipped books too); EN/KM texts. lint,
+  typecheck, 489 tests (1 new), build ok. Browser + axe (local API on the backend branch, real order of 3, stock 2): cart
+  2, toast EN 1280 light and KM 390 dark, axe 0, no overflow.
+- [x] KHQR payments, shop (2026-11-02, branch `feature/khqr-checkout`, `2cc21d8`; backend `feature/khqr-payments`):
+  payment choice from `/delivery/options` `payment_methods` (KHQR only when listed), "Place order and pay" -> new page
+  `/account/orders/:id/pay` (KHQR card drawn with `qrcode`, USD/KHR tabs, countdown from the API's `seconds_left`, polls
+  every 3 s while waiting, Simulate in test mode, Download QR, Paid / Expired / Cancelled screens, Buy again), "Pay now"
+  on the order list and page (`payment_due_at`), EN/KM `pay` group, API types regenerated. lint, typecheck, 499 tests
+  (10 new), build. Browser + axe: see backend HANDOFF 2026-11-02 (drawn QR = API string; full paid and expired flows).
+  Fixed before push: 429 (backend limits), long Khmer Simulate label widened the page at 390 px.
+- [x] KHQR payments, admin (2026-11-02, branch `feature/khqr-admin`, `b75d26a`): `OrderPaymentCard` (QR rows, how paid,
+  paid-after-cancel warning, admin "Mark as paid" with a required note), orders "Payment" filter (`pay=khqr`), "KHQR
+  payments" line on System health. Orders filters now fit a 390 px screen (`grid-cols-1`). lint, typecheck, 496 tests
+  (7 new), build. Browser + axe 390 dark / 1280 light: all 0; Mark as paid on a short screen reached by scrolling.
