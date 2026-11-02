@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, Package } from "lucide-react";
+import { ChevronRight, Package, QrCode } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { orderQueries } from "@/api/endpoints/orders";
 import type { Order, OrderStatus } from "@/api/types";
@@ -46,6 +46,11 @@ function OrderRow({ order }: { order: Order }) {
             {orderDate(order.placed_at, locale)}
             {order.item_count ? ` · ${dict.orders.items(order.item_count)}` : null}
           </span>
+          {order.payment_due_at ? (
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-lapis-tint px-2.5 py-0.5 text-sm font-semibold text-primary">
+              <QrCode className="size-4" aria-hidden="true" /> {dict.orders.payNow} · {dict.orders.payBy(new Date(order.payment_due_at).toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" }))}
+            </span>
+          ) : null}
         </span>
         <span className="flex items-center justify-between gap-3 sm:justify-end">
           <span className="font-semibold tabular-nums">{formatMoney(order.total_usd, order.total_khr, currency)}</span>

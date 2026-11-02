@@ -29,6 +29,7 @@ const AddressesPage = lazy(() => import("../pages/account/AddressesPage"));
 const WishlistPage = lazy(() => import("../pages/account/WishlistPage"));
 const OrdersPage = lazy(() => import("../pages/account/OrdersPage"));
 const OrderDetailPage = lazy(() => import("../pages/account/OrderDetailPage"));
+const KhqrPayPage = lazy(() => import("../pages/account/KhqrPayPage"));
 const ReturnRequestPage = lazy(() => import("../pages/account/ReturnRequestPage"));
 const InvoicePrintPage = lazy(() => import("../pages/account/InvoicePrintPage"));
 const ReturnsPage = lazy(() => import("../pages/account/ReturnsPage"));
@@ -143,6 +144,7 @@ const AppRoutes = () => {
               <Route path="orders" element={<OrdersPage />} />
               <Route path="orders/:id" element={<OrderDetailPage />} />
               <Route path="orders/:id/return" element={<ReturnRequestPage />} />
+              <Route path="orders/:id/pay" element={<KhqrPayPage />} />
               <Route path="returns" element={<ReturnsPage />} />
               <Route path="returns/:id" element={<ReturnDetailPage />} />
               <Route path="reviews" element={<ReviewsPage />} />

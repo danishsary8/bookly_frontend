@@ -744,6 +744,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/collections/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Up to 2 live seasonal collections for the home page (switched on, started, not ended, with a visible book), by position then id; each with up to 12 book cards in the admin's order */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Live collections */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["SeasonalCollection"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/collections/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One live seasonal collection by its web address, with all its visible books (up to 60); 404 when hidden, scheduled, ended or empty */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Collection */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["SeasonalCollection"];
+                        };
+                    };
+                };
+                /** @description Not live or not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/series": {
         parameters: {
             query?: never;
@@ -3126,7 +3211,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/orders/{id}/reorder": {
+    "/orders/{id}/payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** KHQR payment page: QR codes, time left and status. Each call also checks Bakong (bakong mode, at most every 3 s) and cancels the order when the time is over; 40/min */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Payment state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["KhqrPayment"];
+                        };
+                    };
+                };
+                404: components["responses"]["NotFound"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/{id}/payment/qr": {
         parameters: {
             query?: never;
             header?: never;
@@ -3135,7 +3261,58 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Buy again: add the order items to the cart (items that cannot be bought now are skipped with a reason); 10/min */
+        /** The KHQR in USD or KHR (made on first ask; the KHR amount is fixed at that time); 10/min */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        currency: "USD" | "KHR";
+                    };
+                };
+            };
+            responses: {
+                /** @description Payment state (KhqrPayment) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                404: components["responses"]["NotFound"];
+                /** @description Not waiting for payment, or no exchange rate for KHR */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/{id}/payment/simulate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Test mode only: pays the waiting QR with no real money (404 in bakong mode); 10/min */
         post: {
             parameters: {
                 query?: never;
@@ -3147,7 +3324,51 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description data.added (book_variant_id, title, quantity), data.skipped (book_variant_id, title, reason), data.cart (Cart) */
+                /** @description Payment state (KhqrPayment), status paid */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                404: components["responses"]["NotFound"];
+                /** @description Not waiting for payment */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/{id}/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Buy again: add the order items to the cart (items that cannot be bought now are skipped with a reason; when fewer copies are left, what is left is added with a note); 10/min */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description data.added (book_variant_id, title, quantity added, requested_quantity from the order, note when fewer were added, else null), data.skipped (book_variant_id, title, reason), data.cart (Cart) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -3160,7 +3381,9 @@ export interface paths {
                          *           {
                          *             "book_variant_id": 1,
                          *             "title": "Pride and Prejudice",
-                         *             "quantity": 1
+                         *             "quantity": 1,
+                         *             "requested_quantity": 3,
+                         *             "note": "Only 1 left in stock."
                          *           }
                          *         ],
                          *         "skipped": [
@@ -5156,6 +5379,133 @@ export interface paths {
         };
         trace?: never;
     };
+    "/staff/collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Seasonal collections (q = title, per_page). Staff with catalog:view and admins. Each: all fields, status (live|scheduled|ended|hidden), books [{id, title, in_trash}] in order */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Collections */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /** (admin) Create (title_en, slug? made from title_en, title_km?, description_en/km? max 300, starts_at?, ends_at? after starts_at, is_active? default false, position?, books? ordered book ids max 60, each existing and not in the trash). "live" is reserved. Audited */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                403: components["responses"]["Forbidden"];
+                422: components["responses"]["Validation"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/collections/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One collection */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Collection */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** (admin) Delete (its book list goes with it). Audited */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                204: components["responses"]["NoContent"];
+                403: components["responses"]["Forbidden"];
+            };
+        };
+        options?: never;
+        head?: never;
+        /** (admin) Update any field; books replaces the ordered list when sent. Audited (no row when nothing changed) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                403: components["responses"]["Forbidden"];
+                422: components["responses"]["Validation"];
+            };
+        };
+        trace?: never;
+    };
     "/staff/offers": {
         parameters: {
             query?: never;
@@ -5346,7 +5696,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Orders (status, q = order number/customer, from, to) */
+        /** Orders (status, payment_method = cod|khqr, q = order number/customer, from, to); each order lists its payments (provider, status, amount, currency, reference, paid_at, how = bakong|test|staff, paid_after_cancel) */
         get: {
             parameters: {
                 query?: never;
@@ -5540,6 +5890,56 @@ export interface paths {
                     content?: never;
                 };
                 /** @description Not allowed by the flow */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/orders/{id}/mark-paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** (admin) Mark a KHQR order waiting for payment as paid, e.g. after seeing the money in the bank app. Note required; audit log */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        note: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated order (status paid, payments[].how = staff) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                403: components["responses"]["Forbidden"];
+                /** @description Not a KHQR order waiting for payment, or no note */
                 422: {
                     headers: {
                         [name: string]: unknown;
@@ -6937,6 +7337,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff/dashboard/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * (admin) Dashboard extras - daily trends with the previous period, dead stock, stock value, top authors, provinces, promotions, repeat customers
+         * @description trend: one row per day of the period with the same day index of the previous period (net revenue, orders placed, average delivered order, new verified customers). dead_stock: printed formats in stock with no copy in a non-cancelled order in the last 60 days (count, copies, value at selling price, top 10 by value with last_sold_at). stock_value: printed active copies in stock at selling price (no cost price exists). top_authors: top 10 by copies in orders placed. provinces: top 10 by orders placed, province detected from the order address ("Unknown" when not found). promotions: orders with an offer / a coupon / neither. repeat_customer_rate: customers who ordered in the period and before it. Cancelled and deleted orders never count. 5-minute cache.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    period?: components["parameters"]["Period"];
+                    from?: components["parameters"]["From"];
+                    to?: components["parameters"]["To"];
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Insights */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                403: components["responses"]["Forbidden"];
+                422: components["responses"]["Validation"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/dashboard/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Menu badge counts for every staff member: pending_orders, open_returns, low_stock (printed formats at or below their threshold). 60-second cache */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Counts */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                pending_orders?: number;
+                                open_returns?: number;
+                                low_stock?: number;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/staff/orders/export": {
         parameters: {
             query?: never;
@@ -7196,6 +7681,69 @@ export interface paths {
                     };
                     content?: never;
                 };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/reports/offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * (admin) What each automatic offer sold, next to the orders without an offer
+         * @description Orders placed in the range (shop time zone), not cancelled, not deleted; 5-minute cache. Per offer (grouped by orders.offer_id; current name, or the order copy): orders, units (all books in those orders), units_with_offer (books on discounted lines), revenue (sum of order totals), discount, average_order, books_per_order. without_offer: the same numbers for orders with no offer (coupon orders included). format=csv: one row per offer + "Orders without an offer", UTF-8 BOM.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    from?: components["parameters"]["From"];
+                    to?: components["parameters"]["To"];
+                    format?: "json" | "csv";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Offers report data or CSV stream */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                period?: {
+                                    /** Format: date */
+                                    from?: string;
+                                    /** Format: date */
+                                    to?: string;
+                                    timezone?: string;
+                                };
+                                offers?: ({
+                                    offer_id?: number | null;
+                                    name?: string;
+                                    min_quantity?: number | null;
+                                    /** @example 15.00 */
+                                    percent_off?: string | null;
+                                } & components["schemas"]["OfferReportRow"])[];
+                                without_offer?: components["schemas"]["OfferReportRow"];
+                            };
+                        };
+                    };
+                };
+                403: components["responses"]["Forbidden"];
+                422: components["responses"]["Validation"];
             };
         };
         put?: never;
@@ -7739,7 +8287,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** (admin) Detailed system health (database, queue, telegram bot) */
+        /** (admin) Detailed system health (database, queue, telegram bot, payments) */
         get: {
             parameters: {
                 query?: never;
@@ -7749,7 +8297,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description status ok or degraded; checks include database, queue and telegram_bot */
+                /** @description status ok or degraded; checks include database, queue, telegram_bot and payments ({mode: test|bakong, status: test|ok|unknown|token_missing|token_expired|token_expiring|token_invalid|blocked|unreachable|error, token_expires_at, last_check_at}; the token itself is never shown) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -7919,6 +8467,54 @@ export interface components {
                 provinces_khr?: components["schemas"]["Riel"];
             };
             provinces?: components["schemas"]["DeliveryProvince"][];
+            /** @description Ways to pay. The shop shows KHQR only when it is listed (KHQR payments design 3.3). */
+            payment_methods?: {
+                /** @enum {string} */
+                code?: "cod" | "khqr";
+                /**
+                 * @description khqr only: test = Simulate button, no real money
+                 * @enum {string}
+                 */
+                mode?: "test" | "bakong";
+                /**
+                 * @description khqr only
+                 * @example 15
+                 */
+                pay_minutes?: number;
+            }[];
+        };
+        KhqrPayment: {
+            order_id?: number;
+            order_number?: string;
+            /** @enum {string} */
+            status?: "awaiting_payment" | "paid" | "expired" | "cancelled";
+            /** @enum {string} */
+            mode?: "test" | "bakong";
+            /** Format: date-time */
+            expires_at?: string;
+            seconds_left?: number;
+            total_usd?: components["schemas"]["Money"];
+            paid?: {
+                /** @enum {string} */
+                currency?: "USD" | "KHR";
+                amount?: string;
+                /** Format: date-time */
+                paid_at?: string | null;
+            } | null;
+            /** @description The waiting QR codes (USD first, KHR once asked); empty unless awaiting_payment. */
+            qrs?: {
+                /** @enum {string} */
+                currency?: "USD" | "KHR";
+                /**
+                 * @description USD with 2 decimals; KHR whole riel
+                 * @example 26.50
+                 */
+                amount?: string;
+                /** @description KHQR string (EMVCo); draw it as a QR code */
+                qr?: string;
+                /** @description Bakong's lookup key (md5 of qr) */
+                md5?: string;
+            }[];
         };
         CheckoutPreview: {
             subtotal?: components["schemas"]["Amount"];
@@ -8066,6 +8662,36 @@ export interface components {
             review_count?: number;
             offer?: components["schemas"]["BookOffer"];
         };
+        OfferReportRow: {
+            orders?: number;
+            /** @description All books in those orders */
+            units?: number;
+            /** @description Books on lines that got a discount */
+            units_with_offer?: number;
+            revenue_usd?: components["schemas"]["Money"];
+            revenue_khr?: components["schemas"]["Riel"];
+            discount_usd?: components["schemas"]["Money"];
+            discount_khr?: components["schemas"]["Riel"];
+            average_order_usd?: components["schemas"]["Money"];
+            average_order_khr?: components["schemas"]["Riel"];
+            /** @example 2.50 */
+            books_per_order?: string;
+        };
+        SeasonalCollection: {
+            id?: number;
+            /** @example rainy-season-reads */
+            slug?: string;
+            title_en?: string;
+            /** @description Null: the shop shows title_en in Khmer too */
+            title_km?: string | null;
+            description_en?: string | null;
+            description_km?: string | null;
+            /** Format: date-time */
+            ends_at?: string | null;
+            /** @description Visible books in the collection */
+            books_count?: number;
+            books?: components["schemas"]["BookCard"][];
+        };
         /** @description The best live automatic offer covering this book (biggest percent; tie -> lower min_quantity, then lower id), or null. Live offers are cached 60 seconds; checkout always re-checks. */
         BookOffer: {
             id?: number;
@@ -8201,6 +8827,11 @@ export interface components {
             payment_method?: "card" | "cod" | "khqr";
             /** @enum {string} */
             payment_status?: "pending" | "succeeded" | "failed" | "refunded";
+            /**
+             * Format: date-time
+             * @description KHQR order waiting for payment: when the time to pay ends; else null
+             */
+            payment_due_at?: string | null;
             /** Format: date-time */
             placed_at?: string;
             item_count?: number;
@@ -8470,6 +9101,7 @@ export type SchemaRatingSummary = components['schemas']['RatingSummary'];
 export type SchemaEstimatedDelivery = components['schemas']['EstimatedDelivery'];
 export type SchemaDeliveryProvince = components['schemas']['DeliveryProvince'];
 export type SchemaDeliveryOptionsData = components['schemas']['DeliveryOptionsData'];
+export type SchemaKhqrPayment = components['schemas']['KhqrPayment'];
 export type SchemaCheckoutPreview = components['schemas']['CheckoutPreview'];
 export type SchemaCouponCheck = components['schemas']['CouponCheck'];
 export type SchemaCartOffer = components['schemas']['CartOffer'];
@@ -8478,6 +9110,8 @@ export type SchemaCouponNotUsed = components['schemas']['CouponNotUsed'];
 export type SchemaTokenResponse = components['schemas']['TokenResponse'];
 export type SchemaCustomer = components['schemas']['Customer'];
 export type SchemaBookCard = components['schemas']['BookCard'];
+export type SchemaOfferReportRow = components['schemas']['OfferReportRow'];
+export type SchemaSeasonalCollection = components['schemas']['SeasonalCollection'];
 export type SchemaBookOffer = components['schemas']['BookOffer'];
 export type SchemaVariant = components['schemas']['Variant'];
 export type SchemaBookDetail = components['schemas']['BookDetail'];
