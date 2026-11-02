@@ -726,3 +726,12 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   the page. lint, typecheck, 509 tests (3 new), build. Browser + axe (local API, real PNG upload): 1280 light and 390
   dark: New book -> upload -> Create -> Add format prefilled -> save; stored URL loads (200); axe 0; no overflow.
   Note: covers are only kept for good on the live site once R2 is set up (backend DEPLOYMENT.md F6b).
+- [x] Auto refresh (2026-11-02, branch `feature/auto-refresh`; owner chose "Admin + customer orders"). `autoRefresh.ts`:
+  every 30 s (tab visible) and on coming back to the tab, admin data on screen is fetched again (`["staff", …]`, newsletter,
+  admin lookup; not search boxes; old data stays until the answer). Skipped while a dialog is open, a field has focus, or
+  a page has unsaved changes (`usePauseAutoRefresh`: book form, staff note). "Updates by itself · 20 s ago · Refresh now"
+  in every admin header. Customers: order/return queries ask again every 60 s and on tab focus while not finished
+  (orders pending/paid/processing/shipped; returns requested/approved). lint, typecheck, 516 tests (7 new), build.
+  Browser (local API on `main`): status changed through the API while pages were open: admin showed Shipped after 30 s
+  and the customer after 56 s with no reload; while typing a staff note nothing reloaded and the text was kept, then it
+  updated in 23 s; axe 0 (1280 light, 390 dark), no overflow, no console errors.
