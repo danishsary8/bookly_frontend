@@ -194,6 +194,25 @@ describe("OrderDetailPage", () => {
     expect(queryClient.getQueryData(["cart"])).toMatchObject({ item_count: 2 });
   });
 
+  it("says how many were added when fewer copies are left than the order had", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(ordersApi, "reorder").mockResolvedValue({
+      added: [
+        { book_variant_id: 60, title: "Emma", quantity: 2, requested_quantity: 3, note: "Only 2 left in stock." },
+        { book_variant_id: 61, title: "Persuasion", quantity: 1, requested_quantity: 1, note: null },
+      ],
+      skipped: [],
+      cart: { items: [], item_count: 3 } as unknown as Cart,
+    });
+    app("/account/orders/8");
+    await user.click(await screen.findByRole("button", { name: "Buy again" }));
+    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/cart"));
+    expect(screen.getByText("3 books added to your cart")).toBeInTheDocument();
+    expect(screen.getByText("Fewer copies left for 1 book")).toBeInTheDocument();
+    expect(screen.getByText("Emma: 2 of 3 added")).toBeInTheDocument();
+    expect(screen.queryByText(/Persuasion:/)).not.toBeInTheDocument();
+  });
+
   it("stays on the order when none of the books can be bought", async () => {
     const user = userEvent.setup();
     vi.spyOn(ordersApi, "reorder").mockResolvedValue({

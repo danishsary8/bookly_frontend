@@ -14,7 +14,8 @@ const skippedLines = (skipped: ReorderResult["skipped"]) => skipped.map((s) => (
 /*
  * "Buy again": the API puts every line of the order back in the cart with the normal cart rules.
  * The returned cart replaces the cached one (header count and drawer update at once), then the
- * customer lands on the cart; books that can't be bought now are listed with the API's reason.
+ * customer lands on the cart; books that can't be bought now are listed with the API's reason, and books with fewer
+ * copies left than the order had say how many were added ("Emma: 2 of 3 added").
  */
 export function BuyAgainButton({ order }: { order: Order }) {
   const queryClient = useQueryClient();
@@ -34,7 +35,13 @@ export function BuyAgainButton({ order }: { order: Order }) {
       }
       const count = added.reduce((sum, line) => sum + line.quantity, 0);
       toast.success(t.boughtAgain(count));
-      if (skipped.length > 0) toast.info({ title: t.someSkipped(skipped.length), description: skippedLines(skipped), duration: null });
+      // Fewer copies left than the order had: the API added what is left (owner 2026-11-02).
+      const fewer = added.filter((line) => line.requested_quantity !== undefined && line.quantity < line.requested_quantity);
+      if (skipped.length > 0 || fewer.length > 0) {
+        const lines = [...fewer.map((line) => t.partLine(line.title ?? "", line.quantity, line.requested_quantity!)), ...(skipped.length ? [skippedLines(skipped)] : [])];
+        const title = fewer.length === 0 ? t.someSkipped(skipped.length) : skipped.length === 0 ? t.fewerLeft(fewer.length) : t.notAllAdded;
+        toast.info({ title, description: lines.join("\n"), duration: null });
+      }
       navigate("/cart");
     },
     onError: (error) => toast.error({ title: t.buyAgainFailed, description: ApiError.from(error).message }),

@@ -16,7 +16,8 @@ export interface ReviewInput {
 
 /** POST /orders/{id}/reorder: what went back into the cart, what could not (with the API's reason), and the new cart. */
 export interface ReorderResult {
-  added: { book_variant_id: number; title: string | null; quantity: number }[];
+  /** `requested_quantity` and `note` come from APIs with partial "Buy again" (owner 2026-11-02); older ones leave them out. */
+  added: { book_variant_id: number; title: string | null; quantity: number; requested_quantity?: number; note?: string | null }[];
   skipped: { book_variant_id: number | null; title: string | null; reason: string }[];
   cart: Cart;
 }
