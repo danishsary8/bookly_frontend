@@ -1,9 +1,30 @@
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, RefreshCw, XCircle } from "lucide-react";
-import { staffQueries } from "@/api/endpoints/staff";
+import { staffQueries, type StaffHealth } from "@/api/endpoints/staff";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Panel } from "@/features/admin/reportKit";
 import { cn } from "@/lib/utils";
+
+type PaymentsCheck = NonNullable<StaffHealth["checks"]["payments"]>;
+
+/** One line about KHQR (KHQR payments design 3.3). "Blocked" usually means Bakong only answers servers in Cambodia. */
+const paymentsLine = (p: PaymentsCheck) => {
+  const expires = p.token_expires_at ? ` · token until ${new Date(p.token_expires_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : "";
+  switch (p.status) {
+    case "test": return "Test mode: Simulate button, no real money";
+    case "ok": return `Bakong connected${expires}`;
+    case "unknown": return `Bakong mode, no payment checked yet${expires}`;
+    case "token_expiring": return `Bakong token expires soon: renew it${expires}`;
+    case "token_missing": return "Bakong mode but no token set";
+    case "token_expired": return "Bakong token expired: renew it";
+    case "token_invalid": return "Bakong refused the token";
+    case "blocked": return "Bakong refused this server (often: not from Cambodia)";
+    case "unreachable": return "Bakong did not answer in time";
+    default: return "Bakong answered with an error";
+  }
+};
+const paymentsBadge = (status: PaymentsCheck["status"]): "ok" | "degraded" | "off" =>
+  status === "test" ? "off" : status === "ok" || status === "unknown" ? "ok" : "degraded";
 
 export function SystemHealthCard() {
   const { data: health, isLoading, isError, refetch, isFetching } = useQuery(staffQueries.health());
@@ -105,6 +126,16 @@ export function SystemHealthCard() {
             </div>
             {statusBadge(health.checks.telegram_bot.status)}
           </div>
+
+          {health.checks.payments ? (
+            <div className="flex items-center justify-between pt-3">
+              <div>
+                <p className="font-semibold">KHQR payments</p>
+                <p className="text-xs text-muted-foreground">{paymentsLine(health.checks.payments)}</p>
+              </div>
+              {statusBadge(paymentsBadge(health.checks.payments.status))}
+            </div>
+          ) : null}
         </div>
       )}
     </Panel>

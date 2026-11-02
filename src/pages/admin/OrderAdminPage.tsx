@@ -14,6 +14,8 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { OrderPaymentCard } from "@/features/admin/orders/OrderPaymentCard";
+import { useStaff } from "@/features/admin/staffSession";
 import { DeliveryAddressCard, OrderItemsCard } from "@/features/orders/OrderSummary";
 import { OrderTimeline } from "@/features/orders/OrderTimeline";
 import { orderDateTime } from "@/features/orders/format";
@@ -169,6 +171,7 @@ function StaffNoteCard({ order }: { order: StaffOrder }) {
  * API allows (processing → shipped → delivered, or cancel before shipping).
  */
 export default function OrderAdminPage() {
+  const session = useStaff();
   const id = Number(useParams().id);
   const valid = Number.isInteger(id) && id > 0;
   const order = useQuery({ ...opsQueries.order(id), enabled: valid });
@@ -265,13 +268,7 @@ export default function OrderAdminPage() {
           ) : null}
           <StaffNoteCard order={o} />
           <DeliveryAddressCard address={o.shipping_address} title="Deliver to" />
-          <section aria-labelledby="order-payment" className="grid gap-1 rounded-xl border border-border bg-card p-5">
-            <h2 id="order-payment" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
-              Payment
-            </h2>
-            <p>Cash on delivery</p>
-            <p className="text-sm text-muted-foreground">{o.payment_status === "succeeded" ? "Collected" : o.payment_status === "refunded" ? "Refunded" : "Not collected yet"}</p>
-          </section>
+          <OrderPaymentCard order={o} isAdmin={session?.user.role === "admin"} />
         </div>
       </div>
       {step ? <StatusDialog key={step} order={o} to={step} onClose={() => setStep(null)} /> : null}

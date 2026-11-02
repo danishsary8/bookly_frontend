@@ -136,7 +136,9 @@ export default function OrdersAdminPage() {
   const q = get("q");
   const from = get("from");
   const to = get("to");
-  const orders = useQuery(opsQueries.orders({ status, q: q || undefined, from: from || undefined, to: to || undefined, page, per_page: 20 }));
+  const rawPay = get("pay");
+  const paymentMethod = rawPay === "cod" || rawPay === "khqr" ? rawPay : undefined;
+  const orders = useQuery(opsQueries.orders({ status, payment_method: paymentMethod, q: q || undefined, from: from || undefined, to: to || undefined, page, per_page: 20 }));
   const isNew = useIsNewOrder();
   const [exporting, setExporting] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
@@ -163,7 +165,8 @@ export default function OrdersAdminPage() {
         ) : null
       }
     >
-      <div className="grid gap-3">
+      {/* grid-cols-1: the filter rows scroll inside themselves instead of making the page wider than a phone. */}
+      <div className="grid grid-cols-1 gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <SearchBox label="Search orders" value={q} placeholder="Order number, customer name or email" onSearch={(v) => set({ q: v || undefined })} />
           <div className="flex flex-wrap items-end gap-2">
@@ -182,7 +185,19 @@ export default function OrdersAdminPage() {
             ) : null}
           </div>
         </div>
-        <Segmented label="Status" value={status ?? "all"} options={STATUSES} onChange={(v) => set({ status: v === "all" ? undefined : v })} />
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <Segmented label="Status" value={status ?? "all"} options={STATUSES} onChange={(v) => set({ status: v === "all" ? undefined : v })} />
+          <Segmented
+            label="Payment"
+            value={paymentMethod ?? "all"}
+            options={[
+              { value: "all", label: "Any payment" },
+              { value: "cod", label: "Cash on delivery" },
+              { value: "khqr", label: "KHQR" },
+            ]}
+            onChange={(v) => set({ pay: v === "all" ? undefined : v })}
+          />
+        </div>
         {selected.length ? <SelectionBar ids={selected} onStatus={() => setChanging(true)} onClear={() => setSelected([])} /> : null}
       </div>
 

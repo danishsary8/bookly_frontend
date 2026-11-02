@@ -13,8 +13,24 @@ import type { StaffLoginHistoryItem, StaffRole, StaffUser } from "./staff";
 
 type Person = { id: number; name: string; email: string; phone?: string | null };
 
+/** One payment row of an order (KHQR: one row per QR; backend StaffOrderResource, KHQR payments design 2026-11-02). */
+export interface StaffPayment {
+  id: number;
+  provider: "cod" | "bakong" | "stripe" | "paypal";
+  status: "pending" | "succeeded" | "failed" | "refunded";
+  amount: string;
+  currency: string;
+  reference: string | null;
+  paid_at: string | null;
+  how: "bakong" | "test" | "staff" | null;
+  paid_after_cancel: boolean;
+  created_at: string;
+}
+
 export type StaffOrder = Omit<Order, "status_history"> & {
   customer?: Person;
+  /** Missing on an API without KHQR payments. */
+  payments?: StaffPayment[];
   staff_note?: string | null;
   status_history?: Array<{ status: string; note: string | null; changed_by: { id: number; name: string } | null; created_at: string }>;
   allowed_next_statuses: OrderStatus[];
@@ -203,7 +219,7 @@ export interface AuditEntry {
 
 type Meta = { current_page: number; last_page: number; total: number; per_page?: number };
 
-export type OrderFilters = { status?: OrderStatus; q?: string; from?: string; to?: string; page?: number; per_page?: number };
+export type OrderFilters = { status?: OrderStatus; payment_method?: "cod" | "khqr"; q?: string; from?: string; to?: string; page?: number; per_page?: number };
 export type ReturnFilters = { status?: string; q?: string; page?: number; per_page?: number };
 export type ReviewFilters = { visible?: boolean | null; q?: string; max_rating?: number; page?: number; per_page?: number };
 export type CouponFilters = { q?: string; active?: boolean | null; page?: number; per_page?: number };
@@ -245,6 +261,8 @@ export const opsApi = {
     api.post<Resource<StaffOrder>>(`/staff/orders/${id}/status`, { status, ...(note ? { note } : {}) }).then((r) => r.data),
   setStaffNote: (id: number, staff_note: string | null) =>
     api.patch<Resource<StaffOrder>>(`/staff/orders/${id}/staff-note`, { staff_note }).then((r) => r.data),
+  /** (admin) A KHQR order waiting for payment becomes paid; note required (audit log). */
+  markOrderPaid: (id: number, note: string) => api.post<Resource<StaffOrder>>(`/staff/orders/${id}/mark-paid`, { note }).then((r) => r.data),
   /** CSV of every order placed between the two days (Phnom Penh), at most 366 days. */
   bulkOrderStatus: (ids: number[], status: BulkStatusTarget, note?: string) =>
     api.post<{ data: BulkStatusResult }>("/staff/orders/bulk-status", { ids, status, ...(note ? { note } : {}) }).then((r) => r.data),

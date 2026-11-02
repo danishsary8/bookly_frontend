@@ -328,6 +328,13 @@ export interface StaffHealth {
       error?: string;
       repaired?: boolean;
     };
+    /** KHQR (missing on an API without payments). The token itself is never sent. */
+    payments?: {
+      mode: "test" | "bakong";
+      status: "test" | "ok" | "unknown" | "token_missing" | "token_expired" | "token_expiring" | "token_invalid" | "blocked" | "unreachable" | "error";
+      token_expires_at: string | null;
+      last_check_at: string | null;
+    };
   };
 }
 
