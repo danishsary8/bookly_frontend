@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { RefreshNote } from "./RefreshNote";
 
 /** Top of an admin screen: the page's h1, an optional one-line description, and actions on the right. */
 export function AdminPage({ title, lead, actions, back, children }: { title: string; lead?: ReactNode; actions?: ReactNode; back?: ReactNode; children: ReactNode }) {
@@ -12,6 +13,7 @@ export function AdminPage({ title, lead, actions, back, children }: { title: str
           <div className="grid gap-1">
             <h1 className="font-display text-[clamp(1.9rem,3vw,2.4rem)] leading-[1.1]">{title}</h1>
             {lead ? <div className="text-[15px] text-muted-foreground">{lead}</div> : null}
+            <RefreshNote />
           </div>
           {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
         </div>

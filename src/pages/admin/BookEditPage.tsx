@@ -43,6 +43,7 @@ import {
 import { BookState } from "@/features/admin/books/BookState";
 import { VariantDialog } from "@/features/admin/books/VariantDialog";
 import { BookCoverPanel } from "@/features/admin/books/BookCoverPanel";
+import { usePauseAutoRefresh } from "@/features/admin/autoRefresh";
 import { mainCover, pendingCover } from "@/features/admin/books/pendingCover";
 import { ImageUploadField } from "@/components/ui/ImageUploadField";
 import { StockHistoryDrawer } from "@/features/admin/stock/StockHistoryDrawer";
@@ -117,6 +118,8 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
 
   // New book only: a cover chosen now goes to the first format (owner 2026-11-02).
   const [newCover, setNewCover] = useState("");
+  // Unsaved changes: don't let the auto refresh reload this form.
+  usePauseAutoRefresh(isDirty || Boolean(newCover));
 
   const submit = async (values: BookValues) => {
     setFormError(null);

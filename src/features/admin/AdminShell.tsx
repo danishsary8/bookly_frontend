@@ -13,6 +13,7 @@ import { COUNT_FOR, badgeText, useMenuCounts } from "./menuCounts";
 import { QuickJump } from "./QuickJump";
 import { NotificationsBell } from "./NotificationsBell";
 import { useNewOrderWatch } from "./orders/newOrders";
+import { useAdminAutoRefresh } from "./autoRefresh";
 import { useStaff, useStaffSignOut } from "./staffSession";
 
 const itemClass =
@@ -132,6 +133,7 @@ export function AdminShell() {
   const [menuOpen, setMenuOpen] = useState(false);
   const session = useStaff();
   useNewOrderWatch(session?.user);
+  useAdminAutoRefresh(Boolean(session));
 
   return (
     <div className="min-h-dvh bg-background lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)]">

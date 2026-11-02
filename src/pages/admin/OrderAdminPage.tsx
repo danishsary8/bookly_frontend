@@ -16,6 +16,7 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { OrderPaymentCard } from "@/features/admin/orders/OrderPaymentCard";
 import { useStaff } from "@/features/admin/staffSession";
+import { usePauseAutoRefresh } from "@/features/admin/autoRefresh";
 import { DeliveryAddressCard, OrderItemsCard } from "@/features/orders/OrderSummary";
 import { OrderTimeline } from "@/features/orders/OrderTimeline";
 import { orderDateTime } from "@/features/orders/format";
@@ -87,6 +88,7 @@ function StaffNoteCard({ order }: { order: StaffOrder }) {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [note, setNote] = useState(order.staff_note ?? "");
+  usePauseAutoRefresh(editing);
   const [error, setError] = useState<string | null>(null);
 
   const save = useMutation({
