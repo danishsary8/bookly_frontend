@@ -54,15 +54,39 @@ export const ordersApi = {
   deleteReview: (id: number) => api.delete(`/reviews/${id}`),
 };
 
+/*
+ * Auto refresh for customers (owner 2026-11-02): an order or return that is still moving is asked again every 60 s
+ * (only while the tab is visible) and when the customer comes back to the tab, so "Shipped" or "Refunded" shows by
+ * itself. Finished ones are not asked again.
+ */
+export const CUSTOMER_REFRESH_MS = 60_000;
+const OPEN_ORDER = new Set(["pending", "paid", "processing", "shipped"]);
+const OPEN_RETURN = new Set(["requested", "approved"]);
+const orderOpen = (o: { status?: string | null } | undefined) => Boolean(o?.status && OPEN_ORDER.has(o.status));
+const returnOpen = (r: { status?: string | null } | undefined) => Boolean(r?.status && OPEN_RETURN.has(r.status));
+const whileOpen = <T,>(open: (data: T | undefined) => boolean) => ({
+  refetchInterval: (query: { state: { data: T | undefined } }) => (open(query.state.data) ? CUSTOMER_REFRESH_MS : false),
+  refetchOnWindowFocus: (query: { state: { data: T | undefined } }) => open(query.state.data),
+});
+
 export const orderQueries = {
   orders: (params: Parameters<typeof ordersApi.orders>[0] = {}) =>
-    queryOptions({ queryKey: orderKeys.orders(params), queryFn: () => ordersApi.orders(params), placeholderData: keepPreviousData }),
-  order: (id: number) => queryOptions({ queryKey: orderKeys.order(id), queryFn: () => ordersApi.order(id) }),
+    queryOptions({
+      queryKey: orderKeys.orders(params),
+      queryFn: () => ordersApi.orders(params),
+      placeholderData: keepPreviousData,
+      ...whileOpen<Awaited<ReturnType<typeof ordersApi.orders>>>((page) => Boolean(page?.data.some(orderOpen))),
+    }),
+  order: (id: number) => queryOptions({ queryKey: orderKeys.order(id), queryFn: () => ordersApi.order(id), ...whileOpen<Order>(orderOpen) }),
   invoice: (id: number) => queryOptions({ queryKey: [...orderKeys.order(id), "invoice"] as const, queryFn: () => ordersApi.invoice(id) }),
   returnable: (orderId: number) => queryOptions({ queryKey: orderKeys.returnable(orderId), queryFn: () => ordersApi.returnable(orderId) }),
   returns: (params: Parameters<typeof ordersApi.returns>[0] = {}) =>
-    queryOptions({ queryKey: orderKeys.returns(params), queryFn: () => ordersApi.returns(params) }),
-  return: (id: number) => queryOptions({ queryKey: orderKeys.return(id), queryFn: () => ordersApi.return(id) }),
+    queryOptions({
+      queryKey: orderKeys.returns(params),
+      queryFn: () => ordersApi.returns(params),
+      ...whileOpen<Awaited<ReturnType<typeof ordersApi.returns>>>((page) => Boolean(page?.data.some(returnOpen))),
+    }),
+  return: (id: number) => queryOptions({ queryKey: orderKeys.return(id), queryFn: () => ordersApi.return(id), ...whileOpen<ReturnRequest>(returnOpen) }),
   myReviews: (params: Parameters<typeof ordersApi.myReviews>[0] = {}) =>
     queryOptions({ queryKey: orderKeys.reviews(params), queryFn: () => ordersApi.myReviews(params) }),
 };
