@@ -702,3 +702,8 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   mouse wheel: the Create button never moved on Collections and Offers), then fixed (reachable on all 4). axe 0 with the
   dialog open (Collections, Offers, a confirm box; light 1280, dark 390); the page behind does not move. lint, typecheck,
   488 tests, build ok. **Lesson:** browser checks must scroll tall dialogs to the end on a short screen.
+- [x] Buy again with low stock (2026-11-02, branch `feature/buy-again-partial-stock`, `be101ac`; owner: add what is
+  left). `BuyAgainButton`: lines with `quantity < requested_quantity` go in the info toast ("Emma: 2 of 3 added", title
+  "Fewer copies left for 1 book", or "Not everything could be added" with skipped books too); EN/KM texts. lint,
+  typecheck, 489 tests (1 new), build ok. Browser + axe (local API on the backend branch, real order of 3, stock 2): cart
+  2, toast EN 1280 light and KM 390 dark, axe 0, no overflow.
