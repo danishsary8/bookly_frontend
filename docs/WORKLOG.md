@@ -718,3 +718,11 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   paid-after-cancel warning, admin "Mark as paid" with a required note), orders "Payment" filter (`pay=khqr`), "KHQR
   payments" line on System health. Orders filters now fit a 390 px screen (`grid-cols-1`). lint, typecheck, 496 tests
   (7 new), build. Browser + axe 390 dark / 1280 light: all 0; Mark as paid on a short screen reached by scrolling.
+- [x] Book cover on New book (2026-11-02, branch `feature/book-cover-on-create`; owner chose "On New book page"). Covers
+  stay per format in the API (no backend change): a Cover box on New book (kept in this tab until the first format),
+  after Create the book page opens "Add format" with that cover; a Cover panel on the book page changes the cover of
+  every format that shows the main cover or has none (a format with its own cover keeps it); new formats start with the
+  main cover. `ImageUploadField`: label linked to the file input, drag and drop now works, long addresses no longer widen
+  the page. lint, typecheck, 509 tests (3 new), build. Browser + axe (local API, real PNG upload): 1280 light and 390
+  dark: New book -> upload -> Create -> Add format prefilled -> save; stored URL loads (200); axe 0; no overflow.
+  Note: covers are only kept for good on the live site once R2 is set up (backend DEPLOYMENT.md F6b).
