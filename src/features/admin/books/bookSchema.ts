@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zodConfig";
 import type { BookInput, StaffBook } from "@/api/endpoints/staff";
 import { fromShopInput, shopInputDate, toShopInput } from "@/lib/shopTime";
 

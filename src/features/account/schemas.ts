@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zodConfig";
 import { newPassword } from "@/features/auth/schemas";
 import { msg, type Translations } from "@/i18n";
 
