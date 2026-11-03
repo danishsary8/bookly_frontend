@@ -1283,6 +1283,15 @@ export const en = {
     updating: "Updating…",
     backToHome: "Back to homepage",
   },
+  priceDrop: {
+    title: "Price-drop emails",
+    lead: "Email me when a book on my “Want to read” list gets 5% cheaper or more. At most one email per book a week.",
+    on: "On: we'll email you when a wishlist book gets cheaper.",
+    off: "Off: no price-drop emails.",
+    verifyFirst: "Confirm your email address first to get price-drop emails.",
+    saved: "Price-drop emails turned on.",
+    savedOff: "Price-drop emails turned off.",
+  },
   telegramUpdates: {
     title: "Telegram order updates",
     lead: "Receive real-time notifications directly on Telegram when your books are being packed, shipped, or delivered.",

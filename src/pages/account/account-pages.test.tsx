@@ -76,6 +76,19 @@ describe("ProfilePage", () => {
     app("/account/profile");
     expect(await screen.findByDisplayValue("dara@example.com")).toHaveAttribute("readonly");
   });
+
+  it("shows the price-drop switch only when the API knows the setting", async () => {
+    app("/account/profile");
+    await screen.findByLabelText("Full name");
+    expect(screen.queryByRole("switch", { name: "Price-drop emails" })).not.toBeInTheDocument();
+  });
+
+  it("shows the price-drop switch with the customer's setting", async () => {
+    vi.spyOn(accountApi, "me").mockResolvedValue({ ...customer, price_drop_alerts: true });
+    setSession("customer", { token: "t", expiresAt: null, user: { ...customer, price_drop_alerts: true } });
+    app("/account/profile");
+    expect(await screen.findByRole("switch", { name: "Price-drop emails" })).toBeChecked();
+  });
 });
 
 describe("SecurityPage", () => {

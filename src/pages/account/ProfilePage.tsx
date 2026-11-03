@@ -11,6 +11,7 @@ import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { AccountSection } from "@/features/account/AccountSection";
 import { NewsletterToggle } from "@/features/account/NewsletterToggle";
+import { PriceDropToggle } from "@/features/account/PriceDropToggle";
 import { TelegramOrderUpdatesCard } from "@/features/account/TelegramOrderUpdatesCard";
 import { profileSchema, type ProfileValues } from "@/features/account/schemas";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -110,6 +111,13 @@ function ProfileForm({ customer }: { customer: Customer }) {
       <div className="mt-8 max-w-xl rounded-xl border border-border bg-card p-5 sm:p-6">
         <NewsletterToggle customer={customer} />
       </div>
+
+      {/* Only when the API knows the setting (an older API leaves it out). */}
+      {typeof customer.price_drop_alerts === "boolean" ? (
+        <div className="mt-4 max-w-xl rounded-xl border border-border bg-card p-5 sm:p-6">
+          <PriceDropToggle customer={customer} />
+        </div>
+      ) : null}
 
       <div className="mt-4 max-w-xl rounded-xl border border-border bg-card p-5 sm:p-6">
         <TelegramOrderUpdatesCard customer={customer} />
