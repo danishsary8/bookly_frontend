@@ -138,7 +138,7 @@ Tints on dark: `color-mix(in oklab, <semantic> 16%, var(--card))`.
 --font-display: "Gloock", "Kantumruy Pro", Georgia, serif;
 --font-sans: "Hanken Grotesk", "Kantumruy Pro", system-ui, sans-serif;
 ```
-Google Fonts: `https://fonts.googleapis.com/css2?family=Gloock&family=Hanken+Grotesk:wght@400;500;600;700&family=Kantumruy+Pro:wght@400;600&display=swap`
+Fonts are self-hosted (Fontsource packages, imported in `src/fonts.ts`): Gloock 400, Hanken Grotesk 400/500/600/700, Kantumruy Pro 400/600 (Khmer letters only). All `font-display: swap`, split by unicode-range.
 
 ### Type scale (major third 1.25, base 16px)
 | Token | Size / line-height | Family | Use |
