@@ -51,7 +51,8 @@ const SCRIPTS: Record<Provider, string> = {
   google: "https://accounts.google.com/gsi/client",
   facebook: "https://connect.facebook.net/en_US/sdk.js",
 };
-const FACEBOOK_VERSION = "v21.0";
+// Graph API versions expire about two years after release (v21.0 ends 21 Jan 2027); v25.0 runs until about July 2028.
+const FACEBOOK_VERSION = "v25.0";
 
 const loading: Partial<Record<Provider, Promise<void>>> = {};
 
