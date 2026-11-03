@@ -777,3 +777,12 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   is a larger refactor, not started.
 - Checks: lint, typecheck, 520 tests, build; browser with the real CSP: / and /books/20, en/km, light/dark,
   1280/390: axe 0, no overflow, 0 CSP errors, fonts load from our site.
+
+## 2026-11-03: Price-drop email switch (`feature/price-drop-alerts`)
+
+- Account → Profile: `PriceDropToggle` (Switch, label + description, disabled until the email is confirmed), saved
+  through `updateProfile({ price_drop_alerts })`. Shown only when the API returns the field, so the branch works
+  before the backend deploys. en/km strings in `priceDrop`; API types regenerated.
+- Browser checks also found that E2E already runs on every PR (15 tests, green); the owner chose to leave it.
+- Checks: lint, typecheck, 524 tests (4 new), build; browser: profile page en/km, light/dark, 1280/390, axe 0,
+  no overflow, switch on → toast and saved; full email path checked against the local API.
