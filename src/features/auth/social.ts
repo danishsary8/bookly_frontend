@@ -45,6 +45,12 @@ export const socialIds = () => ({
   facebook: (import.meta.env.VITE_FACEBOOK_APP_ID as string | undefined) || "",
 });
 export const socialEnabled = (provider: Provider) => socialIds()[provider] !== "";
+/**
+ * While the Facebook app is unpublished, only the owner and invited testers can use it (Meta needs business
+ * verification and an own domain to publish). Everyone else gets Facebook's own "app not available" popup, so the
+ * shop says so next to the button and after a failed try. Set VITE_FACEBOOK_PUBLIC=true once the app is published.
+ */
+export const facebookTestersOnly = () => (import.meta.env.VITE_FACEBOOK_PUBLIC as string | undefined) !== "true";
 export const anySocialEnabled = () => socialEnabled("google") || socialEnabled("facebook");
 
 const SCRIPTS: Record<Provider, string> = {

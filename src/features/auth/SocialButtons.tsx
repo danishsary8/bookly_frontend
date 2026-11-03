@@ -5,7 +5,7 @@ import { authApi } from "@/api/endpoints/auth";
 import { ApiError } from "@/api/errors";
 import { FormAlert } from "@/components/form/FormAlert";
 import { cn } from "@/lib/utils";
-import { anySocialEnabled, isReady, prepare, requestToken, SocialCancelled, socialEnabled, type Provider } from "./social";
+import { anySocialEnabled, facebookTestersOnly, isReady, prepare, requestToken, SocialCancelled, socialEnabled, type Provider } from "./social";
 import { openTelegram, useTelegramLink } from "./telegram";
 import { TelegramWait } from "./TelegramWait";
 import { useAfterSignIn } from "./useAfterSignIn";
@@ -151,7 +151,11 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
         afterSignIn(response.customer, next, firstName ? s.welcomeName(firstName) : s.welcome, { verifyBy: response.verify_by });
       })
       .catch((err: unknown) => {
-        if (err instanceof SocialCancelled) return;
+        if (err instanceof SocialCancelled) {
+          // Not on the tester list: Facebook showed its own error and the popup closed without a token.
+          if (provider === "facebook" && facebookTestersOnly()) setError(s.facebookNotFinished);
+          return;
+        }
         const apiError = ApiError.from(err);
         // A new Facebook customer: the API wants their phone number first (owner's rule).
         if (apiError.data.needs === "phone") {
@@ -184,6 +188,7 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
             onClick={() => start(p)}
             disabled={busy !== null}
             aria-busy={busy === p || undefined}
+            aria-describedby={p === "facebook" && facebookTestersOnly() ? "facebook-testing" : undefined}
             className={cn(
               buttonClass,
               "outline-none hover:border-foreground/40 hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-70",
@@ -193,6 +198,11 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
             {s.continueWith(NAMES[p])}
           </button>
         ))}
+        {enabled.includes("facebook") && facebookTestersOnly() ? (
+          <p id="facebook-testing" className="-mt-1 text-center text-xs text-muted-foreground">
+            {s.facebookTesting}
+          </p>
+        ) : null}
         {telegram ? (
           telegramState.phase === "waiting" || telegramState.phase === "done" ? (
             telegramState.phase === "waiting" ? <TelegramWait url={telegramState.link.url} signIn onCancel={telegramLink.cancel} /> : null

@@ -9,7 +9,7 @@ import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Row } from "@/features/account/SecurityRow";
-import { isReady, prepare, requestToken, SocialCancelled, socialEnabled, type Provider } from "@/features/auth/social";
+import { facebookTestersOnly, isReady, prepare, requestToken, SocialCancelled, socialEnabled, type Provider } from "@/features/auth/social";
 import { toast } from "@/stores/toast";
 import { useT } from "@/i18n";
 
@@ -76,7 +76,13 @@ export function SocialConnection({ provider, customer }: { provider: Provider; c
         saved(response.customer, t.nameConnected(name), t.canSignInWith(name));
       })
       .catch((err: unknown) => {
-        if (err instanceof SocialCancelled) return;
+        if (err instanceof SocialCancelled) {
+          if (provider === "facebook" && facebookTestersOnly()) {
+            const message = dict.signin.facebookNotFinished;
+            return dialog ? setError(message) : toast.error({ title: t.couldntConnect(name), description: message });
+          }
+          return;
+        }
         if (err instanceof Error && err.message === "popup_blocked") {
           const message = t.popupBlocked(name);
           return dialog ? setError(message) : toast.error({ title: t.couldntOpen(name), description: message });

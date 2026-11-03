@@ -734,6 +734,8 @@ export const en = {
     orEmail: "or use your email",
     popupBlocked: (name: string) => `Your browser blocked the ${name} window. Allow pop-ups for this site, then try again.`,
     socialSoon: "Google and Facebook sign-in are coming soon.",
+    facebookTesting: "Facebook sign-in is still being tested and only works for invited accounts. Please use email or Telegram.",
+    facebookNotFinished: "Facebook sign-in didn't finish. For now it only works for invited test accounts. Please sign in with email or Telegram instead.",
     socialFailed: (name: string) => `${name} sign-in couldn't load. Check your connection, or allow ${name} if you use an ad or tracker blocker, then try again.`,
     socialLoading: (name: string) => `${name} sign-in is still loading. Try again in a moment.`,
     createAccount: "Create an account",

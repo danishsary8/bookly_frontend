@@ -125,6 +125,33 @@ describe("social sign-in", () => {
     await waitFor(() => expect(post).toHaveBeenCalledWith("/auth/social/facebook", { access_token: "fb-token" }));
   });
 
+  it("while the Facebook app is for testers only, says so by the button and when the sign-in doesn't finish", async () => {
+    vi.stubEnv("VITE_FACEBOOK_APP_ID", "app-1");
+    // Someone not on the tester list: Facebook shows its own error, the popup closes without a token.
+    window.FB = { init: vi.fn(), login: vi.fn((cb: (r: { status: string }) => void) => cb({ status: "unknown" })) };
+    const post = vi.spyOn(api, "post");
+    app();
+
+    const button = screen.getByRole("button", { name: "Continue with Facebook" });
+    expect(button).toHaveAccessibleDescription(/only works for invited accounts/);
+    await userEvent.click(button);
+    expect(await screen.findByText(/Facebook sign-in didn't finish/)).toBeInTheDocument();
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("shows no testing note once the Facebook app is published", async () => {
+    vi.stubEnv("VITE_FACEBOOK_APP_ID", "app-1");
+    vi.stubEnv("VITE_FACEBOOK_PUBLIC", "true");
+    window.FB = { init: vi.fn(), login: vi.fn((cb: (r: { status: string }) => void) => cb({ status: "unknown" })) };
+    app();
+
+    const button = screen.getByRole("button", { name: "Continue with Facebook" });
+    expect(button).not.toHaveAccessibleDescription();
+    expect(screen.queryByText(/only works for invited accounts/)).not.toBeInTheDocument();
+    await userEvent.click(button);
+    expect(screen.queryByText(/didn't finish/)).not.toBeInTheDocument(); // a closed popup stays quiet, as before
+  });
+
   it("loads Google's script as a plain script (it has no CORS headers) and asks to try again while it loads", async () => {
     vi.stubEnv("VITE_GOOGLE_CLIENT_ID", "client-1");
     app();
