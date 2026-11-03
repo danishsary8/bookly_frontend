@@ -23,6 +23,14 @@ export default defineConfig([
       // Only affects hot reload during development; shadcn-style files export variants next to components.
       // Shared helpers that live next to their component on purpose (shadcn style); a hot reload of these files is fine.
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true, allowExportNames: ['buttonVariants', 'badgeVariants', 'controlClassName', 'useTheme'] }],
+      // Keep the first-load file small (see docs/WORKLOG.md, 2026-11-03).
+      'no-restricted-imports': ['error', {
+        paths: [{ name: 'zod', message: 'Import { z } from "@/lib/zodConfig" (sets jitless before any schema, keeps Zod out of the first load).' }],
+      }],
     },
+  },
+  {
+    files: ['src/lib/zodConfig.ts'],
+    rules: { 'no-restricted-imports': 'off' },
   },
 ])
