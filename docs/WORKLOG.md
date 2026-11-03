@@ -811,3 +811,10 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   ~Jul 2028). lint, typecheck, 526 tests, build. Browser with a test app ID: "Continue with Facebook" shows (en/km),
   click requests connect.facebook.net SDK, axe 0. Real login not testable here (Facebook blocked by the sandbox).
   Owner setup guide in the backend notes (OWNER_TODO → Facebook sign-in setup).
+
+## 2026-11-03: Facebook testers-only note (`feature/facebook-testing-note`)
+
+- Facebook app is unpublished (Meta business verification refuses vercel.app). `facebookTestersOnly()` (on unless
+  `VITE_FACEBOOK_PUBLIC=true`): note under the button (aria-describedby) and an alert when FB.login returns no
+  token (sign-in page; toast/dialog in Account → connect). en/km. 2 tests (528 pass), lint, typecheck, build.
+  Browser with a stubbed non-tester FB: note + alert in en/km, light/dark, 1280/390, axe 0, no overflow.
