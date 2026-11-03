@@ -255,6 +255,20 @@ describe("BookDetailPage", () => {
       await waitFor(() => expect(similarShelf()).not.toBeInTheDocument());
     });
 
+    it("keeps the shelves out of sight until the book arrives, but already asks for the list", async () => {
+      let finish: (book: BookDetail) => void = () => {};
+      vi.spyOn(catalogApi, "book").mockReturnValue(new Promise<BookDetail>((resolve) => (finish = resolve)));
+      const related = vi.spyOn(catalogApi, "related").mockResolvedValue([card(11, "Persuasion"), card(12, "Emma")]);
+      renderDetail();
+      await waitFor(() => expect(related).toHaveBeenCalledWith(7, 12));
+      // Nothing from the lower shelves sits on the empty page (it would jump down when the book shows).
+      expect(screen.getByText("Loading you may also like…")).not.toBeVisible();
+      expect(similarShelf()).not.toBeInTheDocument();
+      finish({ ...detail, authors: [] });
+      const shelf = await screen.findByRole("region", { name: "You may also like" });
+      expect(within(shelf).getByRole("link", { name: "Emma" })).toBeInTheDocument();
+    });
+
     it("shows what there is when the API returns fewer than 12, in the API's order", async () => {
       setup([card(12, "Emma"), card(11, "Persuasion"), card(13, "Sanditon")], { ...detail, authors: [] });
       renderDetail();

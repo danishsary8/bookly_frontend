@@ -566,7 +566,9 @@ export default function BookDetailPage() {
         </Tabs>
       ) : null}
 
-      <div className="mt-20 grid gap-16">
+      {/* The shelves below stay mounted (their lists load alongside the book) but hidden until the book is shown:
+          otherwise their skeletons sit at the top of the empty page and jump down when the book arrives. */}
+      <div className="mt-20 grid gap-16" hidden={!book}>
         {book?.series && otherInSeries.length ? (
           <BookShelf id="series" eyebrow={b.theSeries} title={book.series.name ?? b.inThisSeries} books={otherInSeries} seeAllHref={`/series/${book.series.id}`} seeAllLabel={b.wholeSeries} />
         ) : null}

@@ -36,8 +36,13 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       sourcemap: uploadSourceMaps ? "hidden" : false,
+      // Never inline font files into the CSS: every page would download all of them, even subsets it never shows.
+      assetsInlineLimit: (file: string) => (/\.woff2?$/.test(file) ? false : undefined),
       rollupOptions: {
         output: {
+          // Merge chunks under ~2 kB (single icons, small helpers) into the chunks that load with them, so a page
+          // needs a few requests instead of dozens of tiny ones.
+          experimentalMinChunkSize: 2_000,
           // Libraries every page needs, in their own long-cached files; app code changes don't invalidate them.
           // Motion stays out: its animation features load lazily (LazyMotion in App.tsx).
           manualChunks(id) {
