@@ -757,3 +757,23 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
 - Fix: `BlurText` reduced-motion branch rendered plain text, so Khmer line breaking split ទូទាំង at 320/390 px.
   It now uses the same nowrap word spans as the animated branch (sr-only full text). New `BlurText.test.tsx`;
   browser-checked reduce and no-preference at 320/390/1280, en/km: same lines, no overflow, axe 0. 519 tests, build ok.
+
+## 2026-11-03: Speed check (`perf/speed-check`)
+
+- Measured with Lighthouse 12 (mobile, simulated slow 4G + 4x CPU), local preview build + local API, median of 3.
+  Before → after: home 74 → 76 (LCP 4.3 → 4.1 s), /books 71 → 69 (noise, same work), book page 64 → 71
+  (LCP 6.0 → 4.9 s, CLS 0 → 0.001; a mid-change build showed CLS 0.54, fixed below). Local numbers have
+  no compression and no Render wake-up, so the live site's scores differ; compare like with like.
+- Fonts self-hosted with Fontsource (owner choice): `src/fonts.ts`, Kantumruy Pro only the Khmer subset, no
+  font inlined (`assetsInlineLimit`), CSP without Google Fonts. No external request other than covers.
+- `experimentalMinChunkSize: 2_000`: 223 → 184 JS files. 10 kB was tried and rejected: it pulled staff code
+  (staffOps, autoRefresh) into the main file. First load stays 236 KB gzip (was 235).
+- Book page: lower shelves are `hidden` until the book arrives (their skeletons sat at the top of the empty
+  page). New test fails without the fix.
+- Tried and dropped: `content-visibility: auto` on home sections (paint halved, score unchanged, and "Back"
+  could restore to the wrong place because heights are guesses); loading the Khmer dictionary on demand
+  (~12 KB gzip less for English, but an extra round trip for Khmer visitors).
+- Bigger remaining cost: main JS (~118 KB gzip: tailwind-merge, motion, both dictionaries, Radix). Shrinking it
+  is a larger refactor, not started.
+- Checks: lint, typecheck, 520 tests, build; browser with the real CSP: / and /books/20, en/km, light/dark,
+  1280/390: axe 0, no overflow, 0 CSP errors, fonts load from our site.
