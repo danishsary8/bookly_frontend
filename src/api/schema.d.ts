@@ -145,7 +145,9 @@ export interface paths {
         /**
          * One-click demo sign-in: a 2-hour customer token for the shared demo account (10 per hour per IP)
          * @description Used by the **Sign in as demo customer** button on this page. No password needed and no way to choose the account:
-         *     it only ever signs in `demo@bookly.test`. The demo account can't change its password, email or linked logins and is tidied every hour.
+         *     it only ever signs in `demo@bookly.test`. The demo account can't change its password, email or linked logins, write reviews or
+         *     connect Telegram order updates. Every hour it is tidied: name and password restored, cart emptied, visitor addresses removed
+         *     (only its sample address stays), Telegram unlinked, and pending orders older than an hour cancelled.
          *     Real sign-ins use `POST /auth/login` (with the bot check when enabled).
          */
         post: {
@@ -563,7 +565,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description No delivered order contains this book */
+                /** @description No delivered order contains this book, or the shared demo account (reviews show on the public shop at once) */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -1546,6 +1548,13 @@ export interface paths {
                     content?: never;
                 };
                 401: components["responses"]["Unauthorized"];
+                /** @description The shared demo account (a visitor's chat would get every other visitor's order updates) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description The bot is off */
                 503: {
                     headers: {
@@ -1930,7 +1939,7 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        /** Update name, phone, or locale (en|km) */
+        /** Update name, phone, locale (en|km), Telegram order updates or price-drop emails */
         patch: {
             parameters: {
                 query?: never;
@@ -1938,15 +1947,31 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        name?: string;
+                        phone?: string | null;
+                        /** @enum {string} */
+                        locale?: "en" | "km";
+                        telegram_order_updates?: boolean;
+                        price_drop_alerts?: boolean;
+                    };
+                };
+            };
             responses: {
                 /** @description Updated */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Customer"];
+                        };
+                    };
                 };
+                422: components["responses"]["Validation"];
             };
         };
         trace?: never;
@@ -3218,7 +3243,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** KHQR payment page: QR codes, time left and status. Each call also checks Bakong (bakong mode, at most every 3 s) and cancels the order when the time is over; 40/min */
+        /** KHQR payment page: QR codes, time left and status. Each call also checks Bakong (bakong mode, at most every 3 s) and cancels the order when the time is over; 60/min (own counter) */
         get: {
             parameters: {
                 query?: never;
@@ -3728,6 +3753,13 @@ export interface paths {
             requestBody?: never;
             responses: {
                 204: components["responses"]["NoContent"];
+                /** @description The shared demo account */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
         };
         options?: never;
@@ -3746,6 +3778,13 @@ export interface paths {
             responses: {
                 /** @description Updated */
                 200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description The shared demo account */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -8632,6 +8671,8 @@ export interface components {
             telegram_connected?: boolean;
             /** @description True if customer has enabled real-time order notifications on Telegram */
             telegram_order_updates?: boolean;
+            /** @description Email me when a book on my "Want to read" wishlist drops 5% or more (at most one email per book per week). Off by default. */
+            price_drop_alerts?: boolean;
             connected?: {
                 google?: boolean;
                 facebook?: boolean;

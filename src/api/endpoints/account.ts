@@ -37,7 +37,7 @@ export const accountApi = {
   me: () => api.get<Resource<Customer>>("/me").then((r) => r.data),
   /** "Download my data": everything the account shows, as one JSON object (5 per hour). */
   exportData: () => api.get<Record<string, unknown>>("/me/export"),
-  updateProfile: async (input: { name?: string; phone?: string | null; locale?: "en" | "km"; telegram_order_updates?: boolean }) => {
+  updateProfile: async (input: { name?: string; phone?: string | null; locale?: "en" | "km"; telegram_order_updates?: boolean; price_drop_alerts?: boolean }) => {
     const customer = (await api.patch<Resource<Customer>>("/me", input)).data;
     updateSessionUser("customer", customer);
     return customer;
