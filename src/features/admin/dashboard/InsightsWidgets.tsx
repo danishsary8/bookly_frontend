@@ -43,8 +43,8 @@ export function InsightsWidgets({ data }: { data: DashboardInsights }) {
   ];
 
   return (
-    <div className="grid gap-6">
-      <div className="grid gap-4 sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Tile label="Stock value" value={formatUsd(data.stock_value.value_usd)} khr={data.stock_value.value_khr} detail={`${count(data.stock_value.copies)} printed copies · at selling price`} />
         <Tile label={`Dead stock (no sale in ${dead.days} days)`} value={formatUsd(dead.value_usd)} khr={dead.value_khr} detail={`${count(dead.copies)} copies of ${count(dead.variants)} ${dead.variants === 1 ? "format" : "formats"}`} />
         <Tile
@@ -54,7 +54,7 @@ export function InsightsWidgets({ data }: { data: DashboardInsights }) {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Panel
           id="dead-stock"
           title="Slow movers"

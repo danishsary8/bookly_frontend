@@ -98,15 +98,15 @@ export default function DashboardPage() {
       ) : !s ? (
         <SkeletonGroup label="Loading dashboard…" className="grid gap-4">
           <Skeleton className="h-32 rounded-xl" />
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Skeleton className="h-24 rounded-xl" />
             <Skeleton className="h-24 rounded-xl" />
             <Skeleton className="h-24 rounded-xl" />
           </div>
         </SkeletonGroup>
       ) : (
-        <div className={cn("grid gap-6", summary.isPlaceholderData && "opacity-60 transition-opacity")}>
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)]">
+        <div className={cn("grid grid-cols-1 gap-6", summary.isPlaceholderData && "opacity-60 transition-opacity")}>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)]">
             <Kpi
               hero
               id="net-revenue"
@@ -118,7 +118,7 @@ export default function DashboardPage() {
               trend={series(trend, (d) => Number(d.net_revenue_usd))}
               view={{ to: "/admin/reports", label: "View sales report" }}
             />
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Kpi
                 id="orders-placed"
                 label="Orders placed"
@@ -165,7 +165,7 @@ export default function DashboardPage() {
             </Panel>
           )}
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Panel id="best-sellers" title="Best sellers">
               {s.best_sellers.length === 0 ? (
                 <p className="text-[15px] text-muted-foreground">No delivered sales in this period yet.</p>
@@ -232,7 +232,7 @@ export default function DashboardPage() {
             </Panel>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Panel
               id="order-mix"
               title="Orders placed by status"

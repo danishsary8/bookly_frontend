@@ -106,9 +106,16 @@ export function ListTabs<T extends string>({
   );
 }
 
-export function TableCard({ children, stale, minWidth = 720 }: { children: ReactNode; stale?: boolean; minWidth?: number }) {
+/**
+ * A table in a card that scrolls sideways on small screens. Pass `label` when the table has no link or button
+ * inside: keyboard users can then focus the card to scroll it (WCAG 2.1.1, axe "scrollable-region-focusable").
+ */
+export function TableCard({ children, stale, minWidth = 720, label }: { children: ReactNode; stale?: boolean; minWidth?: number; label?: string }) {
   return (
-    <div className={cn("relative overflow-x-auto rounded-xl border border-border bg-card", stale && "opacity-60 transition-opacity")}>
+    <div
+      className={cn("relative overflow-x-auto rounded-xl border border-border bg-card outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background", stale && "opacity-60 transition-opacity")}
+      {...(label ? { role: "region", "aria-label": label, tabIndex: 0 } : {})}
+    >
       <table className="w-full text-left text-[15px]" style={{ minWidth }}>
         {children}
       </table>

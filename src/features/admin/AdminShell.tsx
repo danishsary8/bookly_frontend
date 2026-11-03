@@ -23,7 +23,7 @@ function Wordmark() {
   return (
     <Link to="/admin" className="flex items-center gap-2.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring">
       <span className="font-display text-[1.6rem] leading-none text-primary">Bookly</span>
-      <span className="rounded-[4px] border border-border px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Staff</span>
+      <span className="rounded-[4px] border max-[359px]:sr-only border-border px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Staff</span>
     </Link>
   );
 }
@@ -153,7 +153,7 @@ export function AdminShell() {
       </aside>
 
       <div className="flex min-w-0 flex-col">
-        <header className="sticky top-0 z-(--z-header) flex h-16 items-center gap-2 border-b border-border bg-card/95 px-4 backdrop-blur-sm sm:px-6">
+        <header className="sticky top-0 z-(--z-header) flex h-16 items-center gap-1 border-b border-border bg-card/95 px-3 backdrop-blur-sm sm:gap-2 sm:px-6">
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMenuOpen(true)} aria-label="Open menu" aria-expanded={menuOpen}>
             <Menu aria-hidden="true" />
           </Button>

@@ -43,7 +43,7 @@ export function BookCoverPanel({ book }: { book: StaffBook }) {
   };
 
   return (
-    <section aria-labelledby="book-cover" className="grid content-start gap-4 rounded-xl border border-border bg-card p-5">
+    <section aria-labelledby="book-cover" className="grid grid-cols-1 content-start gap-4 rounded-xl border border-border bg-card p-5">
       <h2 id="book-cover" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
         Cover
       </h2>

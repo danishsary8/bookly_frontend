@@ -76,7 +76,7 @@ function ExportDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
             <DialogDescription>A CSV of every order placed in these days (Phnom Penh time), up to a year at a time.</DialogDescription>
           </DialogHeader>
           {error ? <FormAlert title={error} /> : null}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TextField label="From" type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
             <TextField label="To" type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} />
           </div>

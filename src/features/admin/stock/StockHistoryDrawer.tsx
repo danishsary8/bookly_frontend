@@ -105,7 +105,7 @@ export function StockHistoryDrawer({
             </p>
           ) : (
             <div className="grid gap-4">
-              <div className="overflow-x-auto rounded-lg border border-border">
+              <div role="region" aria-label="Stock movements" tabIndex={0} className="overflow-x-auto rounded-lg border border-border outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                 <table className="w-full text-left text-sm">
                   <thead className="border-b border-border bg-muted/50 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <tr>

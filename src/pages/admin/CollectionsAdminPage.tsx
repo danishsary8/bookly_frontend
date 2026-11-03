@@ -362,7 +362,7 @@ function CollectionDialog({
             </DialogDescription>
           </DialogHeader>
           {errors.form ? <FormAlert title={errors.form} /> : null}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TextField
               label="Title (English)"
               value={v.title_en}
@@ -400,7 +400,7 @@ function CollectionDialog({
               maxLength={300}
             />
           </div>
-          <div className="grid gap-4 sm:grid-cols-[1fr_11rem]">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_11rem]">
             <TextField
               label="Web address"
               optional={!collection}
@@ -424,7 +424,7 @@ function CollectionDialog({
               error={errors.position}
             />
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TextField
               label="Starts"
               optional

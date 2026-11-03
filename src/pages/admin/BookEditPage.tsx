@@ -77,7 +77,7 @@ function Panel({
   return (
     <section
       aria-labelledby={id}
-      className="grid content-start gap-4 rounded-xl border border-border bg-card p-5"
+      className="grid grid-cols-1 content-start gap-4 rounded-xl border border-border bg-card p-5"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2
@@ -295,7 +295,7 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
           </fieldset>
         )}
       />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <SelectField
           label="Publisher"
           optional
