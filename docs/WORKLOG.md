@@ -804,3 +804,10 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
 - Admin → Reports: "Excel, all reports" next to Export CSV (`reportsApi.excel`, blob download
   `bookly-report-{from}-to-{to}.xlsx`); 404 → "not available yet" toast. 2 tests; 526 pass; build ok; browser
   download checked and file opened; axe 0 at 1280/390 light/dark.
+
+## 2026-11-03: Facebook SDK version (`fix/facebook-sdk-version`)
+
+- `FACEBOOK_VERSION` v21.0 → v25.0 (Meta changelog: v21.0 expires 21 Jan 2027; v25.0 released Feb 2026, available to
+  ~Jul 2028). lint, typecheck, 526 tests, build. Browser with a test app ID: "Continue with Facebook" shows (en/km),
+  click requests connect.facebook.net SDK, axe 0. Real login not testable here (Facebook blocked by the sandbox).
+  Owner setup guide in the backend notes (OWNER_TODO → Facebook sign-in setup).
