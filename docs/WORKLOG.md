@@ -786,3 +786,15 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
 - Browser checks also found that E2E already runs on every PR (15 tests, green); the owner chose to leave it.
 - Checks: lint, typecheck, 524 tests (4 new), build; browser: profile page en/km, light/dark, 1280/390, axe 0,
   no overflow, switch on → toast and saved; full email path checked against the local API.
+
+## 2026-11-03: Smaller main file (`perf/smaller-main-file`)
+
+- Measured first-load gzip on the built site (my earlier "118 KB" was a different measuring method; same method
+  before/after now): main file 105 → 101 KB, first load 236 → 233 KB.
+- Zod: `z.config({ jitless })` lived in main.tsx and pulled Zod core into the main file. Schema files now import
+  `z` from `@/lib/zodConfig`; lint rule `no-restricted-imports` blocks direct "zod" imports.
+- Tried and reverted: `motion/react-m` namespace import (+2 KB: it imports every element eagerly).
+- Asked and kept (owner): Khmer dictionary stays in the main file (26 KB gzip; lazy loading would cost Khmer
+  visitors a round trip). Other big parts: tailwind-merge ~9.5 KB, Radix header switches, motion core.
+- Checks: lint, typecheck, 524 tests, build; browser with the real CSP: /login, /register, /admin/books/new show
+  validation (en/km, 1280/390), 0 CSP errors, axe 0, home loads no Zod.
