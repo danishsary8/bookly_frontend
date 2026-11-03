@@ -117,11 +117,20 @@ const BlurText: React.FC<BlurTextProps> = ({
   const totalDuration = stepDuration * (stepCount - 1);
   const times = Array.from({ length: stepCount }, (_, i) => (stepCount === 1 ? 0 : i / (stepCount - 1)));
 
-  // Reduced motion: static text, no blur, no movement.
+  // Reduced motion: static text, no blur, no movement. Words still stay whole, like the animated
+  // version: plain Khmer text would let the browser's dictionary break a word (e.g. ទូទាំង) at a line end.
   if (reduceMotion) {
     return (
       <Tag ref={ref as React.RefObject<HTMLParagraphElement & HTMLSpanElement & HTMLDivElement>} className={`blur-text ${className}`}>
-        {text}
+        <span className="sr-only">{text}</span>
+        <span aria-hidden="true">
+          {words.map((word, wordIndex) => (
+            <span key={`w-${wordIndex}`}>
+              <span style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>{word}</span>
+              {wordIndex < words.length - 1 && ' '}
+            </span>
+          ))}
+        </span>
       </Tag>
     );
   }
