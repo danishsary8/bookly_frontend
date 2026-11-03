@@ -747,3 +747,13 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   no focusable content a focusable named region (sign-in history, active sessions, exchange rates, stock movements).
 - After: 0 overflow and axe 0 on all checked pages at 320/390/1280; lint, typecheck, 518 tests, build pass.
 - Not bugs: picsum images blocked by the sandbox proxy; 429s only when two runs shared one staff token (120/min/user).
+
+## 2026-11-03: README refresh (`docs/readme-refresh`) and Khmer title fix (`fix/khmer-hero-wrap`)
+
+- README: new screenshots (home, book, collection, KHQR pay, admin dashboard dark, phone Khmer dark/light, admin
+  phone), current features, a two-minute tour, quality section, stack table with reasons, architecture diagram.
+  Every claim checked against the code (no demo button on the site, so the tour uses email or Telegram sign-in).
+  Backend README updated the same day (KHQR, offers, collections, Telegram, 761 tests, 39 tables).
+- Fix: `BlurText` reduced-motion branch rendered plain text, so Khmer line breaking split ទូទាំង at 320/390 px.
+  It now uses the same nowrap word spans as the animated branch (sr-only full text). New `BlurText.test.tsx`;
+  browser-checked reduce and no-preference at 320/390/1280, en/km: same lines, no overflow, axe 0. 519 tests, build ok.
