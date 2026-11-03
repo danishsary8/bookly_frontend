@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowDown, Download } from "lucide-react";
+import { AlertTriangle, ArrowDown, Download, FileSpreadsheet } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { reportQueries, reportsApi, type ReportGroup, type ReportName, type ReportRange } from "@/api/endpoints/reports";
 import { ApiError } from "@/api/errors";
@@ -603,6 +603,7 @@ export default function ReportsPage() {
   const days = rangeDays(range);
   const [picking, setPicking] = useState(range.period === "custom");
   const [exporting, setExporting] = useState(false);
+  const [exportingExcel, setExportingExcel] = useState(false);
   const active = picking ? "custom" : range.period;
   const tabParam = params.get("tab");
   const tab: ReportName = isTab(tabParam) ? tabParam : "sales";
@@ -635,6 +636,27 @@ export default function ReportsPage() {
     }
   };
 
+  /** One .xlsx with every report (all tabs) for the chosen dates. */
+  const exportExcel = async () => {
+    setExportingExcel(true);
+    try {
+      const blob = await reportsApi.excel(days);
+      const url = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement("a"), { href: url, download: `bookly-report-${days.from}-to-${days.to}.xlsx` });
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      const missing = ApiError.from(error).kind === "not_found";
+      toast.error(
+        missing
+          ? { title: "Excel download isn't available yet", description: "The API hasn't been updated. Try again after it deploys." }
+          : { title: "The Excel file couldn't be downloaded", description: "Try again in a moment." },
+      );
+    } finally {
+      setExportingExcel(false);
+    }
+  };
+
   return (
     <AdminPage
       title="Reports"
@@ -652,6 +674,9 @@ export default function ReportsPage() {
             />
             <Button variant="outline" onClick={() => void exportCsv()} loading={exporting}>
               <Download aria-hidden="true" /> Export CSV
+            </Button>
+            <Button variant="outline" onClick={() => void exportExcel()} loading={exportingExcel}>
+              <FileSpreadsheet aria-hidden="true" /> Excel, all reports
             </Button>
           </div>
           {picking ? <CustomRange range={range} shown={days} onApply={(from, to) => update(rangeToParams({ period: "custom", from, to }), "tab")} /> : null}

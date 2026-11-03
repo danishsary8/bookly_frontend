@@ -146,6 +146,8 @@ type Params = ReportRange & { group?: ReportGroup };
 export const reportsApi = {
   get: <N extends ReportName>(name: N, params: Params) => api.get<{ data: Reports[N] }>(`/staff/reports/${name}`, { params }).then((r) => r.data),
   /** The same report as a CSV file (UTF-8 with BOM, so Excel shows Khmer names). */
+  /** Every report for the dates in one .xlsx (admin). */
+  excel: (params: Params) => api.get<Blob>("/staff/reports/export", { params: { from: params.from, to: params.to }, responseType: "blob" }),
   csv: (name: ReportName, params: Params) => api.get<Blob>(`/staff/reports/${name}`, { params: { ...params, format: "csv" }, responseType: "blob" }),
 };
 

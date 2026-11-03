@@ -10,6 +10,7 @@ import { navFor } from "@/features/admin/adminNav";
 import { rangeDays } from "@/features/admin/dashboardRange";
 import { RequireStaff } from "@/routes/adminGuards";
 import { renderWithProviders } from "@/test/render";
+import { toast } from "@/stores/toast";
 import ReportsPage from "./ReportsPage";
 
 const admin: StaffUser = { id: 1, name: "Demo Admin", email: "admin@bookly.test", role: "admin", two_factor_enabled: true };
@@ -135,6 +136,35 @@ describe("reports page", () => {
     await userEvent.click(screen.getByRole("button", { name: "Export CSV" }));
     await waitFor(() => expect(csv).toHaveBeenCalledWith("coupons", { from: "2026-09-01", to: "2026-09-30" }));
     expect(click).toHaveBeenCalled();
+  });
+
+  it("downloads every report as one Excel file for the same days", async () => {
+    setSession("staff", { token: "t", expiresAt: null, user: admin });
+    stubReports();
+    const excel = vi.spyOn(reportsApi, "excel").mockResolvedValue(new Blob(["xlsx"]));
+    URL.createObjectURL = vi.fn(() => "blob:report");
+    URL.revokeObjectURL = vi.fn();
+    const anchors: HTMLAnchorElement[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
+      anchors.push(this);
+    });
+    open("/admin/reports?tab=coupons&period=custom&from=2026-09-01&to=2026-09-30");
+
+    await screen.findByText("WELCOME10");
+    await userEvent.click(screen.getByRole("button", { name: "Excel, all reports" }));
+    await waitFor(() => expect(excel).toHaveBeenCalledWith({ from: "2026-09-01", to: "2026-09-30" }));
+    expect(anchors[0]?.download).toBe("bookly-report-2026-09-01-to-2026-09-30.xlsx");
+  });
+
+  it("says the Excel download isn't available yet on an older API", async () => {
+    setSession("staff", { token: "t", expiresAt: null, user: admin });
+    stubReports();
+    vi.spyOn(reportsApi, "excel").mockRejectedValue(new ApiError({ kind: "not_found", status: 404, message: "Not found." }));
+    const error = vi.spyOn(toast, "error");
+    open("/admin/reports?period=7d");
+
+    await userEvent.click(await screen.findByRole("button", { name: "Excel, all reports" }));
+    await waitFor(() => expect(error).toHaveBeenCalledWith(expect.objectContaining({ title: "Excel download isn't available yet" })));
   });
 
   it("shows what each offer sold next to orders without an offer, and exports it", async () => {
