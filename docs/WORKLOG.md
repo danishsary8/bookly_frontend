@@ -798,3 +798,9 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   visitors a round trip). Other big parts: tailwind-merge ~9.5 KB, Radix header switches, motion core.
 - Checks: lint, typecheck, 524 tests, build; browser with the real CSP: /login, /register, /admin/books/new show
   validation (en/km, 1280/390), 0 CSP errors, axe 0, home loads no Zod.
+
+## 2026-11-03: Excel report button (`feature/excel-sales-export`)
+
+- Admin → Reports: "Excel, all reports" next to Export CSV (`reportsApi.excel`, blob download
+  `bookly-report-{from}-to-{to}.xlsx`); 404 → "not available yet" toast. 2 tests; 526 pass; build ok; browser
+  download checked and file opened; axe 0 at 1280/390 light/dark.
