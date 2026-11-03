@@ -117,6 +117,7 @@ npm run dev               # http://localhost:5173
 | `VITE_SITE_URL` | The site's public address, used at build time for `sitemap.xml`, `robots.txt` and share links. Leave empty locally. |
 | `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile bot check on sign-up, sign-in and forms that send a code. Off when empty. |
 | `VITE_GOOGLE_CLIENT_ID`, `VITE_FACEBOOK_APP_ID` | Turn on "Continue with Google / Facebook" (the API needs the matching keys). |
+| `VITE_FACEBOOK_PUBLIC` | `true` once the Facebook app is published. Until then the shop notes that Facebook sign-in only works for invited test accounts. |
 
 The local API only accepts the website from `http://localhost:5173` (its `CORS_ALLOWED_ORIGINS`), so keep that port.
 
