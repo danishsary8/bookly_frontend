@@ -4,6 +4,7 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import { Toaster } from './components/ui/toaster'
 import { SessionWatcher } from './features/auth/SessionWatcher'
 import { StagingBanner } from './components/StagingBanner'
+import { VisitorAnalytics } from './components/VisitorAnalytics'
 
 const loadMotionFeatures = () => import('./lib/motionFeatures').then((mod) => mod.default)
 
@@ -15,6 +16,7 @@ function App() {
         <AppRoutes />
         <SessionWatcher />
         <Toaster />
+        <VisitorAnalytics />
       </ThemeProvider>
     </LazyMotion>
   )
