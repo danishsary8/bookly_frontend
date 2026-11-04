@@ -8,6 +8,7 @@ import { loginSchema } from "@/features/auth/schemas";
 import { orderDate } from "@/features/orders/format";
 import { EnglishOnly, LOCALES, en, formatName, km, rangeText, setLanguage, useT } from "./index";
 import { Rich } from "./Rich";
+import kmSource from "./km.ts?raw";
 
 function withProviders(ui: React.ReactElement) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -73,15 +74,39 @@ describe("Khmer storefront", () => {
     // Names and codes that stay the same in Khmer.
     const same = /^(Telegram|Facebook|ISBN|Bakong KHQR|English|ភាសាខ្មែរ|Visa, Mastercard.*|.*\bDELETE\b.*|.*\bORD-.*)$/;
     const leftovers: string[] = [];
+    // Groups waiting for Antigravity's translation (marked in km.ts); everything else must be Khmer.
+    const pending = (path: string) => pendingKhmerGroups().some((group) => path === `km.${group}` || path.startsWith(`km.${group}.`));
     const visit = (a: unknown, b: unknown, path: string) => {
       if (typeof a === "function" && typeof b === "function") return visit(a("7", "8", "X", "Y"), b("7", "8", "X", "Y"), path);
       if (typeof a === "string") {
-        if (a === b && /[a-z]{3,}/.test(a) && !same.test(a)) leftovers.push(`${path}: ${a}`);
+        if (a === b && /[a-z]{3,}/.test(a) && !same.test(a) && !pending(path)) leftovers.push(`${path}: ${a}`);
         return;
       }
       if (a && typeof a === "object") for (const key of Object.keys(a)) visit((a as never)[key], (b as never)?.[key], `${path}.${key}`);
     };
     visit(en, km, "km");
     expect(leftovers).toEqual([]);
+  });
+});
+
+/**
+ * Owner 2026-11-04: Antigravity does all Khmer translation. A new group ships with English text in km.ts, marked by a
+ * `// TODO(antigravity)` line right above it; the "no English left" test skips only those groups. Remove the marker
+ * when the group is translated, so the test guards it again.
+ */
+function pendingKhmerGroups(): string[] {
+  const lines = kmSource.split("\n");
+  return lines.flatMap((line, i) => (line.includes("TODO(antigravity)") ? [/^\s*(\w+):\s*\{/.exec(lines[i + 1] ?? "")?.[1] ?? ""] : [])).filter(Boolean);
+}
+
+describe("Khmer translations waiting for Antigravity", () => {
+  it("marks only groups that exist and still hold English", () => {
+    const groups = pendingKhmerGroups();
+    for (const group of groups) {
+      const kmGroup = (km as Record<string, unknown>)[group];
+      expect(kmGroup, `km.${group} exists`).toBeDefined();
+      // Once Antigravity has translated a group, the marker must go so the main test checks it again.
+      expect(JSON.stringify(kmGroup), `km.${group} is translated: remove its TODO(antigravity) line`).toBe(JSON.stringify((en as Record<string, unknown>)[group]));
+    }
   });
 });

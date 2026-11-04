@@ -566,6 +566,23 @@ export const km: Translations = {
     keepIt: "រក្សាទុកវា",
     disconnectName: (name: string) => `ផ្តាច់ ${name}`,
   },
+  // TODO(antigravity): translate to Khmer (owner 2026-11-04: Antigravity does all Khmer translation). English for now.
+  sessions: {
+    title: "Where you're signed in",
+    lead: "Every device with a sign-in to this account. Sign out any you don't recognise, then change your password.",
+    thisDevice: "This device",
+    unknownDevice: "Earlier sign-in (device not recorded)",
+    lastUsed: (when: string) => `Last used ${when}`,
+    signedIn: (when: string) => `Signed in ${when}`,
+    signOut: "Sign out",
+    signOutDevice: (device: string) => `Sign out ${device}`,
+    signOutOthers: "Sign out of all other devices",
+    onlyThis: "Only this device is signed in.",
+    signedOutOne: "Signed out of that device.",
+    signedOutOthers: (n: number) => (n === 1 ? "Signed out of 1 other device." : `Signed out of ${n} other devices.`),
+    loadFailed: "We couldn't load your devices.",
+    failed: "That didn't work. Please try again.",
+  },
   downloadData: {
     title: "ទាញយកទិន្នន័យរបស់ខ្ញុំ",
     lead: "ទទួលបានច្បាប់ចម្លងនៃអ្វីៗទាំងអស់ដែលគណនីរបស់អ្នកមាន៖ ប្រវត្តិរូប អាសយដ្ឋាន ការបញ្ជាទិញ ការប្តូរត្រឡប់ ការវាយតម្លៃ និងបញ្ជីប្រាថ្នា ជាឯកសារតែមួយ។",
