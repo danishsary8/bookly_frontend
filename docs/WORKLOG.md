@@ -853,6 +853,6 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
 - `DeliveryAddressCard` (customer + admin order pages) shows "Open in Google Maps" (plain link, no key).
 - vercel.json CSP: maps.googleapis.com / maps.gstatic.com scripts + connect, Google Fonts, frame www.google.com,
   worker-src blob:. Schema types regenerated from the backend branch. km `mapPin` = English, TODO(antigravity).
-- Checks: lint (0 errors), typecheck, 548 tests (5 new), build OK. Browser (stubbed Maps script, real CSP): pick → save
+- Checks: lint (0 errors), typecheck, 543 tests (5 new), build OK. Browser (stubbed Maps script, real CSP): pick → save
   → API has lat/lng; en light 1280 + km dark 390: axe 0, no overflow, 0 CSP errors; script not loaded before the
   picker opens; order + admin order pages show the link, axe 0. Real Google tiles not checked (googleapis blocked here).
