@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { AccountSection } from "@/features/account/AccountSection";
 import { NewsletterToggle } from "@/features/account/NewsletterToggle";
 import { PriceDropToggle } from "@/features/account/PriceDropToggle";
+import { CartReminderToggle } from "@/features/account/CartReminderToggle";
 import { TelegramOrderUpdatesCard } from "@/features/account/TelegramOrderUpdatesCard";
 import { profileSchema, type ProfileValues } from "@/features/account/schemas";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -116,6 +117,12 @@ function ProfileForm({ customer }: { customer: Customer }) {
       {typeof customer.price_drop_alerts === "boolean" ? (
         <div className="mt-4 max-w-xl rounded-xl border border-border bg-card p-5 sm:p-6">
           <PriceDropToggle customer={customer} />
+        </div>
+      ) : null}
+
+      {typeof customer.cart_reminders === "boolean" ? (
+        <div className="mt-4 max-w-xl rounded-xl border border-border bg-card p-5 sm:p-6">
+          <CartReminderToggle customer={customer} />
         </div>
       ) : null}
 

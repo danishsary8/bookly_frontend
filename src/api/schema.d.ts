@@ -1956,6 +1956,7 @@ export interface paths {
                         locale?: "en" | "km";
                         telegram_order_updates?: boolean;
                         price_drop_alerts?: boolean;
+                        cart_reminders?: boolean;
                     };
                 };
             };
@@ -8186,6 +8187,98 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/cart-reminders/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop cart reminder emails (the link in the email; no sign-in) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        customer: number;
+                        token: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Cart reminders turned off */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Wrong link */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cart-reminders/stop/one-click": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** RFC 8058 one-click version of the stop link (mail apps) */
+        post: {
+            parameters: {
+                query: {
+                    customer: number;
+                    token: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Cart reminders turned off */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Wrong link */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/newsletter": {
         parameters: {
             query?: never;
@@ -8885,6 +8978,8 @@ export interface components {
             telegram_order_updates?: boolean;
             /** @description Email me when a book on my "Want to read" wishlist drops 5% or more (at most one email per book per week). Off by default. */
             price_drop_alerts?: boolean;
+            /** @description One email 24 hours after books are left in the cart (at most one a week, and only after the cart changed). On by default. */
+            cart_reminders?: boolean;
             connected?: {
                 google?: boolean;
                 facebook?: boolean;
