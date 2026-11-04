@@ -566,11 +566,6 @@ export const km: Translations = {
     keepIt: "រក្សាទុកវា",
     disconnectName: (name: string) => `ផ្តាច់ ${name}`,
   },
-  // TODO(antigravity): translate to Khmer (owner 2026-11-04: Antigravity does all Khmer translation). English for now.
-  wishlistDrop: {
-    percent: (n: number) => `Price dropped ${n}%`,
-    was: "was",
-  },
   downloadData: {
     title: "ទាញយកទិន្នន័យរបស់ខ្ញុំ",
     lead: "ទទួលបានច្បាប់ចម្លងនៃអ្វីៗទាំងអស់ដែលគណនីរបស់អ្នកមាន៖ ប្រវត្តិរូប អាសយដ្ឋាន ការបញ្ជាទិញ ការប្តូរត្រឡប់ ការវាយតម្លៃ និងបញ្ជីប្រាថ្នា ជាឯកសារតែមួយ។",
@@ -1324,6 +1319,11 @@ export const km: Translations = {
     connectedSuccess: "គណនី Telegram របស់អ្នកត្រូវបានភ្ជាប់សម្រាប់ការជូនដំណឹងការបញ្ជាទិញ!",
     disconnectedSuccess: "បានផ្តាច់ការជូនដំណឹងការបញ្ជាទិញតាម Telegram។",
     statusUpdated: "បានរក្សាទុកចំណូលចិត្តការជូនដំណឹង។",
+  },
+  // TODO(antigravity): translate to Khmer (owner 2026-11-04: Antigravity does all Khmer translation). English for now.
+  wishlistDrop: {
+    percent: (n: number) => `Price dropped ${n}%`,
+    was: "was",
   },
   offers: {
     badge: (n: number, pct: string) => `ទិញ ${n} សន្សំ ${pct}%`,
