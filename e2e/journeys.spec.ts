@@ -29,12 +29,15 @@ function codeMailedTo(email: string): string | null {
 test("new customer: sign up → email code → verified", async ({ page }) => {
   test.skip(!MAIL_LOG, "Set E2E_MAIL_LOG to the API's storage/logs/laravel.log (MAIL_MAILER=log)");
   const email = `e2e-${Date.now()}@example.com`;
+  // A fresh password every run: the API refuses passwords found in data leaks (Have I Been Pwned), and a short
+  // fixed one like "Reading123" may be on that list.
+  const password = `Bookly-${Date.now().toString(36)}-e2e9`;
 
   await page.goto("/register");
   await page.getByLabel("Full name").fill("Test Reader");
   await page.getByRole("textbox", { name: /^Email/ }).fill(email);
-  await page.getByLabel("Password", { exact: true }).fill("Reading123");
-  await page.getByLabel("Confirm password").fill("Reading123");
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: /Create/ }).click();
   await page.waitForURL(/\/verify-email/);
   await noAxeViolations(page);
