@@ -132,6 +132,26 @@ describe("packing slip", () => {
     expect(within(invoice).queryByRole("heading", { name: "Note from the customer" })).not.toBeInTheDocument();
     expect(invoice).not.toHaveTextContent("Leave package with security at gate");
   });
+
+  it("a gift order gets a cut-out gift card with the message, and both sheets say to keep prices out of the box", () => {
+    const gift = doc({ is_gift: true, gift_message: "Happy birthday, Sophea!\nLove, Dara", payment_method: "khqr", payment_status: "succeeded", amount_to_collect_usd: "0.00" });
+    const { unmount } = render(<PackingSlipSheet doc={gift} />);
+    const slip = screen.getByRole("article", { name: "Packing slip ORD-7" });
+    expect(slip).toHaveTextContent("Gift order: no invoice or prices in the box");
+    const card = within(slip).getByRole("region", { name: "Gift card" });
+    expect(card).toHaveTextContent("Happy birthday, Sophea!");
+    expect(card).not.toHaveTextContent("$");
+    unmount();
+
+    render(<InvoiceSheet doc={gift} />);
+    expect(screen.getByRole("article")).toHaveTextContent("Gift order: keep this invoice out of the box");
+  });
+
+  it("an ordinary order has no gift card", () => {
+    render(<PackingSlipSheet doc={doc()} />);
+    expect(screen.queryByRole("region", { name: "Gift card" })).not.toBeInTheDocument();
+    expect(screen.getByRole("article")).not.toHaveTextContent("Gift order");
+  });
 });
 
 describe("print pages", () => {

@@ -489,6 +489,17 @@ export const en = {
     ebook: "Ebook",
     audiobook: "Audiobook",
   },
+  gift: {
+    label: "This is a gift",
+    lead: "Free. We add your message to the parcel and leave the prices out.",
+    message: "Gift message",
+    messageHint: "Printed on a card in the box. Add who it's from.",
+    codNote: "With cash on delivery, the person receiving it pays the courier.",
+    codNoteKhqr: "With cash on delivery, the person receiving it pays the courier. To keep the price a surprise, pay now with Bakong KHQR.",
+    orderTitle: "Gift",
+    orderLead: "We'll pack it as a gift, without prices.",
+    noMessage: "No message.",
+  },
   orderParts: {
     items: (n: number) => `${n} ${n === 1 ? "item" : "items"}`,
     line: (format: string, qty: number, price: string) => `${format} · Qty ${qty} × ${price}`,

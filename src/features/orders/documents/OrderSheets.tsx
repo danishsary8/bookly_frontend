@@ -127,6 +127,7 @@ export function InvoiceSheet({ doc }: { doc: Doc }) {
   return (
     <Sheet label={`${invoiceTitle(doc)} ${doc.order_number}`}>
       <Heading title={invoiceTitle(doc)} doc={doc} />
+      {doc.is_gift ? <Stamp>Gift order: keep this invoice out of the box</Stamp> : null}
 
       <div className="grid grid-cols-2 gap-6">
         <Block title="Billed to">
@@ -266,6 +267,18 @@ function InvoiceQrCode({ doc }: { doc: Doc }) {
   );
 }
 
+/** Gift orders: a card to cut out and put in the box (owner 2026-11-05). No prices on it. */
+function GiftCard({ message }: { message?: string | null }) {
+  return (
+    <section aria-label="Gift card" className="grid gap-2 rounded-sm border-2 border-dashed border-foreground p-5 text-center">
+      <p className="text-xs text-muted-foreground">✂ Cut along the dashed line and put this card in the box</p>
+      <p className="font-display text-[1.5rem] leading-tight">A gift for you</p>
+      {message ? <p className="mx-auto max-w-[32rem] text-[1.125rem] leading-relaxed whitespace-pre-wrap">{message}</p> : null}
+      <p className="text-sm text-muted-foreground">Bookly</p>
+    </section>
+  );
+}
+
 export function PackingSlipSheet({ doc }: { doc: Doc }) {
   const items = doc.items ?? [];
   const physical = items.filter((item) => !item.is_digital);
@@ -276,6 +289,7 @@ export function PackingSlipSheet({ doc }: { doc: Doc }) {
   return (
     <Sheet label={`Packing slip ${doc.order_number}`}>
       <Heading title="Packing slip" doc={doc} />
+      {doc.is_gift ? <Stamp>Gift order: no invoice or prices in the box</Stamp> : null}
 
       <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-6">
         <Block title="Ship to">
@@ -346,6 +360,8 @@ export function PackingSlipSheet({ doc }: { doc: Doc }) {
           </p>
         ) : null}
       </div>
+
+      {doc.is_gift ? <GiftCard message={doc.gift_message} /> : null}
 
       <div className="grid grid-cols-2 gap-6 pt-6 text-sm">
         <p className="border-t border-foreground pt-2">Packed by</p>

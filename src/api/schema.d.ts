@@ -3237,6 +3237,10 @@ export interface paths {
                         payment_method: "cod";
                         coupon_code?: string;
                         delivery_note?: string;
+                        /** @description Free gift option. Default false. */
+                        is_gift?: boolean;
+                        /** @description Kept only when is_gift is true (trimmed; empty = null). */
+                        gift_message?: string | null;
                         /** @description The offer shown in the preview. If it no longer applies, 422 on offer_id and nothing is placed. Leave it out to accept whatever wins now. */
                         offer_id?: number;
                     };
@@ -9128,6 +9132,9 @@ export interface components {
             shipping_address?: components["schemas"]["AddressInput"];
             can_cancel?: boolean;
             delivery_note?: string | null;
+            /** @description Free gift option (no fee). The packing sheet hides prices. */
+            is_gift?: boolean;
+            gift_message?: string | null;
             is_free_shipping?: boolean;
             estimated_delivery?: components["schemas"]["EstimatedDelivery"];
             status_history?: {
@@ -9149,6 +9156,9 @@ export interface components {
             /** Format: date-time */
             delivered_at?: string | null;
             delivery_note?: string | null;
+            /** @description Free gift option (no fee). The packing sheet hides prices. */
+            is_gift?: boolean;
+            gift_message?: string | null;
             /** @enum {string} */
             payment_method?: "card" | "cod" | "khqr";
             /** @enum {string|null} */
