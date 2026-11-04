@@ -47,6 +47,7 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
   const authors = (book.authors ?? []).map((a) => a.name).filter(Boolean).join(", ");
   const { dict } = useT();
   const formats = (book.formats ?? []).map((f) => formatName(dict, f)).join(" · ");
+  const audienceTag = book.level ? book.level : book.school_grade ? dict.catalogFilters.gradeN(book.school_grade) : null;
   const Heading = headingLevel;
   const title = book.title ?? dict.cards.untitled;
 
@@ -91,7 +92,16 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
       </div>
 
       <div className="mt-3 flex flex-1 flex-col">
-        {formats ? <p className="line-clamp-1 text-xs font-semibold uppercase tracking-[0.14em] text-accent-text">{formats}</p> : null}
+        {formats || audienceTag ? (
+          <div className="flex items-center justify-between gap-1.5 text-xs">
+            {formats ? <p className="line-clamp-1 font-semibold uppercase tracking-[0.14em] text-accent-text">{formats}</p> : <span />}
+            {audienceTag ? (
+              <span className="shrink-0 rounded bg-muted/80 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                {audienceTag}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
         <Heading className="mt-1 font-display text-[1.125rem] leading-snug">
           <Link to={href} onClick={(e) => morphTo(e, book, key)} className="line-clamp-2 min-h-[2.75em] text-foreground underline-offset-4 outline-none hover:underline focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring">
             {title}

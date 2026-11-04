@@ -255,6 +255,57 @@ describe("BookDetailPage", () => {
     expect(await within(screen.getByRole("region", { name: "Notifications" })).findByRole("status")).toHaveTextContent("Added to cart");
   });
 
+  it("shows audience information and category hierarchy in details list", async () => {
+    const audienceBook: BookDetail = {
+      ...detail,
+      age_min: 8,
+      age_max: 12,
+      school_grade: 9,
+      level: "B1",
+      categories: [{ id: 5, name: "Fantasy", slug: "fantasy" }],
+    };
+    vi.spyOn(catalogApi, "book").mockResolvedValue(audienceBook);
+    vi.spyOn(catalogApi, "categories").mockResolvedValue([
+      { id: 1, name: "Fiction", slug: "fiction", parent_id: null },
+      { id: 5, name: "Fantasy", slug: "fantasy", parent_id: 1 },
+    ] as never);
+
+    renderDetail();
+    expect(await screen.findByRole("heading", { level: 1, name: "Pride and Prejudice" })).toBeInTheDocument();
+
+    const detailsTab = screen.getByRole("tab", { name: "Details" });
+    await userEvent.click(detailsTab);
+
+    const fantasyLinks = screen.getAllByRole("link", { name: "Fantasy" });
+    expect(fantasyLinks.some((l) => l.getAttribute("href") === "/categories/fantasy")).toBe(true);
+    const fictionLinks = screen.getAllByRole("link", { name: "Fiction" });
+    expect(fictionLinks.some((l) => l.getAttribute("href") === "/categories/fiction")).toBe(true);
+
+    const ageLink = screen.getByRole("link", { name: "8–12" });
+    expect(ageLink).toHaveAttribute("href", "/books?age=8");
+
+    const gradeLink = screen.getByRole("link", { name: "Grade 9" });
+    expect(gradeLink).toHaveAttribute("href", "/books?school_grade=9");
+
+    const levelLink = screen.getByRole("link", { name: "Level B1" });
+    expect(levelLink).toHaveAttribute("href", "/books?level=B1");
+  });
+
+  it("shows age with plus when no max age is set", async () => {
+    const openAgeBook: BookDetail = {
+      ...detail,
+      age_min: 8,
+      age_max: null,
+    };
+    vi.spyOn(catalogApi, "book").mockResolvedValue(openAgeBook);
+    renderDetail();
+    expect(await screen.findByRole("heading", { level: 1, name: "Pride and Prejudice" })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("tab", { name: "Details" }));
+    const ageLink = screen.getByRole("link", { name: "8+" });
+    expect(ageLink).toHaveAttribute("href", "/books?age=8");
+  });
+
   describe("You may also like", () => {
     const inSeries: BookDetail = { ...detail, series: { id: 4, name: "Bennet Family", order: 2 } as BookDetail["series"] };
     const similarShelf = () => screen.queryByRole("region", { name: "You may also like" });

@@ -407,6 +407,15 @@ export default function BookDetailPage() {
       }
     : null;
 
+  const categoriesQuery = useQuery(catalogQueries.categories());
+  const allCategories = categoriesQuery.data;
+
+  const getCategoryHierarchy = (c: { id?: number; name?: string; slug?: string }) => {
+    const full = allCategories?.find((cat) => (c.id && cat.id === c.id) || (c.slug && cat.slug === c.slug));
+    const parent = full?.parent_id ? allCategories?.find((cat) => cat.id === full.parent_id) : null;
+    return { parent, current: c };
+  };
+
   const firstAuthor = book?.authors?.[0];
   const byAuthor = useQuery({ ...catalogQueries.books({ author_id: firstAuthor?.id, per_page: 9 }), enabled: Boolean(firstAuthor?.id) });
   const series = useQuery({ ...catalogQueries.series(book?.series?.id ?? 0), enabled: Boolean(book?.series?.id) });
@@ -479,11 +488,24 @@ export default function BookDetailPage() {
             <header className="grid gap-3">
               {book?.categories?.length ? (
                 <p className="flex flex-wrap gap-x-3 text-xs font-bold uppercase tracking-[0.16em] text-accent-text">
-                  {book.categories.map((c) => (
-                    <Link key={c.id} to={`/categories/${c.slug}`} className="underline-offset-4 hover:underline">
-                      {c.name}
-                    </Link>
-                  ))}
+                  {book.categories.map((c) => {
+                    const { parent } = getCategoryHierarchy(c);
+                    return (
+                      <span key={c.id ?? c.slug}>
+                        {parent ? (
+                          <>
+                            <Link to={`/categories/${parent.slug}`} className="underline-offset-4 hover:underline">
+                              {parent.name}
+                            </Link>
+                            <span className="mx-1.5 opacity-60" aria-hidden="true">›</span>
+                          </>
+                        ) : null}
+                        <Link to={`/categories/${c.slug}`} className="underline-offset-4 hover:underline">
+                          {c.name}
+                        </Link>
+                      </span>
+                    );
+                  })}
                 </p>
               ) : null}
               <h1 id="book-title" className="font-display text-[2.441rem] leading-[1.1] sm:text-[3.052rem]">
@@ -537,6 +559,51 @@ export default function BookDetailPage() {
                 {book.publisher ? (
                   <Link to={`/publishers/${book.publisher.id}`} className="underline-offset-4 hover:underline">
                     {book.publisher.name}
+                  </Link>
+                ) : null}
+              </Detail>
+              <Detail label={b.categories}>
+                {book.categories?.length ? (
+                  <ul className="flex flex-wrap gap-x-3 gap-y-1">
+                    {book.categories.map((c) => {
+                      const { parent } = getCategoryHierarchy(c);
+                      return (
+                        <li key={c.id ?? c.slug}>
+                          {parent ? (
+                            <>
+                              <Link to={`/categories/${parent.slug}`} className="underline-offset-4 hover:underline">
+                                {parent.name}
+                              </Link>
+                              <span className="mx-1 text-muted-foreground" aria-hidden="true">›</span>
+                            </>
+                          ) : null}
+                          <Link to={`/categories/${c.slug}`} className="underline-offset-4 hover:underline">
+                            {c.name}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : null}
+              </Detail>
+              <Detail label={b.readerAge}>
+                {book.age_min !== null && book.age_min !== undefined ? (
+                  <Link to={`/books?age=${book.age_min}`} className="underline-offset-4 hover:underline">
+                    {book.age_max && book.age_max !== book.age_min ? `${book.age_min}–${book.age_max}` : `${book.age_min}+`}
+                  </Link>
+                ) : null}
+              </Detail>
+              <Detail label={b.schoolGrade}>
+                {book.school_grade ? (
+                  <Link to={`/books?school_grade=${book.school_grade}`} className="underline-offset-4 hover:underline">
+                    {dict.catalogFilters.gradeN(book.school_grade)}
+                  </Link>
+                ) : null}
+              </Detail>
+              <Detail label={b.level}>
+                {book.level ? (
+                  <Link to={`/books?level=${book.level}`} className="underline-offset-4 hover:underline">
+                    {dict.catalogFilters.levelN(book.level)}
                   </Link>
                 ) : null}
               </Detail>
