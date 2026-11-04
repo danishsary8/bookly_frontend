@@ -128,7 +128,7 @@ every day, then growth, then looks.
   - [ ] Still open (low, not chosen yet): `/health` shows queue/Telegram details to anyone; Swagger UI from a CDN without SRI on `/docs`; dev-only npm advisories (Vitest 5 / shadcn); `/api/report` (Sentry tunnel) has no rate limit; Telegram-only accounts can't close themselves (bug); staff see a customer's lifetime spend (decide if "money numbers admin only" covers it). **Done 2026-10-16** (`fix/security-leftovers` + `feature/overnight-batch-fixes`): /health is status-only (details admin-only), Swagger pinned with SRI, /api/report size + rate limit, Telegram-only accounts close after a fresh sign-in, lifetime spend admin-only. Still open: dev-only npm advisories.
 - [x] Load test the busiest pages: k6 script ramping to 30 VUs over 2 minutes on catalog and search endpoints (backend `chore/load-test-script`); baseline run recorded in `load/RESULTS.md` (backend `chore/load-test-results`).
 
-- [ ] Checks never done in a real browser so far (unit tests only): dashboard Today/30 days switch on real data and dark mode; the real Telegram app and Facebook sign-in (needs real accounts).
+- [ ] Checks never done in a real browser so far (unit tests only): ~~dashboard Today/30 days switch on real data and dark mode~~ (done 2026-11-04: Today/7d/30d/Custom, light+dark, 1280+390, numbers match the database, axe 0); the real Telegram app and Facebook sign-in (needs real accounts).
 
 ## Phase 7 · Redesign (last)
 - [ ] Full frontend redesign, starting from the landing page, then every page; keep all tests passing.

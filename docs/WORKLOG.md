@@ -818,3 +818,15 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   `VITE_FACEBOOK_PUBLIC=true`): note under the button (aria-describedby) and an alert when FB.login returns no
   token (sign-in page; toast/dialog in Account → connect). en/km. 2 tests (528 pass), lint, typecheck, build.
   Browser with a stubbed non-tester FB: note + alert in en/km, light/dark, 1280/390, axe 0, no overflow.
+
+## 2026-11-04: Dev-tool warnings (`chore/dev-tool-updates`) and dashboard browser check
+
+- npm audit: site packages 0 warnings (before and after). Dev-only: 2 high (shadcn 3 CLI + its zod 3) fixed by
+  shadcn 3.8.5 → 4.23.0. `shadcn/tailwind.css` first 95 lines identical; 4.x adds optional scroll-fade/shimmer
+  utilities: built CSS keeps every existing rule, +0.9 kB unused @property. Left (moderate/low, no safe fix):
+  minimatch (eslint/typescript-eslint), glob (Sentry build plugin), @redocly (openapi-typescript), deepmerge (no
+  patch exists). Backend composer audit: clean. lint, typecheck, 528 tests, build pass.
+- Dashboard (roadmap "never checked in a real browser"): Today / 7 days / 30 days / Custom (Oct) on local data, light
+  and dark, 1280 and 390: numbers shown, 2 charts, no errors, axe 0, no overflow; 7-day $23.97 and October $198.46
+  match ReportsService. Note: rapid switching hits `admin-analytics` 30/min (3 requests per view); my script did,
+  a person normally won't. No code change.
