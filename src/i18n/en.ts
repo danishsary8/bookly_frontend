@@ -560,6 +560,10 @@ export const en = {
     keepIt: "Keep it",
     disconnectName: (name: string) => `Disconnect ${name}`,
   },
+  wishlistDrop: {
+    percent: (n: number) => `Price dropped ${n}%`,
+    was: "was",
+  },
   downloadData: {
     title: "Download my data",
     lead: "Get a copy of everything your account holds: profile, addresses, orders, returns, reviews and wishlist, as one file.",
