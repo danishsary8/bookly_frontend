@@ -196,6 +196,18 @@ describe("WishlistPage with Reading Statuses", () => {
     expect(screen.getByRole("button", { name: "Undo" })).toBeInTheDocument();
   });
 
+  it("shows how much a saved book dropped in price, with the old dollar price", async () => {
+    const cheaper = { ...book1, price_from_usd: "16.40", price_from_khr: "67240", wishlist_saved_price_usd: "20.50" };
+    const same = { ...book2, wishlist_saved_price_usd: "9.00" };
+    const older = { ...book3, wishlist_saved_price_usd: null };
+    vi.spyOn(accountApi, "wishlist").mockResolvedValue(mockPage([cheaper, same, older]));
+    renderPage();
+
+    expect(await screen.findByText("Price dropped 20%")).toBeInTheDocument();
+    expect(screen.getAllByText(/Price dropped/)).toHaveLength(1); // not for an unchanged price or an older save
+    expect(screen.getByText("$20.50").tagName).toBe("DEL");
+  });
+
   it("renders localized Khmer content on Khmer language switch", async () => {
     setLanguage("km");
     vi.spyOn(accountApi, "wishlist").mockResolvedValue(mockPage([book1]));

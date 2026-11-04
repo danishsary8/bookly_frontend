@@ -1329,6 +1329,10 @@ export const en = {
     disconnectedSuccess: "Telegram order updates have been disconnected.",
     statusUpdated: "Order updates preference saved.",
   },
+  wishlistDrop: {
+    percent: (n: number) => `Price dropped ${n}%`,
+    was: "was",
+  },
   offers: {
     badge: (n: number, pct: string) => `Buy ${n}, save ${pct}%`,
     bookLine: (n: number, pct: string, label: string | null) =>

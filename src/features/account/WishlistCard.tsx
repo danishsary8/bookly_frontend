@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookMarked, BookOpen, CheckCircle2, Heart, Loader2, ShoppingBag } from "lucide-react";
+import { BookMarked, BookOpen, CheckCircle2, Heart, Loader2, ShoppingBag, TrendingDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { accountApi } from "@/api/endpoints/account";
 import type { WishlistBookCard, WishlistReadingStatus } from "@/api/types";
@@ -15,8 +15,9 @@ import {
 } from "@/components/ui/select";
 import { useT } from "@/i18n";
 import { cn } from "@/lib/utils";
-import { formatMoney, useCurrency } from "@/stores/currency";
+import { formatMoney, formatUsd, useCurrency } from "@/stores/currency";
 import { toast } from "@/stores/toast";
+import { priceDropSince } from "./priceDrop";
 
 type WishlistCardProps = {
   book: WishlistBookCard;
@@ -36,6 +37,7 @@ export function WishlistCard({
   const { dict } = useT();
   const a = dict.account;
   const currency = useCurrency();
+  const drop = priceDropSince(book);
   const morphTo = useCoverMorphNavigate();
   const key = `wishlist-card-${book.id}`;
   const layoutId = useMorphLayoutId(book.id!, key);
@@ -180,6 +182,19 @@ export function WishlistCard({
           {authors ? dict.homePage.by(authors) : "\u00A0"}
         </p>
         <StarRating value={book.rating_avg} count={book.review_count} compact className="mt-2" />
+        {drop ? (
+          <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            <span className="inline-flex items-center gap-1 rounded-md bg-success-tint px-1.5 py-0.5 font-semibold text-success">
+              <TrendingDown className="size-3.5" aria-hidden="true" />
+              {dict.wishlistDrop.percent(drop.percent)}
+            </span>
+            {currency === "USD" ? (
+              <span className="text-muted-foreground">
+                {dict.wishlistDrop.was} <del className="tabular-nums">{formatUsd(drop.savedUsd)}</del>
+              </span>
+            ) : null}
+          </p>
+        ) : null}
 
         <div className="mt-auto flex min-h-14 items-center justify-between gap-2 border-t border-border pt-3">
           <p className={cn("tabular-nums", outOfStock ? "text-muted-foreground" : "text-foreground")}>

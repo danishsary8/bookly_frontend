@@ -1337,6 +1337,11 @@ export const km: Translations = {
     disconnectedSuccess: "បានផ្តាច់ការជូនដំណឹងការបញ្ជាទិញតាម Telegram។",
     statusUpdated: "បានរក្សាទុកចំណូលចិត្តការជូនដំណឹង។",
   },
+  // TODO(antigravity): translate to Khmer (owner 2026-11-04: Antigravity does all Khmer translation). English for now.
+  wishlistDrop: {
+    percent: (n: number) => `Price dropped ${n}%`,
+    was: "was",
+  },
   offers: {
     badge: (n: number, pct: string) => `ទិញ ${n} សន្សំ ${pct}%`,
     bookLine: (n: number, pct: string, label: string | null) =>

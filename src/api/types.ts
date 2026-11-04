@@ -70,6 +70,8 @@ export interface WishlistCounts {
 export interface WishlistBookCard extends BookCard {
   wishlist_status?: WishlistReadingStatus;
   wishlist_saved_at?: string;
+  /** Lowest price when it was saved (null for older saves); see priceDropSince(). */
+  wishlist_saved_price_usd?: string | null;
 }
 
 export interface WishlistPageData extends Paginated<WishlistBookCard> {
