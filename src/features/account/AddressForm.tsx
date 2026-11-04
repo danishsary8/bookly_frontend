@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { MapPin } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { accountApi, type AddressPayload } from "@/api/endpoints/account";
@@ -10,6 +11,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { applyApiErrors } from "@/lib/forms";
 import { CAMBODIA_PROVINCES } from "@/lib/provinces";
 import { addressSchema, type AddressValues } from "./schemas";
+import { mapsEnabled, mapsLink, type LatLng } from "@/features/maps/googleMaps";
+import { MapPinPicker } from "@/features/maps/MapPinPicker";
 import { useT } from "@/i18n";
 
 /*
@@ -55,6 +58,9 @@ type Props = {
 
 export function AddressForm({ address, defaults, hideDefaultToggle, onSaved, onCancel, submitLabel }: Props) {
   const [formError, setFormError] = useState<string | null>(null);
+  // Optional map pin (owner 2026-11-04): kept beside the form fields, sent as latitude/longitude.
+  const [pin, setPin] = useState<LatLng | null>(address?.latitude != null && address?.longitude != null ? { lat: address.latitude, lng: address.longitude } : null);
+  const [picking, setPicking] = useState(false);
   const alertRef = useRef<HTMLDivElement>(null);
   const { dict, lang } = useT();
   const t = dict.addresses;
@@ -67,7 +73,11 @@ export function AddressForm({ address, defaults, hideDefaultToggle, onSaved, onC
   const submit = async (values: AddressValues) => {
     setFormError(null);
     try {
-      const input: AddressPayload = toInput(values);
+      const input: AddressPayload = {
+        ...toInput(values),
+        // A new address without a pin sends nothing; an edit sends null to remove one.
+        ...(pin ? { latitude: pin.lat, longitude: pin.lng } : address?.id ? { latitude: null, longitude: null } : {}),
+      };
       // Unticking "default" on the default address is ignored by the API; don't send it.
       if (address?.is_default && !values.is_default) delete input.is_default;
       const saved = address?.id ? await accountApi.updateAddress(address.id, input) : await accountApi.createAddress(input);
@@ -113,6 +123,35 @@ export function AddressForm({ address, defaults, hideDefaultToggle, onSaved, onC
         <TextField label={t.postal} optional autoComplete="shipping postal-code" inputMode="numeric" error={errors.postal_code?.message} {...register("postal_code")} />
         <TextField label={t.country} autoComplete="shipping country-name" error={errors.country?.message} {...register("country")} />
       </div>
+      {mapsEnabled() ? (
+        <fieldset className="grid gap-2 rounded-lg border border-border p-4">
+          <legend className="px-1 text-sm font-semibold">
+            {dict.mapPin.section} <span className="font-normal text-muted-foreground">{dict.ui.optional}</span>
+          </legend>
+          <p className="text-sm text-muted-foreground">{dict.mapPin.sectionLead}</p>
+          {pin ? (
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+              <span className="inline-flex items-center gap-1 font-semibold text-success">
+                <MapPin className="size-4" aria-hidden="true" /> {dict.mapPin.pinned}
+              </span>
+              <a href={mapsLink(pin)} target="_blank" rel="noopener noreferrer" className="text-primary underline-offset-4 hover:underline">
+                {dict.mapPin.view}
+              </a>
+            </p>
+          ) : null}
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => setPicking(true)}>
+              <MapPin aria-hidden="true" /> {pin ? dict.mapPin.change : dict.mapPin.pick}
+            </Button>
+            {pin ? (
+              <Button type="button" variant="ghost" size="sm" onClick={() => setPin(null)}>
+                {dict.mapPin.remove}
+              </Button>
+            ) : null}
+          </div>
+          <MapPinPicker open={picking} onOpenChange={setPicking} value={pin} onPick={setPin} />
+        </fieldset>
+      ) : null}
       <TextField label={t.label} optional placeholder={t.labelPlaceholder} hint={t.labelHint} error={errors.label?.message} {...register("label")} />
       {hideDefaultToggle ? null : (
         <Controller
