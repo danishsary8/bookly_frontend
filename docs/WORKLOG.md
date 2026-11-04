@@ -856,3 +856,16 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
 - Checks: lint (0 errors), typecheck, 543 tests (5 new), build OK. Browser (stubbed Maps script, real CSP): pick → save
   → API has lat/lng; en light 1280 + km dark 390: axe 0, no overflow, 0 CSP errors; script not loaded before the
   picker opens; order + admin order pages show the link, axe 0. Real Google tiles not checked (googleapis blocked here).
+
+## 2026-11-05: Cart reminder emails + gift note (frontend)
+
+- `feature/cart-reminder`: CartReminderToggle on Account → Profile (shown when the API sends `cart_reminders`; on
+  unless false; needs a verified email). /email/cart-reminders/stop?customer=&token= (no sign-in) calls
+  POST /cart-reminders/stop; links home + to the profile. i18n `cartReminder` (km English, TODO(antigravity)).
+- `feature/gift-note`: GiftOption in checkout step 1 (checkbox + message ≤200, counter; COD note suggests KHQR when
+  enabled); payload is_gift/gift_message only when ticked. Order detail "Gift" card; admin "Gift order" box; packing
+  slip stamp + dashed cut-out GiftCard (no prices); invoice stamp "keep this invoice out of the box". i18n `gift`.
+- Checks: lint (0 errors), typecheck, 552 tests on the merge of both, build. Browser vs local API (both backend
+  branches merged, migrated), real CSP: profile switch off/on (API follows), stop link → API false, gift checkout →
+  order 32/33 is_gift + message, order page, admin box, packing slip card + stamp; en light 1280 + km dark 390: axe 0,
+  no overflow, 0 CSP errors. Fixed: gift counter wrapped at 390 (nowrap). Not checked: the real email in an inbox.
