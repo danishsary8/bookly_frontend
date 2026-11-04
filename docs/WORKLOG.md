@@ -830,3 +830,17 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   and dark, 1280 and 390: numbers shown, 2 charts, no errors, axe 0, no overflow; 7-day $23.97 and October $198.46
   match ReportsService. Note: rapid switching hits `admin-analytics` 30/min (3 requests per view); my script did,
   a person normally won't. No code change.
+
+## 2026-11-04: visitor stats, signed-in devices, wishlist price-drop badge (frontend)
+
+- `feature/visitor-analytics`: @vercel/analytics, lazy, only when VERCEL=1 at build (VITE_ON_VERCEL); beforeSend
+  strips ?query/#hash and drops /admin. Browser (stubbed script, real CSP): script from /_vercel/insights, filter
+  registered, URL cleaned, admin dropped, 0 CSP errors. 3 tests.
+- `feature/customer-sessions`: SignedInDevices on Account → Sign-in & security (this device first, per-device sign
+  out, sign out all others; hidden on 404). Browser vs local API: list + "sign out all others" (other token → 401,
+  this one 200), en/km light/dark 1280/390, axe 0. Khmer test: groups marked `// TODO(antigravity)` in km.ts are
+  skipped (test reads km.ts?raw); a second test fails once a marked group is translated (remove the marker).
+- `feature/wishlist-price-badge`: priceDropSince() (≥1%), "Price dropped N%" + "was $X" in USD only (saved price is
+  USD; no client conversion). Browser: USD/KHR, en/km, light/dark, 1280/390, axe 0. Texts moved next to `offers`
+  so it merges cleanly with customer-sessions (checked: merge + i18n tests + typecheck green).
+- All: lint, typecheck, 532 tests, build.
