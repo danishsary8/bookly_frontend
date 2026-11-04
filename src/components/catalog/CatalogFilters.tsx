@@ -1,10 +1,10 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { BookFilters } from "@/api/endpoints/catalog";
+import type { BookFacets, BookFilters } from "@/api/endpoints/catalog";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { FORMATS, LANGUAGES, withFilter } from "@/lib/catalog";
+import { AGE_BANDS, FORMATS, GRADES, LANGUAGES, LEVELS, withFilter } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n";
 
@@ -12,6 +12,9 @@ import { useT } from "@/i18n";
  * Filter panel for the catalogue: sidebar at ≥ 1024px, inside a drawer below.
  * Single-choice groups are native radio buttons (one tab stop, arrow keys);
  * every change is applied straight to the URL. Price applies on submit.
+ * With `facets` (book counts for each choice, other filters kept) a choice that
+ * would show nothing is hidden, unless it is the one selected; groups that would
+ * be empty (grade, level, age) are left out entirely.
  */
 
 type Props = {
@@ -20,7 +23,12 @@ type Props = {
   /** Filters fixed by the page (e.g. a category landing); their groups are hidden. */
   locked?: Partial<BookFilters>;
   idPrefix: string;
+  facets?: BookFacets;
 };
+
+/** Facet count for a choice; undefined while counts are not known (then everything is shown). */
+const countOf = (counts: Record<string, number> | undefined, key: string | number) => (counts ? (counts[String(key)] ?? 0) : undefined);
+const shown = (count: number | undefined, selected: boolean) => selected || count === undefined || count > 0;
 
 function Group({ legend, children }: { legend: string; children: ReactNode }) {
   return (
@@ -96,33 +104,78 @@ function PriceRange({ filters, onChange, idPrefix }: Props) {
   );
 }
 
-export function CatalogFilters({ filters, onChange, locked = {}, idPrefix }: Props) {
-  const categories = useQuery(catalogQueries.categories());
+export function CatalogFilters({ filters, onChange, locked = {}, idPrefix, facets }: Props) {
+  const tree = useQuery(catalogQueries.categoryTree());
   const publishers = useQuery(catalogQueries.publishers({ per_page: 100 }));
   const { dict } = useT();
   const t = dict.browse;
+  const f = dict.catalogFilters;
   const set = <K extends keyof BookFilters>(key: K, value: BookFilters[K] | undefined) => onChange(withFilter(filters, key, value));
+
+  // The open branch: the selected top-level category, or the parent of a selected sub-category.
+  const tops = tree.data ?? [];
+  const openTop = tops.find((c) => c.id === filters.category_id || (c.children ?? []).some((child) => child.id === filters.category_id));
+  const languages = Array.from(new Set([...LANGUAGES, ...Object.keys(facets?.languages ?? {}), ...(filters.language ? [filters.language] : [])]));
+  // Grade and level only appear when some books have them (they are empty for most of the shop).
+  const grades = GRADES.filter((g) => filters.school_grade === g || (facets?.school_grades?.[String(g)] ?? 0) > 0);
+  const levels = LEVELS.filter((l) => filters.level === l || (facets?.levels?.[l] ?? 0) > 0);
+  const ebookCount = countOf(facets?.formats, "ebook");
+  // Category counts from the API are narrowed by the category filter itself, so they only hide empty categories while
+  // none is chosen; the numbers shown are always the category's own totals.
+  const categoryCounts = filters.category_id === undefined ? facets?.categories : undefined;
 
   return (
     <div className="grid gap-5">
-      <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 text-[15px] font-semibold">
-        {t.inStockOnly}
-        <Switch checked={filters.in_stock === true} onCheckedChange={(on) => set("in_stock", on || undefined)} />
-      </label>
+      <div className="grid gap-1">
+        <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 text-[15px] font-semibold">
+          {t.inStockOnly}
+          <Switch checked={filters.in_stock === true} onCheckedChange={(on) => set("in_stock", on || undefined)} />
+        </label>
+        {shown(ebookCount, filters.has_ebook === true) ? (
+          <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 text-[15px] font-semibold">
+            {f.hasEbook}
+            <Switch checked={filters.has_ebook === true} onCheckedChange={(on) => set("has_ebook", on || undefined)} />
+          </label>
+        ) : null}
+      </div>
 
-      {locked.category_id === undefined ? (
+      {locked.category_id === undefined && tops.length > 0 ? (
         <Group legend={t.category}>
           <Choice name={`${idPrefix}-category`} checked={filters.category_id === undefined} onSelect={() => set("category_id", undefined)} label={t.allCategories} />
-          {(categories.data ?? []).map((c) => (
-            <Choice key={c.id} name={`${idPrefix}-category`} checked={filters.category_id === c.id} onSelect={() => set("category_id", c.id)} label={c.name ?? ""} count={c.books_count} />
-          ))}
+          {tops
+            .filter((c) => shown(countOf(categoryCounts, c.id ?? 0), c.id === openTop?.id))
+            .map((c) => (
+              <div key={c.id} className="grid gap-1">
+                <Choice
+                  name={`${idPrefix}-category`}
+                  checked={filters.category_id === c.id}
+                  onSelect={() => set("category_id", c.id)}
+                  label={c.name ?? ""}
+                  count={c.total_books}
+                />
+                {openTop?.id === c.id && (c.children ?? []).length > 0 ? (
+                  <div className="ml-4 grid gap-1 border-l border-border pl-2" role="group" aria-label={f.allOf(c.name ?? "")}>
+                    {(c.children ?? []).map((child) => (
+                      <Choice
+                        key={child.id}
+                        name={`${idPrefix}-category`}
+                        checked={filters.category_id === child.id}
+                        onSelect={() => set("category_id", child.id)}
+                        label={child.name ?? ""}
+                        count={child.total_books}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ))}
         </Group>
       ) : null}
 
       <Group legend={t.format}>
         <Choice name={`${idPrefix}-format`} checked={filters.format === undefined} onSelect={() => set("format", undefined)} label={t.anyFormat} />
-        {FORMATS.map((f) => (
-          <Choice key={f.value} name={`${idPrefix}-format`} checked={filters.format === f.value} onSelect={() => set("format", f.value)} label={dict.formats[f.value]} />
+        {FORMATS.filter((fm) => shown(countOf(facets?.formats, fm.value), filters.format === fm.value)).map((fm) => (
+          <Choice key={fm.value} name={`${idPrefix}-format`} checked={filters.format === fm.value} onSelect={() => set("format", fm.value)} label={dict.formats[fm.value]} count={countOf(facets?.formats, fm.value)} />
         ))}
       </Group>
 
@@ -132,10 +185,39 @@ export function CatalogFilters({ filters, onChange, locked = {}, idPrefix }: Pro
 
       <Group legend={t.language}>
         <Choice name={`${idPrefix}-language`} checked={filters.language === undefined} onSelect={() => set("language", undefined)} label={t.anyLanguage} />
-        {LANGUAGES.map((l) => (
-          <Choice key={l} name={`${idPrefix}-language`} checked={filters.language === l} onSelect={() => set("language", l)} label={t.languages[l] ?? l} />
-        ))}
+        {languages
+          .filter((l) => shown(countOf(facets?.languages, l), filters.language === l))
+          .map((l) => (
+            <Choice key={l} name={`${idPrefix}-language`} checked={filters.language === l} onSelect={() => set("language", l)} label={t.languages[l] ?? l} count={countOf(facets?.languages, l)} />
+          ))}
       </Group>
+
+      {(facets?.with_age ?? 0) > 0 || filters.age !== undefined ? (
+        <Group legend={f.age}>
+          <Choice name={`${idPrefix}-age`} checked={filters.age === undefined} onSelect={() => set("age", undefined)} label={f.anyAge} />
+          {AGE_BANDS.map((band) => (
+            <Choice key={band.key} name={`${idPrefix}-age`} checked={filters.age === band.age} onSelect={() => set("age", band.age)} label={f.ages[band.key]} />
+          ))}
+        </Group>
+      ) : null}
+
+      {grades.length > 0 ? (
+        <Group legend={f.grade}>
+          <Choice name={`${idPrefix}-grade`} checked={filters.school_grade === undefined} onSelect={() => set("school_grade", undefined)} label={f.anyGrade} />
+          {grades.map((g) => (
+            <Choice key={g} name={`${idPrefix}-grade`} checked={filters.school_grade === g} onSelect={() => set("school_grade", g)} label={f.gradeN(g)} count={countOf(facets?.school_grades, g)} />
+          ))}
+        </Group>
+      ) : null}
+
+      {levels.length > 0 ? (
+        <Group legend={f.level}>
+          <Choice name={`${idPrefix}-level`} checked={filters.level === undefined} onSelect={() => set("level", undefined)} label={f.anyLevel} />
+          {levels.map((l) => (
+            <Choice key={l} name={`${idPrefix}-level`} checked={filters.level === l} onSelect={() => set("level", l)} label={l} count={countOf(facets?.levels, l)} />
+          ))}
+        </Group>
+      ) : null}
 
       {locked.publisher_id === undefined && (publishers.data?.data.length ?? 0) > 0 ? (
         <Group legend={t.publisher}>

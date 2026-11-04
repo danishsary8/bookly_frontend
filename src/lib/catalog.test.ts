@@ -62,4 +62,13 @@ describe("filter helpers", () => {
     expect(effectiveSort({})).toBe("newest");
     expect(effectiveSort({ q: "dune", sort: "title" })).toBe("title");
   });
+
+  it("reads and writes the audience filters, dropping bad values", () => {
+    const params = new URLSearchParams("age=10&school_grade=9&level=B1&has_ebook=1&sort=best_selling");
+    const filters = parseBookFilters(params);
+    expect(filters).toMatchObject({ age: 10, school_grade: 9, level: "B1", has_ebook: true, sort: "best_selling" });
+    expect(toSearchParams(filters).toString()).toBe("age=10&school_grade=9&level=B1&has_ebook=1&sort=best_selling");
+    expect(parseBookFilters(new URLSearchParams("age=40&school_grade=13&level=Z9&has_ebook=yes"))).toMatchObject({ age: undefined, school_grade: undefined, level: undefined, has_ebook: undefined });
+    expect(activeFilterCount(filters)).toBe(4);
+  });
 });

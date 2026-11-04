@@ -33,10 +33,19 @@ export const bookSchema = z
     series_order: optionalInt(1, 32767, "Use a whole number from 1."),
     language: z.string().trim().min(1, "Enter the language.").max(50),
     page_count: optionalInt(1, 100000, "Use a whole number of pages."),
+    // Who the book is for (all optional): reader age, Khmer school grade, English level.
+    age_min: optionalInt(0, 18, "Use an age from 0 to 18."),
+    age_max: optionalInt(0, 18, "Use an age from 0 to 18."),
+    school_grade: z.string(),
+    level: z.string(),
     publish_date: z.string(),
     description: z
       .string()
       .max(20000, "Keep the description under 20,000 characters."),
+  })
+  .refine((data) => data.age_min === "" || data.age_max === "" || Number(data.age_max) >= Number(data.age_min), {
+    message: "The oldest age can't be below the youngest.",
+    path: ["age_max"],
   })
   .refine(
     (data) => {
@@ -72,6 +81,10 @@ export const bookDefaults = (book?: StaffBook | null): BookValues => ({
   series_order: book?.series_order ? String(book.series_order) : "",
   language: book?.language ?? "English",
   page_count: book?.page_count ? String(book.page_count) : "",
+  age_min: book?.age_min != null ? String(book.age_min) : "",
+  age_max: book?.age_max != null ? String(book.age_max) : "",
+  school_grade: book?.school_grade != null ? String(book.school_grade) : "",
+  level: book?.level ?? "",
   publish_date: book?.publish_date ?? "",
   description: book?.description ?? "",
 });
@@ -91,6 +104,10 @@ export const toBookInput = (
     series_order: v.series_id ? numOrNull(v.series_order) : null,
     language: v.language.trim(),
     page_count: numOrNull(v.page_count),
+    age_min: numOrNull(v.age_min),
+    age_max: numOrNull(v.age_max),
+    school_grade: numOrNull(v.school_grade),
+    level: v.level || null,
     publish_date: v.publish_date || null,
     description: v.description.trim() || null,
   };

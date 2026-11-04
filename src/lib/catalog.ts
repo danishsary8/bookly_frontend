@@ -22,13 +22,32 @@ export const LANGUAGES = ["English", "Khmer"] as const;
 export const SORTS: { value: BookSort; label: string }[] = [
   { value: "relevance", label: "Best match" },
   { value: "newest", label: "Newest" },
+  { value: "best_selling", label: "Best selling" },
   { value: "rating", label: "Best rated" },
+  { value: "most_reviewed", label: "Most reviewed" },
   { value: "price_asc", label: "Price: low to high" },
   { value: "price_desc", label: "Price: high to low" },
   { value: "title", label: "Title A–Z" },
 ];
 
 export const PER_PAGE = 24;
+
+/** English learning levels (CEFR) and Khmer school grades the API filters on. */
+export const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
+export const GRADES = [7, 8, 9, 10, 11, 12] as const;
+/** Reader age choices: the filter sends one age inside the band. */
+export const AGE_BANDS = [
+  { key: "baby", age: 2 },
+  { key: "young", age: 5 },
+  { key: "middle", age: 10 },
+  { key: "teen", age: 15 },
+] as const;
+
+const between = (value: string | null, min: number, max: number) => {
+  if (!value || !/^\d+$/.test(value)) return undefined;
+  const n = Number(value);
+  return n >= min && n <= max ? n : undefined;
+};
 
 const positiveInt = (value: string | null) => {
   if (!value || !/^\d+$/.test(value)) return undefined;
@@ -62,12 +81,16 @@ export function parseBookFilters(params: URLSearchParams): BookFilters {
     min_price: min,
     max_price: max,
     in_stock: params.get("in_stock") === "1" ? true : undefined,
+    has_ebook: params.get("has_ebook") === "1" ? true : undefined,
+    age: between(params.get("age"), 0, 18),
+    school_grade: between(params.get("school_grade"), 1, 12),
+    level: LEVELS.find((l) => l === params.get("level")),
     sort: SORTS.some((s) => s.value === sort) ? (sort as BookSort) : undefined,
     page: positiveInt(params.get("page")),
   };
 }
 
-const ORDER: (keyof BookFilters)[] = ["q", "category_id", "author_id", "series_id", "publisher_id", "format", "language", "min_price", "max_price", "in_stock", "sort", "page"];
+const ORDER: (keyof BookFilters)[] = ["q", "category_id", "author_id", "series_id", "publisher_id", "format", "language", "age", "school_grade", "level", "min_price", "max_price", "in_stock", "has_ebook", "sort", "page"];
 
 /** Writes filters back as a stable, minimal query string (no empty values, page 1 omitted). */
 export function toSearchParams(filters: BookFilters): URLSearchParams {
@@ -85,7 +108,7 @@ export function toSearchParams(filters: BookFilters): URLSearchParams {
 export const effectiveSort = (filters: BookFilters): BookSort => filters.sort ?? (filters.q ? "relevance" : "newest");
 
 /** Filters a visitor can clear (search text, sort and page are not "filters"). */
-export const FILTER_KEYS = ["category_id", "author_id", "series_id", "publisher_id", "format", "language", "min_price", "max_price", "in_stock"] as const;
+export const FILTER_KEYS = ["category_id", "author_id", "series_id", "publisher_id", "format", "language", "age", "school_grade", "level", "min_price", "max_price", "in_stock", "has_ebook"] as const;
 
 export const activeFilterCount = (filters: BookFilters) => FILTER_KEYS.filter((key) => filters[key] !== undefined).length;
 
