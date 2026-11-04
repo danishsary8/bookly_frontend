@@ -10,7 +10,20 @@ export const accountKeys = {
   addresses: () => ["account", "addresses"] as const,
   wishlist: (params: object) => ["account", "wishlist", toQueryParams(params)] as const,
   storeCredits: () => ["account", "store-credits"] as const,
+  sessions: () => ["account", "sessions"] as const,
 };
+
+/** One device that is signed in to the account (Account → Sign-in & security). */
+export interface CustomerSession {
+  id: number;
+  /** "Chrome on Windows"; null for sign-ins saved before devices were recorded. */
+  device: string | null;
+  ip_address: string | null;
+  signed_in_at: string | null;
+  last_used_at: string | null;
+  expires_at: string | null;
+  is_current: boolean;
+}
 
 /** A refund paid as a one-use coupon that only this customer can use. */
 export interface StoreCredit {
@@ -34,6 +47,9 @@ export type AddressPayload = Omit<AddressInput, "address_line2" | "state" | "pos
 };
 
 export const accountApi = {
+  sessions: () => api.get<{ data: CustomerSession[] }>("/me/sessions").then((r) => r.data),
+  signOutSession: (id: number) => api.delete<{ message: string }>(`/me/sessions/${id}`),
+  signOutOtherSessions: () => api.post<{ message: string; signed_out: number }>("/me/sessions/sign-out-others", {}),
   me: () => api.get<Resource<Customer>>("/me").then((r) => r.data),
   /** "Download my data": everything the account shows, as one JSON object (5 per hour). */
   exportData: () => api.get<Record<string, unknown>>("/me/export"),
@@ -97,4 +113,5 @@ export const accountQueries = {
   wishlist: (params: Parameters<typeof accountApi.wishlist>[0] = {}) =>
     queryOptions({ queryKey: accountKeys.wishlist(params), queryFn: () => accountApi.wishlist(params) }),
   storeCredits: () => queryOptions({ queryKey: accountKeys.storeCredits(), queryFn: accountApi.storeCredits }),
+  sessions: () => queryOptions({ queryKey: accountKeys.sessions(), queryFn: accountApi.sessions }),
 };
