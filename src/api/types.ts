@@ -15,6 +15,7 @@ export type BookVariant = Schemas["Variant"];
 export type BookFormat = BookVariant["format"];
 export type Author = Schemas["Author"];
 export type Category = Schemas["Category"];
+export type CategoryNode = Schemas["CategoryNode"];
 export type Publisher = Schemas["Publisher"];
 export type Series = Schemas["Series"];
 export type SeriesDetail = Schemas["SeriesDetail"];

@@ -110,6 +110,10 @@ export interface StaffBook {
   language: string;
   page_count: number | null;
   publish_date: string | null;
+  age_min?: number | null;
+  age_max?: number | null;
+  school_grade?: number | null;
+  level?: string | null;
   publisher_id: number | null;
   series_id: number | null;
   series_order: number | null;
@@ -130,6 +134,10 @@ export interface BookInput {
   language?: string;
   page_count?: number | null;
   publish_date?: string | null;
+  age_min?: number | null;
+  age_max?: number | null;
+  school_grade?: number | null;
+  level?: string | null;
   publisher_id?: number | null;
   series_id?: number | null;
   series_order?: number | null;
@@ -256,7 +264,7 @@ export interface NotificationsPage {
 
 export type LookupKind = "authors" | "categories" | "publishers" | "series";
 export type AuthorInput = { name?: string; bio?: string | null; photo_url?: string | null };
-export type CategoryInput = { name?: string; slug?: string };
+export type CategoryInput = { name?: string; slug?: string; parent_id?: number | null; sort_order?: number; icon?: string | null };
 export type PublisherInput = { name: string };
 export type SeriesInput = { name?: string; description?: string | null };
 type LookupOf<K extends LookupKind> = K extends "authors" ? Author : K extends "categories" ? Category : K extends "publishers" ? Publisher : Series;

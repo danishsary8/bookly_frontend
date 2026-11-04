@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import type { BookFilters } from "@/api/endpoints/catalog";
 import { catalogQueries } from "@/api/endpoints/catalog";
-import { FILTER_KEYS, clearFilters, withFilter } from "@/lib/catalog";
+import { AGE_BANDS, FILTER_KEYS, clearFilters, withFilter } from "@/lib/catalog";
 import { formatUsd } from "@/stores/currency";
 import { formatName, useT } from "@/i18n";
 
@@ -38,6 +38,11 @@ export function ActiveFilters({ filters, onChange, locked = {} }: Props) {
     add("max_price", t.upTo(formatUsd(filters.max_price)));
   }
   add("in_stock", t.inStock);
+  add("has_ebook", dict.catalogFilters.hasEbook);
+  const band = AGE_BANDS.find((b) => b.age === filters.age);
+  add("age", dict.catalogFilters.agePrefix(band ? dict.catalogFilters.ages[band.key] : String(filters.age)));
+  add("school_grade", dict.catalogFilters.gradeN(filters.school_grade ?? 0));
+  add("level", dict.catalogFilters.levelN(filters.level ?? ""));
 
   if (chips.length === 0) return null;
 

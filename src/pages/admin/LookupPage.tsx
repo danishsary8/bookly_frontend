@@ -23,15 +23,30 @@ import { toast } from "@/stores/toast";
 
 const PER_PAGE = 25;
 
-function LookupDialog({ kind, row, onClose }: { kind: LookupKind; row: LookupRow | null; onClose: () => void }) {
+/** Categories: top-level ones first (admin order), each followed by its sub-categories. */
+function asTree(rows: LookupRow[]): LookupRow[] {
+  const byOrder = (a: LookupRow, b: LookupRow) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0) || String(a.name).localeCompare(String(b.name));
+  const tops = rows.filter((r) => r.parent_id == null).sort(byOrder);
+  const placed = tops.flatMap((top) => [top, ...rows.filter((r) => r.parent_id === top.id).sort(byOrder)]);
+  // A sub-category whose parent is gone (shouldn't happen) still shows, at the end.
+  return [...placed, ...rows.filter((r) => !placed.includes(r))];
+}
+
+function LookupDialog({ kind, row, onClose, categories = [] }: { kind: LookupKind; row: LookupRow | null; onClose: () => void; categories?: LookupRow[] }) {
   const config = LOOKUPS[kind];
+  const isCategory = kind === "categories";
+  // Two levels: a parent must be top-level, and a category with sub-categories stays top-level.
+  const hasChildren = Boolean(row && categories.some((c) => c.parent_id === row.id));
+  const parentChoices = categories.filter((c) => c.parent_id == null && c.id !== row?.id);
+  const [parentId, setParentId] = useState(row?.parent_id == null ? "" : String(row.parent_id));
+  const [sortOrder, setSortOrder] = useState(String(row?.sort_order ?? 0));
   const queryClient = useQueryClient();
   const [values, setValues] = useState<Record<string, string>>(() => Object.fromEntries(config.fields.map((f) => [f.name, String(row?.[f.name] ?? "")])));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const alertRef = useRef<HTMLDivElement>(null);
 
   const save = useMutation({
-    mutationFn: (input: Record<string, string | null>) =>
+    mutationFn: (input: Record<string, string | number | null>) =>
       row ? staffApi.updateLookup(kind, row.id, input as never) : staffApi.createLookup(kind, input as never),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["catalog"] });
@@ -41,9 +56,9 @@ function LookupDialog({ kind, row, onClose }: { kind: LookupKind; row: LookupRow
     onError: (error) => {
       const apiError = ApiError.from(error);
       const next: Record<string, string> = {};
-      for (const f of config.fields) {
-        const m = apiError.field(f.name);
-        if (m) next[f.name] = m;
+      for (const name of [...config.fields.map((f) => f.name), "parent_id", "sort_order"]) {
+        const m = apiError.field(name);
+        if (m) next[name] = m;
       }
       if (!Object.keys(next).length) next.form = apiError.message;
       setErrors(next);
@@ -63,7 +78,15 @@ function LookupDialog({ kind, row, onClose }: { kind: LookupKind; row: LookupRow
     }
     setErrors(found);
     if (Object.keys(found).length) return;
-    const input: Record<string, string | null> = {};
+    if (isCategory && !/^\d{1,5}$/.test(sortOrder.trim())) {
+      setErrors({ sort_order: "Enter a whole number, e.g. 10." });
+      return;
+    }
+    const input: Record<string, string | number | null> = {};
+    if (isCategory) {
+      input.parent_id = parentId ? Number(parentId) : null;
+      input.sort_order = Number(sortOrder.trim());
+    }
     for (const f of config.fields) {
       const v = values[f.name].trim();
       // Optional fields send null to clear them; an empty slug is left out so the API makes one.
@@ -98,6 +121,43 @@ function LookupDialog({ kind, row, onClose }: { kind: LookupKind; row: LookupRow
               />
             ),
           )}
+          {isCategory ? (
+            <>
+              <div className="grid gap-1.5">
+                <label htmlFor="category-parent" className="text-sm font-semibold">
+                  Parent category <span className="font-normal text-muted-foreground">(optional)</span>
+                </label>
+                <select
+                  id="category-parent"
+                  value={parentId}
+                  disabled={hasChildren}
+                  onChange={(e) => setParentId(e.target.value)}
+                  aria-describedby="category-parent-hint"
+                  aria-invalid={errors.parent_id ? true : undefined}
+                  className="h-11 rounded-md border border-input bg-card px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+                >
+                  <option value="">None (top-level)</option>
+                  {parentChoices.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <p id="category-parent-hint" className="text-sm text-muted-foreground">
+                  {hasChildren ? "This category has sub-categories, so it stays top-level." : "Choose a parent to make this a sub-category (e.g. Fantasy under Fiction)."}
+                </p>
+                {errors.parent_id ? <p className="text-sm font-medium text-destructive">{errors.parent_id}</p> : null}
+              </div>
+              <TextField
+                label="Order"
+                hint="Smaller numbers come first in the shop menu."
+                inputMode="numeric"
+                value={sortOrder}
+                error={errors.sort_order}
+                onChange={(e) => setSortOrder(e.target.value)}
+              />
+            </>
+          ) : null}
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline" disabled={save.isPending}>
@@ -151,7 +211,7 @@ export default function LookupPage({ kind }: { kind: LookupKind }) {
   });
 
   const meta = list.data?.meta;
-  const rows = list.data?.rows ?? [];
+  const rows = kind === "categories" ? asTree(list.data?.rows ?? []) : (list.data?.rows ?? []);
   const search = (event: FormEvent) => {
     event.preventDefault();
     setParams(draft.trim() ? { q: draft.trim() } : {}, { replace: true });
@@ -221,7 +281,10 @@ export default function LookupPage({ kind }: { kind: LookupKind }) {
             <tbody className="divide-y divide-border">
               {rows.map((row) => (
                 <tr key={row.id}>
-                  <th scope="row" className="px-4 py-2.5 font-semibold">{row.name}</th>
+                  <th scope="row" className={cn("px-4 py-2.5", row.parent_id == null ? "font-semibold" : "pl-10 font-normal")}>
+                    {row.parent_id == null ? null : <span className="sr-only">Sub-category: </span>}
+                    {row.name}
+                  </th>
                   {config.detail ? <td className="max-w-md truncate px-4 py-2.5 text-muted-foreground">{String(row[config.detail.field] ?? "") || "—"}</td> : null}
                   <td className="px-4 py-2.5 text-right tabular-nums">{row.books_count ?? 0}</td>
                   <td className="px-4 py-2.5">
@@ -244,7 +307,7 @@ export default function LookupPage({ kind }: { kind: LookupKind }) {
       )}
       {meta ? <Pagination page={meta.current_page ?? 1} lastPage={meta.last_page ?? 1} hrefFor={hrefFor} /> : null}
 
-      {editing ? <LookupDialog key={editing === "new" ? "new" : editing.id} kind={kind} row={editing === "new" ? null : editing} onClose={() => setEditing(null)} /> : null}
+      {editing ? <LookupDialog key={editing === "new" ? "new" : editing.id} kind={kind} row={editing === "new" ? null : editing} categories={kind === "categories" ? rows : []} onClose={() => setEditing(null)} /> : null}
       <StrictDeleteDialog
         open={Boolean(deleting)}
         onOpenChange={(open) => !open && setDeleting(null)}

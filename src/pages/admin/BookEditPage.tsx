@@ -48,7 +48,7 @@ import { mainCover, pendingCover } from "@/features/admin/books/pendingCover";
 import { ImageUploadField } from "@/components/ui/ImageUploadField";
 import { StockHistoryDrawer } from "@/features/admin/stock/StockHistoryDrawer";
 import { useStaff } from "@/features/admin/staffSession";
-import { formatLabel, LANGUAGES } from "@/lib/catalog";
+import { formatLabel, GRADES, LANGUAGES, LEVELS } from "@/lib/catalog";
 import { applyApiErrors } from "@/lib/forms";
 import { cn } from "@/lib/utils";
 import { formatUsd } from "@/stores/currency";
@@ -154,6 +154,10 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
         "series_order",
         "language",
         "page_count",
+        "age_min",
+        "age_max",
+        "school_grade",
+        "level",
         "publish_date",
         "description",
       ]);
@@ -348,6 +352,49 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
           error={errors.page_count?.message}
           {...register("page_count")}
         />
+        <TextField
+          label="Reader age from"
+          optional
+          inputMode="numeric"
+          hint="For kids and young adult books."
+          error={errors.age_min?.message}
+          {...register("age_min")}
+        />
+        <TextField
+          label="Reader age to"
+          optional
+          inputMode="numeric"
+          error={errors.age_max?.message}
+          {...register("age_max")}
+        />
+        <SelectField
+          label="School grade"
+          optional
+          hint="For Khmer school books."
+          error={errors.school_grade?.message}
+          {...register("school_grade")}
+        >
+          <option value="">Not a school book</option>
+          {GRADES.map((g) => (
+            <option key={g} value={g}>
+              Grade {g}
+            </option>
+          ))}
+        </SelectField>
+        <SelectField
+          label="English level"
+          optional
+          hint="For English learning books."
+          error={errors.level?.message}
+          {...register("level")}
+        >
+          <option value="">No level</option>
+          {LEVELS.map((l) => (
+            <option key={l} value={l}>
+              {l}
+            </option>
+          ))}
+        </SelectField>
         <TextField
           label="Published"
           optional

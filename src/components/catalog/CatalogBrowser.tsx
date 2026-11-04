@@ -41,7 +41,7 @@ export function CatalogBrowser({ locked = {}, noun: nounFor, empty }: Props) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const urlFilters = parseBookFilters(searchParams);
   const filters: BookFilters = { ...urlFilters, ...locked };
-  const query = useQuery(catalogQueries.books({ ...filters, per_page: PER_PAGE }));
+  const query = useQuery(catalogQueries.books({ ...filters, per_page: PER_PAGE, facets: true }));
   const showSkeleton = useSkeletonVisible(query.isPending);
 
   const apply = (next: BookFilters) => {
@@ -72,7 +72,7 @@ export function CatalogBrowser({ locked = {}, noun: nounFor, empty }: Props) {
     );
   }, [pageTooFar, lastPage, setSearchParams]);
 
-  const filterPanel = (prefix: string) => <CatalogFilters filters={filters} onChange={apply} locked={locked} idPrefix={prefix} />;
+  const filterPanel = (prefix: string) => <CatalogFilters filters={filters} onChange={apply} locked={locked} idPrefix={prefix} facets={query.data?.facets} />;
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10">
@@ -131,7 +131,7 @@ export function CatalogBrowser({ locked = {}, noun: nounFor, empty }: Props) {
               <SelectContent align="end">
                 {sorts.map((s) => (
                   <SelectItem key={s.value} value={s.value}>
-                    {t.sorts[s.value]}
+                    {s.value === "best_selling" || s.value === "most_reviewed" ? dict.catalogFilters.sorts[s.value] : t.sorts[s.value]}
                   </SelectItem>
                 ))}
               </SelectContent>

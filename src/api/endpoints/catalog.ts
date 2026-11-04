@@ -7,6 +7,7 @@ import type {
   BookFormat,
   BookReviewsPage,
   Category,
+  CategoryNode,
   Paginated,
   Publisher,
   Resource,
@@ -14,7 +15,17 @@ import type {
   SeriesDetail,
 } from "../types";
 
-export type BookSort = "relevance" | "newest" | "price_asc" | "price_desc" | "title" | "rating";
+export type BookSort = "relevance" | "newest" | "price_asc" | "price_desc" | "title" | "rating" | "best_selling" | "most_reviewed";
+
+/** Book counts per filter choice, with the other filters applied (GET /books?facets=1). */
+export interface BookFacets {
+  formats?: Record<string, number>;
+  languages?: Record<string, number>;
+  categories?: Record<string, number>;
+  school_grades?: Record<string, number>;
+  levels?: Record<string, number>;
+  with_age?: number;
+}
 
 export interface BookFilters {
   q?: string;
@@ -27,6 +38,11 @@ export interface BookFilters {
   min_price?: number;
   max_price?: number;
   in_stock?: boolean;
+  has_ebook?: boolean;
+  age?: number;
+  school_grade?: number;
+  level?: string;
+  facets?: boolean;
   sort?: BookSort;
   page?: number;
   per_page?: number;
@@ -54,13 +70,14 @@ export const catalogKeys = {
   authors: (params: object) => ["catalog", "authors", toQueryParams(params)] as const,
   author: (id: number) => ["catalog", "author", id] as const,
   categories: () => ["catalog", "categories"] as const,
+  categoryTree: () => ["catalog", "categories", "tree"] as const,
   publishers: (params: object) => ["catalog", "publishers", toQueryParams(params)] as const,
   seriesList: (params: object) => ["catalog", "series", toQueryParams(params)] as const,
   series: (id: number) => ["catalog", "series", id] as const,
 };
 
 /** A page of books; `search.typo_tolerant` is true when nothing matched exactly and the API matched similar spellings. */
-export type BookList = Paginated<BookCard> & { search?: { typo_tolerant?: boolean } };
+export type BookList = Paginated<BookCard> & { search?: { typo_tolerant?: boolean }; facets?: BookFacets };
 
 export const catalogApi = {
   books: (filters: BookFilters = {}) => api.get<BookList>("/books", { params: toQueryParams(filters) }),
@@ -74,6 +91,8 @@ export const catalogApi = {
     api.get<Paginated<Author>>("/authors", { params: toQueryParams(params) }),
   author: (id: number) => api.get<Resource<Author>>(`/authors/${id}`).then((r) => r.data),
   categories: () => api.get<Resource<Category[]>>("/categories").then((r) => r.data),
+  /** Top-level categories with their non-empty children and total_books (the menu tree). */
+  categoryTree: () => api.get<Resource<CategoryNode[]>>("/categories", { params: { tree: 1 } }).then((r) => r.data),
   publishers: (params: { q?: string; page?: number; per_page?: number } = {}) =>
     api.get<Paginated<Publisher>>("/publishers", { params: toQueryParams(params) }),
   seriesList: (params: { page?: number; per_page?: number } = {}) =>
@@ -96,6 +115,7 @@ export const catalogQueries = {
     queryOptions({ queryKey: catalogKeys.authors(params), queryFn: () => catalogApi.authors(params) }),
   author: (id: number) => queryOptions({ queryKey: catalogKeys.author(id), queryFn: () => catalogApi.author(id) }),
   categories: () => queryOptions({ queryKey: catalogKeys.categories(), queryFn: catalogApi.categories, staleTime: 10 * 60_000 }),
+  categoryTree: () => queryOptions({ queryKey: catalogKeys.categoryTree(), queryFn: catalogApi.categoryTree, staleTime: 10 * 60_000 }),
   publishers: (params: Parameters<typeof catalogApi.publishers>[0] = {}) =>
     queryOptions({ queryKey: catalogKeys.publishers(params), queryFn: () => catalogApi.publishers(params), staleTime: 10 * 60_000 }),
   seriesList: (params: Parameters<typeof catalogApi.seriesList>[0] = {}) =>

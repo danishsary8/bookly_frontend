@@ -227,7 +227,17 @@ export interface paths {
                     min_price?: number;
                     max_price?: number;
                     in_stock?: boolean;
-                    sort?: "relevance" | "newest" | "price_asc" | "price_desc" | "title" | "rating";
+                    /** @description Any of these categories (each includes its sub-categories; category_id does too) */
+                    "category_ids[]"?: number[];
+                    "formats[]"?: ("hardcover" | "paperback" | "ebook" | "audiobook")[];
+                    /** @description Books for a reader of this age (age_min <= age <= age_max) */
+                    age?: number;
+                    school_grade?: number;
+                    level?: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+                    has_ebook?: boolean;
+                    /** @description Adds `facets` {formats, languages, categories (top-level id), school_grades, levels, with_age} = book counts with the other filters applied */
+                    facets?: boolean;
+                    sort?: "relevance" | "newest" | "price_asc" | "price_desc" | "best_selling" | "most_reviewed" | "title" | "rating";
                     /** @description Comma-separated IDs or array (max 12); keeps order and drops missing/hidden books */
                     ids?: string;
                     per_page?: components["parameters"]["PerPage"];
@@ -675,10 +685,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** All categories with books_count (not paginated) */
+        /** All categories with books_count and parent_id (not paginated, by name). ?tree=1: top-level categories in admin order with children nested and total_books; empty ones left out */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    tree?: boolean;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -5216,7 +5228,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create category (slug auto) */
+        /** Create category (name, slug? auto, parent_id? top-level only: two levels, sort_order?, icon? lucide name) */
         post: {
             parameters: {
                 query?: never;
@@ -8733,7 +8745,25 @@ export interface components {
             id?: number;
             name?: string;
             slug?: string;
+            /** @description Two levels: null = top-level */
+            parent_id?: number | null;
+            sort_order?: number;
+            /** @description Lucide icon name, e.g. book-open */
+            icon?: string | null;
             books_count?: number;
+        };
+        /** @description GET /categories?tree=1: a top-level category with its non-empty children */
+        CategoryNode: {
+            id?: number;
+            name?: string;
+            slug?: string;
+            parent_id?: number | null;
+            sort_order?: number;
+            icon?: string | null;
+            books_count?: number;
+            /** @description Books in this category or its children, each counted once */
+            total_books?: number;
+            children?: components["schemas"]["CategoryNode"][];
         };
         Publisher: {
             id?: number;
@@ -8999,6 +9029,16 @@ export interface components {
             id?: number;
             title?: string;
             language?: string;
+            /** @description Youngest reader age (0-18) */
+            age_min?: number | null;
+            age_max?: number | null;
+            /** @description Khmer school grade (1-12) */
+            school_grade?: number | null;
+            /**
+             * @description English learning level
+             * @enum {string|null}
+             */
+            level?: "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | null;
             /** Format: date */
             publish_date?: string | null;
             authors?: {
@@ -9460,6 +9500,7 @@ export type SchemaPageLinks = components['schemas']['PageLinks'];
 export type SchemaAmount = components['schemas']['Amount'];
 export type SchemaAuthor = components['schemas']['Author'];
 export type SchemaCategory = components['schemas']['Category'];
+export type SchemaCategoryNode = components['schemas']['CategoryNode'];
 export type SchemaPublisher = components['schemas']['Publisher'];
 export type SchemaSeries = components['schemas']['Series'];
 export type SchemaSeriesDetail = components['schemas']['SeriesDetail'];

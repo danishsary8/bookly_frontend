@@ -1095,6 +1095,22 @@ export const km: Translations = {
     scanQrLead: "ស្កេនកូដ QR នេះដោយកាមេរ៉ាទូរស័ព្ទ ដើម្បីបើកមើលសៀវភៅនេះភ្លាមៗលើទូរស័ព្ទ។",
     downloadQr: "ទាញយក QR",
   },
+  // TODO(antigravity): translate to Khmer (owner 2026-11-04: Antigravity does all Khmer translation). English for now.
+  catalogFilters: {
+    hasEbook: "Has an ebook",
+    age: "Reader age",
+    anyAge: "Any age",
+    ages: { baby: "0–3", young: "3–7", middle: "8–12", teen: "Teens" } as Record<string, string>,
+    agePrefix: (band: string) => `Age ${band}`,
+    grade: "School grade",
+    anyGrade: "Any grade",
+    gradeN: (n: number) => `Grade ${n}`,
+    level: "English level",
+    anyLevel: "Any level",
+    levelN: (level: string) => `Level ${level}`,
+    allOf: (name: string) => `All of ${name}`,
+    sorts: { best_selling: "Best selling", most_reviewed: "Most reviewed" },
+  },
   browse: {
     filters: "តម្រង",
     clearAll: "សម្អាតទាំងអស់",

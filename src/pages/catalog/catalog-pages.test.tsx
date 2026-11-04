@@ -46,6 +46,12 @@ beforeEach(() => {
     { id: 1, name: "Fiction", slug: "fiction", books_count: 6 },
     { id: 2, name: "Classics", slug: "classics", books_count: 14 },
   ]);
+  vi.spyOn(catalogApi, "categoryTree").mockResolvedValue([
+    { id: 1, name: "Fiction", slug: "fiction", parent_id: null, sort_order: 10, icon: null, books_count: 2, total_books: 6, children: [
+      { id: 3, name: "Fantasy", slug: "fantasy", parent_id: 1, sort_order: 10, icon: null, books_count: 4, total_books: 4, children: [] },
+    ] },
+    { id: 2, name: "Classics", slug: "classics", parent_id: null, sort_order: 20, icon: null, books_count: 14, total_books: 14, children: [] },
+  ]);
   vi.spyOn(catalogApi, "publishers").mockResolvedValue(page([]) as never);
   vi.spyOn(accountApi, "wishlist").mockResolvedValue(page([]));
 });
@@ -111,6 +117,45 @@ describe("BooksPage", () => {
     const sidebar = await screen.findByRole("complementary", { name: "Filters" });
     await user.click(await within(sidebar).findByRole("radio", { name: /Fiction/ }));
     expect(screen.getByTestId("where")).toHaveTextContent("/books?category_id=1");
+  });
+
+  it("shows sub-categories of the chosen category and hides choices that would show nothing", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(catalogApi, "books").mockResolvedValue({
+      ...page([card(1, "Emma")]),
+      facets: { formats: { paperback: 6, ebook: 2 }, languages: { English: 6 }, categories: { "1": 6 }, school_grades: { "9": 2 }, levels: {}, with_age: 0 },
+    });
+    renderWithProviders(
+      <>
+        <Routes>
+          <Route path="/books" element={<BooksPage />} />
+        </Routes>
+        <Routes>
+          <Route path="*" element={<Where />} />
+        </Routes>
+      </>,
+      { route: "/books" },
+    );
+    const sidebar = await screen.findByRole("complementary", { name: "Filters" });
+    await within(sidebar).findByRole("radio", { name: /Fiction/ });
+    expect(within(sidebar).queryByRole("radio", { name: /Classics/ })).not.toBeInTheDocument(); // 0 with these filters
+    expect(within(sidebar).queryByRole("radio", { name: /Hardcover/ })).not.toBeInTheDocument();
+    expect(within(sidebar).queryByRole("radio", { name: /Khmer/ })).not.toBeInTheDocument();
+    expect(within(sidebar).getByRole("radio", { name: /Grade 9/ })).toBeInTheDocument();
+    expect(within(sidebar).queryByRole("group", { name: "English level" })).not.toBeInTheDocument();
+    expect(within(sidebar).queryByText("Reader age")).not.toBeInTheDocument();
+    expect(within(sidebar).getByRole("switch", { name: "Has an ebook" })).toBeInTheDocument();
+    expect(within(sidebar).queryByRole("radio", { name: /Fantasy/ })).not.toBeInTheDocument();
+
+    await user.click(within(sidebar).getByRole("radio", { name: /Fiction/ }));
+    expect(await within(sidebar).findByRole("radio", { name: /Fantasy/ })).toBeInTheDocument();
+    // With a category chosen, the other categories stay (counts are the categories' own totals).
+    expect(within(sidebar).getByRole("radio", { name: /Classics/ })).toHaveAccessibleName(/Classics/);
+    expect(within(sidebar).getByRole("radio", { name: /Fiction/ }).closest("label")).toHaveTextContent("6");
+    await user.click(within(sidebar).getByRole("radio", { name: /Fantasy/ }));
+    expect(screen.getByTestId("where")).toHaveTextContent("/books?category_id=3");
+    await user.click(within(sidebar).getByRole("radio", { name: /Grade 9/ }));
+    expect(screen.getByTestId("where")).toHaveTextContent("/books?category_id=3&school_grade=9");
   });
 
   it("offers to clear filters when nothing matches", async () => {
