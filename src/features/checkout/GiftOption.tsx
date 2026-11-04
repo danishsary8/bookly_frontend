@@ -57,7 +57,7 @@ export function GiftOption({
             hint={
               <span className="flex items-center justify-between gap-2">
                 <span>{t.messageHint}</span>
-                <span className="tabular-nums">
+                <span className="shrink-0 whitespace-nowrap tabular-nums">
                   {message.length}/{GIFT_MESSAGE_MAX}
                 </span>
               </span>
