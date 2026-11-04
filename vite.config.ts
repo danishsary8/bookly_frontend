@@ -15,6 +15,8 @@ export default defineConfig(({ mode }) => {
   return {
     define: {
       "import.meta.env.VITE_RELEASE": JSON.stringify(release),
+      // Vercel sets VERCEL=1 while it builds; visitor statistics only load on those builds (VisitorAnalytics).
+      "import.meta.env.VITE_ON_VERCEL": JSON.stringify(Boolean(env.VERCEL)),
     },
     plugins: [
       react(),
