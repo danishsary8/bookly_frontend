@@ -16,6 +16,7 @@ import { clearRecentlyViewed, getRecentlyViewed } from "@/stores/recentlyViewed"
 import { dismissToast } from "@/stores/toast";
 import BookDetailPage from "./BookDetailPage";
 import BooksPage from "./BooksPage";
+import CategoryPage from "./CategoryPage";
 
 const card = (id: number, title: string, extra: Partial<BookCard> = {}): BookCard => ({
   id,
@@ -43,8 +44,9 @@ beforeEach(() => {
   clearSession("customer");
   clearRecentlyViewed();
   vi.spyOn(catalogApi, "categories").mockResolvedValue([
-    { id: 1, name: "Fiction", slug: "fiction", books_count: 6 },
-    { id: 2, name: "Classics", slug: "classics", books_count: 14 },
+    { id: 1, name: "Fiction", slug: "fiction", parent_id: null, books_count: 6 },
+    { id: 2, name: "Classics", slug: "classics", parent_id: null, books_count: 14 },
+    { id: 3, name: "Fantasy", slug: "fantasy", parent_id: 1, books_count: 4 },
   ]);
   vi.spyOn(catalogApi, "categoryTree").mockResolvedValue([
     { id: 1, name: "Fiction", slug: "fiction", parent_id: null, sort_order: 10, icon: null, books_count: 2, total_books: 6, children: [
@@ -343,5 +345,37 @@ describe("LegacyBrowseRedirect", () => {
       { route: from },
     );
     expect(screen.getByTestId("where")).toHaveTextContent(to);
+  });
+});
+
+describe("CategoryPage", () => {
+  it("shows sub-categories as links on a top-level category page", async () => {
+    vi.spyOn(catalogApi, "books").mockResolvedValue(page([]));
+    renderWithProviders(
+      <Routes>
+        <Route path="/categories/:slug" element={<CategoryPage />} />
+      </Routes>,
+      { route: "/categories/fiction" },
+    );
+
+    const subNav = await screen.findByRole("navigation", { name: "Sub-categories" });
+    const subLink = within(subNav).getByRole("link", { name: /Fantasy/ });
+    expect(subLink).toHaveAttribute("href", "/categories/fantasy");
+    expect(subLink).toHaveTextContent("Fantasy · 4");
+    expect(screen.queryByText(/← Back to/)).not.toBeInTheDocument();
+  });
+
+  it("shows a back link to the parent category on a sub-category page", async () => {
+    vi.spyOn(catalogApi, "books").mockResolvedValue(page([]));
+    renderWithProviders(
+      <Routes>
+        <Route path="/categories/:slug" element={<CategoryPage />} />
+      </Routes>,
+      { route: "/categories/fantasy" },
+    );
+
+    const backLink = await screen.findByRole("link", { name: "← Back to Fiction" });
+    expect(backLink).toHaveAttribute("href", "/categories/fiction");
+    expect(screen.queryByRole("navigation", { name: "Sub-categories" })).not.toBeInTheDocument();
   });
 });

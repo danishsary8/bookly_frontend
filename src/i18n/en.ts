@@ -1449,6 +1449,10 @@ export const en = {
     notFound: "No payment to show",
     notFoundLead: "This order is not paid by KHQR, or it is not yours.",
   },
+  categorySubNav: {
+    subcategories: "Sub-categories",
+    backToParent: (name: string) => `← Back to ${name}`,
+  },
   common: {
     loading: "Loading…",
     error: "An error occurred",

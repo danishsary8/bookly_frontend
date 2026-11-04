@@ -1454,6 +1454,10 @@ export const km: Translations = {
     notFound: "មិនមានការបង់ប្រាក់ត្រូវបង្ហាញ",
     notFoundLead: "ការបញ្ជាទិញនេះមិនបង់តាម KHQR ឬមិនមែនជារបស់អ្នក។",
   },
+  categorySubNav: {
+    subcategories: "ប្រភេទរង",
+    backToParent: (name: string) => `← ត្រឡប់ទៅ ${name}`,
+  },
   common: {
     loading: "កំពុងដំណើរការ…",
     error: "មានបញ្ហាកើតឡើង",
