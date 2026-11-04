@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { MapPin, Phone } from "lucide-react";
+import { ExternalLink, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Order, OrderItem } from "@/api/types";
 import { formatAddressLines } from "@/features/account/address";
+import { mapsLink } from "@/features/maps/googleMaps";
 import { percentLabel } from "@/features/offers/percent";
 import { formatMoney, formatUsd, useCurrency } from "@/stores/currency";
 import { formatName, useT } from "@/i18n";
@@ -100,6 +101,17 @@ export function DeliveryAddressCard({ address, title }: { address: Order["shippi
           <Phone className="size-4" aria-hidden="true" /> {address.phone}
         </span>
       </address>
+      {address.latitude != null && address.longitude != null ? (
+        // The customer's map pin: a plain Google Maps link (free, no key), e.g. for the courier.
+        <a
+          href={mapsLink({ lat: address.latitude, lng: address.longitude })}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 justify-self-start text-sm font-semibold text-primary underline-offset-4 hover:underline"
+        >
+          <ExternalLink className="size-4" aria-hidden="true" /> {dict.mapPin.openInMaps}
+        </a>
+      ) : null}
     </section>
   );
 }

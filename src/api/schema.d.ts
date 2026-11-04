@@ -2261,6 +2261,159 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Where you're signed in (one entry per signed-in device)
+         * @description Device is read from the browser ("Chrome on Windows"; null for sign-ins saved before 2026-11-04). The shared demo account only sees its own session.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Signed-in devices, most recently used first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                id?: number;
+                                device?: string | null;
+                                ip_address?: string | null;
+                                /** Format: date-time */
+                                signed_in_at?: string | null;
+                                /** Format: date-time */
+                                last_used_at?: string | null;
+                                /** Format: date-time */
+                                expires_at?: string | null;
+                                is_current?: boolean;
+                            }[];
+                        };
+                    };
+                };
+                401: components["responses"]["Unauthorized"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/sessions/sign-out-others": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign out of every other device (keeps this one) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Done; signed_out = how many devices were signed out */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["Unauthorized"];
+                /** @description The shared demo account */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Sign out of one other device */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Signed out */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["Unauthorized"];
+                /** @description The shared demo account */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not one of your devices, or already signed out */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description This device (use POST /auth/logout) */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/store-credits": {
         parameters: {
             query?: never;
@@ -2870,7 +3023,14 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            data?: components["schemas"]["BookCard"][];
+                            data?: (components["schemas"]["BookCard"] & {
+                                /** @enum {string} */
+                                wishlist_status?: "want_to_read" | "reading" | "finished";
+                                /** Format: date-time */
+                                wishlist_saved_at?: string | null;
+                                /** @description Lowest price when the book was saved (null for saves before 2026-11-04); the wishlist shows "Now …, was …" when price_from_usd is lower */
+                                wishlist_saved_price_usd?: string | null;
+                            })[];
                             links?: components["schemas"]["PageLinks"];
                             meta?: components["schemas"]["PageMeta"];
                         };
@@ -7730,6 +7890,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff/reports/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * (admin) Every report for the dates in one Excel file
+         * @description One .xlsx, one sheet per report, same numbers as the JSON reports: Summary, Sales by day, Top books (by revenue, by copies, revenue by category; top 20), Top customers (names and emails: personal data), Orders (by status, payment method, delivery area), Coupons and refunds, Offers. Money is stored as numbers with $ / ៛ formats; text is always a text cell, never a formula. At most 366 days; 10 downloads a minute.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    from?: components["parameters"]["From"];
+                    to?: components["parameters"]["To"];
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The workbook, as a download named bookly-report-{from}-to-{to}.xlsx */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                    };
+                };
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
+                422: components["responses"]["Validation"];
+                /** @description Too many downloads */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/staff/reports/offers": {
         parameters: {
             query?: never;
@@ -8786,6 +8998,10 @@ export interface components {
             postal_code?: string | null;
             country?: string;
             is_default?: boolean;
+            /** @description Optional map pin (with longitude), inside Cambodia (9.5–15) */
+            latitude?: number | null;
+            /** @description Optional map pin (with latitude), inside Cambodia (102–108) */
+            longitude?: number | null;
         };
         AddressInput: {
             label?: string;
@@ -8798,6 +9014,10 @@ export interface components {
             postal_code?: string;
             country: string;
             is_default?: boolean;
+            /** @description Optional map pin (with longitude), inside Cambodia (9.5–15) */
+            latitude?: number | null;
+            /** @description Optional map pin (with latitude), inside Cambodia (102–108) */
+            longitude?: number | null;
         };
         CartIssue: {
             /** @enum {string} */
