@@ -64,6 +64,7 @@ const TrashAdminPage = lazy(() => import("../pages/admin/TrashAdminPage"));
 const StaffSecurityPage = lazy(() => import("../pages/admin/StaffSecurityPage"));
 const NewsletterConfirmPage = lazy(() => import("../pages/NewsletterConfirmPage"));
 const NewsletterUnsubscribePage = lazy(() => import("../pages/NewsletterUnsubscribePage"));
+const CartReminderStopPage = lazy(() => import("../pages/CartReminderStopPage"));
 const ShippingPage = lazy(() => import("../pages/content/ShippingPage"));
 const ReturnsPolicyPage = lazy(() => import("../pages/content/ReturnsPolicyPage"));
 const FaqPage = lazy(() => import("../pages/content/FaqPage"));
@@ -130,6 +131,7 @@ const AppRoutes = () => {
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/newsletter/confirm" element={<NewsletterConfirmPage />} />
           <Route path="/newsletter/unsubscribe" element={<NewsletterUnsubscribePage />} />
+          <Route path="/email/cart-reminders/stop" element={<CartReminderStopPage />} />
           {UiKit ? <Route path="/ui-kit" element={<UiKit />} /> : null}
           <Route path="*" element={<NotFound />} />
           <Route element={<RequireVerified />}>

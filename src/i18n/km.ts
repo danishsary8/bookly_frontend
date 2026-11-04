@@ -1327,6 +1327,22 @@ export const km: Translations = {
     updating: "កំពុងធ្វើបច្ចុប្បន្នភាព…",
     backToHome: "ត្រឡប់ទៅទំព័រដើម",
   },
+  // TODO(antigravity): translate to Khmer (owner 2026-11-04: Antigravity does all Khmer translation). English for now.
+  cartReminder: {
+    title: "Cart reminder emails",
+    lead: "If I leave books in my cart, email me once a day later. At most one email a week.",
+    on: "On: we'll remind you once if books wait in your cart for a day.",
+    off: "Off: no cart reminder emails.",
+    verifyFirst: "Confirm your email address first to get cart reminders.",
+    saved: "Cart reminder emails turned on.",
+    savedOff: "Cart reminder emails turned off.",
+    stopping: "Turning off cart reminders…",
+    stopTitle: "Cart reminder emails",
+    stopDone: "Done. You won't get cart reminder emails any more.",
+    stopInvalid: "This link doesn't work. You can turn cart reminders off in Account → Profile.",
+    turnBackOn: "Change this in your profile",
+    backHome: "Back to the shop",
+  },
   priceDrop: {
     title: "អ៊ីមែលពេលតម្លៃចុះ",
     lead: "ផ្ញើអ៊ីមែលមកខ្ញុំ ពេលសៀវភៅក្នុងបញ្ជី «ចង់អាន» ចុះតម្លៃ 5% ឬច្រើនជាងនេះ។ យ៉ាងច្រើនមួយអ៊ីមែលក្នុងមួយសៀវភៅក្នុងមួយសប្តាហ៍។",
