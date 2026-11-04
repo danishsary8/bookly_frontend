@@ -154,6 +154,17 @@ describe("CheckoutPage", () => {
     );
   });
 
+  it("sends the gift option and message (trimmed) only when ticked", async () => {
+    const user = userEvent.setup();
+    const place = vi.spyOn(cartApi, "placeOrder").mockResolvedValue(order);
+    vi.spyOn(ordersApi, "order").mockResolvedValue(order);
+    app("/checkout");
+    await user.click(await screen.findByRole("checkbox", { name: /This is a gift/ }));
+    await user.type(screen.getByLabelText(/Gift message/), "  For Mum  ");
+    await user.click(screen.getByRole("button", { name: "Place order" }));
+    expect(place).toHaveBeenCalledWith(expect.objectContaining({ is_gift: true, gift_message: "For Mum" }), expect.any(String));
+  });
+
   it("prices delivery for the chosen address", async () => {
     const user = userEvent.setup();
     app("/checkout");

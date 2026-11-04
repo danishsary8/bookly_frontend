@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Ban, CheckCircle2, FileText, Mail, PackageCheck, Phone, Printer, Truck } from "lucide-react";
+import { ArrowLeft, Ban, CheckCircle2, FileText, Gift, Mail, PackageCheck, Phone, Printer, Truck } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { opsApi, opsKeys, opsQueries, type StaffOrder } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
@@ -266,6 +266,15 @@ export default function OrderAdminPage() {
                 Customer note
               </h2>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{o.delivery_note}</p>
+            </section>
+          ) : null}
+          {o.is_gift ? (
+            <section aria-labelledby="order-gift" className="grid gap-1 rounded-xl border border-warning bg-warning-tint p-5">
+              <h2 id="order-gift" className="flex items-center gap-2 font-sans text-[1.0625rem] font-semibold tracking-normal">
+                <Gift className="size-4" aria-hidden="true" /> Gift order
+              </h2>
+              <p className="text-sm">Print the packing slip (it shows the message, no prices). Keep the invoice out of the box.</p>
+              <p className="text-sm font-medium whitespace-pre-wrap">{o.gift_message || "No message."}</p>
             </section>
           ) : null}
           <StaffNoteCard order={o} />

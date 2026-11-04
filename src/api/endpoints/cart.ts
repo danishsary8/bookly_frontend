@@ -12,6 +12,9 @@ export interface PlaceOrderInput {
   payment_method: "cod" | "khqr";
   coupon_code?: string;
   delivery_note?: string;
+  /** Free gift option; the message (max 200) is printed on the packing sheet. */
+  is_gift?: boolean;
+  gift_message?: string;
   /** The automatic offer the preview showed; if it no longer applies the API answers 422 and places nothing. */
   offer_id?: number;
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Banknote, FileText, RotateCcw, Star, XCircle, QrCode } from "lucide-react";
+import { ArrowLeft, Banknote, FileText, Gift, RotateCcw, Star, XCircle, QrCode } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { orderQueries } from "@/api/endpoints/orders";
 import { ApiError } from "@/api/errors";
@@ -139,6 +139,15 @@ export default function OrderDetailPage() {
             <section aria-labelledby="delivery-note" className="grid gap-2 rounded-xl border border-border bg-card p-5 sm:p-6">
               <h2 id="delivery-note" className="font-display text-[1.563rem] leading-tight">{t.deliveryNote}</h2>
               <p className="text-muted-foreground whitespace-pre-wrap">{o.delivery_note}</p>
+            </section>
+          ) : null}
+          {o.is_gift ? (
+            <section aria-labelledby="order-gift" className="grid gap-2 rounded-xl border border-border bg-card p-5 sm:p-6">
+              <h2 id="order-gift" className="flex items-center gap-2 font-display text-[1.563rem] leading-tight">
+                <Gift className="size-5 text-primary" aria-hidden="true" /> {dict.gift.orderTitle}
+              </h2>
+              <p className="text-muted-foreground">{dict.gift.orderLead}</p>
+              <p className="whitespace-pre-wrap">{o.gift_message || dict.gift.noMessage}</p>
             </section>
           ) : null}
           <section aria-labelledby="order-payment" className="grid gap-2 rounded-xl border border-border bg-card p-5 sm:p-6">

@@ -20,6 +20,7 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { setCoupon, useCoupon } from "@/features/cart/couponStore";
 import { useUsableCart } from "@/features/cart/useCart";
 import { AddressPicker } from "@/features/checkout/AddressPicker";
+import { GiftOption } from "@/features/checkout/GiftOption";
 import { PaymentOptions, type PaymentChoice } from "@/features/checkout/PaymentOptions";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { formatMoney, useCurrency } from "@/stores/currency";
@@ -89,6 +90,8 @@ export default function CheckoutPage() {
     placeholderData: keepPreviousData,
   });
   const [deliveryNote, setDeliveryNote] = useState("");
+  const [isGift, setIsGift] = useState(false);
+  const [giftMessage, setGiftMessage] = useState("");
   // KHQR is offered only when the API lists it (KHQR payments design 2026-11-02).
   const options = useQuery(deliveryQueries.options());
   const khqr = options.data?.payment_methods?.find((m) => m.code === "khqr") ?? null;
@@ -117,6 +120,7 @@ export default function CheckoutPage() {
           payment_method: paymentMethod,
           ...(coupon ? { coupon_code: coupon } : {}),
           ...(deliveryNote.trim() ? { delivery_note: deliveryNote.trim() } : {}),
+          ...(isGift ? { is_gift: true, ...(giftMessage.trim() ? { gift_message: giftMessage.trim() } : {}) } : {}),
           // Offers spec O1: send the offer the customer saw, so a just-ended offer never silently raises the total.
           ...(preview.data?.applied === "offer" && preview.data.offer?.id ? { offer_id: preview.data.offer.id } : {}),
         },
@@ -214,6 +218,14 @@ export default function CheckoutPage() {
               value={deliveryNote}
               onChange={(e) => setDeliveryNote(e.target.value)}
               containerClassName="mt-4"
+            />
+            <GiftOption
+              isGift={isGift}
+              onIsGiftChange={setIsGift}
+              message={giftMessage}
+              onMessageChange={setGiftMessage}
+              cashOnDelivery={paymentMethod === "cod"}
+              khqrAvailable={Boolean(khqr)}
             />
           </Step>
 
