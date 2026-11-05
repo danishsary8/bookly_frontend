@@ -4,6 +4,7 @@ import { contact, policy, shop } from "@/content/shop";
 import { formatLabel } from "@/lib/catalog";
 import { invoiceTitle } from "./invoiceTitle";
 import { cn } from "@/lib/utils";
+import { FreeGiftLine } from "@/features/offers/FreeGiftLine";
 import { formatKhr, formatUsd } from "@/stores/currency";
 
 /*
@@ -127,6 +128,7 @@ export function InvoiceSheet({ doc }: { doc: Doc }) {
   return (
     <Sheet label={`${invoiceTitle(doc)} ${doc.order_number}`}>
       <Heading title={invoiceTitle(doc)} doc={doc} />
+      <FreeGiftLine gift={doc.free_gift} packing />
       {doc.is_gift ? <Stamp>Gift order: keep this invoice out of the box</Stamp> : null}
 
       <div className="grid grid-cols-2 gap-6">
@@ -289,6 +291,7 @@ export function PackingSlipSheet({ doc }: { doc: Doc }) {
   return (
     <Sheet label={`Packing slip ${doc.order_number}`}>
       <Heading title="Packing slip" doc={doc} />
+      <FreeGiftLine gift={doc.free_gift} packing />
       {doc.is_gift ? <Stamp>Gift order: no invoice or prices in the box</Stamp> : null}
 
       <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-6">

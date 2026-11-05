@@ -49,9 +49,9 @@ export const cartApi = {
 
   checkCoupon: (code: string) => api.post<Resource<CouponCheck>>("/cart/coupon/check", { code }).then((r) => r.data),
   /** Totals for the cart; delivery is priced for `addressId` (else the default address). */
-  preview: (couponCode?: string | null, addressId?: number | null) =>
+  preview: (couponCode?: string | null, addressId?: number | null, deliveryArea?: "phnom_penh" | "provinces") =>
     api
-      .post<Resource<CheckoutPreview>>("/checkout/preview", { ...(couponCode ? { coupon_code: couponCode } : {}), ...(addressId ? { address_id: addressId } : {}) })
+      .post<Resource<CheckoutPreview>>("/checkout/preview", { ...(couponCode ? { coupon_code: couponCode } : {}), ...(addressId ? { address_id: addressId } : {}), ...(deliveryArea ? { delivery_area: deliveryArea } : {}) })
       .then((r) => r.data),
 
   /**

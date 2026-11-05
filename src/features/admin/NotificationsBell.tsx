@@ -55,7 +55,7 @@ export function NotificationsBell() {
                   <li key={n.id}>
                     <Popover.Close asChild>
                       <Link
-                        to={n.data.book_id ? `/admin/books/${n.data.book_id}` : "/admin/books"}
+                        to={n.type === "low_gift_stock" ? "/admin/gifts" : n.data.book_id ? `/admin/books/${n.data.book_id}` : "/admin/books"}
                         onClick={() => !n.read_at && readOne.mutate(n.id)}
                         className={cn(
                           "flex gap-3 rounded-md px-3 py-2.5 text-[15px] outline-none transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring",

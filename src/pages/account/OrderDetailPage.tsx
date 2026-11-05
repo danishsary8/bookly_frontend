@@ -17,6 +17,7 @@ import { OrderTimeline } from "@/features/orders/OrderTimeline";
 import { orderDate } from "@/features/orders/format";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useT } from "@/i18n";
+import { FreeGiftLine } from "@/features/offers/FreeGiftLine";
 
 const PAYMENT_STATUS = {
   pending: "payPending",
@@ -80,6 +81,7 @@ export default function OrderDetailPage() {
 
   return (
     <div className="grid gap-8">
+      <FreeGiftLine gift={o.free_gift} />
       <div className="grid gap-4">
         <Link to="/account/orders" className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline">
           <ArrowLeft className="size-4" aria-hidden="true" /> {t.allOrders}

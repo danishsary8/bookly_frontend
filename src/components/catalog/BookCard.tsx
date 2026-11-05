@@ -1,7 +1,7 @@
 import { Heart, Loader2, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { BookCard as Book } from "@/api/types";
-import { NewBadge, OutOfStockBadge } from "@/components/BookBadge";
+import { LowStockBadge, NewBadge, OutOfStockBadge } from "@/components/BookBadge";
 import { MorphCover } from "@/components/MorphCover";
 import { OfferBadge } from "@/features/offers/offerText";
 import SpotlightCard from "@/components/SpotlightCard";
@@ -69,6 +69,7 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
 
         <div className="pointer-events-none absolute left-2 top-2 flex flex-col items-start gap-1.5">
           {outOfStock ? <OutOfStockBadge className="bg-card/95" /> : isNewRelease(book.publish_date) ? <NewBadge /> : null}
+          {book.low_stock_remaining ? <LowStockBadge remaining={book.low_stock_remaining} /> : null}
         </div>
         {outOfStock ? null : (
           <div className="pointer-events-none absolute bottom-2 left-2 right-2 flex">
@@ -109,6 +110,7 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
         </Heading>
         <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">{authors ? dict.homePage.by(authors) : " "}</p>
         <StarRating value={book.rating_avg} count={book.review_count} compact className="mt-2" />
+        {book.sold_count ? <p className="mt-1 text-sm text-muted-foreground">{dict.shopExtras.sold(book.sold_count)}</p> : null}
 
         <div className="mt-auto flex min-h-14 items-center justify-between gap-2 border-t border-border pt-3">
           <p className={cn("tabular-nums", outOfStock ? "text-muted-foreground" : "text-foreground")}>

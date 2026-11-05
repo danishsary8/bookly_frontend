@@ -11,6 +11,7 @@ import { ImageUploadField } from "@/components/ui/ImageUploadField";
 import { Switch } from "@/components/ui/switch";
 import { FORMATS } from "@/lib/catalog";
 import { validateImageUrl } from "@/lib/imageValidation";
+import { useT } from "@/i18n";
 
 const DIGITAL = new Set(["ebook", "audiobook"]);
 type Values = { format: string; sku: string; isbn: string; price_usd: string; stock_quantity: string; low_stock_threshold: string; cover_image_url: string; is_active: boolean; release_date: string; allow_backorder: boolean; delay_note: string };
@@ -71,6 +72,7 @@ export function VariantDialog({
   onSaved: (saved: StaffVariant) => void;
 }) {
   const free = FORMATS.filter((f) => !usedFormats.includes(f.value));
+  const { dict } = useT();
   const [values, setValues] = useState<Values>(() => valuesFor(variant, free[0]?.value ?? "paperback", defaultCover));
   const [errors, setErrors] = useState<Errors>({});
   const alertRef = useRef<HTMLDivElement>(null);
@@ -136,7 +138,14 @@ export function VariantDialog({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TextField label="SKU" value={values.sku} onChange={(e) => set({ sku: e.target.value })} error={errors.sku} autoComplete="off" />
             <TextField label="ISBN" optional value={values.isbn} onChange={(e) => set({ isbn: e.target.value })} error={errors.isbn} autoComplete="off" />
-            <TextField label="Price (USD)" inputMode="decimal" value={values.price_usd} onChange={(e) => set({ price_usd: e.target.value })} error={errors.price_usd} hint="Riel prices follow the exchange rate." />
+            <div className="grid content-start gap-2">
+              <TextField label="Price (USD)" inputMode="decimal" value={values.price_usd} onChange={(e) => set({ price_usd: e.target.value })} error={errors.price_usd} hint={dict.shopExtras.charmHint} />
+              {/^\d+(\.\d{1,2})?$/.test(values.price_usd) && Number(values.price_usd) < 99999999 ? (
+                <Button type="button" variant="outline" onClick={() => set({ price_usd: `${Math.floor(Number(values.price_usd))}.99` })}>
+                  {dict.shopExtras.makeCharm(`${Math.floor(Number(values.price_usd))}.99`)}
+                </Button>
+              ) : null}
+            </div>
             {digital ? null : (
               <>
                 <TextField label="In stock" inputMode="numeric" value={values.stock_quantity} onChange={(e) => set({ stock_quantity: e.target.value })} error={errors.stock_quantity} />

@@ -92,9 +92,12 @@ export interface OfferTarget {
   in_trash: boolean;
 }
 export interface Offer {
+  gift_id?: number | null;
+  gift_quantity?: number;
+  min_subtotal?: string | null;
   id: number;
   name: string;
-  type: "buy_n_percent";
+    type: "buy_n_percent" | "gift";
   applies_to: "all" | "selected";
   min_quantity: number;
   percent_off: string;
@@ -108,6 +111,10 @@ export interface Offer {
   orders_count: number;
 }
 export type OfferInput = Partial<{
+  type: "buy_n_percent" | "gift";
+  gift_id: number | null;
+  gift_quantity: number;
+  min_subtotal: string | null;
   name: string;
   applies_to: "all" | "selected";
   min_quantity: number;

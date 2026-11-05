@@ -27,6 +27,9 @@ const ProfilePage = lazy(() => import("../pages/account/ProfilePage"));
 const SecurityPage = lazy(() => import("../pages/account/SecurityPage"));
 const AddressesPage = lazy(() => import("../pages/account/AddressesPage"));
 const WishlistPage = lazy(() => import("../pages/account/WishlistPage"));
+const ReadingListsPage = lazy(() => import("../pages/account/ReadingListsPage"));
+const ReadingListPage = lazy(() => import("../pages/catalog/ReadingListPage"));
+const ReadingListPicksPage = lazy(() => import("../pages/admin/ReadingListPicksPage"));
 const OrdersPage = lazy(() => import("../pages/account/OrdersPage"));
 const MyEbooksPage = lazy(() => import("../pages/account/MyEbooksPage"));
 const ReaderPage = lazy(() => import("../pages/reader/ReaderPage"));
@@ -55,6 +58,7 @@ const ReturnAdminPage = lazy(() => import("../pages/admin/ReturnAdminPage"));
 const ReviewsAdminPage = lazy(() => import("../pages/admin/ReviewsAdminPage"));
 const CouponsAdminPage = lazy(() => import("../pages/admin/CouponsAdminPage"));
 const OffersAdminPage = lazy(() => import("../pages/admin/OffersAdminPage"));
+const GiftsPage = lazy(() => import("../pages/admin/GiftsPage"));
 const CollectionsAdminPage = lazy(() => import("../pages/admin/CollectionsAdminPage"));
 const CustomersAdminPage = lazy(() => import("../pages/admin/CustomersAdminPage"));
 const CustomerAdminPage = lazy(() => import("../pages/admin/CustomerAdminPage"));
@@ -122,6 +126,7 @@ const AppRoutes = () => {
           <Route path="/series" element={<SeriesListPage />} />
           <Route path="/series/:id" element={<SeriesPage />} />
           <Route path="/collections/:slug" element={<CollectionPage />} />
+          <Route path="/lists/:slug" element={<ReadingListPage />} />
           <Route path="/categories/:slug" element={<CategoryPage />} />
           <Route path="/publishers/:id" element={<PublisherPage />} />
           <Route path="/books/:id" element={<BookDetail />} />
@@ -147,6 +152,7 @@ const AppRoutes = () => {
               <Route path="security" element={<SecurityPage />} />
               <Route path="addresses" element={<AddressesPage />} />
               <Route path="wishlist" element={<WishlistPage />} />
+              <Route path="lists" element={<ReadingListsPage />} />
               <Route path="orders" element={<OrdersPage />} />
               <Route path="ebooks" element={<MyEbooksPage />} />
               <Route path="orders/:id" element={<OrderDetailPage />} />
@@ -203,6 +209,8 @@ const AppRoutes = () => {
               <Route path="reviews" element={<ReviewsAdminPage />} />
               <Route path="coupons" element={<CouponsAdminPage />} />
               <Route path="offers" element={<OffersAdminPage />} />
+              <Route path="gifts" element={<GiftsPage />} />
+              <Route path="reading-lists" element={<ReadingListPicksPage />} />
               <Route path="collections" element={<CollectionsAdminPage />} />
               <Route path="customers" element={<CustomersAdminPage />} />
               <Route path="customers/:id" element={<CustomerAdminPage />} />

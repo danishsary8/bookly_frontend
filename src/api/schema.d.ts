@@ -235,9 +235,11 @@ export interface paths {
                     school_grade?: number;
                     level?: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
                     has_ebook?: boolean;
+                    /** @description At least one active format has a future release_date */
+                    coming_soon?: boolean;
                     /** @description Adds `facets` {formats, languages, categories (top-level id), school_grades, levels, with_age} = book counts with the other filters applied */
                     facets?: boolean;
-                    sort?: "relevance" | "newest" | "price_asc" | "price_desc" | "best_selling" | "most_reviewed" | "title" | "rating";
+                    sort?: "relevance" | "newest" | "price_asc" | "price_desc" | "best_selling" | "most_reviewed" | "release_soon" | "title" | "rating";
                     /** @description Comma-separated IDs or array (max 12); keeps order and drops missing/hidden books */
                     ids?: string;
                     per_page?: components["parameters"]["PerPage"];
@@ -484,6 +486,581 @@ export interface paths {
                         };
                     };
                 };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/gifts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List gifts (catalog view or admin) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Gifts outside the book catalogue */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Gift"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a gift (admin only, audited) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Gift"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Gift"];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/gifts/{gift}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit gift or stock under a row lock (admin only, audited) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    gift: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Gift"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Gift"];
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/lists/staff-picks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Up to six public staff-pick lists from active customers */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Reading lists with currently visible books */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["ReadingList"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lists/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Public reading list; private, closed-owner and missing lists return 404 */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Reading list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["ReadingList"];
+                        };
+                    };
+                };
+                404: components["responses"]["NotFound"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lists/{slug}/cart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add one cheapest available format per visible public-list book; skip existing or unavailable books (20/min) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Honest added and skipped counts; existing cart rules apply */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                added?: number;
+                                skipped?: number;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reading-lists": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Own reading lists (verified customer) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Reading lists with currently visible books */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["ReadingList"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a list (max 20; writes 20/minute; demo writes refused) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ReadingListInput"];
+                };
+            };
+            responses: {
+                /** @description Reading list */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["ReadingList"];
+                        };
+                    };
+                };
+                422: components["responses"]["Validation"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reading-lists/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete own list and entries */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                204: components["responses"]["NoContent"];
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Edit own list; private also clears staff-pick status */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ReadingListInput"];
+                };
+            };
+            responses: {
+                /** @description Reading list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["ReadingList"];
+                        };
+                    };
+                };
+                404: components["responses"]["NotFound"];
+            };
+        };
+        trace?: never;
+    };
+    "/reading-lists/{id}/books": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add/update visible book (max 200); optional plain note and position 0-199 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        book_id: number;
+                        note?: string | null;
+                        position?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Reading list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["ReadingList"];
+                        };
+                    };
+                };
+                422: components["responses"]["Validation"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reading-lists/{id}/books/{book}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove book from own list */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                    book: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Reading list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["ReadingList"];
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/reading-lists": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Latest 100 public lists (catalog view or admin); private lists never included */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Reading lists with currently visible books */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["ReadingList"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/reading-lists/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Mark/unmark a public list as staff pick (catalog view or admin, audited, 20 writes/minute) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        is_staff_pick: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Reading list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["ReadingList"];
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/catalog/rows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Automatic catalogue shelves (cached 15 minutes) */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Only best_sellers in this category and its descendants */
+                    category_id?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Nonempty rows with up to 12 currently visible books each */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                /** @enum {string} */
+                                id: "best_sellers" | "new_arrivals" | "coming_soon" | "ebook_deals";
+                                total: number;
+                                books: components["schemas"]["BookCard"][];
+                            }[];
+                        };
+                    };
+                };
+                422: components["responses"]["Validation"];
             };
         };
         put?: never;
@@ -3264,8 +3841,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Totals for the cart (subtotal, discount, shipping, tax, total in USD and KHR)
-         * @description Delivery is priced for address_id, else the default address: Phnom Penh 1.50 USD, the provinces 3.00 USD (SHIPPING_FEE_PHNOM_PENH / SHIPPING_FEE_PROVINCES).
+         * Totals and delivery estimate for the cart
+         * @description Saved address_id or default address takes precedence; without one, optional delivery_area selects the existing Phnom Penh/provinces rates and calendar. Does not reserve inventory.
          */
         post: {
             parameters: {
@@ -3279,6 +3856,8 @@ export interface paths {
                     "application/json": {
                         coupon_code?: string;
                         address_id?: number;
+                        /** @enum {string} */
+                        delivery_area?: "phnom_penh" | "provinces";
                         delivery_note?: string;
                     };
                 };
@@ -3295,7 +3874,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description address_id is not one of your addresses, or a bad coupon */
+                /** @description Invalid area, address or coupon */
                 422: {
                     headers: {
                         [name: string]: unknown;
@@ -5946,7 +6525,10 @@ export interface paths {
             };
         };
         put?: never;
-        /** (admin) Create (name, applies_to all|selected, min_quantity 2-20, percent_off 0.01-50, starts_at?, ends_at? after starts_at, max_orders?, is_active?, targets [{type book|category|series, id}] 1-200 for selected, refused for all). Audited; the live-offers cache is cleared */
+        /**
+         * (admin) Create automatic offer
+         * @description name, type buy_n_percent (default) or gift, applies_to all|selected, min_quantity 2-20 (gift 1-20, default 1), percent_off 0.01-50 (gift 0), gift_id required for gift, gift_quantity 1-100 default 1, min_subtotal optional positive matching subtotal instead of min_quantity for gifts, starts_at?, ends_at? after starts_at, max_orders?, is_active?, targets [{type book|category|series, id}] 1-200 for selected, refused for all. Gift and monetary winners are independent; one gift plus one monetary discount. Audited.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -9338,6 +9920,42 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ReadingList: {
+            id?: number;
+            slug?: string;
+            title?: string;
+            description?: string | null;
+            is_public?: boolean;
+            is_staff_pick?: boolean;
+            /** @description First name only; never email or full customer data */
+            owner_first_name?: string;
+            books?: {
+                book?: components["schemas"]["BookCard"];
+                position?: number;
+                note?: string | null;
+            }[];
+        };
+        ReadingListInput: {
+            title?: string;
+            description?: string | null;
+            is_public?: boolean;
+        };
+        FreeGift: {
+            id?: number;
+            offer_id?: number;
+            name_en?: string;
+            name_km?: string;
+            quantity?: number;
+            limited?: boolean;
+        } | null;
+        Gift: {
+            id?: number;
+            name_en?: string;
+            name_km?: string;
+            image_url?: string | null;
+            stock?: number;
+            is_active?: boolean;
+        };
         Error: {
             message?: string;
         };
@@ -9552,6 +10170,9 @@ export interface components {
             }[];
         };
         CheckoutPreview: {
+            /** @description A saved address was selected or defaulted; otherwise delivery_area is an estimate choice only. */
+            has_delivery_address?: boolean;
+            free_gift?: components["schemas"]["FreeGift"];
             subtotal?: components["schemas"]["Amount"];
             discount?: components["schemas"]["Amount"];
             shipping_fee?: components["schemas"]["Amount"];
@@ -9575,8 +10196,8 @@ export interface components {
             delivery_area?: "phnom_penh" | "provinces" | null;
             can_checkout?: boolean;
             is_free_shipping?: boolean;
-            free_shipping_threshold?: components["schemas"]["Amount"];
-            amount_needed_for_free_shipping?: components["schemas"]["Amount"];
+            free_shipping_threshold?: components["schemas"]["Amount"] | null;
+            amount_needed_for_free_shipping?: components["schemas"]["Amount"] | null;
             province_code?: string | null;
             province_name?: string | null;
             estimated_delivery?: components["schemas"]["EstimatedDelivery"];
@@ -9714,6 +10335,10 @@ export interface components {
             in_stock?: boolean;
             rating_avg?: number | null;
             review_count?: number;
+            /** @description Copies ordered in the last 90 days excluding cancelled and deleted orders; cached hourly. Null below 5. */
+            sold_count?: number | null;
+            /** @description Remaining copies of the cheapest active format when physical, released and between 1 and shop.low_stock_badge; otherwise null. */
+            low_stock_remaining?: number | null;
             offer?: components["schemas"]["BookOffer"];
             series_order?: number | null;
         };
@@ -9773,6 +10398,8 @@ export interface components {
             allow_backorder?: boolean;
             is_preorder?: boolean;
             is_backorder?: boolean;
+            /** @description Physical stock from 1 through shop.low_stock_badge; null for digital, preorders, backorders and out of stock. */
+            low_stock_remaining?: number | null;
         };
         BookDetail: components["schemas"]["BookCard"] & {
             description?: string | null;
@@ -9834,6 +10461,7 @@ export interface components {
             previous_price_usd?: components["schemas"]["Money"];
         };
         Cart: {
+            free_gift?: components["schemas"]["FreeGift"];
             id?: number;
             items?: {
                 id?: number;
@@ -9852,6 +10480,8 @@ export interface components {
                 issues?: components["schemas"]["CartIssue"][];
                 /** @description True when the automatic offer in `pricing.offer` discounts this line. */
                 in_offer?: boolean;
+                /** @description Real low-stock count for this format; null when no badge applies. */
+                low_stock_remaining?: number | null;
             }[];
             item_count?: number;
             subtotal_usd?: components["schemas"]["Money"];
@@ -9886,6 +10516,7 @@ export interface components {
             free_shipping?: components["schemas"]["CartFreeShipping"];
         };
         Order: {
+            free_gift?: components["schemas"]["FreeGift"];
             id?: number;
             /** @example ORD-20261003-7K2QX */
             order_number?: string;
@@ -9956,6 +10587,7 @@ export interface components {
         };
         /** @description What an invoice or packing slip prints. KHR uses the rate in force when the order was placed (null when no rate was set then), so a reprint never changes. */
         OrderDocument: {
+            free_gift?: components["schemas"]["FreeGift"];
             id?: number;
             /** @example ORD-20261003-7K2QX */
             order_number?: string;
@@ -10165,6 +10797,10 @@ export interface components {
     headers: never;
     pathItems: never;
 }
+export type SchemaReadingList = components['schemas']['ReadingList'];
+export type SchemaReadingListInput = components['schemas']['ReadingListInput'];
+export type SchemaFreeGift = components['schemas']['FreeGift'];
+export type SchemaGift = components['schemas']['Gift'];
 export type SchemaError = components['schemas']['Error'];
 export type SchemaValidationError = components['schemas']['ValidationError'];
 export type SchemaMoney = components['schemas']['Money'];

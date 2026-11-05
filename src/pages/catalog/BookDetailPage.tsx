@@ -37,6 +37,8 @@ import { addRecentlyViewed, clearRecentlyViewed, useRecentlyViewed } from "@/sto
 import { toast } from "@/stores/toast";
 import { formatName, useT } from "@/i18n";
 import { BookOfferLine } from "@/features/offers/offerText";
+import { LowStockBadge } from "@/components/BookBadge";
+import { AddToReadingList } from "@/features/account/AddToReadingList";
 
 /*
  * /books/:id. Layout (MASTER 5/7 split): cover panel | title, authors, rating,
@@ -190,6 +192,10 @@ function Purchase({ book }: { book: BookDetail }) {
           {!variant ? b.notAvailable : !buyable ? dict.bookDetail.outOfStock : digital ? b.download : dict.bookDetail.inStock}
         </p>
         {buyable ? <BookOfferLine offer={book.offer} className="mt-1" /> : null}
+        {variant?.low_stock_remaining ? <LowStockBadge remaining={variant.low_stock_remaining} className="mt-2" /> : null}
+        {book.sold_count ? <p className="mt-2 text-sm text-muted-foreground">{dict.shopExtras.sold(book.sold_count)}</p> : null}
+        <p className="mt-2 text-sm text-muted-foreground">{dict.shopExtras.trust}</p>
+        <AddToReadingList bookId={book.id!} />
       </div>
 
       {readerInfo.data?.owned ? (

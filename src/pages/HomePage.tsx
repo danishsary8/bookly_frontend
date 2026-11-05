@@ -4,9 +4,11 @@ import { Link } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { AuthorAvatar } from "@/components/catalog/AuthorAvatar";
 import { BookShelf } from "@/components/catalog/BookShelf";
+import { CatalogRows } from "@/components/catalog/CatalogRows";
 import { collectionQueries, collectionText } from "@/api/endpoints/collections";
 import { CategoryTiles } from "@/components/home/CategoryTiles";
 import { HomeHero } from "@/components/home/HomeHero";
+import { StaffPicks } from "@/components/home/StaffPicks";
 import { SeriesSpotlight } from "@/components/home/SeriesSpotlight";
 import AnimatedContent from "@/components/AnimatedContent";
 import { Button } from "@/components/ui/button";
@@ -116,16 +118,8 @@ export default function HomePage() {
           );
         })}
 
-        <BookShelf
-          id="new-arrivals"
-          eyebrow={h.justIn}
-          title={h.newArrivals}
-          books={newest.data?.data}
-          loading={newest.isPending}
-          error={newest.isError ? newest.error : undefined}
-          onRetry={() => newest.refetch()}
-          seeAllHref="/books?sort=newest"
-        />
+        <CatalogRows />
+        <StaffPicks />
 
         <AnimatedContent distance={32} duration={0.7} threshold={0.15}>
           <section aria-labelledby="categories-title">

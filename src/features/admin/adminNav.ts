@@ -24,6 +24,8 @@ export const adminNav: AdminNavGroup[] = [
       { to: "/admin/reviews", label: "Reviews", Icon: MessageSquareText },
       { to: "/admin/coupons", label: "Coupons", Icon: TicketPercent },
       { to: "/admin/offers", label: "Offers", Icon: Tag },
+      { to: "/admin/gifts", label: "Gifts", Icon: Boxes },
+      { to: "/admin/reading-lists", label: "Staff picks", Icon: BookCopy },
       { to: "/admin/collections", label: "Collections", Icon: Sparkles },
       { to: "/admin/customers", label: "Customers", Icon: Users },
     ],

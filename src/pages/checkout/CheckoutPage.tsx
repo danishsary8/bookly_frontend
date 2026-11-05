@@ -26,6 +26,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { toast } from "@/stores/toast";
 import { formatName, getDict, useT } from "@/i18n";
+import { FreeGiftLine } from "@/features/offers/FreeGiftLine";
 import { CouponNotUsedNote } from "@/features/offers/offerText";
 import { percentLabel } from "@/features/offers/percent";
 
@@ -261,6 +262,7 @@ export default function CheckoutPage() {
         </div>
 
         <aside aria-labelledby="checkout-summary" className="lg:col-span-4">
+          <FreeGiftLine gift={data?.free_gift} />
           <div className="grid gap-5 rounded-xl border border-border bg-card p-5 sm:p-6 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
             <h2 id="checkout-summary" className="font-display text-[1.563rem] leading-tight">
               {k.orderTotal}

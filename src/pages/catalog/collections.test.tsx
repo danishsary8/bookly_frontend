@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
 import { Route, Routes } from "react-router-dom";
 import { catalogApi } from "@/api/endpoints/catalog";
+import { readingListsApi } from "@/api/endpoints/readingLists";
 import { collectionsApi, type SeasonalCollection } from "@/api/endpoints/collections";
 import { ApiError } from "@/api/errors";
 import type { BookCard } from "@/api/types";
@@ -30,6 +31,8 @@ const app = (route: string) =>
   );
 
 const quietHome = () => {
+  vi.spyOn(catalogApi, "rows").mockResolvedValue([{ id: "new_arrivals", total: 1, books: [book(30, "A new arrival")] }]);
+  vi.spyOn(readingListsApi, "picks").mockResolvedValue([]);
   vi.spyOn(catalogApi, "books").mockResolvedValue(empty);
   vi.spyOn(catalogApi, "categories").mockResolvedValue([]);
 };

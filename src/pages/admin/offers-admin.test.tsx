@@ -12,6 +12,7 @@ import { RequireStaff } from "@/routes/adminGuards";
 import { renderWithProviders } from "@/test/render";
 import { dismissToast } from "@/stores/toast";
 import OffersAdminPage from "./OffersAdminPage";
+import { giftsApi } from "@/api/endpoints/gifts";
 
 /* /admin/offers (owner 2026-11-01: 1A table + dialog, 2A one search box, 3A preview, 4A row switch with confirm). */
 
@@ -52,6 +53,23 @@ afterEach(() => {
 });
 
 describe("offers admin", () => {
+  it("creates a gift offer using real inventory and matching subtotal", async () => {
+    signIn(admin);
+    vi.spyOn(opsApi, "offers").mockResolvedValue(page([]));
+    vi.spyOn(giftsApi, "list").mockResolvedValue([{ id: 5, name_en: "Pen", stock: 3 }]);
+    const create = vi.spyOn(opsApi, "createOffer").mockResolvedValue({ ...paused, type: "gift", gift_id: 5 });
+    const user = userEvent.setup();
+    app();
+    await user.click(await screen.findByRole("button", { name: "New offer" }));
+    const dialog = screen.getByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Name"), "Free pen");
+    await user.selectOptions(within(dialog).getByLabelText("Offer type"), "gift");
+    await user.selectOptions(within(dialog).getByLabelText("Free gift"), "5");
+    await user.type(within(dialog).getByLabelText("Minimum matching subtotal (USD)"), "10.00");
+    await user.click(within(dialog).getByRole("radio", { name: "All books" }));
+    await user.click(within(dialog).getByRole("button", { name: "Create offer" }));
+    await waitFor(() => expect(create).toHaveBeenCalledWith(expect.objectContaining({ type: "gift", gift_id: 5, gift_quantity: 1, min_subtotal: "10.00", percent_off: "0.00" })));
+  });
   it("lists offers with their status, books, uses and end date", async () => {
     signIn(admin);
     vi.spyOn(opsApi, "offers").mockResolvedValue(page([holmes, paused]));

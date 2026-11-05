@@ -15,6 +15,25 @@ const sampleBook = (extra: Partial<Book> = {}): Book => ({
 });
 
 describe("BookCard audience tag", () => {
+  it("shows real stock and sales supplied by the API", () => {
+    renderWithProviders(<BookCard book={sampleBook({ low_stock_remaining: 3, sold_count: 8 })} />);
+    expect(screen.getByText("Only 3 left")).toBeInTheDocument();
+    expect(screen.getByText("8 sold in the last 90 days")).toBeInTheDocument();
+  });
+
+  it("does not invent scarcity or sales when signals are absent", () => {
+    renderWithProviders(<BookCard book={sampleBook()} />);
+    expect(screen.queryByText(/Only .* left/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/sold in the last/)).not.toBeInTheDocument();
+  });
+
+  it("labels only dated offers as limited", () => {
+    const { rerender } = renderWithProviders(<BookCard book={sampleBook({ offer: { min_quantity: 2, percent_off: "10.00", ends_at: "2030-01-01T00:00:00Z" } })} />);
+    expect(screen.getByText(/Limited/)).toBeInTheDocument();
+    rerender(<BookCard book={sampleBook({ offer: { min_quantity: 2, percent_off: "10.00", ends_at: null } })} />);
+    expect(screen.queryByText(/Limited/)).not.toBeInTheDocument();
+  });
+
   afterEach(() => {
     act(() => setLanguage("en"));
   });

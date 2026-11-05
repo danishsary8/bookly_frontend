@@ -22,6 +22,7 @@ export const LANGUAGES = ["English", "Khmer"] as const;
 export const SORTS: { value: BookSort; label: string }[] = [
   { value: "relevance", label: "Best match" },
   { value: "newest", label: "Newest" },
+  { value: "release_soon", label: "Release date: soonest" },
   { value: "best_selling", label: "Best selling" },
   { value: "rating", label: "Best rated" },
   { value: "most_reviewed", label: "Most reviewed" },
@@ -82,6 +83,7 @@ export function parseBookFilters(params: URLSearchParams): BookFilters {
     max_price: max,
     in_stock: params.get("in_stock") === "1" ? true : undefined,
     has_ebook: params.get("has_ebook") === "1" ? true : undefined,
+    coming_soon: params.get("coming_soon") === "1" ? true : undefined,
     age: between(params.get("age"), 0, 18),
     school_grade: between(params.get("school_grade"), 1, 12),
     level: LEVELS.find((l) => l === params.get("level")),
@@ -90,7 +92,7 @@ export function parseBookFilters(params: URLSearchParams): BookFilters {
   };
 }
 
-const ORDER: (keyof BookFilters)[] = ["q", "category_id", "author_id", "series_id", "publisher_id", "format", "language", "age", "school_grade", "level", "min_price", "max_price", "in_stock", "has_ebook", "sort", "page"];
+const ORDER: (keyof BookFilters)[] = ["q", "category_id", "author_id", "series_id", "publisher_id", "format", "language", "age", "school_grade", "level", "min_price", "max_price", "in_stock", "has_ebook", "coming_soon", "sort", "page"];
 
 /** Writes filters back as a stable, minimal query string (no empty values, page 1 omitted). */
 export function toSearchParams(filters: BookFilters): URLSearchParams {
@@ -108,7 +110,7 @@ export function toSearchParams(filters: BookFilters): URLSearchParams {
 export const effectiveSort = (filters: BookFilters): BookSort => filters.sort ?? (filters.q ? "relevance" : "newest");
 
 /** Filters a visitor can clear (search text, sort and page are not "filters"). */
-export const FILTER_KEYS = ["category_id", "author_id", "series_id", "publisher_id", "format", "language", "age", "school_grade", "level", "min_price", "max_price", "in_stock", "has_ebook"] as const;
+export const FILTER_KEYS = ["category_id", "author_id", "series_id", "publisher_id", "format", "language", "age", "school_grade", "level", "min_price", "max_price", "in_stock", "has_ebook", "coming_soon"] as const;
 
 export const activeFilterCount = (filters: BookFilters) => FILTER_KEYS.filter((key) => filters[key] !== undefined).length;
 

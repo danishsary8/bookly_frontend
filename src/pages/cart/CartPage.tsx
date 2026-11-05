@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import type { CouponCheck } from "@/api/types";
 import { BookShelf } from "@/components/catalog/BookShelf";
-import { FreeShippingBar } from "@/components/cart/FreeShippingBar";
+import { CartDeliveryEstimate } from "@/features/cart/CartDeliveryEstimate";
 import { PageHeader } from "@/components/catalog/PageHeader";
 import { CtaGlare } from "@/components/CtaGlare";
 import { EmptyState } from "@/components/EmptyState";
@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { useRecentlyViewed } from "@/stores/recentlyViewed";
 import { useT } from "@/i18n";
+import { FreeGiftLine } from "@/features/offers/FreeGiftLine";
 
 /*
  * /cart (MASTER 8/4 split): editable lines on the left; on the right a sticky
@@ -51,13 +52,12 @@ function Summary() {
 
   return (
     <aside aria-labelledby="summary-title" className="grid gap-5 rounded-xl border border-border bg-card p-5 sm:p-6 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
+      <FreeGiftLine gift={data.free_gift} />
       <h2 id="summary-title" className="font-display text-[1.563rem] leading-tight">
         {c.summary}
       </h2>
       <OfferNudge nudge={data.pricing?.nudge} />
-      {totals.freeShipping === null ? null : (
-        <FreeShippingBar subtotalUsd={totals.totalBeforeShipping.usd} thresholdUsd={totals.freeShipping?.threshold_usd} />
-      )}
+      <CartDeliveryEstimate version={cartVersion} coupon={coupon} />
       <CouponField cartVersion={cartVersion} onChecked={setCheck} />
       <CouponNotUsedNote code={totals.couponNotUsed} />
       <dl className="grid gap-2 border-t border-border pt-4 text-[15px]">

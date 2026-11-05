@@ -718,3 +718,15 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   paid-after-cancel warning, admin "Mark as paid" with a required note), orders "Payment" filter (`pay=khqr`), "KHQR
   payments" line on System health. Orders filters now fit a 390 px screen (`grid-cols-1`). lint, typecheck, 496 tests
   (7 new), build. Browser + axe 390 dark / 1280 light: all 0; Mark as paid on a short screen reached by scrolling.
+
+- Phase 5 Part A in progress on feature/shop-extras: real stock/sales badges, dated offer labels, EN/KM trust copy and explicit unsaved .99 price suggestion. Local OpenAPI types regenerated. Card and price suggestion tests pass; full verification pending.
+
+- Phase 5 Part B: home and category automatic shelves, View all links and coming-soon URL filters; existing keyboard-accessible scroll-snap shelf reused. Row/link tests 2 passed; final suite pending.
+
+- Phase 5 Part C: gifts list/edit/stock, gift offer fields, gift cart/checkout/order/document lines and stock notification links. EN/KM and generated API types included; focused offer and gift text checks pass. Full/browser checks pending.
+
+- Phase 5 Part D: cart delivery fee/date estimate, area chooser and free-delivery progress from checkout preview. Typecheck passed; browser/full suite pending.
+
+- Phase 5 Part E: reading-list management, book-page add menu, public lists, batch cart action, clipboard/Facebook/Telegram sharing and home/staff picks. EN/KM strings, generated types and regression fixtures updated. Public/manager tests pass; Playwright matrix 390/1280 light/dark: axe 0, no overflow. Reproducible local-only script and screenshots/report paths recorded in backend PROGRESS.md.
+
+- Final Phase 5 checks: lint 0 errors (one existing refresh warning), typecheck passed, 603 tests passed with 3 existing skips, build passed against the local API. Playwright home/cart/public-list matrix has 12 unique size/theme/page combinations, zero WCAG 2.1 A/AA axe violations and no overflow. Real share and batch-cart interactions pass. Local browser runner supports focused repeat combinations and preserves the combined report; default pacing respects request limits. Backend PROGRESS.md contains Danish's merge order and setup steps.
