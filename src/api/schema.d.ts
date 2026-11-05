@@ -496,6 +496,114 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff/gifts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List gifts (catalog view or admin) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Gifts outside the book catalogue */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Gift"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a gift (admin only, audited) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Gift"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Gift"];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/gifts/{gift}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit gift or stock under a row lock (admin only, audited) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    gift: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Gift"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Gift"];
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/catalog/rows": {
         parameters: {
             query?: never;
@@ -9387,6 +9495,22 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        FreeGift: {
+            id?: number;
+            offer_id?: number;
+            name_en?: string;
+            name_km?: string;
+            quantity?: number;
+            limited?: boolean;
+        } | null;
+        Gift: {
+            id?: number;
+            name_en?: string;
+            name_km?: string;
+            image_url?: string | null;
+            stock?: number;
+            is_active?: boolean;
+        };
         Error: {
             message?: string;
         };
@@ -9601,6 +9725,7 @@ export interface components {
             }[];
         };
         CheckoutPreview: {
+            free_gift?: components["schemas"]["FreeGift"];
             subtotal?: components["schemas"]["Amount"];
             discount?: components["schemas"]["Amount"];
             shipping_fee?: components["schemas"]["Amount"];
@@ -9889,6 +10014,7 @@ export interface components {
             previous_price_usd?: components["schemas"]["Money"];
         };
         Cart: {
+            free_gift?: components["schemas"]["FreeGift"];
             id?: number;
             items?: {
                 id?: number;
@@ -9943,6 +10069,7 @@ export interface components {
             free_shipping?: components["schemas"]["CartFreeShipping"];
         };
         Order: {
+            free_gift?: components["schemas"]["FreeGift"];
             id?: number;
             /** @example ORD-20261003-7K2QX */
             order_number?: string;
@@ -10013,6 +10140,7 @@ export interface components {
         };
         /** @description What an invoice or packing slip prints. KHR uses the rate in force when the order was placed (null when no rate was set then), so a reprint never changes. */
         OrderDocument: {
+            free_gift?: components["schemas"]["FreeGift"];
             id?: number;
             /** @example ORD-20261003-7K2QX */
             order_number?: string;
@@ -10222,6 +10350,8 @@ export interface components {
     headers: never;
     pathItems: never;
 }
+export type SchemaFreeGift = components['schemas']['FreeGift'];
+export type SchemaGift = components['schemas']['Gift'];
 export type SchemaError = components['schemas']['Error'];
 export type SchemaValidationError = components['schemas']['ValidationError'];
 export type SchemaMoney = components['schemas']['Money'];

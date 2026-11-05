@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { useRecentlyViewed } from "@/stores/recentlyViewed";
 import { useT } from "@/i18n";
+import { FreeGiftLine } from "@/features/offers/FreeGiftLine";
 
 /*
  * /cart (MASTER 8/4 split): editable lines on the left; on the right a sticky
@@ -51,6 +52,7 @@ function Summary() {
 
   return (
     <aside aria-labelledby="summary-title" className="grid gap-5 rounded-xl border border-border bg-card p-5 sm:p-6 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
+      <FreeGiftLine gift={data.free_gift} />
       <h2 id="summary-title" className="font-display text-[1.563rem] leading-tight">
         {c.summary}
       </h2>

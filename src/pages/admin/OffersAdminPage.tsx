@@ -6,7 +6,9 @@ import { staffApi } from "@/api/endpoints/staff";
 import { opsApi, opsQueries, type Offer, type OfferInput, type OfferStatus, type OfferTargetType } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
 import { SaleBadge } from "@/components/BookBadge";
-import { TextField } from "@/components/form/Field";
+import { SelectField, TextField } from "@/components/form/Field";
+import { giftsApi } from "@/api/endpoints/gifts";
+import { useT } from "@/i18n";
 import { FormAlert } from "@/components/form/FormAlert";
 import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/ui/badge";
@@ -144,6 +146,10 @@ function TargetPicker({ value, onChange, error }: { value: Pick[]; onChange: (ne
 }
 
 type Values = {
+  type: "buy_n_percent" | "gift";
+  gift_id: string;
+  gift_quantity: string;
+  min_subtotal: string;
   name: string;
   applies_to: "all" | "selected";
   min_quantity: string;
@@ -157,8 +163,14 @@ type Values = {
 type Errors = Partial<Record<keyof Values | "form", string>>;
 
 function OfferDialog({ offer, onClose }: { offer: Offer | null; onClose: () => void }) {
+  const { dict } = useT();
+  const t = dict.shopExtras;
   const queryClient = useQueryClient();
   const [v, setV] = useState<Values>({
+    type: offer?.type ?? "buy_n_percent",
+    gift_id: String(offer?.gift_id ?? ""),
+    gift_quantity: String(offer?.gift_quantity ?? 1),
+    min_subtotal: offer?.min_subtotal ?? "",
     name: offer?.name ?? "",
     applies_to: offer?.applies_to ?? "selected",
     min_quantity: String(offer?.min_quantity ?? 2),
@@ -170,6 +182,7 @@ function OfferDialog({ offer, onClose }: { offer: Offer | null; onClose: () => v
     targets: (offer?.targets ?? []).filter((t) => !t.in_trash).map((t) => ({ type: t.type, id: t.id, label: t.label ?? `#${t.id}` })),
   });
   const [errors, setErrors] = useState<Errors>({});
+  const gifts = useQuery({ queryKey: ["staff", "gifts"], queryFn: giftsApi.list, enabled: v.type === "gift" });
   const set = (patch: Partial<Values>) => setV((cur) => ({ ...cur, ...patch }));
 
   const save = useMutation({
@@ -182,7 +195,7 @@ function OfferDialog({ offer, onClose }: { offer: Offer | null; onClose: () => v
     onError: (err) => {
       const apiError = ApiError.from(err);
       const next: Errors = {};
-      for (const f of ["name", "applies_to", "min_quantity", "percent_off", "starts_at", "ends_at", "max_orders", "targets"] as const) {
+      for (const f of ["name", "applies_to", "min_quantity", "percent_off", "starts_at", "ends_at", "max_orders", "targets", "gift_id", "gift_quantity", "min_subtotal", "type"] as const) {
         const m = apiError.field(f);
         if (m) next[f] = m;
       }
@@ -194,24 +207,27 @@ function OfferDialog({ offer, onClose }: { offer: Offer | null; onClose: () => v
   const n = Number(v.min_quantity);
   const percentOk = /^\d+(\.\d{1,2})?$/.test(v.percent_off.trim()) && Number(v.percent_off) > 0 && Number(v.percent_off) <= 50;
   const single = v.targets.length === 1 && v.targets[0].type !== "book" ? v.targets[0].label : null;
-  const previewOk = Number.isInteger(n) && n >= 2 && n <= 20 && percentOk;
+  const previewOk = v.type !== "gift" && Number.isInteger(n) && n >= 2 && n <= 20 && percentOk;
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const e: Errors = {};
     if (!v.name.trim()) e.name = "Give the offer a name (only staff see it).";
-    if (!(Number.isInteger(n) && n >= 2 && n <= 20)) e.min_quantity = "Enter a whole number from 2 to 20.";
-    if (!percentOk) e.percent_off = "Enter a percent above 0 and at most 50, like 10 or 12.5.";
+    if (!(Number.isInteger(n) && n >= (v.type === "gift" ? 1 : 2) && n <= 20)) e.min_quantity = v.type === "gift" ? t.quantityRange : "Enter a whole number from 2 to 20.";
+    if (v.type !== "gift" && !percentOk) e.percent_off = "Enter a percent above 0 and at most 50, like 10 or 12.5.";
+    if (v.type === "gift" && !v.gift_id) e.gift_id = t.giftType;
     if (v.max_orders.trim() && !(/^\d+$/.test(v.max_orders.trim()) && Number(v.max_orders) >= 1)) e.max_orders = "Enter a whole number, 1 or more.";
     if (v.starts_at && v.ends_at && v.ends_at <= v.starts_at) e.ends_at = "The end must be after the start.";
     if (v.applies_to === "selected" && v.targets.length === 0) e.targets = "Choose at least one book, category or series.";
     setErrors(e);
     if (Object.keys(e).length) return;
     save.mutate({
+      ...(v.type === "gift" || offer?.type === "gift" ? { type: v.type } : {}),
+      ...(v.type === "gift" ? { gift_id: Number(v.gift_id), gift_quantity: Number(v.gift_quantity), min_subtotal: v.min_subtotal || null } : {}),
       name: v.name.trim(),
       applies_to: v.applies_to,
       min_quantity: n,
-      percent_off: v.percent_off.trim(),
+      percent_off: v.type === "gift" ? "0.00" : v.percent_off.trim(),
       starts_at: v.starts_at ? new Date(v.starts_at).toISOString() : null,
       ends_at: v.ends_at ? new Date(v.ends_at).toISOString() : null,
       max_orders: v.max_orders.trim() ? Number(v.max_orders) : null,
@@ -234,8 +250,18 @@ function OfferDialog({ offer, onClose }: { offer: Offer | null; onClose: () => v
           <TextField label="Name" hint="Only staff see it (lists and reports)." value={v.name} onChange={(e) => set({ name: e.target.value })} error={errors.name} maxLength={100} />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TextField label="Buy at least (books)" inputMode="numeric" value={v.min_quantity} onChange={(e) => set({ min_quantity: e.target.value })} error={errors.min_quantity} hint="2 to 20" />
-            <TextField label="Percent off each book" inputMode="decimal" value={v.percent_off} onChange={(e) => set({ percent_off: e.target.value })} error={errors.percent_off} hint="Up to 50" />
+            {v.type !== "gift" ? <TextField label="Percent off each book" inputMode="decimal" value={v.percent_off} onChange={(e) => set({ percent_off: e.target.value })} error={errors.percent_off} hint="Up to 50" /> : null}
           </div>
+          <SelectField label={t.offerType} value={v.type} onChange={(e) => set({ type: e.target.value as Values["type"] })}>
+            <option value="buy_n_percent">{t.percentType}</option><option value="gift">{t.giftType}</option>
+          </SelectField>
+          {v.type === "gift" ? <div className="grid gap-4">
+            <SelectField label={t.giftType} value={v.gift_id} onChange={(e) => set({ gift_id: e.target.value })} error={errors.gift_id}>
+              <option value="">—</option>{gifts.data?.map((gift) => <option key={gift.id} value={gift.id}>{gift.name_en} ({gift.stock})</option>)}
+            </SelectField>
+            <TextField label={t.giftQuantity} type="number" min={1} max={100} value={v.gift_quantity} onChange={(e) => set({ gift_quantity: e.target.value })} error={errors.gift_quantity} />
+            <TextField label={t.minSubtotal} inputMode="decimal" value={v.min_subtotal} onChange={(e) => set({ min_subtotal: e.target.value })} error={errors.min_subtotal} />
+          </div> : null}
           <fieldset className="grid gap-2">
             <legend className="mb-1 text-sm font-semibold">Which books</legend>
             <Segmented
@@ -300,6 +326,7 @@ function OfferDialog({ offer, onClose }: { offer: Offer | null; onClose: () => v
 const FILTERS = ["all", "live", "scheduled", "paused", "ended"] as const;
 
 export default function OffersAdminPage() {
+  const { dict } = useT();
   const session = useStaff();
   const isAdmin = session?.user.role === "admin";
   const queryClient = useQueryClient();
@@ -393,7 +420,7 @@ export default function OffersAdminPage() {
                       <th scope="row" className={`${td} font-semibold`}>
                         {o.name}
                         <span className="mt-0.5 block text-sm font-normal text-muted-foreground">
-                          Buy {o.min_quantity}, save {pct(o.percent_off)}%
+                          {o.type === "gift" ? dict.shopExtras.giftType : `Buy ${o.min_quantity}, save ${pct(o.percent_off)}%`}
                         </span>
                       </th>
                       <td className={cn(td, "max-w-[18rem] text-sm")}>{coverage(o)}</td>
@@ -443,7 +470,7 @@ export default function OffersAdminPage() {
         title={`Turn on ${turningOn?.name ?? "the offer"}?`}
         description={
           turningOn
-            ? `Customers buying ${turningOn.min_quantity} or more books from ${coverage(turningOn).toLowerCase() === "all books" ? "any books" : coverage(turningOn)} get ${pct(turningOn.percent_off)}% off each, starting now${turningOn.starts_at && new Date(turningOn.starts_at) > new Date() ? ` (from ${orderDate(turningOn.starts_at)})` : ""}.`
+            ? turningOn.type === "gift" ? dict.shopExtras.giftType : `Customers buying ${turningOn.min_quantity} or more books from ${coverage(turningOn).toLowerCase() === "all books" ? "any books" : coverage(turningOn)} get ${pct(turningOn.percent_off)}% off each, starting now${turningOn.starts_at && new Date(turningOn.starts_at) > new Date() ? ` (from ${orderDate(turningOn.starts_at)})` : ""}.`
             : ""
         }
         confirmLabel="Turn on"
