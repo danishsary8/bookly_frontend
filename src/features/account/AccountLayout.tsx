@@ -25,6 +25,7 @@ const accountSections = [
   { to: "/account/security", key: "security", Icon: KeyRound },
   { to: "/account/addresses", key: "addresses", Icon: MapPin },
   { to: "/account/wishlist", key: "wishlist", Icon: Heart },
+  { to: "/account/lists", key: "readingLists", Icon: BookOpen },
 ] as const;
 
 export function AccountLayout() {

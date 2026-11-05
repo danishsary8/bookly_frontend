@@ -27,6 +27,9 @@ const ProfilePage = lazy(() => import("../pages/account/ProfilePage"));
 const SecurityPage = lazy(() => import("../pages/account/SecurityPage"));
 const AddressesPage = lazy(() => import("../pages/account/AddressesPage"));
 const WishlistPage = lazy(() => import("../pages/account/WishlistPage"));
+const ReadingListsPage = lazy(() => import("../pages/account/ReadingListsPage"));
+const ReadingListPage = lazy(() => import("../pages/catalog/ReadingListPage"));
+const ReadingListPicksPage = lazy(() => import("../pages/admin/ReadingListPicksPage"));
 const OrdersPage = lazy(() => import("../pages/account/OrdersPage"));
 const MyEbooksPage = lazy(() => import("../pages/account/MyEbooksPage"));
 const ReaderPage = lazy(() => import("../pages/reader/ReaderPage"));
@@ -123,6 +126,7 @@ const AppRoutes = () => {
           <Route path="/series" element={<SeriesListPage />} />
           <Route path="/series/:id" element={<SeriesPage />} />
           <Route path="/collections/:slug" element={<CollectionPage />} />
+          <Route path="/lists/:slug" element={<ReadingListPage />} />
           <Route path="/categories/:slug" element={<CategoryPage />} />
           <Route path="/publishers/:id" element={<PublisherPage />} />
           <Route path="/books/:id" element={<BookDetail />} />
@@ -148,6 +152,7 @@ const AppRoutes = () => {
               <Route path="security" element={<SecurityPage />} />
               <Route path="addresses" element={<AddressesPage />} />
               <Route path="wishlist" element={<WishlistPage />} />
+              <Route path="lists" element={<ReadingListsPage />} />
               <Route path="orders" element={<OrdersPage />} />
               <Route path="ebooks" element={<MyEbooksPage />} />
               <Route path="orders/:id" element={<OrderDetailPage />} />
@@ -205,6 +210,7 @@ const AppRoutes = () => {
               <Route path="coupons" element={<CouponsAdminPage />} />
               <Route path="offers" element={<OffersAdminPage />} />
               <Route path="gifts" element={<GiftsPage />} />
+              <Route path="reading-lists" element={<ReadingListPicksPage />} />
               <Route path="collections" element={<CollectionsAdminPage />} />
               <Route path="customers" element={<CustomersAdminPage />} />
               <Route path="customers/:id" element={<CustomerAdminPage />} />

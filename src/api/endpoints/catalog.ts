@@ -82,6 +82,7 @@ export const catalogKeys = {
 export type BookList = Paginated<BookCard> & { search?: { typo_tolerant?: boolean }; facets?: BookFacets };
 
 export const catalogApi = {
+  rows: (categoryId?: number) => api.get<Resource<Array<{ id: "best_sellers" | "new_arrivals" | "coming_soon" | "ebook_deals"; total: number; books: BookCard[] }>>>("/catalog/rows", { params: categoryId ? { category_id: categoryId } : {} }).then((r) => r.data),
   books: (filters: BookFilters = {}) => api.get<BookList>("/books", { params: toQueryParams(filters) }),
   book: (id: number) => api.get<Resource<BookDetail>>(`/books/${id}`).then((r) => r.data),
   related: (id: number, limit = 6) => api.get<Resource<BookCard[]>>(`/books/${id}/related`, { params: { limit } }).then((r) => r.data),

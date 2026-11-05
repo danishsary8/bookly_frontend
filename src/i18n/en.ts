@@ -1,5 +1,8 @@
 /** English translations for Bookly storefront. */
 export const en = {
+  readingLists: {
+    title: "Reading lists", listTitle: "List title", description: "Description", public: "Public list", save: "Save list", delete: "Delete list", create: "Create list", openPublic: "Open public list", note: "Note", up: "Move up", down: "Move down", remove: "Remove book", addToList: "Add to list", choose: "Choose a list", manage: "Manage reading lists", added: "Added to reading list", loading: "Loading reading list…", by: (name: string) => `By ${name}`, addAll: "Add all to cart", addResult: (added: number, skipped: number) => `${added} added to cart · ${skipped} skipped`, share: "Share list", copy: "Copy link", copied: "Link copied", copyFailed: "Could not copy the link. Use your browser’s address bar.", staffPick: "Staff pick", limits: "Up to 20 lists with 200 books each. Lists start private.",
+  },
   shopExtras: {
     deliveryEstimate: "Estimated delivery fee",
     deliveryArea: "Delivery area",
@@ -240,6 +243,7 @@ export const en = {
     unknown: "Unknown",
   },
   account: {
+    readingLists: "Reading lists",
     eyebrow: "Your account",
     signedInAs: (who: string) => `Signed in as ${who}`,
     nav: "Account",
@@ -934,7 +938,7 @@ export const en = {
     atCheckout: "At checkout",
     totalBeforeShipping: "Total before shipping",
     blocked: "Some items can't be ordered as they are. Change or remove the items marked in red to continue.",
-    payCash: "Pay cash on delivery. Card and Bakong KHQR are coming soon.",
+    payCash: "Cash on delivery or Bakong KHQR",
     loading: "Loading your cart…",
     emptyLead: "Books you add will wait here until you're ready to check out.",
     items: (n: number) => `${n} ${n === 1 ? "item" : "items"}`,

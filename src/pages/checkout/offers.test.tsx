@@ -44,6 +44,9 @@ const cart: Cart = {
 };
 const amount = (usd: string) => ({ usd, khr: "0" });
 const preview: CheckoutPreview = {
+  has_delivery_address: true,
+  free_shipping_threshold: amount("50.00"),
+  amount_needed_for_free_shipping: amount("3.00"),
   subtotal: amount("50.00"), discount: amount("3.00"), shipping_fee: amount("1.50"), tax: amount("0.00"), total: amount("48.50"),
   coupon_code: null, requires_shipping: true, delivery_area: "phnom_penh", can_checkout: true,
   applied: "offer", offer, coupon_not_used: null,
@@ -91,7 +94,7 @@ describe("Cart with an automatic offer", () => {
     expect(within(summary).getByText("Offer: buy 2, save 15%")).toBeInTheDocument();
     expect(within(summary).getByText("−$3.00")).toBeInTheDocument();
     expect(within(summary).getByText("$47.00")).toBeInTheDocument();
-    expect(within(summary).getByText(/Add \$3\.00 more for FREE delivery/)).toBeInTheDocument();
+    expect(await within(summary).findByText(/Add \$3\.00 more for FREE delivery/)).toBeInTheDocument();
     expect(screen.getAllByText("In offer")).toHaveLength(2);
   });
 
@@ -129,6 +132,7 @@ describe("Cart with an automatic offer", () => {
   });
 
   it("hides the free-delivery bar when the API says there is none (ebooks only)", async () => {
+    vi.spyOn(cartApi, "preview").mockResolvedValue({ ...preview, requires_shipping: false, free_shipping_threshold: null, amount_needed_for_free_shipping: null });
     vi.spyOn(cartApi, "cart").mockResolvedValue({ ...cart, pricing: { ...cart.pricing!, free_shipping: null } });
     app("/cart");
     await screen.findByText("Offer: buy 2, save 15%");

@@ -726,3 +726,5 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
 - Phase 5 Part C: gifts list/edit/stock, gift offer fields, gift cart/checkout/order/document lines and stock notification links. EN/KM and generated API types included; focused offer and gift text checks pass. Full/browser checks pending.
 
 - Phase 5 Part D: cart delivery fee/date estimate, area chooser and free-delivery progress from checkout preview. Typecheck passed; browser/full suite pending.
+
+- Phase 5 Part E: reading-list management, book-page add menu, public lists, batch cart action, clipboard/Facebook/Telegram sharing and home/staff picks. EN/KM strings, generated types and regression fixtures updated. Public/manager tests pass; Playwright matrix 390/1280 light/dark: axe 0, no overflow. Reproducible local-only script and screenshots/report paths recorded in backend PROGRESS.md.

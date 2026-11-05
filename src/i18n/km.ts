@@ -4,6 +4,9 @@ import type { Translations } from "./en";
 
 /** Khmer translations for Bookly storefront. */
 export const km: Translations = {
+  readingLists: {
+    title: "បញ្ជីអាន", listTitle: "ចំណងជើងបញ្ជី", description: "សេចក្ដីពិពណ៌នា", public: "បញ្ជីសាធារណៈ", save: "រក្សាទុកបញ្ជី", delete: "លុបបញ្ជី", create: "បង្កើតបញ្ជី", openPublic: "បើកបញ្ជីសាធារណៈ", note: "កំណត់ចំណាំ", up: "ផ្លាស់ឡើងលើ", down: "ផ្លាស់ចុះក្រោម", remove: "ដកសៀវភៅចេញ", addToList: "បន្ថែមទៅបញ្ជី", choose: "ជ្រើសរើសបញ្ជី", manage: "គ្រប់គ្រងបញ្ជីអាន", added: "បានបន្ថែមទៅបញ្ជីអាន", loading: "កំពុងផ្ទុកបញ្ជីអាន…", by: (name: string) => `ដោយ ${name}`, addAll: "ដាក់ទាំងអស់ចូលកន្ត្រក", addResult: (added: number, skipped: number) => `បានដាក់ ${added} ចូលកន្ត្រក · រំលង ${skipped}`, share: "ចែករំលែកបញ្ជី", copy: "ចម្លងតំណ", copied: "បានចម្លងតំណ", copyFailed: "មិនអាចចម្លងតំណបានទេ។ សូមប្រើរបារអាសយដ្ឋានរបស់កម្មវិធីរុករក។", staffPick: "ជម្រើសរបស់បុគ្គលិក", limits: "រហូតដល់ 20 បញ្ជី ដោយបញ្ជីនីមួយៗអាចមានសៀវភៅ 200 ក្បាល។ បញ្ជីថ្មីជាបញ្ជីឯកជន។",
+  },
   shopExtras: {
     deliveryEstimate: "ថ្លៃដឹកជញ្ជូនប៉ាន់ស្មាន",
     deliveryArea: "តំបន់ដឹកជញ្ជូន",
@@ -244,6 +247,7 @@ export const km: Translations = {
     unknown: "មិនស្គាល់",
   },
   account: {
+    readingLists: "បញ្ជីអាន",
     eyebrow: "គណនីរបស់អ្នក",
     signedInAs: (who: string) => `បានចូលជា ${who}`,
     nav: "គណនី",
@@ -940,7 +944,7 @@ export const km: Translations = {
     atCheckout: "នៅពេលទូទាត់",
     totalBeforeShipping: "សរុបមុនថ្លៃដឹកជញ្ជូន",
     blocked: "មុខទំនិញខ្លះមិនអាចបញ្ជាទិញបានដូចនេះទេ។ សូមប្តូរ ឬលុបមុខទំនិញដែលសម្គាល់ពណ៌ក្រហម ដើម្បីបន្ត។",
-    payCash: "ទូទាត់ជាសាច់ប្រាក់ពេលទទួលទំនិញ។ កាត និង Bakong KHQR នឹងមកដល់ឆាប់ៗ។",
+    payCash: "ទូទាត់ពេលទទួលទំនិញ ឬតាម Bakong KHQR",
     loading: "កំពុងផ្ទុកកន្ត្រករបស់អ្នក…",
     emptyLead: "សៀវភៅដែលអ្នកបន្ថែម នឹងរង់ចាំនៅទីនេះ រហូតដល់អ្នករួចរាល់ក្នុងការទូទាត់។",
     items: (n: number) => `${n} មុខ`,

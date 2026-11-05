@@ -1,12 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/api/client";
-import type { BookCard, Resource } from "@/api/types";
+import { catalogApi } from "@/api/endpoints/catalog";
 import { useT } from "@/i18n";
 import { BookShelf } from "./BookShelf";
 
 // The API owns membership and ordering; dictionary keys remain stable across languages.
 type RowId = "best_sellers" | "new_arrivals" | "coming_soon" | "ebook_deals";
-type Row = { id: RowId; total: number; books: BookCard[] };
 const links: Record<RowId, string> = {
   best_sellers: "sort=best_selling",
   new_arrivals: "sort=newest",
@@ -18,7 +16,7 @@ export function CatalogRows({ categoryId, categoryName }: { categoryId?: number;
   const { dict } = useT();
   const rows = useQuery({
     queryKey: ["catalog", "rows", categoryId ?? null],
-    queryFn: () => api.get<Resource<Row[]>>("/catalog/rows", { params: categoryId ? { category_id: categoryId } : {} }).then((r) => r.data),
+    queryFn: () => catalogApi.rows(categoryId),
     staleTime: 15 * 60 * 1000,
   });
   return <>{rows.data?.map((row) => <BookShelf
