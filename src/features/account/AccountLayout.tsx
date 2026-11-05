@@ -26,6 +26,7 @@ const accountSections = [
   { to: "/account/addresses", key: "addresses", Icon: MapPin },
   { to: "/account/wishlist", key: "wishlist", Icon: Heart },
   { to: "/account/lists", key: "readingLists", Icon: BookOpen },
+  { to: "/account/support", key: "support", Icon: MessageSquareText },
 ] as const;
 
 export function AccountLayout() {
@@ -86,7 +87,7 @@ export function AccountLayout() {
                   }
                 >
                   <Icon className="hidden size-[18px] lg:block" aria-hidden="true" />
-                  {dict.account[key]}
+                  {key === "support" ? dict.support.title : dict.account[key]}
                 </NavLink>
               </li>
             ))}

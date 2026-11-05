@@ -15,6 +15,7 @@ import { NotificationsBell } from "./NotificationsBell";
 import { useNewOrderWatch } from "./orders/newOrders";
 import { useAdminAutoRefresh } from "./autoRefresh";
 import { useStaff, useStaffSignOut } from "./staffSession";
+import { SupportMenuBadge } from "@/features/support/SupportMenuBadge";
 
 const itemClass =
   "flex min-h-11 cursor-pointer select-none items-center gap-3 rounded-md px-3 text-[15px] text-foreground outline-none data-[highlighted]:bg-secondary";
@@ -51,6 +52,7 @@ function Nav({ onNavigate }: { onNavigate?: () => void }) {
             >
               <Icon className="size-[18px] shrink-0" aria-hidden="true" />
               {label}
+              {to === "/admin/support" ? <SupportMenuBadge /> : null}
               {(() => {
                 const badge = COUNT_FOR[to];
                 const n = badge && counts ? counts[badge.key] : 0;

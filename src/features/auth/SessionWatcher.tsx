@@ -26,6 +26,8 @@ export function SessionWatcher() {
     let shownAt = 0;
     const onExpired = (event: Event) => {
       const kind = (event as CustomEvent<{ kind: SessionKind }>).detail?.kind;
+      queryClient.removeQueries({ queryKey: ["support"] });
+      queryClient.removeQueries({ queryKey: ["support-orders"] });
       // Several requests can fail together; one message is enough.
       const repeat = Date.now() - shownAt < 5000;
       if (kind === "staff") {

@@ -53,6 +53,7 @@ export const DEFAULT_STAFF_PERMISSIONS = [
   "customers:view",
   "customers:manage",
   "reviews:manage",
+  "support:manage",
 ] as const;
 
 export const ADMIN_ONLY_PERMISSIONS = [
