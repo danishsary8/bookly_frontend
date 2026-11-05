@@ -7,6 +7,8 @@ import { TextField } from "@/components/form/Field";
 import { Button } from "@/components/ui/button";
 import { InlineError } from "@/components/ui/error-state";
 import { useT } from "@/i18n";
+import { useSession } from "@/api/session";
+import type { Customer } from "@/api/types";
 
 function Editor({ id, rating }: { id: number; rating: OrderRating | null }) {
   const { dict } = useT();
@@ -26,8 +28,10 @@ function Editor({ id, rating }: { id: number; rating: OrderRating | null }) {
 }
 
 export function OrderRatingForm({ orderId }: { orderId: number }) {
-  const query = useQuery({ queryKey: ["order-rating", orderId], queryFn: () => ratingsApi.own(orderId) });
+  const customerId = useSession<Customer>("customer")?.user.id;
+  const query = useQuery({ queryKey: ["order-rating", orderId, customerId], queryFn: () => ratingsApi.own(orderId), enabled: !!customerId });
+  if (!customerId) return null;
   if (query.isError) return <InlineError error={query.error} onRetry={() => query.refetch()} />;
   if (query.isPending) return null;
-  return <Editor key={`${query.data?.id ?? "new"}:${query.data?.stars}`} id={orderId} rating={query.data} />;
+  return <Editor key={`${customerId}:${query.data?.id ?? "new"}:${query.data?.stars}`} id={orderId} rating={query.data} />;
 }
