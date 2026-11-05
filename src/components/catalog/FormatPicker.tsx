@@ -20,7 +20,7 @@ export function FormatPicker({ variants, value, onChange, name }: { variants: Bo
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))]">
         {variants.map((v) => {
           const selected = v.id === value;
-          const available = v.in_stock !== false;
+          const available = v.in_stock !== false || Boolean(v.is_preorder || v.is_backorder);
           return (
             <label
               key={v.id}
@@ -34,7 +34,7 @@ export function FormatPicker({ variants, value, onChange, name }: { variants: Bo
               <span className={cn("text-[15px] font-semibold", selected && "text-primary")}>{formatName(dict, v.format)}</span>
               <span className="text-sm font-semibold tabular-nums">{formatMoney(v.price_usd, v.price_khr, currency)}</span>
               <span className={cn("text-xs", available ? "text-muted-foreground" : "text-destructive")}>
-                {!available ? dict.cards.outOfStock : DIGITAL.has(v.format ?? "") ? dict.cards.instant : dict.cards.inStock}
+                {!available ? dict.cards.outOfStock : v.is_preorder ? dict.preorder.preorderBadge : v.is_backorder ? dict.preorder.backorderBadge : DIGITAL.has(v.format ?? "") ? dict.cards.instant : dict.cards.inStock}
               </span>
             </label>
           );

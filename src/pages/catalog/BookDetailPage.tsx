@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, BookOpen, BookX, Eye, Heart, RotateCcw, Share2, ShoppingBag, Truck, Wallet } from "lucide-react";
+import { Bell, BookOpen, BookX, CalendarClock, Clock3, Eye, Heart, RotateCcw, Share2, ShoppingBag, Truck, Wallet } from "lucide-react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { ebookQueries } from "@/api/endpoints/ebooks";
@@ -94,7 +94,7 @@ function Purchase({ book }: { book: BookDetail }) {
   const [shareOpen, setShareOpen] = useState(false);
   const variant = variants.find((v) => v.id === variantId);
   const digital = DIGITAL.has(variant?.format ?? "");
-  const buyable = Boolean(variant && variant.in_stock !== false);
+  const buyable = Boolean(variant && (variant.in_stock !== false || variant.is_preorder || variant.is_backorder));
   const saved = wishlist.isSaved(book.id);
   const adding = cart.pendingBookId === book.id;
 
@@ -214,6 +214,18 @@ function Purchase({ book }: { book: BookDetail }) {
       ) : null}
 
 
+      {variant?.is_preorder ? (
+        <p className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">
+          <CalendarClock className="size-4 shrink-0" aria-hidden="true" />
+          <span>{variant.release_date ? dict.preorder.shipsFrom(variant.release_date) : dict.preorder.preorderBadge}</span>
+        </p>
+      ) : variant?.is_backorder ? (
+        <p className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-muted-foreground">
+          <Clock3 className="size-4 shrink-0 text-primary" aria-hidden="true" />
+          <span>{dict.preorder.shipsInAbout}</span>
+        </p>
+      ) : null}
+
       <div ref={mainButton} className="flex flex-wrap items-center gap-3">
         {!digital && buyable ? <QuantityStepper value={quantity} onChange={setQuantity} max={MAX_QTY} label={b.quantityFor(book.title ?? "")} /> : null}
         {!digital && !buyable ? (
@@ -251,7 +263,13 @@ function Purchase({ book }: { book: BookDetail }) {
           <CtaGlare className="min-w-[12rem] flex-1 sm:flex-none">
             <Button variant="cta" size="lg" className="w-full" onClick={add} disabled={!buyable} loading={adding}>
               {!adding ? <ShoppingBag aria-hidden="true" /> : null}
-              {adding ? b.adding : dict.bookDetail.addToCart}
+              {adding
+                ? b.adding
+                : variant?.is_preorder
+                  ? dict.preorder.preorderNow
+                  : variant?.is_backorder
+                    ? dict.preorder.orderNowBackorder
+                    : dict.bookDetail.addToCart}
             </Button>
           </CtaGlare>
         )}
@@ -335,7 +353,13 @@ function Purchase({ book }: { book: BookDetail }) {
             )
           ) : (
             <Button variant="cta" onClick={add} disabled={!buyable} loading={adding} tabIndex={showBar ? 0 : -1}>
-              {dict.bookDetail.addToCart}
+              {adding
+                ? b.adding
+                : variant?.is_preorder
+                  ? dict.preorder.preorderNow
+                  : variant?.is_backorder
+                    ? dict.preorder.orderNowBackorder
+                    : dict.bookDetail.addToCart}
             </Button>
           )}
         </div>

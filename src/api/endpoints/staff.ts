@@ -130,6 +130,10 @@ export interface StaffVariant {
   is_active: boolean;
   in_stock: boolean;
   cover_image_url: string | null;
+  release_date?: string | null;
+  allow_backorder?: boolean;
+  is_preorder?: boolean;
+  is_backorder?: boolean;
 }
 
 export type BookStatus = "draft" | "scheduled" | "live";
@@ -227,6 +231,9 @@ export interface VariantInput {
   low_stock_threshold?: number;
   cover_image_url?: string | null;
   is_active?: boolean;
+  release_date?: string | null;
+  allow_backorder?: boolean;
+  delay_note?: string | null;
 }
 
 export type DashboardPeriod = "today" | "7d" | "30d";

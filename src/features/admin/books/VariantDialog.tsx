@@ -13,7 +13,7 @@ import { FORMATS } from "@/lib/catalog";
 import { validateImageUrl } from "@/lib/imageValidation";
 
 const DIGITAL = new Set(["ebook", "audiobook"]);
-type Values = { format: string; sku: string; isbn: string; price_usd: string; stock_quantity: string; low_stock_threshold: string; cover_image_url: string; is_active: boolean };
+type Values = { format: string; sku: string; isbn: string; price_usd: string; stock_quantity: string; low_stock_threshold: string; cover_image_url: string; is_active: boolean; release_date: string; allow_backorder: boolean; delay_note: string };
 type Errors = Partial<Record<keyof Values | "form", string>>;
 
 const valuesFor = (variant: StaffVariant | null, format: string, defaultCover = ""): Values => ({
@@ -25,6 +25,9 @@ const valuesFor = (variant: StaffVariant | null, format: string, defaultCover = 
   low_stock_threshold: String(variant?.low_stock_threshold ?? 5),
   cover_image_url: variant ? (variant.cover_image_url ?? "") : defaultCover,
   is_active: variant?.is_active ?? true,
+  release_date: variant?.release_date ?? "",
+  allow_backorder: variant?.allow_backorder ?? false,
+  delay_note: "",
 });
 
 function check(v: Values, digital: boolean): Errors {
