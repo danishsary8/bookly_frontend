@@ -15,14 +15,16 @@ function totp() {
   const hash = createHmac("sha1", key).update(counter).digest(); const offset = hash[19] & 15;
   return ((hash.readUInt32BE(offset) & 0x7fffffff) % 1000000).toString().padStart(6, "0");
 }
-mkdirSync("test-results/support", { recursive: true });
+const smoke = process.env.E2E_SUPPORT_SMOKE === "1";
+const output = smoke ? "test-results/support-smoke" : "test-results/support";
+mkdirSync(output, { recursive: true });
 const browser = await chromium.launch(); const report = [];
 const expect = baseExpect.configure({ timeout: 20000 });
 async function audit(page, name) {
   const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
   expect(violations.map((v) => ({ id: v.id, targets: v.nodes.map((n) => n.target) }))).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
-  await page.screenshot({ path: `test-results/support/${name}.png`, fullPage: true });
+  await page.screenshot({ path: `${output}/${name}.png`, fullPage: true });
 }
 try {
   const authContext = await browser.newContext();
@@ -30,6 +32,7 @@ try {
   const staffLogin = await authContext.request.post(`${api}/staff/auth/login`, { data: { email: "support-staff@example.test", password: password("StaffUser") } }); expect(staffLogin.ok()).toBe(true); const challenge = await staffLogin.json();
   const verified = await authContext.request.post(`${api}/staff/auth/two-factor/challenge`, { data: { challenge_token: challenge.challenge_token, code: totp() } }); expect(verified.ok()).toBe(true); const staffAuth = await verified.json(); await authContext.close();
   for (const language of ["en", "km"]) for (const theme of ["light", "dark"]) for (const width of [390, 1280]) {
+    if (smoke && !((language === "en" && theme === "light" && width === 1280) || (language === "km" && theme === "dark" && width === 390))) continue;
     const tag = `${language}-${theme}-${width}`;
     const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme, reducedMotion: "reduce" });
     await context.addInitScript(({ auth, staffAuth, language, theme }) => {
@@ -72,13 +75,13 @@ try {
     await guestDialog.getByLabel(language === "en" ? "Message" : "សារ", { exact: true }).fill("Guest support question");
     await audit(guest, `${tag}-guest`);
     // The real guest IP quota is retained: submit three times, inspect the form in every combination.
-    if (report.length < 3) {
+    if (!smoke && report.length < 3) {
       await guestDialog.getByRole("button", { name: language === "en" ? "Send message" : "ផ្ញើសារ" }).click();
       await expect(guestDialog.getByRole("status")).toContainText("#");
     }
     await guestContext.close(); await context.close();
-    report.push({ language, theme, width, customerChat: true, guestChat: true, staffReply: true, closedRating: 5, axeViolations: 0, overflow: false });
-    writeFileSync("test-results/support/report.json", JSON.stringify(report, null, 2)); console.log(`${tag}: customer/guest/staff/rating passed, axe 0`);
+    report.push({ language, theme, width, customerChat: true, guestChat: true, guestSubmitted: !smoke && report.length < 3, staffReply: true, closedRating: 5, axeViolations: 0, overflow: false });
+    writeFileSync(`${output}/report.json`, JSON.stringify(report, null, 2)); console.log(`${tag}: customer/guest/staff/rating passed, axe 0`);
     await new Promise((resolve) => setTimeout(resolve, 10000));
   }
 } finally { await browser.close(); }

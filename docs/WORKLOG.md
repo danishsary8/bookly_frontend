@@ -734,3 +734,9 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
 - Phase 6: delivered-order ratings (seven-day edits), truthful store badge, staff comment moderation and dashboard summary. Shared native star radio input and EN/KM text/tests added. Existing book review verification preserved. First full checks: 606 frontend tests, lint/typecheck/build passed; production npm audit zero vulnerabilities. Local en/km/light/dark/390/1280 browser checks in progress.
 
 - Phase 6 final browser matrix passed: en/km, light/dark, 390/1280; order rating save and store badge threshold; 16 page audits, axe 0, no overflow. Full frontend checks 606 passing tests, lint/typecheck/build clean, production audit 0 vulnerabilities. No production requests. Review/setup/merge order recorded in backend PROGRESS.md.
+
+## Phase 7 — Human support chat (2026-11-06)
+- Added storefront/account support with guest form, owned recent-order selection, accessible dialog/log/composer, conditional polling/unread badge, close/rate-once and bilingual text. Staff inbox supports filters, assignment/status, internal notes, bilingual templates and admin-only Telegram identity binding.
+- Private caches are scoped to principal and cleared on logout/session expiry; messages remain escaped plain text without autolinks. Bubble uses MASTER layering tokens and is hidden for payment/print.
+- Full standalone support suite 607 passed; combined ratings/support suite 612 passed (3 existing opt-in skips), lint 0 errors/typecheck/build passed. PostgreSQL/backend results and final security findings are in backend PROGRESS.md.
+- Local browser full8 combinations EN/KM/light/dark/390/1280 plus post-merge EN/light1280 and KM/dark390: customer/guest/staff/closed-rating checks, axe0, no overflow. Three guest submissions respected the real quota. Existing staff area remains English by policy. No external services or production called.
