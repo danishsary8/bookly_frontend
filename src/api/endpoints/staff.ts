@@ -1,3 +1,36 @@
+export interface StaffSeriesVolumeBook {
+  id: number;
+  title: string;
+  status: string;
+  series_order: number | null;
+  cover_image_url: string | null;
+  authors: Array<{ id: number; name: string }>;
+  formats: string[];
+  in_stock: boolean;
+  created_at: string | null;
+}
+
+export interface StaffSeriesDetail {
+  id: number;
+  name: string;
+  slug: string | null;
+  description: string | null;
+  books: StaffSeriesVolumeBook[];
+  has_duplicate_orders: boolean;
+  duplicate_orders: number[];
+}
+
+export interface UpdateSeriesVolumesInput {
+  volumes: Array<{ id: number; series_order: number | null }>;
+}
+
+export interface UpdateSeriesVolumesResponse {
+  message: string;
+  updated_count: number;
+  has_duplicates: boolean;
+  warnings: string[];
+}
+
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { api } from "../client";
 import { toQueryParams } from "./catalog";
@@ -441,6 +474,10 @@ export const staffApi = {
   createLookup: <K extends LookupKind>(kind: K, input: LookupInputOf<K>) => api.post<Resource<LookupOf<K>>>(`/staff/${kind}`, input).then((r) => r.data),
   updateLookup: <K extends LookupKind>(kind: K, id: number, input: LookupInputOf<K>) =>
     api.patch<Resource<LookupOf<K>>>(`/staff/${kind}/${id}`, input).then((r) => r.data),
+  seriesDetail: (id: number) =>
+    api.get<Resource<StaffSeriesDetail>>(`/staff/series/${id}`).then((r) => r.data),
+  updateSeriesVolumes: (id: number, input: UpdateSeriesVolumesInput) =>
+    api.put<Resource<UpdateSeriesVolumesResponse>>(`/staff/series/${id}/volumes`, input).then((r) => r.data),
   deleteLookup: (kind: LookupKind, id: number, payload?: StrictDeletePayload) =>
     api.delete(`/staff/${kind}/${id}`, { data: payload }),
 };
@@ -465,4 +502,6 @@ export const staffQueries = {
   sessions: () => queryOptions({ queryKey: staffKeys.sessions(), queryFn: () => staffApi.sessions() }),
   loginHistory: (params: Parameters<typeof staffApi.loginHistory>[0] = {}) =>
     queryOptions({ queryKey: staffKeys.loginHistory(params), queryFn: () => staffApi.loginHistory(params), placeholderData: keepPreviousData }),
+  seriesDetail: (id: number) =>
+    queryOptions({ queryKey: ["staff", "series", id] as const, queryFn: () => staffApi.seriesDetail(id), enabled: id > 0 }),
 };

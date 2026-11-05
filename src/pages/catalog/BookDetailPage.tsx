@@ -10,6 +10,7 @@ import { useSession } from "@/api/session";
 import type { BookCard, BookDetail, Customer } from "@/api/types";
 import { BookCover } from "@/components/catalog/BookCover";
 import { BookShelf } from "@/components/catalog/BookShelf";
+import { VolumePicker } from "@/components/catalog/VolumePicker";
 import { BookShareModal } from "@/components/catalog/BookShareModal";
 import { FormatPicker } from "@/components/catalog/FormatPicker";
 import { ReviewsSection } from "@/components/catalog/ReviewsSection";
@@ -575,6 +576,10 @@ export default function BookDetailPage() {
           </div>
         </article>
       )}
+
+      {book && series.data && series.data.books && series.data.books.length > 0 ? (
+        <VolumePicker currentBookId={book.id ?? 0} series={series.data} className="mt-12" />
+      ) : null}
 
       {book ? (
         <Tabs defaultValue={hash === "#your-review" || hash === "#reviews" ? "reviews" : "description"} className="mt-16">

@@ -1,5 +1,46 @@
+function OrderNextVolumePrompt({ bookIds }: { bookIds: number[] }) {
+  const { dict } = useT();
+  const vDict = dict.seriesVolumes;
+
+  // Check next volume for the books in order
+  const firstBookId = bookIds[0] ?? 0;
+  const nextQuery = useQuery(catalogQueries.nextVolume(firstBookId));
+  const nextBook = nextQuery.data;
+
+  if (!nextBook) return null;
+
+  return (
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5">
+      <div className="flex items-center gap-3">
+        {nextBook.cover_image_url ? (
+          <img
+            src={nextBook.cover_image_url}
+            alt={nextBook.title}
+            className="h-16 w-11 shrink-0 rounded object-cover shadow-xs"
+          />
+        ) : null}
+        <div className="grid gap-0.5">
+          <span className="text-xs font-bold uppercase tracking-wider text-primary">
+            {vDict.nextVolumeAfterOrder}
+          </span>
+          <span className="font-semibold text-foreground">{nextBook.title}</span>
+          <span className="text-sm text-muted-foreground">{vDict.nextVolumeOrderPrompt}</span>
+        </div>
+      </div>
+      <Link
+        to={`/books/${nextBook.id}`}
+        className={buttonVariants({ className: "shrink-0 gap-1.5" })}
+      >
+        <span>{vDict.nextVolume}</span>
+        <ArrowRight className="size-4" aria-hidden="true" />
+      </Link>
+    </div>
+  );
+}
+
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, FileText, PackageCheck, Send, Truck } from "lucide-react";
+import { CheckCircle2, FileText, PackageCheck, Send, Truck, ArrowRight } from "lucide-react";
+import { catalogQueries } from "@/api/endpoints/catalog";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { orderQueries } from "@/api/endpoints/orders";
 import { ApiError } from "@/api/errors";
@@ -77,6 +118,9 @@ export default function OrderConfirmationPage() {
 
         <OrderItemsCard order={o} totalLabel={k.totalOnDelivery} />
         <DeliveryAddressCard address={o.shipping_address} />
+        {o.items && o.items.length > 0 ? (
+          <OrderNextVolumePrompt bookIds={o.items.map((i) => i.book_id).filter((id): id is number => typeof id === "number")} />
+        ) : null}
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5">
           <div className="flex items-start sm:items-center gap-3">

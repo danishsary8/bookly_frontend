@@ -19,6 +19,10 @@ export type CategoryNode = Schemas["CategoryNode"];
 export type Publisher = Schemas["Publisher"];
 export type Series = Schemas["Series"];
 export type SeriesDetail = Schemas["SeriesDetail"];
+export type SeriesBook = NonNullable<SeriesDetail["books"]>[number] & {
+  is_owned?: boolean | null;
+  is_in_cart?: boolean | null;
+};
 export type Review = Schemas["Review"];
 export type OwnReview = Schemas["OwnReview"];
 export type RatingSummary = Schemas["RatingSummary"];

@@ -2,6 +2,22 @@ import { queryOptions } from "@tanstack/react-query";
 import { api, newIdempotencyKey } from "../client";
 import type { Cart, CheckoutPreview, CouponCheck, Order, Resource } from "../types";
 
+export interface AddSeriesResult {
+  added: Array<{
+    book_id: number;
+    title: string;
+    variant_id: number;
+    format: string;
+    price_usd: string;
+  }>;
+  skipped: Array<{
+    book_id: number;
+    title: string;
+    reason: 'already_owned' | 'already_in_cart' | 'out_of_stock';
+  }>;
+  cart: Cart;
+}
+
 export const cartKeys = {
   cart: () => ["cart"] as const,
   preview: (couponCode: string | null, addressId: number | null = null) => ["cart", "preview", couponCode ?? "", addressId ?? 0] as const,
@@ -29,6 +45,7 @@ export const cartApi = {
   setQuantity: (itemId: number, quantity: number) => api.patch<Resource<Cart>>(`/cart/items/${itemId}`, { quantity }).then(cartData),
   removeItem: (itemId: number) => api.delete<Resource<Cart>>(`/cart/items/${itemId}`).then(cartData),
   clear: () => api.delete<Resource<Cart>>("/cart").then(cartData),
+  addSeries: (seriesId: number) => api.post<Resource<AddSeriesResult>>(`/cart/series/${seriesId}`).then((r) => r.data),
 
   checkCoupon: (code: string) => api.post<Resource<CouponCheck>>("/cart/coupon/check", { code }).then((r) => r.data),
   /** Totals for the cart; delivery is priced for `addressId` (else the default address). */

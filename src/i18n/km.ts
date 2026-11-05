@@ -1539,6 +1539,33 @@ export const km: Translations = {
     staffResetDevicesLead: "សកម្មភាពនេះនឹងសម្អាតឧបករណ៍ទាំង 3 និងសម្អាតការរង់ចាំ 30 ថ្ងៃសម្រាប់អតិថិជននេះភ្លាមៗ។",
     staffResetDevicesSuccess: (count: number) => `បានកំណត់ ${count} ឧបករណ៍ឡើងវិញ។`,
   },
+  seriesVolumes: {
+    volumeOf: (vol: number | string, series: string) => `កម្រងទី ${vol} នៃ ${series}`,
+    volumeNumber: (vol: number | string) => `កម្រង ${vol}`,
+    volumePicker: "កម្រងសៀវភៅក្នុងឈុត",
+    owned: "បានទិញរួច",
+    inCart: "ក្នុងកន្ត្រក",
+    outOfStock: "អស់ពីស្តុក",
+    nextVolume: "កម្រងបន្ទាប់",
+    nextVolumeEyebrow: "បន្តឈុតសៀវភៅ",
+    continueReading: "បន្តសាច់រឿងជាមួយកម្រងបន្ទាប់",
+    completeSet: "ទិញបង្គ្រប់ឈុត",
+    completeSetDesc: "បន្ថែមរាល់កម្រងដែលអ្នកមិនទាន់មានចូលក្នុងកន្ត្រក",
+    addingSet: "កំពុងបន្ថែមសៀវភៅក្នុងឈុត…",
+    setAddedToast: (added: number, skipped: number) =>
+      added > 0
+        ? `បានបន្ថែម ${added} កម្រងទៅក្នុងកន្ត្រក${skipped > 0 ? ` (រំលង ${skipped} កម្រង)` : ""}`
+        : "អ្នកមានឬបានដាក់កម្រងទាំងអស់ក្នុងកន្ត្រករួចហើយ",
+    noMissingVolumes: "អ្នកបានទិញ ឬបានដាក់កម្រងទាំងអស់ក្នុងកន្ត្រករួចហើយ!",
+    reorderVolumes: "រៀបចំលំដាប់កម្រង",
+    manageVolumes: "គ្រប់គ្រងកម្រង",
+    duplicateOrdersWarning: "ការព្រមាន៖ មានកម្រងសៀវភៅប្រើលេខលំដាប់ដូចគ្នា។",
+    saveOrder: "រក្សាទុកលំដាប់",
+    orderSaved: "បានរក្សាទុកលំដាប់កម្រងដោយជោគជ័យ",
+    nextVolumeAfterOrder: "កម្រងបន្ទាប់ក្នុងឈុត",
+    nextVolumeOrderPrompt: "ត្រៀមខ្លួនសម្រាប់សាច់រឿងភាគបន្តហើយឬនៅ?",
+    addedToCart: "បានបន្ថែមទៅកន្ត្រក",
+  },
   common: {
     loading: "កំពុងដំណើរការ…",
     error: "មានបញ្ហាកើតឡើង",

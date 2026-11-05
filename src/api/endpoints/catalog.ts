@@ -74,6 +74,7 @@ export const catalogKeys = {
   publishers: (params: object) => ["catalog", "publishers", toQueryParams(params)] as const,
   seriesList: (params: object) => ["catalog", "series", toQueryParams(params)] as const,
   series: (id: number) => ["catalog", "series", id] as const,
+  nextVolume: (id: number) => ["catalog", "book", id, "next-volume"] as const,
 };
 
 /** A page of books; `search.typo_tolerant` is true when nothing matched exactly and the API matched similar spellings. */
@@ -98,6 +99,7 @@ export const catalogApi = {
   seriesList: (params: { page?: number; per_page?: number } = {}) =>
     api.get<Paginated<Series>>("/series", { params: toQueryParams(params) }),
   series: (id: number) => api.get<Resource<SeriesDetail>>(`/series/${id}`).then((r) => r.data),
+  nextVolume: (bookId: number) => api.get<Resource<BookDetail | null>>(`/books/${bookId}/next-volume`).then((r) => r.data),
 };
 
 export const catalogQueries = {
@@ -121,4 +123,5 @@ export const catalogQueries = {
   seriesList: (params: Parameters<typeof catalogApi.seriesList>[0] = {}) =>
     queryOptions({ queryKey: catalogKeys.seriesList(params), queryFn: () => catalogApi.seriesList(params) }),
   series: (id: number) => queryOptions({ queryKey: catalogKeys.series(id), queryFn: () => catalogApi.series(id) }),
+  nextVolume: (id: number) => queryOptions({ queryKey: catalogKeys.nextVolume(id), queryFn: () => catalogApi.nextVolume(id), enabled: id > 0 }),
 };
