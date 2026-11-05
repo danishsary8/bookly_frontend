@@ -9379,6 +9379,11 @@ export interface components {
             province_code?: string | null;
             province_name?: string | null;
             estimated_delivery?: components["schemas"]["EstimatedDelivery"];
+            has_preorder?: boolean;
+            has_backorder?: boolean;
+            /** Format: date */
+            expected_ship_date?: string | null;
+            shipping_notice?: string | null;
         };
         CouponCheck: {
             code?: string;
@@ -9561,6 +9566,11 @@ export interface components {
             price_khr?: components["schemas"]["Riel"];
             in_stock?: boolean;
             cover_image_url?: string | null;
+            /** Format: date */
+            release_date?: string | null;
+            allow_backorder?: boolean;
+            is_preorder?: boolean;
+            is_backorder?: boolean;
         };
         BookDetail: components["schemas"]["BookCard"] & {
             description?: string | null;
@@ -9690,6 +9700,9 @@ export interface components {
             payment_due_at?: string | null;
             /** Format: date-time */
             placed_at?: string;
+            is_waiting_stock?: boolean;
+            /** Format: date */
+            expected_ship_date?: string | null;
             item_count?: number;
             items?: {
                 id?: number;
@@ -9702,6 +9715,10 @@ export interface components {
                 subtotal_usd?: components["schemas"]["Money"];
                 /** @description This line's share of the order discount; the lines add up to the order's discount_usd (0.00 on older orders). */
                 discount_usd?: components["schemas"]["Money"];
+                is_preorder?: boolean;
+                is_backorder?: boolean;
+                /** Format: date */
+                expected_date?: string | null;
             }[];
             subtotal_usd?: components["schemas"]["Money"];
             discount_usd?: components["schemas"]["Money"];

@@ -25,8 +25,9 @@ import { rangeSummary } from "@/lib/pagination";
 import { formatUsd } from "@/stores/currency";
 import { toast } from "@/stores/toast";
 
-const STATUSES: Array<{ value: OrderStatus | "all"; label: string }> = [
+const STATUSES: Array<{ value: OrderStatus | "waiting" | "all"; label: string }> = [
   { value: "all", label: "All" },
+  { value: "waiting", label: "Waiting" },
   { value: "pending", label: "Pending" },
   { value: "processing", label: "Processing" },
   { value: "shipped", label: "Shipped" },
@@ -34,7 +35,7 @@ const STATUSES: Array<{ value: OrderStatus | "all"; label: string }> = [
   { value: "cancelled", label: "Cancelled" },
   { value: "returned", label: "Returned" },
 ];
-const isStatus = (v: string): v is OrderStatus => STATUSES.some((s) => s.value === v && v !== "all");
+const isStatus = (v: string): v is OrderStatus | "waiting" => STATUSES.some((s) => s.value === v && v !== "all");
 const today = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Phnom_Penh" });
 const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toLocaleDateString("en-CA", { timeZone: "Asia/Phnom_Penh" });
 
@@ -257,7 +258,14 @@ export default function OrdersAdminPage() {
                   <span className="block text-sm text-muted-foreground">{o.customer?.email}</span>
                 </td>
                 <td className={td}>
-                  <OrderStatusBadge status={o.status} />
+                  <div className="flex flex-col items-start gap-1">
+                    <OrderStatusBadge status={o.status} />
+                    {o.is_waiting_stock ? (
+                      <Badge tone="warning" shape="tint" size="sm">
+                        Waiting for stock / release
+                      </Badge>
+                    ) : null}
+                  </div>
                 </td>
                 <td className={`${td} text-right font-semibold tabular-nums`}>{formatUsd(o.total_usd)}</td>
                 <td className={`${td} whitespace-nowrap text-sm text-muted-foreground`}>{orderDateTime(o.placed_at)}</td>
