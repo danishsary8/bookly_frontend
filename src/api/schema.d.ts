@@ -4,6 +4,293 @@
  */
 
 export interface paths {
+    "/assistant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask the local automatic assistant (optional customer token for own orders) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        question: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Answer */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: components["schemas"]["AssistantResponse"];
+                        };
+                    };
+                };
+                422: components["responses"]["Validation"];
+                /** @description Too many questions */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/assistant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask for staff data, filtered by the staff member's abilities */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        question: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Answer */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                intent: string;
+                                text: string;
+                                link: string | null;
+                            };
+                        };
+                    };
+                };
+                403: components["responses"]["Forbidden"];
+                /** @description Too many questions */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/assistant/faqs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List bilingual assistant FAQs, including hit counts */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paginated FAQs */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                data: components["schemas"]["AssistantFaq"][];
+                                current_page: number;
+                                last_page: number;
+                            };
+                        };
+                    };
+                };
+                403: components["responses"]["Forbidden"];
+            };
+        };
+        put?: never;
+        /** Create an FAQ, optionally resolving an unanswered question */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AssistantFaqInput"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["AssistantFaq"];
+                        };
+                    };
+                };
+                403: components["responses"]["Forbidden"];
+                422: components["responses"]["Validation"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/assistant/faqs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a bilingual FAQ */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                204: components["responses"]["NoContent"];
+                403: components["responses"]["Forbidden"];
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Update a bilingual FAQ */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AssistantFaqInput"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["AssistantFaq"];
+                        };
+                    };
+                };
+                403: components["responses"]["Forbidden"];
+                422: components["responses"]["Validation"];
+            };
+        };
+        trace?: never;
+    };
+    "/staff/assistant/unanswered": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List redacted unanswered questions and counts */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paginated redacted questions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                data: components["schemas"]["AssistantUnanswered"][];
+                                current_page: number;
+                                last_page: number;
+                            };
+                        };
+                    };
+                };
+                403: components["responses"]["Forbidden"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/support/guest": {
         parameters: {
             query?: never;
@@ -11181,6 +11468,43 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AssistantResponse: {
+            intent: string;
+            text: string;
+            link: string | null;
+            books: components["schemas"]["BookCard"][];
+            handoff: boolean;
+        };
+        AssistantFaq: {
+            id: number;
+            question_en: string;
+            question_km: string;
+            answer_en: string;
+            answer_km: string;
+            keywords: string[];
+            is_active: boolean;
+            hits: number;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+        };
+        AssistantFaqInput: {
+            question_en: string;
+            question_km: string;
+            answer_en: string;
+            answer_km: string;
+            keywords: string[];
+            is_active: boolean;
+            unanswered_id?: number;
+        };
+        AssistantUnanswered: {
+            id: number;
+            question: string;
+            count: number;
+            /** Format: date-time */
+            last_seen: string;
+        };
         SupportMessage: {
             id: number;
             /** @enum {string} */
@@ -12119,6 +12443,10 @@ export interface components {
     headers: never;
     pathItems: never;
 }
+export type SchemaAssistantResponse = components['schemas']['AssistantResponse'];
+export type SchemaAssistantFaq = components['schemas']['AssistantFaq'];
+export type SchemaAssistantFaqInput = components['schemas']['AssistantFaqInput'];
+export type SchemaAssistantUnanswered = components['schemas']['AssistantUnanswered'];
 export type SchemaSupportMessage = components['schemas']['SupportMessage'];
 export type SchemaSupportConversation = components['schemas']['SupportConversation'];
 export type SchemaSupportQuickReply = components['schemas']['SupportQuickReply'];

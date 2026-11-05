@@ -18,6 +18,7 @@ it("opens the guest form, sends a confirmation reference and returns keyboard fo
   const trigger = screen.getByRole("button", { name: en.support.open });
   await user.click(trigger);
   expect(screen.getByRole("dialog")).toBeInTheDocument();
+  await user.click(screen.getByRole("tab", { name: en.assistant.human }));
   await user.type(screen.getByLabelText(en.support.name), "Reader");
   await user.type(screen.getByLabelText(en.support.email), "reader@example.test");
   await user.type(screen.getByLabelText(en.support.message), "Help please");

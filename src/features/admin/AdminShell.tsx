@@ -16,6 +16,7 @@ import { useNewOrderWatch } from "./orders/newOrders";
 import { useAdminAutoRefresh } from "./autoRefresh";
 import { useStaff, useStaffSignOut } from "./staffSession";
 import { SupportMenuBadge } from "@/features/support/SupportMenuBadge";
+import { StaffAssistantDialog } from "@/features/assistant/StaffAssistantDialog";
 
 const itemClass =
   "flex min-h-11 cursor-pointer select-none items-center gap-3 rounded-md px-3 text-[15px] text-foreground outline-none data-[highlighted]:bg-secondary";
@@ -164,6 +165,7 @@ export function AdminShell() {
           </div>
           <QuickJump />
           <div className="ml-auto flex items-center gap-1">
+            <StaffAssistantDialog />
             <NotificationsBell />
             <UserMenu />
           </div>

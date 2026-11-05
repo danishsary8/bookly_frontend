@@ -12,9 +12,9 @@ import { useT } from "@/i18n";
 import { ConversationView, supportField } from "./ConversationView";
 import { useConversations } from "./useSupport";
 
-function GuestSupport() {
+function GuestSupport({ initialMessage = "" }: { initialMessage?: string }) {
   const t = useT().dict.support; const id = useId(); const turnstile = useTurnstile("support_guest");
-  const [name, setName] = useState(""); const [email, setEmail] = useState(""); const [message, setMessage] = useState("");
+  const [name, setName] = useState(""); const [email, setEmail] = useState(""); const [message, setMessage] = useState(initialMessage);
   const submit = useMutation({ mutationFn: async () => { try { return await supportApi.guest({ name, email, message, turnstile_token: await turnstile.getToken() }); } finally { turnstile.reset(); } } });
   return <div className="grid gap-4"><p className="text-sm text-muted-foreground">{t.guestIntro}</p>{submit.data ? <p role="status">{t.sent} #{submit.data.id}</p> : <form className="grid gap-3" onSubmit={(event) => { event.preventDefault(); submit.mutate(); }}>
     <label htmlFor={`${id}-name`}>{t.name}</label><input id={`${id}-name`} autoComplete="name" className={supportField} required maxLength={100} value={name} onChange={(event) => setName(event.target.value)} />
@@ -24,11 +24,11 @@ function GuestSupport() {
   </form>}<Link className="min-h-11 py-2 text-primary underline" to="/login">{t.signIn}</Link></div>;
 }
 
-function CustomerSupport({ customer }: { customer: Customer }) {
+function CustomerSupport({ customer, initialMessage = "" }: { customer: Customer; initialMessage?: string }) {
   const { dict } = useT(); const t = dict.support; const client = useQueryClient();
   const storageKey = `bookly.support.${customer.id}`;
-  const [selected, setSelected] = useState(() => { try { return Number(localStorage.getItem(storageKey)) || 0; } catch { return 0; } });
-  const [starting, setStarting] = useState(false); const [topic, setTopic] = useState<Topic>("other"); const [order, setOrder] = useState(""); const [message, setMessage] = useState("");
+  const [selected, setSelected] = useState(() => { if (initialMessage) return 0; try { return Number(localStorage.getItem(storageKey)) || 0; } catch { return 0; } });
+  const [starting, setStarting] = useState(Boolean(initialMessage)); const [topic, setTopic] = useState<Topic>("other"); const [order, setOrder] = useState(""); const [message, setMessage] = useState(initialMessage);
   const [page, setPage] = useState(1);
   const list = useConversations(false, `?page=${page}`);
   const orders = useQuery({ queryKey: ["support-orders", customer.id], queryFn: () => ordersApi.orders({ per_page: 20 }), enabled: starting });
@@ -45,7 +45,7 @@ function CustomerSupport({ customer }: { customer: Customer }) {
     {!selected && !starting && (list.data?.value.meta.last_page ?? 1) > 1 ? <nav aria-label={dict.ui.pagination} className="flex gap-2"><Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>{dict.ui.prev}</Button><span className="self-center">{dict.ui.page(page)}</span><Button variant="outline" disabled={page >= (list.data?.value.meta.last_page ?? 1)} onClick={() => setPage(page + 1)}>{dict.ui.next}</Button></nav> : null}
   </div>;
 }
-export function SupportPanel() {
+export function SupportPanel({ initialMessage = "" }: { initialMessage?: string }) {
   const customer = useSession<Customer>("customer")?.user;
-  return customer && !needsVerifying(customer) ? <CustomerSupport key={customer.id} customer={customer} /> : <GuestSupport />;
+  return customer && !needsVerifying(customer) ? <CustomerSupport key={`${customer.id}:${initialMessage}`} customer={customer} initialMessage={initialMessage} /> : <GuestSupport key={initialMessage} initialMessage={initialMessage} />;
 }
