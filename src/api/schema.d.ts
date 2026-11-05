@@ -235,9 +235,11 @@ export interface paths {
                     school_grade?: number;
                     level?: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
                     has_ebook?: boolean;
+                    /** @description At least one active format has a future release_date */
+                    coming_soon?: boolean;
                     /** @description Adds `facets` {formats, languages, categories (top-level id), school_grades, levels, with_age} = book counts with the other filters applied */
                     facets?: boolean;
-                    sort?: "relevance" | "newest" | "price_asc" | "price_desc" | "best_selling" | "most_reviewed" | "title" | "rating";
+                    sort?: "relevance" | "newest" | "price_asc" | "price_desc" | "best_selling" | "most_reviewed" | "release_soon" | "title" | "rating";
                     /** @description Comma-separated IDs or array (max 12); keeps order and drops missing/hidden books */
                     ids?: string;
                     per_page?: components["parameters"]["PerPage"];
@@ -484,6 +486,53 @@ export interface paths {
                         };
                     };
                 };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/rows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Automatic catalogue shelves (cached 15 minutes) */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Only best_sellers in this category and its descendants */
+                    category_id?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Nonempty rows with up to 12 currently visible books each */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                /** @enum {string} */
+                                id: "best_sellers" | "new_arrivals" | "coming_soon" | "ebook_deals";
+                                total: number;
+                                books: components["schemas"]["BookCard"][];
+                            }[];
+                        };
+                    };
+                };
+                422: components["responses"]["Validation"];
             };
         };
         put?: never;

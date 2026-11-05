@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { CatalogBrowser } from "@/components/catalog/CatalogBrowser";
+import { CatalogRows } from "@/components/catalog/CatalogRows";
 import { NotFoundState } from "@/components/catalog/NotFoundState";
 import { PageHeader } from "@/components/catalog/PageHeader";
 import { ErrorState } from "@/components/ui/error-state";
@@ -68,7 +69,7 @@ export default function CategoryPage() {
           </ul>
         </nav>
       ) : null}
-      {category?.id ? <CatalogBrowser locked={{ category_id: category.id }} /> : null}
+      {category?.id ? <div className="grid gap-12"><CatalogRows categoryId={category.id} categoryName={category.name} /><CatalogBrowser locked={{ category_id: category.id }} /></div> : null}
     </div>
   );
 }

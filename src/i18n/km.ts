@@ -5,6 +5,9 @@ import type { Translations } from "./en";
 /** Khmer translations for Bookly storefront. */
 export const km: Translations = {
   shopExtras: {
+    rows: { best_sellers: "សៀវភៅលក់ដាច់", new_arrivals: "សៀវភៅទើបមកដល់", coming_soon: "នឹងមកដល់ឆាប់ៗ", ebook_deals: "សៀវភៅអេឡិចត្រូនិកតម្លៃក្រោម $5" },
+    viewAll: "មើលទាំងអស់",
+    categoryBest: (name: string) => `សៀវភៅលក់ដាច់ក្នុង ${name}`,
     sold: (n: number) => `លក់បាន ${n} ក្បាលក្នុងរយៈពេល 90 ថ្ងៃចុងក្រោយ`,
     limited: "មានកំណត់",
     charmHint: "តម្លៃដែលបញ្ចប់ដោយ .99 ជួយឱ្យលក់បានកាន់តែប្រសើរ",
@@ -1122,7 +1125,7 @@ export const km: Translations = {
     anyLevel: "គ្រប់កម្រិត",
     levelN: (level: string) => `កម្រិត ${level}`,
     allOf: (name: string) => `ទាំងអស់ក្នុង ${name}`,
-    sorts: { best_selling: "លក់ដាច់បំផុត", most_reviewed: "ការវាយតម្លៃច្រើនបំផុត" },
+    sorts: { best_selling: "លក់ដាច់បំផុត", most_reviewed: "ការវាយតម្លៃច្រើនបំផុត", release_soon: "កាលបរិច្ឆេទចេញផ្សាយ៖ ឆាប់បំផុតមុន" },
   },
   browse: {
     filters: "តម្រង",

@@ -15,7 +15,7 @@ import type {
   SeriesDetail,
 } from "../types";
 
-export type BookSort = "relevance" | "newest" | "price_asc" | "price_desc" | "title" | "rating" | "best_selling" | "most_reviewed";
+export type BookSort = "relevance" | "newest" | "price_asc" | "price_desc" | "title" | "rating" | "best_selling" | "most_reviewed" | "release_soon";
 
 /** Book counts per filter choice, with the other filters applied (GET /books?facets=1). */
 export interface BookFacets {
@@ -39,6 +39,7 @@ export interface BookFilters {
   max_price?: number;
   in_stock?: boolean;
   has_ebook?: boolean;
+  coming_soon?: boolean;
   age?: number;
   school_grade?: number;
   level?: string;

@@ -1,6 +1,9 @@
 /** English translations for Bookly storefront. */
 export const en = {
   shopExtras: {
+    rows: { best_sellers: "Best sellers", new_arrivals: "New arrivals", coming_soon: "Coming soon", ebook_deals: "Ebooks under $5" },
+    viewAll: "View all",
+    categoryBest: (name: string) => `Best sellers in ${name}`,
     sold: (n: number) => `${n} sold in the last 90 days`,
     limited: "Limited",
     charmHint: "Prices ending in .99 sell better",
@@ -1116,7 +1119,7 @@ export const en = {
     anyLevel: "Any level",
     levelN: (level: string) => `Level ${level}`,
     allOf: (name: string) => `All of ${name}`,
-    sorts: { best_selling: "Best selling", most_reviewed: "Most reviewed" },
+    sorts: { best_selling: "Best selling", most_reviewed: "Most reviewed", release_soon: "Release date: soonest" },
   },
   browse: {
     filters: "Filters",

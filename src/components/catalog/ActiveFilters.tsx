@@ -39,6 +39,7 @@ export function ActiveFilters({ filters, onChange, locked = {} }: Props) {
   }
   add("in_stock", t.inStock);
   add("has_ebook", dict.catalogFilters.hasEbook);
+  add("coming_soon", dict.shopExtras.rows.coming_soon);
   const band = AGE_BANDS.find((b) => b.age === filters.age);
   add("age", dict.catalogFilters.agePrefix(band ? dict.catalogFilters.ages[band.key] : String(filters.age)));
   add("school_grade", dict.catalogFilters.gradeN(filters.school_grade ?? 0));

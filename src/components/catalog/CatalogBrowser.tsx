@@ -131,7 +131,7 @@ export function CatalogBrowser({ locked = {}, noun: nounFor, empty }: Props) {
               <SelectContent align="end">
                 {sorts.map((s) => (
                   <SelectItem key={s.value} value={s.value}>
-                    {s.value === "best_selling" || s.value === "most_reviewed" ? dict.catalogFilters.sorts[s.value] : t.sorts[s.value]}
+                    {s.value === "best_selling" || s.value === "most_reviewed" || s.value === "release_soon" ? dict.catalogFilters.sorts[s.value] : t.sorts[s.value]}
                   </SelectItem>
                 ))}
               </SelectContent>
