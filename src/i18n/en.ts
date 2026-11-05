@@ -1560,6 +1560,7 @@ export const en = {
     nextVolumeAfterOrder: "Next volume in series",
     nextVolumeOrderPrompt: "Ready for the next part of the story?",
     addedToCart: "Added to cart",
+  },
   preorder: {
     preorder: "Pre-order",
     preorderNow: "Pre-order now",

@@ -1565,6 +1565,7 @@ export const km: Translations = {
     nextVolumeAfterOrder: "កម្រងបន្ទាប់ក្នុងឈុត",
     nextVolumeOrderPrompt: "ត្រៀមខ្លួនសម្រាប់សាច់រឿងភាគបន្តហើយឬនៅ?",
     addedToCart: "បានបន្ថែមទៅកន្ត្រក",
+  },
   preorder: {
     preorder: "កុម្ម៉ង់ទុកមុន",
     preorderNow: "កុម្ម៉ង់ទុកមុនឥឡូវនេះ",
