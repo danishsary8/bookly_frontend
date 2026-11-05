@@ -1,5 +1,5 @@
 // Run only against tests/Support/prepare-shop-extras-browser.php fixtures and the local Vite/API servers.
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -12,7 +12,9 @@ if (!process.env.E2E_CUSTOMER_PASSWORD) throw new Error("Set the local fixture a
 const directory = "test-results/shop-extras";
 mkdirSync(directory, { recursive: true });
 const browser = await chromium.launch({ headless: true });
-const report = [];
+const report = existsSync(`${directory}/report.json`) ? JSON.parse(readFileSync(`${directory}/report.json`, "utf8")) : [];
+const themes = process.env.E2E_THEME ? [process.env.E2E_THEME] : ["light", "dark"];
+const widths = process.env.E2E_WIDTH ? [Number(process.env.E2E_WIDTH)] : [390, 1280];
 try {
   const loginContext = await browser.newContext();
   const login = await loginContext.request.post(`${api}/auth/login`, { data: { email: "phase5@example.test", password: process.env.E2E_CUSTOMER_PASSWORD }, headers: { Accept: "application/json" } });
@@ -20,8 +22,8 @@ try {
   const auth = await login.json();
   const session = { token: auth.token, expiresAt: null, user: auth.customer };
   await loginContext.close();
-  for (const theme of ["light", "dark"]) {
-    for (const width of [390, 1280]) {
+  for (const theme of themes) {
+    for (const width of widths) {
       const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme, reducedMotion: "reduce", permissions: ["clipboard-read", "clipboard-write"] });
       await context.addInitScript(({ session, theme }) => {
         localStorage.setItem("bookly.session.customer", JSON.stringify(session));
@@ -64,6 +66,8 @@ try {
         expect(overflow, `${name} horizontal overflow`).toBe(false);
         const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
         const problems = violations.map((violation) => ({ id: violation.id, targets: violation.nodes.map((node) => node.target) }));
+        const previous = report.findIndex((entry) => entry.name === name && entry.width === width && entry.theme === theme);
+        if (previous !== -1) report.splice(previous, 1);
         report.push({ name, width, theme, overflow, violations: problems });
         writeFileSync(`${directory}/report.json`, JSON.stringify(report, null, 2));
         expect(problems, `${name} ${width} ${theme}`).toEqual([]);
@@ -73,7 +77,7 @@ try {
       expect(external, "No external network requests").toEqual([]);
       await context.close();
       // Keep repeated full-page runs within the existing catalogue request limit.
-      await new Promise((resolve) => setTimeout(resolve, 20000));
+      if (theme !== themes.at(-1) || width !== widths.at(-1)) await new Promise((resolve) => setTimeout(resolve, 60000));
     }
   }
 } finally {
