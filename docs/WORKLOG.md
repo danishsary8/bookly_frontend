@@ -724,3 +724,5 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
 - Phase 5 Part B: home and category automatic shelves, View all links and coming-soon URL filters; existing keyboard-accessible scroll-snap shelf reused. Row/link tests 2 passed; final suite pending.
 
 - Phase 5 Part C: gifts list/edit/stock, gift offer fields, gift cart/checkout/order/document lines and stock notification links. EN/KM and generated API types included; focused offer and gift text checks pass. Full/browser checks pending.
+
+- Phase 5 Part D: cart delivery fee/date estimate, area chooser and free-delivery progress from checkout preview. Typecheck passed; browser/full suite pending.

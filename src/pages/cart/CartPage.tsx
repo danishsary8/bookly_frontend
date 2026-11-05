@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import type { CouponCheck } from "@/api/types";
 import { BookShelf } from "@/components/catalog/BookShelf";
-import { FreeShippingBar } from "@/components/cart/FreeShippingBar";
+import { CartDeliveryEstimate } from "@/features/cart/CartDeliveryEstimate";
 import { PageHeader } from "@/components/catalog/PageHeader";
 import { CtaGlare } from "@/components/CtaGlare";
 import { EmptyState } from "@/components/EmptyState";
@@ -57,9 +57,7 @@ function Summary() {
         {c.summary}
       </h2>
       <OfferNudge nudge={data.pricing?.nudge} />
-      {totals.freeShipping === null ? null : (
-        <FreeShippingBar subtotalUsd={totals.totalBeforeShipping.usd} thresholdUsd={totals.freeShipping?.threshold_usd} />
-      )}
+      <CartDeliveryEstimate version={cartVersion} coupon={coupon} />
       <CouponField cartVersion={cartVersion} onChecked={setCheck} />
       <CouponNotUsedNote code={totals.couponNotUsed} />
       <dl className="grid gap-2 border-t border-border pt-4 text-[15px]">

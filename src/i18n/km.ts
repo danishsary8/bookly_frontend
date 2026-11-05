@@ -5,6 +5,8 @@ import type { Translations } from "./en";
 /** Khmer translations for Bookly storefront. */
 export const km: Translations = {
   shopExtras: {
+    deliveryEstimate: "ថ្លៃដឹកជញ្ជូនប៉ាន់ស្មាន",
+    deliveryArea: "តំបន់ដឹកជញ្ជូន",
     freeGift: (name: string, qty: number) => `កាដូឥតគិតថ្លៃ៖ ${name} ×${qty}`,
     include: (name: string, qty: number) => `ដាក់បញ្ចូល៖ ${name} ×${qty}`,
     gifts: "កាដូ",

@@ -1,6 +1,8 @@
 /** English translations for Bookly storefront. */
 export const en = {
   shopExtras: {
+    deliveryEstimate: "Estimated delivery fee",
+    deliveryArea: "Delivery area",
     freeGift: (name: string, qty: number) => `Free gift: ${name} ×${qty}`,
     include: (name: string, qty: number) => `Include: ${name} ×${qty}`,
     gifts: "Gifts",

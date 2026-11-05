@@ -6103,7 +6103,10 @@ export interface paths {
             };
         };
         put?: never;
-        /** (admin) Create (name, applies_to all|selected, min_quantity 2-20, percent_off 0.01-50, starts_at?, ends_at? after starts_at, max_orders?, is_active?, targets [{type book|category|series, id}] 1-200 for selected, refused for all). Audited; the live-offers cache is cleared */
+        /**
+         * (admin) Create automatic offer
+         * @description name, type buy_n_percent (default) or gift, applies_to all|selected, min_quantity 2-20 (gift 1-20, default 1), percent_off 0.01-50 (gift 0), gift_id required for gift, gift_quantity 1-100 default 1, min_subtotal optional positive matching subtotal instead of min_quantity for gifts, starts_at?, ends_at? after starts_at, max_orders?, is_active?, targets [{type book|category|series, id}] 1-200 for selected, refused for all. Gift and monetary winners are independent; one gift plus one monetary discount. Audited.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -9725,6 +9728,8 @@ export interface components {
             }[];
         };
         CheckoutPreview: {
+            /** @description A saved address was selected or defaulted; otherwise delivery_area is an estimate choice only. */
+            has_delivery_address?: boolean;
             free_gift?: components["schemas"]["FreeGift"];
             subtotal?: components["schemas"]["Amount"];
             discount?: components["schemas"]["Amount"];
