@@ -54,4 +54,50 @@ describe("Admin categories as a tree", () => {
     await user.click(await screen.findByRole("button", { name: "Edit Fiction" }));
     expect(within(await screen.findByRole("dialog")).getByLabelText(/Parent category/)).toBeDisabled();
   });
+  it("lets admins pick an icon for top-level categories and sends it on save", async () => {
+    const user = userEvent.setup();
+    const update = vi.spyOn(staffApi, "updateLookup").mockResolvedValue({} as never);
+    renderWithProviders(
+      <Routes>
+        <Route path="/admin/categories" element={<LookupPage kind="categories" />} />
+      </Routes>,
+      { route: "/admin/categories" },
+    );
+    await user.click(await screen.findByRole("button", { name: "Edit Fiction" }));
+    const dialog = await screen.findByRole("dialog");
+    const bookOpenBtn = within(dialog).getByRole("radio", { name: "Open book" });
+    await user.click(bookOpenBtn);
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+    expect(update).toHaveBeenCalledWith("categories", 1, expect.objectContaining({ icon: "book-open" }));
+  });
+
+  it("sends null for icon when 'No icon' is selected", async () => {
+    const user = userEvent.setup();
+    const update = vi.spyOn(staffApi, "updateLookup").mockResolvedValue({} as never);
+    renderWithProviders(
+      <Routes>
+        <Route path="/admin/categories" element={<LookupPage kind="categories" />} />
+      </Routes>,
+      { route: "/admin/categories" },
+    );
+    await user.click(await screen.findByRole("button", { name: "Edit Fiction" }));
+    const dialog = await screen.findByRole("dialog");
+    const noIconBtn = within(dialog).getByRole("radio", { name: "No icon" });
+    await user.click(noIconBtn);
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+    expect(update).toHaveBeenCalledWith("categories", 1, expect.objectContaining({ icon: null }));
+  });
+
+  it("does not show the icon picker for sub-categories", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <Routes>
+        <Route path="/admin/categories" element={<LookupPage kind="categories" />} />
+      </Routes>,
+      { route: "/admin/categories" },
+    );
+    await user.click(await screen.findByRole("button", { name: "Edit Romance" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).queryByRole("radio", { name: "No icon" })).not.toBeInTheDocument();
+  });
 });

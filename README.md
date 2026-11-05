@@ -42,15 +42,15 @@ Customers browse, buy and pay with cash on delivery or a Bakong KHQR code. Staff
 
 **For customers**
 - **English and Khmer**, prices in **US dollars or riel**, light and dark mode, works on any phone.
-- Search that forgives typos, filters (category, format, language, price), authors, series, publishers.
-- Book pages with formats (paperback, hardcover, ebook, audiobook), stock, reviews, "More in this series",
+- Search that forgives typos, category tree with sub-category navigation, audience filters (reader age, school grade, English level), authors, series, publishers.
+- Book pages with formats (paperback, hardcover, ebook, audiobook), stock, reviews, audience tags (reader age, grade, CEFR level), "More in this series",
   "More by this author" and "You may also like".
 - **Seasonal collections** on the home page, and **offers** like "Buy 2, save 15%".
 - Cart with coupons, free delivery above a set amount, and **checkout with cash on delivery or Bakong KHQR**
-  (a real KHQR code in US dollars or riel, with a countdown; the page notices the payment by itself).
+  (a real KHQR code in US dollars or riel, with a countdown; the page notices the payment by itself), cart reminder emails, gift notes, and optional delivery address map pin (when configured).
 - Sign in with email and a 6-digit code, Google, Facebook, **Telegram**, or a code sent to a confirmed phone number in Telegram.
 - Account: orders with a timeline, **buy again** in one click, cancel while pending, returns, store credit, reviews,
-  wishlist, addresses, "tell me when it's back in stock", order updates in Telegram, print a receipt,
+  wishlist with price-drop badges and email alerts, addresses, "tell me when it's back in stock", order updates in Telegram, active sessions with remote sign-out, new-device alerts, print a receipt,
   download my data, close my account.
 
 **For staff** (`/admin`, two-step sign-in with an authenticator app)
@@ -61,13 +61,13 @@ Customers browse, buy and pay with cash on delivery or a Bakong KHQR code. Staff
 - Orders (status steps with notes, mark KHQR orders as paid, CSV export, invoices and packing slips),
   returns and refunds, reviews, customers with tags and notes.
 - Books with formats, prices, stock and **cover upload** (stored in Cloudflare R2), bulk CSV import, trash,
-  authors, categories, publishers, series.
+  authors, category hierarchy with menu ordering and icon picker, publishers, series, audience metadata (`age_min`, `age_max`, `school_grade`, `level`).
 - Coupons, **offers**, **seasonal collections**, newsletter campaigns, reports with CSV export.
 - Admins only: staff members and roles, exchange rate, audit log, system health.
 
 ## Quality
 
-- **500+ unit tests** (Vitest + Testing Library) and browser tests (Playwright) run on every push.
+- **560+ unit tests** (Vitest + Testing Library) and browser tests (Playwright) run on every push.
 - **Accessibility:** every page is checked with axe against WCAG 2.1 A and AA, in English and Khmer,
   light and dark, from a 320 px phone to a 1280 px laptop. Keyboard only works everywhere (skip link, focus traps,
   tables you can scroll with the keyboard), and "reduce motion" is respected.

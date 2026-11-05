@@ -16,6 +16,7 @@ import { clearRecentlyViewed, getRecentlyViewed } from "@/stores/recentlyViewed"
 import { dismissToast } from "@/stores/toast";
 import BookDetailPage from "./BookDetailPage";
 import BooksPage from "./BooksPage";
+import CategoryPage from "./CategoryPage";
 
 const card = (id: number, title: string, extra: Partial<BookCard> = {}): BookCard => ({
   id,
@@ -43,8 +44,9 @@ beforeEach(() => {
   clearSession("customer");
   clearRecentlyViewed();
   vi.spyOn(catalogApi, "categories").mockResolvedValue([
-    { id: 1, name: "Fiction", slug: "fiction", books_count: 6 },
-    { id: 2, name: "Classics", slug: "classics", books_count: 14 },
+    { id: 1, name: "Fiction", slug: "fiction", parent_id: null, books_count: 6 },
+    { id: 2, name: "Classics", slug: "classics", parent_id: null, books_count: 14 },
+    { id: 3, name: "Fantasy", slug: "fantasy", parent_id: 1, books_count: 4 },
   ]);
   vi.spyOn(catalogApi, "categoryTree").mockResolvedValue([
     { id: 1, name: "Fiction", slug: "fiction", parent_id: null, sort_order: 10, icon: null, books_count: 2, total_books: 6, children: [
@@ -253,6 +255,57 @@ describe("BookDetailPage", () => {
     expect(await within(screen.getByRole("region", { name: "Notifications" })).findByRole("status")).toHaveTextContent("Added to cart");
   });
 
+  it("shows audience information and category hierarchy in details list", async () => {
+    const audienceBook: BookDetail = {
+      ...detail,
+      age_min: 8,
+      age_max: 12,
+      school_grade: 9,
+      level: "B1",
+      categories: [{ id: 5, name: "Fantasy", slug: "fantasy" }],
+    };
+    vi.spyOn(catalogApi, "book").mockResolvedValue(audienceBook);
+    vi.spyOn(catalogApi, "categories").mockResolvedValue([
+      { id: 1, name: "Fiction", slug: "fiction", parent_id: null },
+      { id: 5, name: "Fantasy", slug: "fantasy", parent_id: 1 },
+    ] as never);
+
+    renderDetail();
+    expect(await screen.findByRole("heading", { level: 1, name: "Pride and Prejudice" })).toBeInTheDocument();
+
+    const detailsTab = screen.getByRole("tab", { name: "Details" });
+    await userEvent.click(detailsTab);
+
+    const fantasyLinks = screen.getAllByRole("link", { name: "Fantasy" });
+    expect(fantasyLinks.some((l) => l.getAttribute("href") === "/categories/fantasy")).toBe(true);
+    const fictionLinks = screen.getAllByRole("link", { name: "Fiction" });
+    expect(fictionLinks.some((l) => l.getAttribute("href") === "/categories/fiction")).toBe(true);
+
+    const ageLink = screen.getByRole("link", { name: "8–12" });
+    expect(ageLink).toHaveAttribute("href", "/books?age=8");
+
+    const gradeLink = screen.getByRole("link", { name: "Grade 9" });
+    expect(gradeLink).toHaveAttribute("href", "/books?school_grade=9");
+
+    const levelLink = screen.getByRole("link", { name: "Level B1" });
+    expect(levelLink).toHaveAttribute("href", "/books?level=B1");
+  });
+
+  it("shows age with plus when no max age is set", async () => {
+    const openAgeBook: BookDetail = {
+      ...detail,
+      age_min: 8,
+      age_max: null,
+    };
+    vi.spyOn(catalogApi, "book").mockResolvedValue(openAgeBook);
+    renderDetail();
+    expect(await screen.findByRole("heading", { level: 1, name: "Pride and Prejudice" })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("tab", { name: "Details" }));
+    const ageLink = screen.getByRole("link", { name: "8+" });
+    expect(ageLink).toHaveAttribute("href", "/books?age=8");
+  });
+
   describe("You may also like", () => {
     const inSeries: BookDetail = { ...detail, series: { id: 4, name: "Bennet Family", order: 2 } as BookDetail["series"] };
     const similarShelf = () => screen.queryByRole("region", { name: "You may also like" });
@@ -343,5 +396,37 @@ describe("LegacyBrowseRedirect", () => {
       { route: from },
     );
     expect(screen.getByTestId("where")).toHaveTextContent(to);
+  });
+});
+
+describe("CategoryPage", () => {
+  it("shows sub-categories as links on a top-level category page", async () => {
+    vi.spyOn(catalogApi, "books").mockResolvedValue(page([]));
+    renderWithProviders(
+      <Routes>
+        <Route path="/categories/:slug" element={<CategoryPage />} />
+      </Routes>,
+      { route: "/categories/fiction" },
+    );
+
+    const subNav = await screen.findByRole("navigation", { name: "Sub-categories" });
+    const subLink = within(subNav).getByRole("link", { name: /Fantasy/ });
+    expect(subLink).toHaveAttribute("href", "/categories/fantasy");
+    expect(subLink).toHaveTextContent("Fantasy · 4");
+    expect(screen.queryByText(/← Back to/)).not.toBeInTheDocument();
+  });
+
+  it("shows a back link to the parent category on a sub-category page", async () => {
+    vi.spyOn(catalogApi, "books").mockResolvedValue(page([]));
+    renderWithProviders(
+      <Routes>
+        <Route path="/categories/:slug" element={<CategoryPage />} />
+      </Routes>,
+      { route: "/categories/fantasy" },
+    );
+
+    const backLink = await screen.findByRole("link", { name: "← Back to Fiction" });
+    expect(backLink).toHaveAttribute("href", "/categories/fiction");
+    expect(screen.queryByRole("navigation", { name: "Sub-categories" })).not.toBeInTheDocument();
   });
 });

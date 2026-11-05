@@ -16,6 +16,7 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { StrictDeleteDialog } from "@/features/admin/StrictDeleteDialog";
 import { LOOKUPS, type LookupRow } from "@/features/admin/lookups";
+import { CategoryIcon, CATEGORY_ICON_OPTIONS } from "@/features/catalog/categoryIcons";
 import { useStaff } from "@/features/admin/staffSession";
 import { rangeSummary } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,7 @@ function LookupDialog({ kind, row, onClose, categories = [] }: { kind: LookupKin
   const parentChoices = categories.filter((c) => c.parent_id == null && c.id !== row?.id);
   const [parentId, setParentId] = useState(row?.parent_id == null ? "" : String(row.parent_id));
   const [sortOrder, setSortOrder] = useState(String(row?.sort_order ?? 0));
+  const [icon, setIcon] = useState(row?.icon ? String(row.icon) : "");
   const queryClient = useQueryClient();
   const [values, setValues] = useState<Record<string, string>>(() => Object.fromEntries(config.fields.map((f) => [f.name, String(row?.[f.name] ?? "")])));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -83,9 +85,11 @@ function LookupDialog({ kind, row, onClose, categories = [] }: { kind: LookupKin
       return;
     }
     const input: Record<string, string | number | null> = {};
+    const isTopLevelCategory = isCategory && !parentId;
     if (isCategory) {
       input.parent_id = parentId ? Number(parentId) : null;
       input.sort_order = Number(sortOrder.trim());
+      input.icon = isTopLevelCategory && icon.trim() ? icon.trim() : null;
     }
     for (const f of config.fields) {
       const v = values[f.name].trim();
@@ -148,6 +152,56 @@ function LookupDialog({ kind, row, onClose, categories = [] }: { kind: LookupKin
                 </p>
                 {errors.parent_id ? <p className="text-sm font-medium text-destructive">{errors.parent_id}</p> : null}
               </div>
+              {!parentId ? (
+                <div className="grid gap-2">
+                  <span id="category-icon-label" className="text-sm font-semibold">
+                    Icon <span className="font-normal text-muted-foreground">(optional, top-level only)</span>
+                  </span>
+                  <div
+                    role="radiogroup"
+                    aria-labelledby="category-icon-label"
+                    className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 p-1.5 max-h-48 overflow-y-auto rounded-lg border border-border bg-surface-2/40"
+                  >
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={!icon}
+                      aria-label="No icon"
+                      onClick={() => setIcon("")}
+                      className={cn(
+                        "flex min-h-[44px] items-center justify-center rounded-lg border text-xs font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                        !icon
+                          ? "border-primary bg-primary/10 text-primary font-semibold ring-2 ring-primary"
+                          : "border-border bg-card text-muted-foreground hover:bg-surface-2 hover:text-foreground"
+                      )}
+                    >
+                      No icon
+                    </button>
+                    {CATEGORY_ICON_OPTIONS.map(({ name, label, Icon }) => {
+                      const selected = icon === name;
+                      return (
+                        <button
+                          key={name}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          aria-label={label}
+                          title={label}
+                          onClick={() => setIcon(name)}
+                          className={cn(
+                            "flex min-h-[44px] items-center justify-center rounded-lg border transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                            selected
+                              ? "border-primary bg-primary/10 text-primary ring-2 ring-primary"
+                              : "border-border bg-card text-muted-foreground hover:bg-surface-2 hover:text-foreground"
+                          )}
+                        >
+                          <Icon className="size-5 shrink-0" aria-hidden="true" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
               <TextField
                 label="Order"
                 hint="Smaller numbers come first in the shop menu."
@@ -282,8 +336,17 @@ export default function LookupPage({ kind }: { kind: LookupKind }) {
               {rows.map((row) => (
                 <tr key={row.id}>
                   <th scope="row" className={cn("px-4 py-2.5", row.parent_id == null ? "font-semibold" : "pl-10 font-normal")}>
-                    {row.parent_id == null ? null : <span className="sr-only">Sub-category: </span>}
-                    {row.name}
+                    {row.parent_id == null ? (
+                      <span className="inline-flex items-center gap-2">
+                        <CategoryIcon name={row.icon as string | null} className="size-4 shrink-0 text-muted-foreground" />
+                        <span>{row.name}</span>
+                      </span>
+                    ) : (
+                      <>
+                        <span className="sr-only">Sub-category: </span>
+                        {row.name}
+                      </>
+                    )}
                   </th>
                   {config.detail ? <td className="max-w-md truncate px-4 py-2.5 text-muted-foreground">{String(row[config.detail.field] ?? "") || "—"}</td> : null}
                   <td className="px-4 py-2.5 text-right tabular-nums">{row.books_count ?? 0}</td>

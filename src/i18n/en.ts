@@ -1055,6 +1055,10 @@ export const en = {
     noDescription: "No description yet.",
     authors: "Authors",
     publisher: "Publisher",
+    categories: "Categories",
+    readerAge: "Reader age",
+    schoolGrade: "School grade",
+    level: "English level",
     published: "Published",
     language: "Language",
     pages: "Pages",
@@ -1448,6 +1452,10 @@ export const en = {
     cancelledLead: "There is nothing to pay for this order.",
     notFound: "No payment to show",
     notFoundLead: "This order is not paid by KHQR, or it is not yours.",
+  },
+  categorySubNav: {
+    subcategories: "Sub-categories",
+    backToParent: (name: string) => `← Back to ${name}`,
   },
   common: {
     loading: "Loading…",
