@@ -23,6 +23,7 @@ export const adminNav: AdminNavGroup[] = [
       { to: "/admin/returns", label: "Returns", Icon: RotateCcw },
       { to: "/admin/reviews", label: "Reviews", Icon: MessageSquareText },
       { to: "/admin/support", label: "Support", Icon: MessageSquareText },
+      { to: "/admin/ratings", label: "Ratings", Icon: MessageSquareText },
       { to: "/admin/coupons", label: "Coupons", Icon: TicketPercent },
       { to: "/admin/offers", label: "Offers", Icon: Tag },
       { to: "/admin/gifts", label: "Gifts", Icon: Boxes },

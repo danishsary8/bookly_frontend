@@ -18,6 +18,7 @@ import { orderDate } from "@/features/orders/format";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useT } from "@/i18n";
 import { FreeGiftLine } from "@/features/offers/FreeGiftLine";
+import { OrderRatingForm } from "@/features/ratings/OrderRatingForm";
 
 const PAYMENT_STATUS = {
   pending: "payPending",
@@ -116,6 +117,7 @@ export default function OrderDetailPage() {
           </div>
         </div>
         {delivered ? <ReturnEntry order={o} /> : null}
+        {delivered ? <OrderRatingForm orderId={id} /> : null}
       </div>
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">

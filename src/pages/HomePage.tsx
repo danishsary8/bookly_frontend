@@ -9,6 +9,7 @@ import { collectionQueries, collectionText } from "@/api/endpoints/collections";
 import { CategoryTiles } from "@/components/home/CategoryTiles";
 import { HomeHero } from "@/components/home/HomeHero";
 import { StaffPicks } from "@/components/home/StaffPicks";
+import { StoreRatingBadge } from "@/components/ratings/StoreRatingBadge";
 import { SeriesSpotlight } from "@/components/home/SeriesSpotlight";
 import AnimatedContent from "@/components/AnimatedContent";
 import { Button } from "@/components/ui/button";
@@ -119,6 +120,7 @@ export default function HomePage() {
         })}
 
         <CatalogRows />
+        <StoreRatingBadge />
         <StaffPicks />
 
         <AnimatedContent distance={32} duration={0.7} threshold={0.15}>

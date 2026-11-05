@@ -16,6 +16,7 @@ import { day, rangeFromParams, rangeToParams } from "@/features/admin/dashboardR
 import { Change, CustomRange, Khr, Panel, PeriodPicker } from "@/features/admin/reportKit";
 import { SystemHealthCard } from "@/features/admin/SystemHealthCard";
 import { useStaff } from "@/features/admin/staffSession";
+import { useT } from "@/i18n";
 import { formatLabel } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { formatUsd } from "@/stores/currency";
@@ -59,6 +60,7 @@ const series = (days: TrendDay[] | undefined, pick: (d: TrendDay) => number) => 
  * best sellers, low stock, an orders-by-status donut and top categories (BI design 2026-11-01, branch 2).
  */
 export default function DashboardPage() {
+  const { dict } = useT();
   const session = useStaff();
   const [params, setParams] = useSearchParams();
   const range = rangeFromParams(params);
@@ -274,7 +276,10 @@ export default function DashboardPage() {
           </div>
 
           {insights.data?.dead_stock && insights.data.stock_value && insights.data.promotions && insights.data.repeat_customer_rate && insights.data.top_authors && insights.data.provinces ? (
+            <>
+            {insights.data.order_ratings ? <p className="rounded-lg border border-border bg-card p-4">{dict.ratings.title}: {insights.data.order_ratings.average ?? "—"} / 5 · {insights.data.order_ratings.count}</p> : null}
             <InsightsWidgets data={insights.data} />
+            </>
           ) : null}
 
           {session?.user.role === "admin" ? <SystemHealthCard /> : null}
