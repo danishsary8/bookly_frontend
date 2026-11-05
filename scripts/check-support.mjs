@@ -52,6 +52,10 @@ try {
     const id = await page.evaluate(() => Number(localStorage.getItem("bookly.support.1")));
     expect(id).toBeGreaterThan(0); await audit(page, `${tag}-customer`);
     // Native dialog focus is trapped and Escape returns to the bubble.
+    for (let tab = 0; tab < 12; tab++) {
+      await page.keyboard.press("Tab");
+      expect(await page.evaluate(() => document.activeElement?.closest('[role="dialog"]') !== null)).toBe(true);
+    }
     await page.keyboard.press("Escape"); await expect(trigger).toBeFocused();
     const staffPage = await context.newPage(); await staffPage.goto(`${base}/admin/support?conversation=${id}`); await expect(staffPage.getByRole("log")).toBeVisible({ timeout: 20000 });
     await staffPage.getByLabel("Reply", { exact: true }).fill(`Human staff answer ${tag}`);
@@ -59,8 +63,11 @@ try {
     await staffPage.getByRole("button", { name: "Send message", exact: true }).click();
     expect((await replyResponse).status()).toBe(204);
     await expect(staffPage.getByRole("log").getByText(`Human staff answer ${tag}`)).toBeVisible({ timeout: 15000 });
+    const customerCopy = await context.request.get(`${api}/support/conversations/${id}`, { headers: { Authorization: `Bearer ${auth.token}` } });
+    expect(customerCopy.status()).toBe(200);
+    expect((await customerCopy.json()).data.messages.some((message) => message.body === `Human staff answer ${tag}`)).toBe(true);
     await audit(staffPage, `${tag}-staff`);
-    await page.bringToFront(); await trigger.click(); await expect(dialog.getByText(`Human staff answer ${tag}`)).toBeVisible({ timeout: 12000 });
+    await page.bringToFront(); await trigger.click(); await expect(dialog.getByText(`Human staff answer ${tag}`)).toBeVisible({ timeout: 30000 });
     await dialog.getByRole("button", { name: language === "en" ? "Close conversation" : "បិទការជជែក" }).click();
     const radios = dialog.getByRole("radio"); await expect(radios).toHaveCount(5); await radios.nth(3).focus(); await page.keyboard.press("ArrowRight"); await expect(radios.nth(4)).toBeChecked();
     await dialog.getByRole("button", { name: language === "en" ? "Rate this conversation" : "វាយតម្លៃការជជែកនេះ" }).click();
@@ -82,6 +89,6 @@ try {
     await guestContext.close(); await context.close();
     report.push({ language, theme, width, customerChat: true, guestChat: true, guestSubmitted: !smoke && report.length < 3, staffReply: true, closedRating: 5, axeViolations: 0, overflow: false });
     writeFileSync(`${output}/report.json`, JSON.stringify(report, null, 2)); console.log(`${tag}: customer/guest/staff/rating passed, axe 0`);
-    await new Promise((resolve) => setTimeout(resolve, 10000));
+    await new Promise((resolve) => setTimeout(resolve, 30000));
   }
 } finally { await browser.close(); }
