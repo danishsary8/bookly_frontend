@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Pencil, Plus, Search, Trash2, ListOrdered } from "lucide-react";
+import { SeriesVolumesDialog } from "@/features/admin/SeriesVolumesDialog";
 import { useSearchParams } from "react-router-dom";
 import { catalogApi } from "@/api/endpoints/catalog";
 import { staffApi, type LookupKind } from "@/api/endpoints/staff";
@@ -245,6 +246,7 @@ export default function LookupPage({ kind }: { kind: LookupKind }) {
   const [draft, setDraft] = useState(q);
   const [editing, setEditing] = useState<LookupRow | "new" | null>(null);
   const [deleting, setDeleting] = useState<LookupRow | null>(null);
+  const [managingVolumes, setManagingVolumes] = useState<LookupRow | null>(null);
 
   const list = useQuery({
     queryKey: ["catalog", "admin-lookup", kind, q, page],
@@ -352,6 +354,11 @@ export default function LookupPage({ kind }: { kind: LookupKind }) {
                   <td className="px-4 py-2.5 text-right tabular-nums">{row.books_count ?? 0}</td>
                   <td className="px-4 py-2.5">
                     <div className="flex justify-end gap-1">
+                      {kind === "series" ? (
+                        <Button size="icon" variant="ghost" aria-label={`Manage volumes for ${row.name}`} onClick={() => setManagingVolumes(row)}>
+                          <ListOrdered aria-hidden="true" />
+                        </Button>
+                      ) : null}
                       <Button size="icon" variant="ghost" aria-label={`Edit ${row.name}`} onClick={() => setEditing(row)}>
                         <Pencil aria-hidden="true" />
                       </Button>
@@ -370,6 +377,8 @@ export default function LookupPage({ kind }: { kind: LookupKind }) {
       )}
       {meta ? <Pagination page={meta.current_page ?? 1} lastPage={meta.last_page ?? 1} hrefFor={hrefFor} /> : null}
 
+      {managingVolumes ? <SeriesVolumesDialog seriesId={managingVolumes.id} seriesName={managingVolumes.name} onClose={() => setManagingVolumes(null)} /> : null}
+      {managingVolumes ? <SeriesVolumesDialog seriesId={managingVolumes.id} seriesName={String(managingVolumes.name)} onClose={() => setManagingVolumes(null)} /> : null}
       {editing ? <LookupDialog key={editing === "new" ? "new" : editing.id} kind={kind} row={editing === "new" ? null : editing} categories={kind === "categories" ? rows : []} onClose={() => setEditing(null)} /> : null}
       <StrictDeleteDialog
         open={Boolean(deleting)}

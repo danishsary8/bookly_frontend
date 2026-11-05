@@ -1534,6 +1534,33 @@ export const en = {
     staffResetDevicesLead: "This immediately frees all 3 device slots and clears the 30-day removal cooldown for this customer.",
     staffResetDevicesSuccess: (count: number) => `Reset ${count} device(s).`,
   },
+  seriesVolumes: {
+    volumeOf: (vol: number | string, series: string) => `Volume ${vol} of ${series}`,
+    volumeNumber: (vol: number | string) => `Vol. ${vol}`,
+    volumePicker: "Series volumes",
+    owned: "Owned",
+    inCart: "In cart",
+    outOfStock: "Out of stock",
+    nextVolume: "Next volume",
+    nextVolumeEyebrow: "Next in series",
+    continueReading: "Continue the story with the next volume",
+    completeSet: "Complete the set",
+    completeSetDesc: "Add every volume you don't own yet to your cart",
+    addingSet: "Adding missing volumes…",
+    setAddedToast: (added: number, skipped: number) =>
+      added > 0
+        ? `Added ${added} ${added === 1 ? "volume" : "volumes"} to your cart${skipped > 0 ? ` (${skipped} skipped)` : ""}`
+        : "All volumes are already in your cart or owned",
+    noMissingVolumes: "You already own or have all available volumes in your cart!",
+    reorderVolumes: "Reorder volumes",
+    manageVolumes: "Manage volumes",
+    duplicateOrdersWarning: "Warning: Multiple volumes share the same volume number.",
+    saveOrder: "Save volume order",
+    orderSaved: "Volume order saved successfully",
+    nextVolumeAfterOrder: "Next volume in series",
+    nextVolumeOrderPrompt: "Ready for the next part of the story?",
+    addedToCart: "Added to cart",
+  },
   preorder: {
     preorder: "Pre-order",
     preorderNow: "Pre-order now",

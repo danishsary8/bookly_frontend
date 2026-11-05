@@ -1,7 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Library } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { catalogQueries } from "@/api/endpoints/catalog";
+import { catalogKeys, catalogQueries } from "@/api/endpoints/catalog";
+import { cartApi, cartKeys } from "@/api/endpoints/cart";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Sparkles, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/stores/toast";
 import { ApiError } from "@/api/errors";
 import { BookCard } from "@/components/catalog/BookCard";
 import { NotFoundState } from "@/components/catalog/NotFoundState";
@@ -25,7 +30,27 @@ export default function SeriesPage() {
   const wishlist = useWishlist();
   const showSkeleton = useSkeletonVisible(series.isPending);
   const { dict } = useT();
+  const vDict = dict.seriesVolumes;
   const p = dict.pages;
+  const queryClient = useQueryClient();
+
+  const completeSetMutation = useMutation({
+    mutationFn: () => cartApi.addSeries(id),
+    onSuccess: (data) => {
+      void queryClient.invalidateQueries({ queryKey: cartKeys.cart() });
+      void queryClient.invalidateQueries({ queryKey: catalogKeys.series(id) });
+      const addedCount = data.added.length;
+      const skippedCount = data.skipped.length;
+      if (addedCount > 0) {
+        toast.success(vDict.setAddedToast(addedCount, skippedCount));
+      } else {
+        toast.info(vDict.noMissingVolumes);
+      }
+    },
+    onError: () => {
+      toast.error(dict.common.error);
+    },
+  });
   useDocumentTitle(series.data?.name, { description: series.data?.description || (series.data ? p.seriesBookMeta(series.data.name ?? "") : null) });
 
   if (!valid || (series.isError && ApiError.from(series.error).kind === "not_found")) {
@@ -42,6 +67,27 @@ export default function SeriesPage() {
         title={series.data?.name ?? <span aria-hidden="true" className="skeleton inline-block h-12 w-72 max-w-full rounded-sm align-middle" />}
         lead={series.data?.description ?? undefined}
       />
+
+      {books.length > 0 && !series.isPending ? (
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5">
+          <div className="grid gap-0.5">
+            <span className="font-semibold text-foreground">{vDict.completeSet}</span>
+            <span className="text-sm text-muted-foreground">{vDict.completeSetDesc}</span>
+          </div>
+          <Button
+            onClick={() => completeSetMutation.mutate()}
+            disabled={completeSetMutation.isPending}
+            className="self-start sm:self-auto shrink-0 gap-1.5"
+          >
+            {completeSetMutation.isPending ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Sparkles className="size-4" aria-hidden="true" />
+            )}
+            <span>{vDict.completeSet}</span>
+          </Button>
+        </div>
+      ) : null}
 
       {series.isPending ? (
         showSkeleton ? (

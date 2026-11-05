@@ -454,6 +454,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/books/{id}/next-volume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get next volume in the series if this book belongs to a series */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Next volume or null */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["BookDetail"];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/catalog/recommendations": {
         parameters: {
             query?: never;
@@ -3008,6 +3048,64 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/cart/series/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add missing series volumes to cart ("Complete the set")
+         * @description Adds cheapest in-stock physical variant for every volume in the series that the customer does not own and is not already in cart.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Missing volumes added */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                added?: {
+                                    book_id?: number;
+                                    title?: string;
+                                    variant_id?: number;
+                                    format?: string;
+                                    price_usd?: components["schemas"]["Money"];
+                                }[];
+                                skipped?: {
+                                    book_id?: number;
+                                    title?: string;
+                                    /** @enum {string} */
+                                    reason?: "already_owned" | "already_in_cart" | "out_of_stock";
+                                }[];
+                                cart?: components["schemas"]["Cart"];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/wishlist": {
         parameters: {
             query?: never;
@@ -5428,7 +5526,52 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Series details with volumes for admin ordering */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Series with ordered volumes and duplicate warnings */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                id?: number;
+                                name?: string;
+                                slug?: string | null;
+                                description?: string | null;
+                                books?: {
+                                    id?: number;
+                                    title?: string;
+                                    status?: string;
+                                    series_order?: number | null;
+                                    cover_image_url?: string | null;
+                                    authors?: {
+                                        id?: number;
+                                        name?: string;
+                                    }[];
+                                    formats?: string[];
+                                    in_stock?: boolean;
+                                    created_at?: string | null;
+                                }[];
+                                has_duplicate_orders?: boolean;
+                                duplicate_orders?: number[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         /** (admin) Delete */
@@ -5469,6 +5612,60 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/staff/series/{id}/volumes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Batch update series volume ordering */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        volumes: {
+                            id: number;
+                            series_order?: number | null;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Volumes updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                message?: string;
+                                updated_count?: number;
+                                has_duplicates?: boolean;
+                                warnings?: string[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/staff/coupons": {
@@ -9236,6 +9433,10 @@ export interface components {
             id?: number;
             name?: string;
             description?: string | null;
+            books_count?: number | null;
+            total_volumes?: number | null;
+            owned_count?: number | null;
+            in_cart_count?: number | null;
             books?: components["schemas"]["BookCard"][];
         };
         RatingSummary: {
@@ -9514,6 +9715,7 @@ export interface components {
             rating_avg?: number | null;
             review_count?: number;
             offer?: components["schemas"]["BookOffer"];
+            series_order?: number | null;
         };
         OfferReportRow: {
             orders?: number;
