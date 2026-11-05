@@ -2,6 +2,7 @@ import { AlertTriangle, Info, Tag, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { CartLine } from "@/api/types";
 import { CoverThumb } from "@/components/CoverThumb";
+import { LowStockBadge } from "@/components/BookBadge";
 import { QuantityStepper } from "@/components/QuantityStepper";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -50,6 +51,7 @@ export function CartLineItem({ line, onQuantity, onRemove, busy, compact, onNavi
                 <Tag className="size-3" aria-hidden="true" /> {dict.offers.inOffer}
               </p>
             ) : null}
+            {line.low_stock_remaining ? <LowStockBadge remaining={line.low_stock_remaining} className="mt-1" /> : null}
           </div>
           <p className={cn("shrink-0 font-semibold tabular-nums", blocked && "text-muted-foreground line-through")}>{formatMoney(line.line_total_usd, line.line_total_khr, currency)}</p>
         </div>

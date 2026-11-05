@@ -718,3 +718,5 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
   paid-after-cancel warning, admin "Mark as paid" with a required note), orders "Payment" filter (`pay=khqr`), "KHQR
   payments" line on System health. Orders filters now fit a 390 px screen (`grid-cols-1`). lint, typecheck, 496 tests
   (7 new), build. Browser + axe 390 dark / 1280 light: all 0; Mark as paid on a short screen reached by scrolling.
+
+- Phase 5 Part A in progress on feature/shop-extras: real stock/sales badges, dated offer labels, EN/KM trust copy and explicit unsaved .99 price suggestion. Local OpenAPI types regenerated. Card and price suggestion tests pass; full verification pending.

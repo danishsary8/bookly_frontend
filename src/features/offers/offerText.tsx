@@ -19,7 +19,7 @@ type BookOffer = NonNullable<BookCard["offer"]>;
 export function OfferBadge({ offer, className }: { offer: BookOffer | null | undefined; className?: string }) {
   const { dict } = useT();
   if (!offer?.min_quantity || !offer.percent_off) return null;
-  return <SaleBadge label={dict.offers.badge(offer.min_quantity, percentLabel(offer.percent_off))} className={className} />;
+  return <SaleBadge label={`${offer.ends_at ? `${dict.shopExtras.limited} · ` : ""}${dict.offers.badge(offer.min_quantity, percentLabel(offer.percent_off))}`} className={className} />;
 }
 
 /** Book page line under the price: "Buy 2 from Sherlock Holmes, save 15%. Ends 15 Nov 2026." */

@@ -9714,6 +9714,10 @@ export interface components {
             in_stock?: boolean;
             rating_avg?: number | null;
             review_count?: number;
+            /** @description Copies ordered in the last 90 days excluding cancelled and deleted orders; cached hourly. Null below 5. */
+            sold_count?: number | null;
+            /** @description Remaining copies of the cheapest active format when physical, released and between 1 and shop.low_stock_badge; otherwise null. */
+            low_stock_remaining?: number | null;
             offer?: components["schemas"]["BookOffer"];
             series_order?: number | null;
         };
@@ -9773,6 +9777,8 @@ export interface components {
             allow_backorder?: boolean;
             is_preorder?: boolean;
             is_backorder?: boolean;
+            /** @description Physical stock from 1 through shop.low_stock_badge; null for digital, preorders, backorders and out of stock. */
+            low_stock_remaining?: number | null;
         };
         BookDetail: components["schemas"]["BookCard"] & {
             description?: string | null;
@@ -9852,6 +9858,8 @@ export interface components {
                 issues?: components["schemas"]["CartIssue"][];
                 /** @description True when the automatic offer in `pricing.offer` discounts this line. */
                 in_offer?: boolean;
+                /** @description Real low-stock count for this format; null when no badge applies. */
+                low_stock_remaining?: number | null;
             }[];
             item_count?: number;
             subtotal_usd?: components["schemas"]["Money"];

@@ -4,6 +4,13 @@ import type { Translations } from "./en";
 
 /** Khmer translations for Bookly storefront. */
 export const km: Translations = {
+  shopExtras: {
+    sold: (n: number) => `លក់បាន ${n} ក្បាលក្នុងរយៈពេល 90 ថ្ងៃចុងក្រោយ`,
+    limited: "មានកំណត់",
+    charmHint: "តម្លៃដែលបញ្ចប់ដោយ .99 ជួយឱ្យលក់បានកាន់តែប្រសើរ",
+    makeCharm: (price: string) => `កំណត់តម្លៃ $${price}`,
+    trust: "ទូទាត់ពេលទទួលទំនិញ ឬតាម Bakong KHQR",
+  },
   nav: {
     books: "សៀវភៅ",
     categories: "ប្រភេទ",

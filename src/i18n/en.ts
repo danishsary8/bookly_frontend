@@ -1,5 +1,12 @@
 /** English translations for Bookly storefront. */
 export const en = {
+  shopExtras: {
+    sold: (n: number) => `${n} sold in the last 90 days`,
+    limited: "Limited",
+    charmHint: "Prices ending in .99 sell better",
+    makeCharm: (price: string) => `Make it $${price}`,
+    trust: "Cash on delivery or Bakong KHQR",
+  },
   nav: {
     books: "Books",
     categories: "Categories",
