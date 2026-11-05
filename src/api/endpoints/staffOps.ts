@@ -219,7 +219,7 @@ export interface AuditEntry {
 
 type Meta = { current_page: number; last_page: number; total: number; per_page?: number };
 
-export type OrderFilters = { status?: OrderStatus; payment_method?: "cod" | "khqr"; q?: string; from?: string; to?: string; page?: number; per_page?: number };
+export type OrderFilters = { status?: OrderStatus | "waiting"; payment_method?: "cod" | "khqr"; q?: string; from?: string; to?: string; page?: number; per_page?: number };
 export type ReturnFilters = { status?: string; q?: string; page?: number; per_page?: number };
 export type ReviewFilters = { visible?: boolean | null; q?: string; max_rating?: number; page?: number; per_page?: number };
 export type CouponFilters = { q?: string; active?: boolean | null; page?: number; per_page?: number };

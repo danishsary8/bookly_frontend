@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Lock, TicketPercent, Truck } from "lucide-react";
+import { AlertTriangle, CalendarClock, Lock, TicketPercent, Truck } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { accountQueries } from "@/api/endpoints/account";
 import { cartApi, cartKeys, cartQueries } from "@/api/endpoints/cart";
@@ -294,6 +294,13 @@ export default function CheckoutPage() {
                 subtotalUsd={Number(data.subtotal?.usd || 0) - Number(data.discount?.usd || 0)}
                 thresholdUsd={data.free_shipping_threshold?.usd}
               />
+            ) : null}
+
+            {data?.shipping_notice ? (
+              <div className="flex items-start gap-2.5 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-foreground">
+                <CalendarClock className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+                <span>{data.shipping_notice}</span>
+              </div>
             ) : null}
 
             {preview.isPending || (preview.isFetching && !data) ? (
