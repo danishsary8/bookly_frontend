@@ -4,6 +4,7 @@ import { Wordmark } from "./SiteHeader";
 import { footerNav, legalNav } from "./nav";
 import { useT } from "@/i18n";
 import { NewsletterSignup } from "./NewsletterSignup";
+import { StoreRatingBadge } from "@/components/ratings/StoreRatingBadge";
 
 /*
  * MASTER §6.13: Daylight --lapis-tint background, Night --card with a top
@@ -21,6 +22,7 @@ export function SiteFooter({ className }: { className?: string }) {
       <div className="container-shell grid gap-12 py-16 md:grid-cols-[1.4fr_repeat(3,1fr)] md:gap-8">
         <div className="grid content-start gap-4">
           <Wordmark />
+          <StoreRatingBadge />
           <p className="max-w-xs text-[15px] leading-6 text-muted-foreground">
             {dict.footer.tagline}
           </p>

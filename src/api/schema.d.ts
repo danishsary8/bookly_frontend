@@ -4,6 +4,229 @@
  */
 
 export interface paths {
+    "/store-rating": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Real order rating average/count, null below ten ratings; cached one hour */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No comments or customer data */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["StoreRating"];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orders/{id}/rating": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Own order rating or null; another customer receives 404 */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Rating; hidden comments are null */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["OrderRating"] | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Rate own delivered order once (10 writes/minute, demo refused) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        stars: number;
+                        comment?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Rating; hidden comments are null */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["OrderRating"] | null;
+                        };
+                    };
+                };
+                422: components["responses"]["Validation"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit within seven days of the original rating; hiding is preserved */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        stars: number;
+                        comment?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Rating; hidden comments are null */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["OrderRating"] | null;
+                        };
+                    };
+                };
+                422: components["responses"]["Validation"];
+            };
+        };
+        trace?: never;
+    };
+    "/staff/ratings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ratings list (reviews manage or admin) */
+        get: {
+            parameters: {
+                query?: {
+                    stars?: number;
+                    per_page?: components["parameters"]["PerPage"];
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paginated ratings */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["OrderRating"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/ratings/{id}/hide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hide comment without removing its stars (reviews manage or admin); audited */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Rating; hidden comments are null */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["OrderRating"] | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ping": {
         parameters: {
             query?: never;
@@ -9920,6 +10143,23 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        OrderRating: {
+            id?: number;
+            order_id?: number;
+            order_number?: string | null;
+            stars?: number;
+            comment?: string | null;
+            is_comment_hidden?: boolean;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            editable_until?: string;
+            can_edit?: boolean;
+        };
+        StoreRating: {
+            count?: number;
+            average?: number;
+        } | null;
         ReadingList: {
             id?: number;
             slug?: string;
@@ -10797,6 +11037,8 @@ export interface components {
     headers: never;
     pathItems: never;
 }
+export type SchemaOrderRating = components['schemas']['OrderRating'];
+export type SchemaStoreRating = components['schemas']['StoreRating'];
 export type SchemaReadingList = components['schemas']['ReadingList'];
 export type SchemaReadingListInput = components['schemas']['ReadingListInput'];
 export type SchemaFreeGift = components['schemas']['FreeGift'];

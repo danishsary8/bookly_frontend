@@ -26,6 +26,7 @@ export interface TrendDay {
 }
 
 export interface DashboardInsights {
+  order_ratings?: { average: number | null; count: number };
   period: { from: string; to: string; timezone: string };
   trend: TrendDay[];
   dead_stock: {

@@ -44,6 +44,7 @@ export function SessionWatcher() {
       if (kind !== "customer") return;
       queryClient.removeQueries({ queryKey: ["cart"] });
       queryClient.removeQueries({ queryKey: ["account"] });
+      queryClient.removeQueries({ queryKey: ["order-rating"] });
       if (repeat) return;
       shownAt = Date.now();
       toast.info({
