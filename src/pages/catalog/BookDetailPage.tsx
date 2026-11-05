@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, BookX, Heart, RotateCcw, Share2, ShoppingBag, Truck, Wallet } from "lucide-react";
+import { Bell, BookOpen, BookX, Eye, Heart, RotateCcw, Share2, ShoppingBag, Truck, Wallet } from "lucide-react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
+import { ebookQueries } from "@/api/endpoints/ebooks";
 import { stockAlertQueries, stockAlertsApi } from "@/api/endpoints/stockAlerts";
 import { ApiError } from "@/api/errors";
 import { useSession } from "@/api/session";
@@ -103,6 +104,19 @@ function Purchase({ book }: { book: BookDetail }) {
 
   const activeAlert = alerts.data?.find((a) => a.book_variant_id === variant?.id && !a.notified_at);
 
+  const readerInfo = useQuery({
+    ...ebookQueries.meta(book.id!),
+    enabled: Boolean(session?.token && book.id),
+    retry: false,
+  });
+
+  const previewInfo = useQuery({
+    ...ebookQueries.previewMeta(book.id!),
+    enabled: Boolean(book.id),
+    retry: false,
+  });
+
+
   const createAlert = useMutation({
     mutationFn: (id: number) => stockAlertsApi.create(id),
     onSuccess: () => {
@@ -176,6 +190,28 @@ function Purchase({ book }: { book: BookDetail }) {
         </p>
         {buyable ? <BookOfferLine offer={book.offer} className="mt-1" /> : null}
       </div>
+
+      {readerInfo.data?.owned ? (
+        <div className="rounded-xl border border-primary/30 bg-primary/10 p-3.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <BookOpen className="size-5 text-primary shrink-0" aria-hidden="true" />
+            <span className="text-sm font-semibold">{dict.ebook.readNow}</span>
+          </div>
+          <Link to={`/read/${book.id}`} className={cn(buttonVariants({ variant: "cta", size: "sm" }), "gap-1.5")}>
+            <BookOpen className="size-4" aria-hidden="true" /> {dict.ebook.readNow}
+          </Link>
+        </div>
+      ) : previewInfo.data ? (
+        <div className="flex items-center gap-2">
+          <Link
+            to={`/read/${book.id}/preview`}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5 text-xs font-semibold")}
+          >
+            <Eye className="size-3.5" aria-hidden="true" /> {dict.ebook.readPreview}
+          </Link>
+        </div>
+      ) : null}
+
 
       <div ref={mainButton} className="flex flex-wrap items-center gap-3">
         {!digital && buyable ? <QuantityStepper value={quantity} onChange={setQuantity} max={MAX_QTY} label={b.quantityFor(book.title ?? "")} /> : null}

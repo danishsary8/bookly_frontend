@@ -6,6 +6,7 @@ import {
   BadgeCheck,
   Ban,
   Clock3,
+  Laptop,
   Mail,
   Phone,
   RotateCcw,
@@ -13,6 +14,7 @@ import {
   UserX,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { ebookApi } from "@/api/endpoints/ebooks";
 import { opsApi, opsKeys, opsQueries, type StaffCustomer } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
 import { NotFoundState } from "@/components/catalog/NotFoundState";
@@ -178,6 +180,7 @@ export default function CustomerAdminPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmReopen, setConfirmReopen] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
+  const [confirmResetDevices, setConfirmResetDevices] = useState(false);
   const reopen = useReopenCustomer(() => setConfirmReopen(false));
   const navigate = useNavigate();
   const remove = useMutation({
@@ -217,7 +220,23 @@ export default function CustomerAdminPage() {
       }),
     onSettled: () => setConfirm(false),
   });
-  const resendVerification = useMutation({
+  const resetDevices = useMutation({
+    mutationFn: () => ebookApi.resetCustomerDevices(id),
+    onSuccess: (res) => {
+      toast.success({
+        title: "Ebook devices reset",
+        description: `Cleared ${res.cleared} registered device(s).`,
+      });
+      setConfirmResetDevices(false);
+    },
+    onError: (err) => {
+      toast.error({
+        title: "Couldn't reset devices",
+        description: ApiError.from(err).message,
+      });
+    },
+  });
+    const resendVerification = useMutation({
     mutationFn: () => opsApi.resendCustomerVerification(id),
     onSuccess: () => {
       toast.success("Verification email sent");
@@ -319,6 +338,14 @@ export default function CustomerAdminPage() {
               loading={resendVerification.isPending}
             >
               <Mail aria-hidden="true" /> Resend verification email
+            </Button>
+          ) : null}
+          {!closed ? (
+            <Button
+              variant="outline"
+              onClick={() => setConfirmResetDevices(true)}
+            >
+              <Laptop aria-hidden="true" /> Reset ebook devices
             </Button>
           ) : null}
           {isAdmin && closed ? (
@@ -584,6 +611,15 @@ export default function CustomerAdminPage() {
         confirmLabel="Delete"
         loading={remove.isPending}
         onConfirm={() => remove.mutate()}
+      />
+      <ConfirmDialog
+        open={confirmResetDevices}
+        onOpenChange={setConfirmResetDevices}
+        title={`Reset ebook devices for ${c.name}?`}
+        description="This removes all registered reading devices for this customer. They will be able to register new devices the next time they open the reader."
+        confirmLabel="Reset devices"
+        loading={resetDevices.isPending}
+        onConfirm={() => resetDevices.mutate()}
       />
       <ReopenDialog customer={confirmReopen ? c : null} onOpenChange={setConfirmReopen} loading={reopen.isPending} onConfirm={() => reopen.mutate(c)} />
       <CloseCustomerDialog

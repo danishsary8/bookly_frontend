@@ -28,6 +28,8 @@ const SecurityPage = lazy(() => import("../pages/account/SecurityPage"));
 const AddressesPage = lazy(() => import("../pages/account/AddressesPage"));
 const WishlistPage = lazy(() => import("../pages/account/WishlistPage"));
 const OrdersPage = lazy(() => import("../pages/account/OrdersPage"));
+const MyEbooksPage = lazy(() => import("../pages/account/MyEbooksPage"));
+const ReaderPage = lazy(() => import("../pages/reader/ReaderPage"));
 const OrderDetailPage = lazy(() => import("../pages/account/OrderDetailPage"));
 const KhqrPayPage = lazy(() => import("../pages/account/KhqrPayPage"));
 const ReturnRequestPage = lazy(() => import("../pages/account/ReturnRequestPage"));
@@ -109,6 +111,8 @@ const AppRoutes = () => {
         <Route path="/orders" element={<Navigate to="/account/orders" replace />} />
         <Route path="/orders/:id" element={<LegacyOrderRedirect />} />
         <Route path="/invoices" element={<Navigate to="/account/orders" replace />} />
+                <Route path="/read/:bookId" element={<ReaderPage />} />
+        <Route path="/read/:bookId/preview" element={<ReaderPage />} />
         <Route element={<ClientLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/books" element={<BooksPage />} />
@@ -144,6 +148,7 @@ const AppRoutes = () => {
               <Route path="addresses" element={<AddressesPage />} />
               <Route path="wishlist" element={<WishlistPage />} />
               <Route path="orders" element={<OrdersPage />} />
+              <Route path="ebooks" element={<MyEbooksPage />} />
               <Route path="orders/:id" element={<OrderDetailPage />} />
               <Route path="orders/:id/return" element={<ReturnRequestPage />} />
               <Route path="orders/:id/pay" element={<KhqrPayPage />} />

@@ -43,6 +43,7 @@ import {
 import { BookState } from "@/features/admin/books/BookState";
 import { VariantDialog } from "@/features/admin/books/VariantDialog";
 import { BookCoverPanel } from "@/features/admin/books/BookCoverPanel";
+import { EbookPanel } from "@/features/admin/books/EbookPanel";
 import { usePauseAutoRefresh } from "@/features/admin/autoRefresh";
 import { mainCover, pendingCover } from "@/features/admin/books/pendingCover";
 import { ImageUploadField } from "@/components/ui/ImageUploadField";
@@ -774,6 +775,7 @@ export default function BookEditPage() {
         <div className="grid content-start gap-6">
           <BookCoverPanel key={`${b.id}-${b.updated_at}-${b.variants.map((v) => v.cover_image_url ?? "").join("|")}`} book={b} />
           <Formats book={b} isAdmin={isAdmin} />
+          <EbookPanel book={b} />
           {isAdmin ? <DangerZone book={b} /> : null}
         </div>
       </div>
