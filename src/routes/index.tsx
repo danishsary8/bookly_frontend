@@ -27,6 +27,8 @@ const ProfilePage = lazy(() => import("../pages/account/ProfilePage"));
 const SecurityPage = lazy(() => import("../pages/account/SecurityPage"));
 const AddressesPage = lazy(() => import("../pages/account/AddressesPage"));
 const WishlistPage = lazy(() => import("../pages/account/WishlistPage"));
+const SupportPage = lazy(() => import("../pages/account/SupportPage"));
+const SupportInboxPage = lazy(() => import("../pages/admin/SupportInboxPage"));
 const ReadingListsPage = lazy(() => import("../pages/account/ReadingListsPage"));
 const ReadingListPage = lazy(() => import("../pages/catalog/ReadingListPage"));
 const ReadingListPicksPage = lazy(() => import("../pages/admin/ReadingListPicksPage"));
@@ -152,6 +154,7 @@ const AppRoutes = () => {
               <Route path="security" element={<SecurityPage />} />
               <Route path="addresses" element={<AddressesPage />} />
               <Route path="wishlist" element={<WishlistPage />} />
+              <Route path="support" element={<SupportPage />} />
               <Route path="lists" element={<ReadingListsPage />} />
               <Route path="orders" element={<OrdersPage />} />
               <Route path="ebooks" element={<MyEbooksPage />} />
@@ -207,6 +210,7 @@ const AppRoutes = () => {
               <Route path="returns" element={<ReturnsAdminPage />} />
               <Route path="returns/:id" element={<ReturnAdminPage />} />
               <Route path="reviews" element={<ReviewsAdminPage />} />
+              <Route path="support" element={<SupportInboxPage />} />
               <Route path="coupons" element={<CouponsAdminPage />} />
               <Route path="offers" element={<OffersAdminPage />} />
               <Route path="gifts" element={<GiftsPage />} />

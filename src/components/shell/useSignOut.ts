@@ -12,6 +12,8 @@ export function useSignOut() {
     await authApi.logout().catch(() => undefined);
     queryClient.removeQueries({ queryKey: ["cart"] });
     queryClient.removeQueries({ queryKey: ["account"] });
+    queryClient.removeQueries({ queryKey: ["support"] });
+    queryClient.removeQueries({ queryKey: ["support-orders"] });
     toast.info(getDict().shell.signedOut);
     navigate("/");
   };

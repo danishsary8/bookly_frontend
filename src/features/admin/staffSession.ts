@@ -16,5 +16,6 @@ export function useStaffSignOut() {
     await staffAuthApi.logout().catch(() => undefined);
     clearSession("staff");
     queryClient.removeQueries({ queryKey: ["staff"] });
+    queryClient.removeQueries({ queryKey: ["support"] });
   }, [queryClient]);
 }

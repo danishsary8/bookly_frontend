@@ -1,5 +1,7 @@
 /** English translations for Bookly storefront. */
+import { support } from "./support-en";
 export const en = {
+  support,
   readingLists: {
     title: "Reading lists", listTitle: "List title", description: "Description", public: "Public list", save: "Save list", delete: "Delete list", create: "Create list", openPublic: "Open public list", note: "Note", up: "Move up", down: "Move down", remove: "Remove book", addToList: "Add to list", choose: "Choose a list", manage: "Manage reading lists", added: "Added to reading list", loading: "Loading reading list…", by: (name: string) => `By ${name}`, addAll: "Add all to cart", addResult: (added: number, skipped: number) => `${added} added to cart · ${skipped} skipped`, share: "Share list", copy: "Copy link", copied: "Link copied", copyFailed: "Could not copy the link. Use your browser’s address bar.", staffPick: "Staff pick", limits: "Up to 20 lists with 200 books each. Lists start private.",
   },

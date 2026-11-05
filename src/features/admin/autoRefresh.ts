@@ -14,6 +14,7 @@ export const AUTO_REFRESH_MS = 30_000;
 /** Admin data: everything under "staff" (plus the newsletter and lookup pages), not search boxes. */
 export function isAdminData(query: Query): boolean {
   const key = query.queryKey;
+  if (key[0] === "support" && key[1] === "staff") return true;
   const parts = key.map((part) => (typeof part === "string" ? part : ""));
   if (parts.some((part) => part === "jump" || part.endsWith("search") || part === "customer-tags")) return false;
   return key[0] === "staff" || key[0] === "newsletter" || (key[0] === "catalog" && key[1] === "admin-lookup");
