@@ -14,6 +14,7 @@ export function useSignOut() {
     queryClient.removeQueries({ queryKey: ["account"] });
     queryClient.removeQueries({ queryKey: ["support"] });
     queryClient.removeQueries({ queryKey: ["support-orders"] });
+    queryClient.removeQueries({ queryKey: ["order-rating"] });
     toast.info(getDict().shell.signedOut);
     navigate("/");
   };
