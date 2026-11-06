@@ -1,8 +1,9 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
 import { Route, Routes } from "react-router-dom";
 import { insightsApi, type DashboardInsights } from "@/api/endpoints/dashboardInsights";
 import { staffApi, type DashboardSummary, type StaffUser } from "@/api/endpoints/staff";
+import { opsApi } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
 import { clearSession, setSession } from "@/api/session";
 import { RequireStaff } from "@/routes/adminGuards";
@@ -67,6 +68,9 @@ beforeAll(() => {
 afterEach(() => {
   vi.restoreAllMocks();
   clearSession("staff");
+});
+beforeEach(() => {
+  vi.spyOn(opsApi, "orders").mockResolvedValue({ data: [], links: {}, meta: { current_page: 1, last_page: 1, per_page: 5, total: 0 } });
 });
 
 describe("dashboard extras", () => {
