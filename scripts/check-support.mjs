@@ -44,6 +44,7 @@ try {
     const page = await context.newPage(); await page.goto(base); await page.waitForLoadState("networkidle");
     const trigger = page.getByRole("button", { name: language === "en" ? "Chat with Bookly" : "ជជែកជាមួយ Bookly" });
     await trigger.click(); const dialog = page.getByRole("dialog"); await expect(dialog).toBeVisible();
+    await dialog.getByRole("tab", { name: language === "en" ? "Talk to a person" : "និយាយជាមួយបុគ្គលិក", exact: true }).click();
     await dialog.getByRole("button", { name: language === "en" ? "New conversation" : "ចាប់ផ្ដើមការជជែកថ្មី" }).click();
     await dialog.locator("select").first().selectOption("delivery"); await dialog.locator("select").nth(1).selectOption({ index: 1 });
     await dialog.locator("textarea").fill(language === "en" ? `Delivery question ${tag}` : `សំណួរអំពីការដឹកជញ្ជូន ${tag}`);
@@ -77,7 +78,9 @@ try {
     await guestContext.route("**/*", (route) => new URL(route.request().url()).hostname === "127.0.0.1" ? route.continue() : route.abort());
     const guest = await guestContext.newPage(); await guest.goto(base); await guest.waitForLoadState("networkidle");
     await guest.getByRole("button", { name: language === "en" ? "Chat with Bookly" : "ជជែកជាមួយ Bookly" }).click();
-    const guestDialog = guest.getByRole("dialog"); await guestDialog.getByLabel(language === "en" ? "Your name" : "ឈ្មោះរបស់អ្នក").fill("Guest Reader");
+    const guestDialog = guest.getByRole("dialog");
+    await guestDialog.getByRole("tab", { name: language === "en" ? "Talk to a person" : "និយាយជាមួយបុគ្គលិក", exact: true }).click();
+    await guestDialog.getByLabel(language === "en" ? "Your name" : "ឈ្មោះរបស់អ្នក").fill("Guest Reader");
     await guestDialog.getByLabel(language === "en" ? "Email address" : "អាសយដ្ឋានអ៊ីមែល").fill("guest@example.test");
     await guestDialog.getByLabel(language === "en" ? "Message" : "សារ", { exact: true }).fill("Guest support question");
     await audit(guest, `${tag}-guest`);
