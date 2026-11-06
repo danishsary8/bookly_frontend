@@ -39,7 +39,7 @@ export default function DashboardPrintPage() {
           <Rows title={t.statuses} rows={Object.entries(s.orders_by_status)} />
           <Rows title={t.best} rows={s.best_sellers.map((book) => [book.title, book.copies_sold])} />
           <Rows title={t.categories} rows={(s.top_categories ?? []).map((category) => [category.name, category.copies_sold])} />
-          <section className="mt-6"><h2 className="mb-2 text-lg font-semibold">{dict.dashboardAnalysis.payments}</h2><p className="text-sm">{dict.dashboardAnalysis.paymentNote}</p><PaymentMethods rows={data.payment_methods ?? []} /></section>
+          <section className="mt-6"><h2 className="mb-2 text-lg font-semibold">{dict.dashboardAnalysis.payments}</h2><p className="text-sm">{dict.dashboardAnalysis.paymentNote}</p>{data.payment_methods ? <PaymentMethods rows={data.payment_methods} /> : <p>{t.none}</p>}</section>
           <Rows title={t.promotions} rows={[[t.offer, data.promotions.offer_orders], [t.coupon, data.promotions.coupon_orders], ...(data.promotions.gift_orders === undefined ? [] : [[t.gift, data.promotions.gift_orders] as [string, number]])]} />
           <Rows title={dict.dashboardAnalysis.reminder} rows={data.cart_reminder_recovery ? [[dict.dashboardAnalysis.sent, data.cart_reminder_recovery.sent], [dict.dashboardAnalysis.recovered, `${data.cart_reminder_recovery.recovered} (${data.cart_reminder_recovery.percent}%)`]] : []} />
           <p className="mt-2 text-sm">{dict.dashboardAnalysis.reminderNote}</p>
