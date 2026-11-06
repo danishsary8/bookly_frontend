@@ -116,7 +116,7 @@ export default function OrderConfirmationPage() {
           </div>
         </header>
 
-        <OrderItemsCard order={o} totalLabel={k.totalOnDelivery} />
+        <OrderItemsCard order={o} totalLabel={Number(o.credit_used_usd) > 0 ? dict.orderParts.total : k.totalOnDelivery} />
         <DeliveryAddressCard address={o.shipping_address} />
         {o.items && o.items.length > 0 ? (
           <OrderNextVolumePrompt bookIds={o.items.map((i) => i.book_id).filter((id): id is number => typeof id === "number")} />

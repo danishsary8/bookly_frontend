@@ -14,6 +14,8 @@ export interface RegisterInput {
   verify_by?: VerifyChannel;
   locale?: "en" | "km";
   turnstile_token?: string;
+  referral_code?: string;
+  referral_device?: string;
 }
 
 export type VerifyChannel = "email" | "telegram";

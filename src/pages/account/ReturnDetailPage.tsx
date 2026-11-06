@@ -132,6 +132,7 @@ export default function ReturnDetailPage() {
             <dt className="font-semibold">{r.is_refund_final ? t.refundedTitle : t.estimatedTitle}</dt>
             <dd className="text-2xl font-semibold tabular-nums">{formatUsd(r.refund_amount_usd)}</dd>
           </div>
+          {r.is_refund_final && Number(r.credit_refund_usd) > 0 ? <><div className="flex justify-between gap-3"><dt>{dict.credit.restored}</dt><dd>{formatUsd(r.credit_refund_usd)}</dd></div><div className="flex justify-between gap-3"><dt>{dict.credit.externalRefund}</dt><dd>{formatUsd(r.external_refund_usd)}</dd></div></> : null}
         </dl>
       </section>
 

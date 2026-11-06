@@ -5,6 +5,7 @@ import { Toaster } from './components/ui/toaster'
 import { SessionWatcher } from './features/auth/SessionWatcher'
 import { StagingBanner } from './components/StagingBanner'
 import { VisitorAnalytics } from './components/VisitorAnalytics'
+import { ReferralCapture } from './features/account/ReferralCapture'
 
 const loadMotionFeatures = () => import('./lib/motionFeatures').then((mod) => mod.default)
 
@@ -14,6 +15,7 @@ function App() {
       <ThemeProvider>
         <StagingBanner />
         <AppRoutes />
+        <ReferralCapture />
         <SessionWatcher />
         <Toaster />
         <VisitorAnalytics />

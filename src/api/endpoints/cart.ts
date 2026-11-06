@@ -33,6 +33,8 @@ export interface PlaceOrderInput {
   gift_message?: string;
   /** The automatic offer the preview showed; if it no longer applies the API answers 422 and places nothing. */
   offer_id?: number;
+  use_credit?: boolean;
+  expected_payment_due_usd?: string;
 }
 
 const cartData = (response: Resource<Cart>) => response.data;
@@ -49,9 +51,9 @@ export const cartApi = {
 
   checkCoupon: (code: string) => api.post<Resource<CouponCheck>>("/cart/coupon/check", { code }).then((r) => r.data),
   /** Totals for the cart; delivery is priced for `addressId` (else the default address). */
-  preview: (couponCode?: string | null, addressId?: number | null, deliveryArea?: "phnom_penh" | "provinces") =>
+  preview: (couponCode?: string | null, addressId?: number | null, deliveryArea?: "phnom_penh" | "provinces", useCredit = false) =>
     api
-      .post<Resource<CheckoutPreview>>("/checkout/preview", { ...(couponCode ? { coupon_code: couponCode } : {}), ...(addressId ? { address_id: addressId } : {}), ...(deliveryArea ? { delivery_area: deliveryArea } : {}) })
+      .post<Resource<CheckoutPreview>>("/checkout/preview", { ...(couponCode ? { coupon_code: couponCode } : {}), ...(addressId ? { address_id: addressId } : {}), ...(deliveryArea ? { delivery_area: deliveryArea } : {}), ...(useCredit ? { use_credit: true } : {}) })
       .then((r) => r.data),
 
   /**
@@ -64,6 +66,6 @@ export const cartApi = {
 
 export const cartQueries = {
   cart: () => queryOptions({ queryKey: cartKeys.cart(), queryFn: cartApi.cart, staleTime: 0 }),
-  preview: (couponCode: string | null, addressId: number | null = null) =>
-    queryOptions({ queryKey: cartKeys.preview(couponCode, addressId), queryFn: () => cartApi.preview(couponCode, addressId), staleTime: 0 }),
+  preview: (couponCode: string | null, addressId: number | null = null, useCredit = false) =>
+    queryOptions({ queryKey: useCredit ? [...cartKeys.preview(couponCode, addressId), true] : cartKeys.preview(couponCode, addressId), queryFn: () => useCredit ? cartApi.preview(couponCode, addressId, undefined, true) : cartApi.preview(couponCode, addressId), staleTime: 0 }),
 };

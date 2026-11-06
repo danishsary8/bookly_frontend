@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router-dom";
 import { accountApi } from "@/api/endpoints/account";
 import { cartApi } from "@/api/endpoints/cart";
+import { creditApi } from "@/api/endpoints/credit";
 import { ordersApi } from "@/api/endpoints/orders";
 import { ApiError } from "@/api/errors";
 import { clearSession, setSession } from "@/api/session";
@@ -120,6 +121,17 @@ describe("CartPage", () => {
 });
 
 describe("CheckoutPage", () => {
+  it("shows the credit remainder and sends the amount the customer approved", async () => {
+    vi.spyOn(creditApi, "features").mockResolvedValue({ gift_cards: true, referrals: false });
+    vi.mocked(cartApi.preview).mockImplementation(async (code, address, _area, useCredit) => ({ ...preview(code ?? null, address ?? null), credit_balance: amount("5.00"), credit_used: amount(useCredit ? "5.00" : "0.00"), payment_due: amount(useCredit ? "22.48" : "27.48") }));
+    const place = vi.spyOn(cartApi, "placeOrder").mockResolvedValue({ ...order, credit_used_usd: "5.00", payment_due_usd: "22.48" });
+    vi.spyOn(ordersApi, "order").mockResolvedValue(order);
+    const user = userEvent.setup(); app("/checkout");
+    await user.click(await screen.findByRole("checkbox", { name: /Use credit balance/ }));
+    await screen.findByText("$22.48");
+    await user.click(screen.getByRole("button", { name: "Place order" }));
+    await waitFor(() => expect(place).toHaveBeenCalledWith(expect.objectContaining({ use_credit: true, expected_payment_due_usd: "22.48" }), expect.any(String)));
+  });
   it("preselects the default address and places a cash-on-delivery order", async () => {
     const user = userEvent.setup();
     setCoupon("WELCOME10");

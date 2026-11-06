@@ -8,6 +8,8 @@ import { useSignOut } from "@/components/shell/useSignOut";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n";
+import { useQuery } from "@tanstack/react-query";
+import { shopFeaturesQuery } from "@/api/endpoints/credit";
 
 /*
  * The account area's frame: a side navigation at ≥ 1024px, a horizontally
@@ -27,10 +29,13 @@ const accountSections = [
   { to: "/account/wishlist", key: "wishlist", Icon: Heart },
   { to: "/account/lists", key: "readingLists", Icon: BookOpen },
   { to: "/account/support", key: "support", Icon: MessageSquareText },
+  { to: "/account/gift-cards", key: "gifts", Icon: BookOpen },
+  { to: "/account/referrals", key: "referrals", Icon: UserRound },
 ] as const;
 
 export function AccountLayout() {
   const session = useSession<Customer>("customer");
+  const flags = useQuery(shopFeaturesQuery());
   const signOut = useSignOut();
   const firstName = session?.user?.name?.split(" ")[0];
   const { pathname } = useLocation();
@@ -72,7 +77,7 @@ export function AccountLayout() {
         <nav aria-label={dict.account.nav} className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
           <div className="relative">
           <ul ref={strip} onScroll={measure} className="no-scrollbar relative -mx-4 flex gap-1 overflow-x-auto border-b border-border px-4 lg:mx-0 lg:grid lg:border-b-0 lg:px-0">
-            {accountSections.map(({ to, key, Icon, ...rest }) => (
+            {accountSections.filter(({ key }) => key === "gifts" ? flags.data?.gift_cards && session?.user.email !== "demo@bookly.test" : key === "referrals" ? flags.data?.referrals && session?.user.email_verified && session?.user.email !== "demo@bookly.test" : true).map(({ to, key, Icon, ...rest }) => (
               <li key={to} className="shrink-0">
                 <NavLink
                   to={to}
@@ -87,7 +92,7 @@ export function AccountLayout() {
                   }
                 >
                   <Icon className="hidden size-[18px] lg:block" aria-hidden="true" />
-                  {key === "support" ? dict.support.title : dict.account[key]}
+                  {key === "support" ? dict.support.title : key === "gifts" || key === "referrals" ? dict.credit[key] : dict.account[key]}
                 </NavLink>
               </li>
             ))}

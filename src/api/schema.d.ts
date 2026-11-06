@@ -4,6 +4,626 @@
  */
 
 export interface paths {
+    "/shop/features": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Available optional money features; both disabled by default */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Feature flags */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                gift_cards: boolean;
+                                referrals: boolean;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/gift-cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Buyer purchases and wallet balance, 20 per page; verified non-demo customers only */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Purchases */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: components["schemas"]["GiftCard"][];
+                            balance_usd: string;
+                            current_page: number;
+                            last_page: number;
+                        };
+                    };
+                };
+                /** @description Feature disabled */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /** Create an unpaid USD KHQR purchase; no credit funding or simulated activation */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    "Idempotency-Key": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["GiftPurchaseInput"];
+                };
+            };
+            responses: {
+                /** @description Pending purchase (same buyer/key/details replays existing purchase) */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["GiftCard"];
+                        };
+                    };
+                };
+                /** @description Feature disabled */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid details or purchase unavailable */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/gift-cards/{id}/payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Buyer-only verified payment polling, 20/min; late payments require staff refund review */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Payment state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GiftPaymentState"];
+                    };
+                };
+                /** @description Disabled or not owned */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/gift-cards/{id}/reveal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reveal active code exactly once; response is never cached */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Code */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                code?: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Disabled or not owned */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Already shown or not active */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/gift-cards/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Single-use redemption to wallet; 5/min/customer, 20/hour/IP and one-hour lock after ten failures */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        gift_code: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description New balance */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                balance_usd?: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Feature disabled */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Generic failure; no validity/status disclosure */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/referrals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Email-verified non-demo customer referral code and paged status list; no friend personal data */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    "X-Bookly-Device"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Referrals */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["ReferralSummary"];
+                        };
+                    };
+                };
+                /** @description Feature disabled */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/gift-cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin-only paged cards and funding/redeemed/unredeemed/refund-review totals; code hashes omitted */
+        get: {
+            parameters: {
+                query?: {
+                    last_four?: string;
+                    buyer_id?: number;
+                    status?: "pending_payment" | "active" | "redeemed" | "cancelled" | "expired";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paged card records and totals (amounts in USD) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Feature disabled */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/gift-cards/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin-only card details and payment status; no redeemable code */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Card and payment state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Disabled or missing */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/gift-cards/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel pending/active card with audit; paid cancellations require manual refund */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Card and payment state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Disabled or missing */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not cancellable */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/gift-cards/{id}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Explicit audited resend to original recipient, active cards only; one-hour cooldown; respects send date */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Card and delivery status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Disabled or missing */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or cooldown */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/referrals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin-only paged referrals and credited/unrecovered totals */
+        get: {
+            parameters: {
+                query?: {
+                    status?: components["schemas"]["ReferralStatus"];
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Referrals and statistics */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Feature disabled */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/referrals/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Audited void; recover available reward credit once and report any already-spent remainder */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Referral */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Disabled or missing */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/assistant": {
         parameters: {
             query?: never;
@@ -3157,6 +3777,8 @@ export interface paths {
                      *     }
                      */
                     "application/json": {
+                        referral_code?: string;
+                        referral_device?: string;
                         name: string;
                         /**
                          * Format: email
@@ -5402,6 +6024,7 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
+                        use_credit?: boolean;
                         coupon_code?: string;
                         address_id?: number;
                         /** @enum {string} */
@@ -5470,6 +6093,10 @@ export interface paths {
                      *     }
                      */
                     "application/json": {
+                        /** @description Required when use_credit is true; reject changed due amount rather than silently charging more */
+                        expected_payment_due_usd?: string;
+                        /** @default false */
+                        use_credit?: boolean;
                         address_id: number;
                         /** @enum {string} */
                         payment_method: "cod";
@@ -11872,6 +12499,10 @@ export interface components {
             }[];
         };
         CheckoutPreview: {
+            credit_balance?: components["schemas"]["Amount"];
+            credit_used?: components["schemas"]["Amount"];
+            payment_due?: components["schemas"]["Amount"];
+            referral_discount?: components["schemas"]["Amount"];
             /** @description A saved address was selected or defaulted; otherwise delivery_area is an estimate choice only. */
             has_delivery_address?: boolean;
             free_gift?: components["schemas"]["FreeGift"];
@@ -12218,6 +12849,8 @@ export interface components {
             free_shipping?: components["schemas"]["CartFreeShipping"];
         };
         Order: {
+            credit_used_usd?: components["schemas"]["Money"];
+            payment_due_usd?: components["schemas"]["Money"];
             free_gift?: components["schemas"]["FreeGift"];
             id?: number;
             /** @example ORD-20261003-7K2QX */
@@ -12289,6 +12922,8 @@ export interface components {
         };
         /** @description What an invoice or packing slip prints. KHR uses the rate in force when the order was placed (null when no rate was set then), so a reprint never changes. */
         OrderDocument: {
+            credit_used_usd?: components["schemas"]["Money"];
+            payment_due_usd?: components["schemas"]["Money"];
             free_gift?: components["schemas"]["FreeGift"];
             id?: number;
             /** @example ORD-20261003-7K2QX */
@@ -12345,6 +12980,8 @@ export interface components {
             } | null;
         };
         Return: {
+            credit_refund_usd?: components["schemas"]["Money"];
+            external_refund_usd?: string | null;
             id?: number;
             order_id?: number;
             order_number?: string;
@@ -12435,6 +13072,62 @@ export interface components {
                 stock_quantity?: number;
                 is_active?: boolean;
             } | null;
+        };
+        GiftCard: {
+            id: number;
+            amount_usd: string;
+            recipient_name: string;
+            recipient_email: string;
+            message: string | null;
+            /** Format: date */
+            send_on: string;
+            /** @enum {string} */
+            status: "pending_payment" | "active" | "redeemed" | "cancelled" | "expired";
+            last_four: string | null;
+            expires_at: string | null;
+            can_reveal: boolean;
+            email_sent_at: string | null;
+            email_failed_at: string | null;
+        };
+        GiftPurchaseInput: {
+            /** @description 5.00 through 200.00 USD, at most two decimal places */
+            amount_usd: string;
+            recipient_name: string;
+            /** Format: email */
+            recipient_email: string;
+            /** @description Plain text, escaped on display */
+            message?: string | null;
+            /**
+             * Format: date
+             * @description Today through 90 days ahead in shop timezone
+             */
+            send_on: string;
+        };
+        GiftPaymentState: {
+            data: components["schemas"]["GiftCard"];
+            payment: {
+                qr_payload: string;
+                expires_at: string;
+                /** @enum {string} */
+                mode: "test" | "bakong";
+            } | null;
+        };
+        /** @enum {string} */
+        ReferralStatus: "pending" | "qualified" | "rewarded" | "void";
+        ReferralSummary: {
+            code: string;
+            friend_discount_usd: string;
+            reward_usd: string;
+            balance_usd: string;
+            current_page: number;
+            last_page: number;
+            history: {
+                id: number;
+                status: components["schemas"]["ReferralStatus"];
+                reward_cents: number;
+                created_at: string;
+                rewarded_at: string | null;
+            }[];
         };
     };
     responses: {
@@ -12556,6 +13249,11 @@ export type SchemaBookImportRow = components['schemas']['BookImportRow'];
 export type SchemaReview = components['schemas']['Review'];
 export type SchemaOwnReview = components['schemas']['OwnReview'];
 export type SchemaStockAlert = components['schemas']['StockAlert'];
+export type SchemaGiftCard = components['schemas']['GiftCard'];
+export type SchemaGiftPurchaseInput = components['schemas']['GiftPurchaseInput'];
+export type SchemaGiftPaymentState = components['schemas']['GiftPaymentState'];
+export type SchemaReferralStatus = components['schemas']['ReferralStatus'];
+export type SchemaReferralSummary = components['schemas']['ReferralSummary'];
 export type ResponseValidation = components['responses']['Validation'];
 export type ResponseUnauthorized = components['responses']['Unauthorized'];
 export type ResponseForbidden = components['responses']['Forbidden'];

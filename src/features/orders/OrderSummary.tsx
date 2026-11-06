@@ -78,6 +78,7 @@ export function OrderItemsCard({
           <dd className="text-2xl font-semibold tabular-nums">{formatMoney(order.total_usd, order.total_khr, currency)}</dd>
         </div>
       </dl>
+      {Number(order.credit_used_usd) > 0 ? <dl className="mt-3 grid gap-2 text-sm"><div className="flex justify-between gap-3"><dt>{dict.credit.used}</dt><dd>{formatUsd(order.credit_used_usd)}</dd></div><div className="flex justify-between gap-3"><dt>{dict.credit.due}</dt><dd>{formatUsd(order.payment_due_usd)}</dd></div></dl> : null}
     </section>
   );
 }

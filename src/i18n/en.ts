@@ -1,7 +1,9 @@
 /** English translations for Bookly storefront. */
 import { support } from "./support-en";
 import { assistant } from "./assistant-en";
+import { credit } from "./credit-en";
 export const en = {
+  credit,
   dashboardPeriods: { ninetyDays: "90 days", twelveMonths: "12 months" },
   dashboardCopies: { books: "Books sold", ebooks: "Ebooks sold", detail: "Copies in non-cancelled orders", view: "View product report" },
   dashboardAnalysis: { payments: "Payment methods", paymentNote: "Order totals at placement; not cash received.", method: "Method", amount: "Order total", share: "Share", orders: "Orders", empty: "No orders in this period.", reminder: "Cart reminder recovery", reminderNote: "Sent reminders with a complete seven-day window; an order may not have been caused by the reminder.", recovered: "Recovered", sent: "Reminders sent", gifts: "Orders with a free gift", cod: "Cash on delivery", khqr: "Bakong KHQR", card: "Card" },

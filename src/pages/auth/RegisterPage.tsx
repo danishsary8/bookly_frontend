@@ -20,6 +20,9 @@ import { useTurnstile } from "@/features/auth/turnstile";
 import { useTelegramBot } from "@/features/auth/verification";
 import { useT } from "@/i18n";
 import { toast } from "@/stores/toast";
+import { useQuery } from "@tanstack/react-query";
+import { shopFeaturesQuery } from "@/api/endpoints/credit";
+import { referralSignup } from "@/features/account/referralAttribution";
 
 const FIELDS = ["name", "email", "phone", "password", "password_confirmation", "verify_by"] as const;
 
@@ -31,6 +34,7 @@ export default function RegisterPage() {
   const alertRef = useRef<HTMLDivElement>(null);
   const { lang, dict } = useT();
   const s = dict.signin;
+  const features = useQuery(shopFeaturesQuery());
 
   const { register, handleSubmit, setError, control, formState } = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
@@ -54,6 +58,7 @@ export default function RegisterPage() {
         verify_by: byTelegram ? "telegram" : "email",
         locale: lang,
         turnstile_token: await turnstile.getToken(),
+        ...(features.data?.referrals ? referralSignup() : {}),
       });
       // New accounts are unverified, so this continues to the code page or Telegram (which keep `next`).
       if (response.pending_email) toast.info({ title: dict.security.pendingEmailTitle, description: dict.security.pendingEmailSent(response.pending_email) });

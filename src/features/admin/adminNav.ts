@@ -49,6 +49,8 @@ export const adminNav: AdminNavGroup[] = [
     label: "Admin",
     items: [
       { to: "/admin/newsletter", label: "Newsletter", Icon: Mail, roles: ["admin"] },
+      { to: "/admin/gift-cards", label: "Gift cards", Icon: TicketPercent, roles: ["admin"] },
+      { to: "/admin/referrals", label: "Referrals", Icon: Users, roles: ["admin"] },
       { to: "/admin/members", label: "Staff members", Icon: ShieldCheck, roles: ["admin"] },
       { to: "/admin/exchange-rates", label: "Exchange rate", Icon: ArrowLeftRight, roles: ["admin"] },
       { to: "/admin/audit-log", label: "Audit log", Icon: ScrollText, roles: ["admin"] },

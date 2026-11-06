@@ -203,6 +203,7 @@ export function InvoiceSheet({ doc }: { doc: Doc }) {
           ) : null}
           <dt className="mt-1 border-t border-foreground pt-2 font-semibold">Total (USD)</dt>
           <dd className="mt-1 border-t border-foreground pt-2 text-right font-semibold">{formatUsd(doc.total_usd)}</dd>
+          {num(doc.credit_used_usd) > 0 ? <><dt>Paid with credit</dt><dd className="text-right">{formatUsd(doc.credit_used_usd)}</dd><dt>External payment</dt><dd className="text-right">{formatUsd(doc.payment_due_usd)}</dd></> : null}
           {refunded > 0 ? (
             <>
               <dt>Refunded</dt>
