@@ -26,3 +26,10 @@ it("does not show status actions to staff without manage permission", async () =
   expect(await screen.findByRole("link", { name: "ORD-2" })).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Confirm ORD-2" })).not.toBeInTheDocument();
 });
+
+it("does not offer a shortcut for an unpaid KHQR order or a waiting order", async () => {
+  vi.spyOn(opsApi, "orders").mockResolvedValue({ data: [{ ...order, payment_method: "khqr" }, { ...order, id: 3, order_number: "ORD-3", is_waiting_stock: true }], links: {}, meta: { current_page: 1, last_page: 1, per_page: 5, total: 2 } });
+  renderWithProviders(<RecentOrders user={admin} />);
+  expect(await screen.findByRole("link", { name: "ORD-2" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /Confirm ORD-/ })).not.toBeInTheDocument();
+});

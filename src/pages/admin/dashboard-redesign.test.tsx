@@ -92,6 +92,17 @@ describe("dashboard redesign", () => {
     expect(screen.getByText(/order.updated/)).toBeInTheDocument();
   });
 
+  it("keeps unknown delivery locations separate from the provinces", async () => {
+    setSession("staff", { token: "t", expiresAt: null, user: admin });
+    vi.spyOn(staffApi, "summary").mockResolvedValue(summary);
+    vi.spyOn(staffApi, "sales").mockResolvedValue(sales);
+    vi.spyOn(insightsApi, "get").mockResolvedValue({ ...insights, delivery_areas: { phnom_penh: 2, provinces: 3, unknown: 1 } });
+    app();
+    const area = await screen.findByRole("region", { name: "Delivery areas" });
+    expect(within(area).getByText("Unknown location").nextElementSibling).toHaveTextContent("1");
+    expect(within(area).getByText("Provinces").nextElementSibling).toHaveTextContent("3");
+  });
+
   it("shows KPI cards with a trend line and a View link each", async () => {
     setSession("staff", { token: "t", expiresAt: null, user: admin });
     vi.spyOn(staffApi, "summary").mockResolvedValue(summary);

@@ -154,7 +154,7 @@ export default function AuditLogPage() {
             </option>
           ))}
         </SelectField>
-        <TextField label={dict.auditAction} maxLength={100} value={action ?? ""} onChange={(e) => set({ action: e.target.value || undefined })} />
+        <TextField label={dict.dashboardAudit.action} maxLength={100} value={action ?? ""} onChange={(e) => set({ action: e.target.value || undefined })} />
         <TextField label="From" type="date" value={from ?? ""} max={to} onChange={(e) => set({ from: e.target.value || undefined })} />
         <TextField label="To" type="date" value={to ?? ""} min={from} onChange={(e) => set({ to: e.target.value || undefined })} />
       </div>

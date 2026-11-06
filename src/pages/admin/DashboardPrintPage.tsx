@@ -43,7 +43,7 @@ export default function DashboardPrintPage() {
           <Rows title={t.promotions} rows={[[t.offer, data.promotions.offer_orders], [t.coupon, data.promotions.coupon_orders], ...(data.promotions.gift_orders === undefined ? [] : [[t.gift, data.promotions.gift_orders] as [string, number]])]} />
           <Rows title={dict.dashboardAnalysis.reminder} rows={data.cart_reminder_recovery ? [[dict.dashboardAnalysis.sent, data.cart_reminder_recovery.sent], [dict.dashboardAnalysis.recovered, `${data.cart_reminder_recovery.recovered} (${data.cart_reminder_recovery.percent}%)`]] : []} />
           <p className="mt-2 text-sm">{dict.dashboardAnalysis.reminderNote}</p>
-          <Rows title={t.customers} rows={[[t.repeat, `${data.repeat_customer_rate.percent}%`], [t.returning, data.repeat_customer_rate.returning], [t.firstTime, data.repeat_customer_rate.customers - data.repeat_customer_rate.returning], [t.ratings, data.order_ratings?.average ?? t.none]]} />
+          <Rows title={dict.dashboardBuyers.title} rows={[[t.repeat, `${data.repeat_customer_rate.percent}%`], [t.returning, data.repeat_customer_rate.returning], [t.firstTime, data.repeat_customer_rate.customers - data.repeat_customer_rate.returning], [t.ratings, data.order_ratings?.average ?? t.none]]} />
           <Rows title={t.provinces} rows={data.provinces.map((province) => [province.name, province.orders])} />
           {data.delivery_areas ? <Rows title={dict.dashboardAreas.title} rows={[[dict.dashboardAreas.phnomPenh, data.delivery_areas.phnom_penh], [dict.dashboardAreas.provinces, data.delivery_areas.provinces], [dict.dashboardAreas.unknown, data.delivery_areas.unknown]]} /> : null}
         </article>
