@@ -153,7 +153,7 @@ export default function LoginPage() {
               }
             >
               {step === 0 ? (
-                <TextField label={dict.auth.email} type="email" autoComplete="username email" inputMode="email" placeholder="name@example.com" error={errors.email?.message} {...register("email")} />
+                <TextField label={dict.auth.email} type="email" autoComplete="email" inputMode="email" placeholder="name@example.com" error={errors.email?.message} {...register("email")} />
               ) : (
                 <div className="grid gap-5">
                   {/* Who is signing in, with a way back to change it. The hidden username helps password managers. */}
