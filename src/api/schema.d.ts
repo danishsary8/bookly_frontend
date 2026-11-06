@@ -12111,7 +12111,7 @@ export interface components {
         Id: number;
         Provider: "google" | "facebook";
         PerPage: number;
-        Period: "today" | "7d" | "30d" | "custom";
+        Period: "today" | "7d" | "30d" | "90d" | "12m" | "custom";
         From: string;
         To: string;
     };

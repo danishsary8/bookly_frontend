@@ -4,6 +4,8 @@ import { daysIn, rangeDays, rangeFromParams, rangeProblem, rangeToParams } from 
 describe("dashboard range", () => {
   it("reads presets and custom days from the URL, and falls back to 30 days", () => {
     expect(rangeFromParams(new URLSearchParams("period=7d"))).toEqual({ period: "7d" });
+    expect(rangeFromParams(new URLSearchParams("period=90d"))).toEqual({ period: "90d" });
+    expect(rangeFromParams(new URLSearchParams("period=12m"))).toEqual({ period: "12m" });
     expect(rangeFromParams(new URLSearchParams("period=custom&from=2026-09-01&to=2026-09-30"))).toEqual({ period: "custom", from: "2026-09-01", to: "2026-09-30" });
     expect(rangeFromParams(new URLSearchParams(""))).toEqual({ period: "30d" });
     expect(rangeFromParams(new URLSearchParams("period=year"))).toEqual({ period: "30d" });
@@ -27,7 +29,15 @@ describe("dashboard range", () => {
     expect(rangeDays({ period: "today" })).toEqual({ from: "2026-10-15", to: "2026-10-15" });
     expect(rangeDays({ period: "7d" })).toEqual({ from: "2026-10-09", to: "2026-10-15" });
     expect(rangeDays({ period: "30d" })).toEqual({ from: "2026-09-16", to: "2026-10-15" });
+    expect(rangeDays({ period: "90d" })).toEqual({ from: "2026-07-18", to: "2026-10-15" });
+    expect(rangeDays({ period: "12m" })).toEqual({ from: "2025-10-16", to: "2026-10-15" });
     expect(rangeDays({ period: "custom", from: "2026-01-01", to: "2026-03-31" })).toEqual({ from: "2026-01-01", to: "2026-03-31" });
+  });
+
+  it("clamps the twelve-month start when tomorrow is leap day", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2024-02-28T05:00:00Z"));
+    expect(rangeDays({ period: "12m" })).toEqual({ from: "2023-02-28", to: "2024-02-28" });
   });
 });
 

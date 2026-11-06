@@ -5,6 +5,7 @@ import { support } from "./support-km";
 
 /** Khmer translations for Bookly storefront. */
 export const km: Translations = {
+  dashboardPeriods: { ninetyDays: "៩០ ថ្ងៃ", twelveMonths: "១២ ខែ" },
   support,
   ratings: { title: "ការវាយតម្លៃការបញ្ជាទិញ", rateOrder: "វាយតម្លៃការបញ្ជាទិញរបស់អ្នក", comment: "មតិយោបល់ (មិនបាច់បំពេញក៏បាន)", editWindow: "អ្នកអាចកែសម្រួលការវាយតម្លៃក្នុងរយៈពេលប្រាំពីរថ្ងៃ។", save: "រក្សាទុកការវាយតម្លៃ", saved: (stars: number) => `ការវាយតម្លៃរបស់អ្នក៖ ${stars} ក្នុងចំណោម 5`, store: (average: string, count: number) => `★ ${average} · ការបញ្ជាទិញ ${count} បានវាយតម្លៃ`, all: "ការវាយតម្លៃទាំងអស់", hide: "លាក់មតិយោបល់", previous: "មុន", next: "បន្ទាប់" },
   readingLists: {

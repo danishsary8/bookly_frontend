@@ -1,6 +1,7 @@
 /** English translations for Bookly storefront. */
 import { support } from "./support-en";
 export const en = {
+  dashboardPeriods: { ninetyDays: "90 days", twelveMonths: "12 months" },
   support,
   ratings: { title: "Order ratings", rateOrder: "Rate your order", comment: "Comment (optional)", editWindow: "You can edit your rating for seven days.", save: "Save rating", saved: (stars: number) => `Your rating: ${stars} out of 5`, store: (average: string, count: number) => `★ ${average} · ${count} orders rated`, all: "All ratings", hide: "Hide comment", previous: "Previous", next: "Next" },
   readingLists: {

@@ -5,18 +5,12 @@ import { Button } from "@/components/ui/button";
 import { rangeProblem, shopToday } from "@/features/admin/dashboardRange";
 import { cn } from "@/lib/utils";
 import { formatKhr } from "@/stores/currency";
+import { useT } from "@/i18n";
 
 /*
  * Pieces shared by the dashboard and the reports: the period picker and custom days, figure tiles with the
  * change against the previous period, and titled panels.
  */
-
-const PERIODS: Array<{ value: DashboardPeriod | "custom"; label: string }> = [
-  { value: "today", label: "Today" },
-  { value: "7d", label: "7 days" },
-  { value: "30d", label: "30 days" },
-  { value: "custom", label: "Custom" },
-];
 
 /** "≈ 207,050 ៛" under a USD amount; nothing until the shop has set a USD→KHR rate. */
 export function Khr({ value, className }: { value?: string | null; className?: string }) {
@@ -120,9 +114,18 @@ export function CustomRange({ range, shown, onApply }: { range: DashboardRange; 
 
 /** Today / 7 days / 30 days / Custom as one radio group. */
 export function PeriodPicker({ active, onPick }: { active: DashboardPeriod | "custom"; onPick: (value: DashboardPeriod | "custom") => void }) {
+  const { dict } = useT();
+  const periods: Array<{ value: DashboardPeriod | "custom"; label: string }> = [
+    { value: "today", label: "Today" },
+    { value: "7d", label: "7 days" },
+    { value: "30d", label: "30 days" },
+    { value: "90d", label: dict.dashboardPeriods.ninetyDays },
+    { value: "12m", label: dict.dashboardPeriods.twelveMonths },
+    { value: "custom", label: "Custom" },
+  ];
   return (
-    <div role="radiogroup" aria-label="Period" className="inline-flex rounded-md border border-border bg-card p-1">
-      {PERIODS.map((p) => (
+    <div role="radiogroup" aria-label="Period" className="flex flex-wrap rounded-md border border-border bg-card p-1">
+      {periods.map((p) => (
         <button
           key={p.value}
           type="button"

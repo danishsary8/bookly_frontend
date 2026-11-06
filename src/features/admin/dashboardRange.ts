@@ -4,7 +4,7 @@ import type { DashboardPeriod, DashboardRange } from "@/api/endpoints/staff";
 export const MAX_RANGE_DAYS = 366;
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
-const PRESETS: DashboardPeriod[] = ["today", "7d", "30d"];
+const PRESETS: DashboardPeriod[] = ["today", "7d", "30d", "90d", "12m"];
 
 /** Today in shop time (Phnom Penh), "2026-10-13". */
 export const shopToday = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Phnom_Penh" });
@@ -45,7 +45,15 @@ export const day = (date: string) => dayFormat.format(new Date(`${date}T00:00:00
 export function rangeDays(range: DashboardRange): { from: string; to: string } {
   if (range.period === "custom") return { from: range.from, to: range.to };
   const to = shopToday();
-  const back = { today: 0, "7d": 6, "30d": 29 }[range.period];
+  if (range.period === "12m") {
+    const tomorrow = new Date(Date.parse(`${to}T00:00:00Z`) + 86_400_000);
+    const year = tomorrow.getUTCFullYear() - 1;
+    const month = tomorrow.getUTCMonth();
+    const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+    const from = new Date(Date.UTC(year, month, Math.min(tomorrow.getUTCDate(), lastDay))).toISOString().slice(0, 10);
+    return { from, to };
+  }
+  const back = { today: 0, "7d": 6, "30d": 29, "90d": 89 }[range.period];
   const from = new Date(Date.parse(`${to}T00:00:00Z`) - back * 86_400_000).toISOString().slice(0, 10);
   return { from, to };
 }

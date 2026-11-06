@@ -237,7 +237,7 @@ export interface VariantInput {
   delay_note?: string | null;
 }
 
-export type DashboardPeriod = "today" | "7d" | "30d";
+export type DashboardPeriod = "today" | "7d" | "30d" | "90d" | "12m";
 /** A preset period, or Phnom Penh days `from`–`to` (YYYY-MM-DD, at most 366 days; the API checks it too). */
 export type DashboardRange = { period: DashboardPeriod } | { period: "custom"; from: string; to: string };
 
