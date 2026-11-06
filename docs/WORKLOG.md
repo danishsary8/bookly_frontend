@@ -746,3 +746,7 @@ branch per repo built on `fix/security-leftovers`; tasks 10 (strict delete) and 
 
 ## Phase 8 — Assistants implementation (2026-11-06)
 Added a clearly labelled automatic-assistant tab to the existing support dialog, explicit prefilled human handoff, linked catalogue results, a staff header panel and Ctrl-K destination, and a bilingual FAQ/unanswered knowledge screen with delete confirmation. Focused UI tests pass; final branch gates and local smoke follow. Decisions and merge order are recorded in backend PROGRESS.md.
+
+## Phase 9 ? Dashboard v2 (feature/dashboard-v2)
+
+Added longer periods, sales and recovery analysis, recent-order actions, activity, purchase planning, audit filtering and printable reports. Integrated the newly merged assistants work. Lint has zero errors, typecheck and build passed, and 629 tests passed with three existing opt-in skips. Local desktop/mobile browser smoke passed six axe checks without overflow.
