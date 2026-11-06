@@ -34,8 +34,8 @@ export const AuthShell = ({ children, panel }: AuthShellProps) => {
   const { dict } = useT();
   return (
     <div className="auth-paper min-h-dvh bg-background text-foreground lg:h-dvh lg:overflow-hidden">
-      <div className="mx-auto grid min-h-dvh max-w-[1360px] lg:h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-10 lg:p-5">
-        <aside className="hero-lapis auth-cover hidden min-h-0 flex-col justify-between gap-6 overflow-hidden rounded-[10px] p-10 lg:flex xl:p-12">
+      <div className="mx-auto grid min-h-dvh max-w-[1360px] lg:h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-10 lg:p-4">
+        <aside className="hero-lapis auth-cover hidden min-h-0 flex-col justify-between gap-6 overflow-hidden rounded-[14px] p-9 lg:flex xl:p-11 [@media(max-height:820px)]:p-7">
           <Wordmark onLapis />
           {panel ?? <CoverSwap />}
         </aside>
@@ -48,7 +48,7 @@ export const AuthShell = ({ children, panel }: AuthShellProps) => {
               {dict.content.backToStore}
             </Link>
           </div>
-          <div className="flex flex-1 items-center justify-center py-6 lg:py-4">
+          <div className="flex flex-1 items-center justify-center py-6 lg:py-2">
             <div className="w-full max-w-[28rem]">{children}</div>
           </div>
         </main>

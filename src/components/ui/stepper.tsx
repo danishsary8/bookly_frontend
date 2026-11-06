@@ -4,7 +4,7 @@ import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /*
- * Segmented step progress + sliding panel (the React Bits "Stepper" idea, rebuilt on our tokens).
+ * Numbered step discs + sliding panel (the React Bits "Stepper" idea, rebuilt on our tokens).
  * The parent owns `current` so it can validate a step before moving on; buttons live in the parent's form.
  * When the step changes, focus moves to the first field of the new step. Reduced motion: Motion's global
  * skip (src/lib/reducedMotion.ts) makes the slide instant.
@@ -34,25 +34,49 @@ export function Stepper({ steps, current, label, status, children, className }: 
 
   return (
     <div className={className}>
-      {/* Segmented progress: one bar per step that fills as you go, its name underneath. */}
-      <ol aria-label={label} className="grid gap-3" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
+      {/* React Bits "Stepper" look: numbered discs joined by rules that fill as you go; the current step is named under it. */}
+      <ol aria-label={label} className="flex items-start">
         {steps.map((title, i) => {
           const done = i < current;
           const active = i === current;
           return (
-            <li key={title} aria-current={active ? "step" : undefined} className="grid min-w-0 gap-2">
-              <span className="relative h-1 overflow-hidden rounded-full bg-border" aria-hidden="true">
+            <li key={title} aria-current={active ? "step" : undefined} className={cn("flex min-w-0 items-start", i < steps.length - 1 && "flex-1")}>
+              <span className="grid min-w-0 justify-items-center gap-1.5">
                 <motion.span
-                  className="absolute inset-0 origin-left rounded-full bg-primary"
                   initial={false}
-                  animate={{ scaleX: done || active ? 1 : 0, opacity: done ? 0.55 : 1 }}
-                  transition={{ duration: 0.5, ease }}
-                />
+                  animate={{ scale: active ? 1 : 0.9 }}
+                  transition={{ duration: 0.35, ease }}
+                  className={cn(
+                    "relative grid size-8 shrink-0 place-items-center rounded-full text-[13px] font-semibold tabular-nums transition-colors duration-300",
+                    done && "bg-primary text-primary-foreground",
+                    active && "bg-primary text-primary-foreground shadow-[0_0_0_5px_color-mix(in_srgb,var(--primary)_16%,transparent)]",
+                    !done && !active && "border border-border bg-card text-muted-foreground",
+                  )}
+                >
+                  <AnimatePresence mode="wait" initial={false}>
+                    {done ? (
+                      <motion.span key="done" initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.4, opacity: 0 }} transition={{ duration: 0.25, ease }}>
+                        <Check className="size-4" strokeWidth={2.75} aria-hidden="true" />
+                      </motion.span>
+                    ) : (
+                      <motion.span key="n" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                        {i + 1}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </motion.span>
+                <span className={cn("max-w-[7rem] truncate text-xs font-semibold leading-4", active ? "text-foreground" : "text-muted-foreground")}>{title}</span>
               </span>
-              <span className={cn("flex min-w-0 items-center gap-1.5 py-0.5 text-xs font-semibold leading-5", active ? "text-foreground" : "text-muted-foreground")}>
-                <span className="tabular-nums">{done ? <Check className="size-3.5 text-primary" aria-hidden="true" /> : `${i + 1}.`}</span>
-                <span className="truncate">{title}</span>
-              </span>
+              {i < steps.length - 1 ? (
+                <span className="relative mx-2 mt-[15px] h-0.5 flex-1 overflow-hidden rounded-full bg-border" aria-hidden="true">
+                  <motion.span
+                    className="absolute inset-0 origin-left rounded-full bg-primary"
+                    initial={false}
+                    animate={{ scaleX: done ? 1 : 0 }}
+                    transition={{ duration: 0.45, ease }}
+                  />
+                </span>
+              ) : null}
             </li>
           );
         })}

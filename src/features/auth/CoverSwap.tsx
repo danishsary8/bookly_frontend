@@ -90,7 +90,7 @@ export function CoverSwap() {
     >
       {/* The pile of covers: decorative, the caption and live text carry the meaning. */}
       <div className="grid min-h-0 flex-1 place-items-center py-6" aria-hidden="true">
-        <div className="relative [perspective:1100px]" style={{ width: "min(13.5rem, 26vh)", aspectRatio: "2 / 3" }}>
+        <div className="relative [perspective:1100px]" style={{ width: "min(13.5rem, 23vh)", aspectRatio: "2 / 3" }}>
           {books.map((item, k) => {
             const slot = (((k - shift) % n) + n) % n;
             const leaving = lastMove === 1 && slot === n - 1 && shift > 0;
