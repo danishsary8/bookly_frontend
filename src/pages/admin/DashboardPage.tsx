@@ -83,6 +83,7 @@ export default function DashboardPage() {
       lead={s ? `${day(s.period.from)}${s.period.from !== s.period.to ? ` to ${day(s.period.to)}` : ""} · Phnom Penh time` : `Hello${firstName ? `, ${firstName}` : ""}`}
       actions={
         <div className="grid justify-items-end gap-3">
+          {session?.user.role === "admin" ? <Link to="/admin/purchases" className="text-sm font-semibold text-primary underline-offset-4 hover:underline">{dict.purchaseList.title}</Link> : null}
           <PeriodPicker
             active={active}
             onPick={(value) => {

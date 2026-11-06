@@ -2,6 +2,7 @@
 import { support } from "./support-en";
 export const en = {
   dashboardPeriods: { ninetyDays: "90 days", twelveMonths: "12 months" },
+  purchaseList: { title: "Stock purchase list", lead: "Stock already includes reservations. Buy quantities replenish stock to the low-stock threshold.", export: "Export CSV", book: "Book", format: "Format", sku: "SKU", stock: "Stock", threshold: "Threshold", waiting: "Waiting", buy: "Buy", empty: "No stock needs attention.", loading: "Loading purchase list…", failed: "Could not download the purchase list." },
   support,
   ratings: { title: "Order ratings", rateOrder: "Rate your order", comment: "Comment (optional)", editWindow: "You can edit your rating for seven days.", save: "Save rating", saved: (stars: number) => `Your rating: ${stars} out of 5`, store: (average: string, count: number) => `★ ${average} · ${count} orders rated`, all: "All ratings", hide: "Hide comment", previous: "Previous", next: "Next" },
   readingLists: {

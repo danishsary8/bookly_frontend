@@ -6,6 +6,7 @@ import { support } from "./support-km";
 /** Khmer translations for Bookly storefront. */
 export const km: Translations = {
   dashboardPeriods: { ninetyDays: "៩០ ថ្ងៃ", twelveMonths: "១២ ខែ" },
+  purchaseList: { title: "បញ្ជីទិញស្តុក", lead: "ស្តុកបានគិតការកក់រួចហើយ។ បរិមាណទិញបំពេញស្តុកដល់កម្រិតជូនដំណឹង។", export: "ទាញយក CSV", book: "សៀវភៅ", format: "ទម្រង់", sku: "លេខ SKU", stock: "ស្តុក", threshold: "កម្រិតជូនដំណឹង", waiting: "កំពុងរង់ចាំ", buy: "ត្រូវទិញ", empty: "មិនមានស្តុកដែលត្រូវពិនិត្យទេ។", loading: "កំពុងផ្ទុកបញ្ជីទិញ…", failed: "មិនអាចទាញយកបញ្ជីទិញបានទេ។" },
   support,
   ratings: { title: "ការវាយតម្លៃការបញ្ជាទិញ", rateOrder: "វាយតម្លៃការបញ្ជាទិញរបស់អ្នក", comment: "មតិយោបល់ (មិនបាច់បំពេញក៏បាន)", editWindow: "អ្នកអាចកែសម្រួលការវាយតម្លៃក្នុងរយៈពេលប្រាំពីរថ្ងៃ។", save: "រក្សាទុកការវាយតម្លៃ", saved: (stars: number) => `ការវាយតម្លៃរបស់អ្នក៖ ${stars} ក្នុងចំណោម 5`, store: (average: string, count: number) => `★ ${average} · ការបញ្ជាទិញ ${count} បានវាយតម្លៃ`, all: "ការវាយតម្លៃទាំងអស់", hide: "លាក់មតិយោបល់", previous: "មុន", next: "បន្ទាប់" },
   readingLists: {

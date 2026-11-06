@@ -9636,6 +9636,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff/dashboard/purchases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * (admin) Physical stock purchase list, including waiting reservations
+         * @description Stock is already reduced by checkout reservations. Quantity to buy replenishes net stock to the threshold, without adding waiting quantities twice.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    format?: "json" | "csv";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Purchase list or CSV */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: {
+                                book_id: number;
+                                title: string;
+                                variant_id: number;
+                                format: string;
+                                sku: string;
+                                stock_quantity: number;
+                                low_stock_threshold: number;
+                                waiting_quantity: number;
+                                quantity_to_buy: number;
+                            }[];
+                        };
+                        "text/csv": string;
+                    };
+                };
+                403: components["responses"]["Forbidden"];
+                422: components["responses"]["Validation"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/staff/dashboard/counts": {
         parameters: {
             query?: never;
