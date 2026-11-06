@@ -87,9 +87,11 @@ describe("Sign-up with Telegram", () => {
     expect(screen.getByText("(optional)", { selector: "label span" })).toBeInTheDocument();
     expect(document.querySelector(".library-card")).toHaveTextContent("Confirm withTelegram");
     await user.type(screen.getByLabelText("Full name"), "Sok Dara");
-    await user.type(screen.getByLabelText("Password", { selector: "input" }), "reading123");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.type(await screen.findByLabelText("Password", { selector: "input" }), "reading123");
     await user.type(screen.getByLabelText("Confirm password", { selector: "input" }), "reading123");
-    await user.click(screen.getByRole("button", { name: "Create account" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(await screen.findByRole("button", { name: "Create account" }));
 
     await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/verify-email?via=telegram"));
     const body = post.mock.calls[0][1] as Record<string, unknown>;
@@ -109,9 +111,7 @@ describe("Sign-up with Telegram", () => {
     expect(await screen.findByLabelText(/^Phone/)).toBeInTheDocument();
     expect(screen.queryByRole("radio", { name: /Telegram/ })).not.toBeInTheDocument();
     await user.type(screen.getByLabelText("Full name"), "Sok Dara");
-    await user.type(screen.getByLabelText("Password", { selector: "input" }), "reading123");
-    await user.type(screen.getByLabelText("Confirm password", { selector: "input" }), "reading123");
-    await user.click(screen.getByRole("button", { name: "Create account" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(await screen.findByText("Enter your email address.")).toBeInTheDocument();
     expect(post).not.toHaveBeenCalled();
   });
@@ -236,7 +236,7 @@ describe("Continue with Telegram", () => {
 
     await user.click(screen.getByRole("button", { name: "Sign in with email and password?" }));
     expect(screen.getByLabelText("Email")).toBeInTheDocument();
-    expect(screen.getByLabelText("Password", { selector: "input" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
   });
 
   it("isn't offered while the bot is off", async () => {
