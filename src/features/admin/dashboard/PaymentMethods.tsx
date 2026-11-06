@@ -3,9 +3,10 @@ import { useT } from "@/i18n";
 import { formatUsd } from "@/stores/currency";
 
 export function PaymentMethods({ rows }: { rows: NonNullable<DashboardInsights["payment_methods"]> }) {
+  const credit = useT().dict.credit;
   const t = useT().dict.dashboardAnalysis;
   if (!rows.length) return <p>{t.empty}</p>;
-  const label = (method: string) => method === "cod" ? t.cod : method === "khqr" ? t.khqr : method === "card" ? t.card : method;
+  const label = (method: string) => method === "cod" ? t.cod : method === "khqr" ? t.khqr : method === "card" ? t.card : method === "wallet" ? credit.balance : method;
 
   return (
     <div role="region" aria-label={t.payments} tabIndex={0} className="overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">

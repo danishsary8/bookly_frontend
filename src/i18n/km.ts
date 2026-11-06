@@ -3,9 +3,11 @@
 import type { Translations } from "./en";
 import { support } from "./support-km";
 import { assistant } from "./assistant-km";
+import { credit } from "./credit-km";
 
 /** Khmer translations for Bookly storefront. */
 export const km: Translations = {
+  credit,
   dashboardPeriods: { ninetyDays: "៩០ ថ្ងៃ", twelveMonths: "១២ ខែ" },
   dashboardCopies: { books: "សៀវភៅបានលក់", ebooks: "សៀវភៅអេឡិចត្រូនិកបានលក់", detail: "ចំនួនក្បាលក្នុងការបញ្ជាទិញដែលមិនបានបោះបង់", view: "មើលរបាយការណ៍ផលិតផល" },
   dashboardAnalysis: { payments: "វិធីទូទាត់", paymentNote: "សរុបពេលដាក់បញ្ជាទិញ មិនមែនជាប្រាក់ដែលបានទទួលទេ។", method: "វិធី", amount: "ទឹកប្រាក់បញ្ជាទិញ", share: "ភាគរយ", orders: "ការបញ្ជាទិញ", empty: "មិនមានការបញ្ជាទិញក្នុងរយៈពេលនេះទេ។", reminder: "ការបញ្ជាទិញបន្ទាប់ពីរំលឹកកន្ត្រក", reminderNote: "រាប់ការរំលឹកដែលបានផ្ញើ និងផុតរយៈពេលប្រាំពីរថ្ងៃ។ ការបញ្ជាទិញអាចមិនមែនមកពីការរំលឹកទេ។", recovered: "បានបញ្ជាទិញ", sent: "ការរំលឹកបានផ្ញើ", gifts: "ការបញ្ជាទិញមានអំណោយឥតគិតថ្លៃ", cod: "ទូទាត់ពេលទទួល", khqr: "Bakong KHQR", card: "កាត" },

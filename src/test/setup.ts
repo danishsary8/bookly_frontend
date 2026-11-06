@@ -12,6 +12,9 @@ beforeEach(async () => {
     if (config.method === "get" && config.url === "/auth/options") {
       return { data: { telegram: false }, status: 200, statusText: "OK", headers: {}, config };
     }
+    if (config.method === "get" && config.url === "/shop/features") {
+      return { data: { data: { gift_cards: false, referrals: false } }, status: 200, statusText: "OK", headers: {}, config };
+    }
 
     throw new ApiError({
       kind: "unexpected",

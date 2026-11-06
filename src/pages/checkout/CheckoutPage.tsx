@@ -29,6 +29,7 @@ import { formatName, getDict, useT } from "@/i18n";
 import { FreeGiftLine } from "@/features/offers/FreeGiftLine";
 import { CouponNotUsedNote } from "@/features/offers/offerText";
 import { percentLabel } from "@/features/offers/percent";
+import { shopFeaturesQuery } from "@/api/endpoints/credit";
 
 /*
  * /checkout (verified customers): 1) delivery address, 2) payment (cash on
@@ -82,10 +83,12 @@ export default function CheckoutPage() {
   const addresses = useQuery(accountQueries.addresses());
   const [chosenAddress, setChosenAddress] = useState<number | null>(null);
   const list = addresses.data ?? [];
+  const [useCredit, setUseCredit] = useState(false);
+  const features = useQuery(shopFeaturesQuery());
   const addressId = chosenAddress ?? list.find((a) => a.is_default)?.id ?? list[0]?.id ?? null;
   // Delivery depends on the address (Phnom Penh or the provinces), so the totals follow the chosen one.
   const preview = useQuery({
-    ...cartQueries.preview(coupon, addressId),
+    ...cartQueries.preview(coupon, addressId, useCredit),
     enabled: Boolean(cart.data?.items?.length) && !addresses.isPending,
     retry: false,
     placeholderData: keepPreviousData,
@@ -119,6 +122,7 @@ export default function CheckoutPage() {
         {
           address_id: addressId!,
           payment_method: paymentMethod,
+          ...(useCredit ? { use_credit: true, expected_payment_due_usd: preview.data?.payment_due?.usd } : {}),
           ...(coupon ? { coupon_code: coupon } : {}),
           ...(deliveryNote.trim() ? { delivery_note: deliveryNote.trim() } : {}),
           ...(isGift ? { is_gift: true, ...(giftMessage.trim() ? { gift_message: giftMessage.trim() } : {}) } : {}),
@@ -133,7 +137,7 @@ export default function CheckoutPage() {
       queryClient.removeQueries({ queryKey: ["cart", "preview"] });
       queryClient.removeQueries({ queryKey: ["orders"] });
       // A KHQR order waits for payment: straight to its QR page.
-      if (order.payment_method === "khqr") navigate(`/account/orders/${order.id}/pay`, { replace: true });
+      if (order.payment_method === "khqr" && order.status === "pending") navigate(`/account/orders/${order.id}/pay`, { replace: true });
       else navigate(`/checkout/success/${order.id}`, { replace: true, state: { order } });
     },
     onError: (error) => {
@@ -177,7 +181,7 @@ export default function CheckoutPage() {
   const data = preview.data;
   const blocked = cart.data.can_checkout === false || data?.can_checkout === false;
   // A retry after a lost response replays the same key, so it never depends on today's cart.
-  const ready = Boolean(addressId) && (unconfirmed || (Boolean(data) && !blocked));
+  const ready = Boolean(addressId) && (unconfirmed || (Boolean(data) && !blocked && !preview.isFetching));
   const shipsSomething = data?.requires_shipping !== false;
 
   return (
@@ -231,6 +235,7 @@ export default function CheckoutPage() {
           </Step>
 
           <Step n={2} title={dict.checkout.paymentMethod}>
+            {(features.data?.gift_cards || features.data?.referrals) && Number(preview.data?.credit_balance?.usd) > 0 ? <label className="flex min-h-11 items-center gap-3"><input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} disabled={place.isPending || unconfirmed} />{dict.credit.use} ({formatMoney(preview.data?.credit_balance?.usd, preview.data?.credit_balance?.khr, currency)})</label> : null}
             <PaymentOptions value={paymentMethod} onChange={setChosenMethod} khqr={khqr} />
           </Step>
 
@@ -343,6 +348,8 @@ export default function CheckoutPage() {
                     amount={data.shipping_fee}
                   /> : null}
                 {Number(data.tax?.usd) > 0 ? <Row label={<span className="text-muted-foreground">{k.tax}</span>} amount={data.tax} /> : null}
+                {Number(data.referral_discount?.usd) > 0 ? <div className="flex justify-between gap-3 text-sm text-success"><dt>{dict.credit.referralDiscount}</dt><dd>{formatMoney(data.referral_discount?.usd, data.referral_discount?.khr, currency)}</dd></div> : null}
+                {Number(data.credit_used?.usd) > 0 ? <><Row label={dict.credit.used} amount={data.credit_used} negative /><Row label={dict.credit.due} amount={data.payment_due} /></> : null}
                 <div className="mt-2 flex items-baseline justify-between gap-4 border-t border-border pt-3">
                   <dt className="font-semibold">{k.total}</dt>
                   <dd className="text-2xl font-semibold tabular-nums">{formatMoney(data.total?.usd, data.total?.khr, currency)}</dd>

@@ -93,7 +93,7 @@ function ActionDialog({ item, action, onClose }: { item: StaffReturn; action: Ac
             <DialogTitle>
               {a.label} return #{item.id}?
             </DialogTitle>
-            <DialogDescription>{a.detail(item)}</DialogDescription>
+            <DialogDescription>{a.detail(item)}{action === "refund" && Number(item.credit_refund_usd) > 0 ? ` Restored automatically to wallet: ${formatUsd(item.credit_refund_usd)}. Refund externally only: ${formatUsd(item.external_refund_usd)}.` : ""}</DialogDescription>
           </DialogHeader>
           {error ? <FormAlert title={error} /> : null}
 
@@ -119,7 +119,7 @@ function ActionDialog({ item, action, onClose }: { item: StaffReturn; action: Ac
               ) : null}
               {method === "store_credit" ? (
                 <p className="rounded-lg border border-border bg-surface-2 p-3 text-sm text-muted-foreground">
-                  Makes a one-use code for {formatUsd(item.refund_amount_usd)} that only this customer can use, valid for 12 months. The customer gets it by email and sees it in their account.
+                  Makes a one-use code for {formatUsd(item.external_refund_usd ?? item.refund_amount_usd)} that only this customer can use, valid for 12 months. The customer gets it by email and sees it in their account.
                 </p>
               ) : null}
             </>
@@ -271,6 +271,7 @@ export default function ReturnAdminPage() {
             <div className="flex items-baseline justify-between gap-4 border-t border-border pt-3">
               <dt className="font-semibold">{r.is_refund_final ? "Refunded" : "Refund if accepted"}</dt>
               <dd className="text-2xl font-semibold tabular-nums">{formatUsd(r.refund_amount_usd)}</dd>
+              {Number(r.credit_refund_usd) > 0 ? <><dt>Restored to wallet</dt><dd>{formatUsd(r.credit_refund_usd)}</dd><dt>External refund</dt><dd>{formatUsd(r.external_refund_usd)}</dd></> : null}
             </div>
           </dl>
         </section>

@@ -32,6 +32,10 @@ const SupportInboxPage = lazy(() => import("../pages/admin/SupportInboxPage"));
 const AssistantPage = lazy(() => import("../pages/admin/AssistantPage"));
 const AssistantKnowledgePage = lazy(() => import("../pages/admin/AssistantKnowledgePage"));
 const ReadingListsPage = lazy(() => import("../pages/account/ReadingListsPage"));
+const GiftCardsPage = lazy(() => import("../pages/account/GiftCardsPage"));
+const ReferralsPage = lazy(() => import("../pages/account/ReferralsPage"));
+const GiftCardsAdminPage = lazy(() => import("../pages/admin/GiftCardsPage"));
+const ReferralsAdminPage = lazy(() => import("../pages/admin/ReferralsPage"));
 const ReadingListPage = lazy(() => import("../pages/catalog/ReadingListPage"));
 const ReadingListPicksPage = lazy(() => import("../pages/admin/ReadingListPicksPage"));
 const OrdersPage = lazy(() => import("../pages/account/OrdersPage"));
@@ -161,6 +165,8 @@ const AppRoutes = () => {
               <Route path="wishlist" element={<WishlistPage />} />
               <Route path="support" element={<SupportPage />} />
               <Route path="lists" element={<ReadingListsPage />} />
+              <Route path="gift-cards" element={<GiftCardsPage />} />
+              <Route path="referrals" element={<ReferralsPage />} />
               <Route path="orders" element={<OrdersPage />} />
               <Route path="ebooks" element={<MyEbooksPage />} />
               <Route path="orders/:id" element={<OrderDetailPage />} />
@@ -231,6 +237,8 @@ const AppRoutes = () => {
               <Route path="customers/:id" element={<CustomerAdminPage />} />
               <Route path="security" element={<StaffSecurityPage />} />
               <Route element={<RequireAdminRole />}>
+                <Route path="gift-cards" element={<GiftCardsAdminPage />} />
+                <Route path="referrals" element={<ReferralsAdminPage />} />
                 <Route path="newsletter" element={<NewsletterAdminPage />} />
                 <Route path="reports" element={<ReportsPage />} />
                 <Route path="purchases" element={<PurchaseListPage />} />
