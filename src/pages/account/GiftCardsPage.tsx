@@ -4,6 +4,8 @@ import { Navigate } from "react-router-dom";
 import { newIdempotencyKey } from "@/api/client";
 import { creditApi, shopFeaturesQuery, type GiftPurchaseInput } from "@/api/endpoints/credit";
 import { ApiError } from "@/api/errors";
+import { useSession } from "@/api/session";
+import type { Customer } from "@/api/types";
 import { TextAreaField, TextField } from "@/components/form/Field";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
@@ -13,6 +15,11 @@ import { useT } from "@/i18n";
 import { formatUsd } from "@/stores/currency";
 
 export default function GiftCardsPage() {
+  const session = useSession<Customer>("customer");
+  return <GiftCardsContent key={session?.user.id} customerId={session?.user.id} />;
+}
+
+function GiftCardsContent({ customerId }: { customerId: number | undefined }) {
   const { dict } = useT();
   const t = dict.credit;
   useDocumentTitle(t.gifts);
@@ -24,8 +31,8 @@ export default function GiftCardsPage() {
   const [code, setCode] = useState("");
   const [shown, setShown] = useState<string | null>(null);
   const key = useRef(newIdempotencyKey());
-  const purchases = useQuery({ queryKey: ["gift-purchases", page], queryFn: () => creditApi.purchases(page), enabled: flags.data?.gift_cards === true });
-  const refresh = useCallback(() => { void client.invalidateQueries({ queryKey: ["gift-purchases"] }); void client.invalidateQueries({ queryKey: ["cart", "preview"] }); }, [client]);
+  const purchases = useQuery({ queryKey: ["account", "gift-purchases", customerId, page], queryFn: () => creditApi.purchases(page), enabled: flags.data?.gift_cards === true });
+  const refresh = useCallback(() => { void client.invalidateQueries({ queryKey: ["account", "gift-purchases"] }); void client.invalidateQueries({ queryKey: ["cart", "preview"] }); }, [client]);
   const buy = useMutation({ mutationFn: (input: GiftPurchaseInput) => creditApi.buy(input, key.current), onSuccess: (card) => { key.current = newIdempotencyKey(); setPaymentId(card.id); refresh(); } });
   const redeem = useMutation({ mutationFn: () => creditApi.redeem(code), onSuccess: () => { setCode(""); refresh(); } });
   const reveal = useMutation({ mutationFn: creditApi.reveal, onSuccess: (value) => { setShown(value); refresh(); } });
@@ -40,7 +47,7 @@ export default function GiftCardsPage() {
   const latest = new Date(`${today}T00:00:00Z`); latest.setUTCDate(latest.getUTCDate() + 90);
   return <div className="grid gap-8">
     <h1 className="font-display text-3xl">{t.gifts}</h1>
-    <p className="text-lg">{t.balance}: <strong>{formatUsd(purchases.data?.balance_usd)}</strong></p>
+    {purchases.data ? <p className="text-lg">{t.balance}: <strong>{formatUsd(purchases.data.balance_usd)}</strong></p> : null}
     <section className="grid gap-4 rounded-xl border border-border bg-card p-5" aria-labelledby="redeem-title">
       <h2 id="redeem-title" className="font-display text-2xl">{t.redeem}</h2>
       <form className="grid gap-3" onSubmit={(e) => { e.preventDefault(); redeem.mutate(); }}>

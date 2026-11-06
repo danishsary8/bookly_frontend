@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Navigate } from "react-router-dom";
 import { creditApi, shopFeaturesQuery } from "@/api/endpoints/credit";
+import { useSession } from "@/api/session";
+import type { Customer } from "@/api/types";
 import { TextField } from "@/components/form/Field";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
@@ -11,12 +13,13 @@ import { useT } from "@/i18n";
 import { formatUsd } from "@/stores/currency";
 
 export default function ReferralsPage() {
+  const session = useSession<Customer>("customer");
   const { dict } = useT(); const t = dict.credit;
   useDocumentTitle(t.referrals);
   const flags = useQuery(shopFeaturesQuery());
   const [page, setPage] = useState(1);
   const [copyResult, setCopyResult] = useState("");
-  const referral = useQuery({ queryKey: ["referrals", page], queryFn: () => creditApi.referrals(referralDevice(), page), enabled: flags.data?.referrals === true, retry: false });
+  const referral = useQuery({ queryKey: ["account", "referrals", session?.user.id, page], queryFn: () => creditApi.referrals(referralDevice(), page), enabled: flags.data?.referrals === true, retry: false });
   if (flags.isPending) return <p role="status">{t.loading}</p>;
   if (!flags.data?.referrals) return <Navigate to="/account" replace />;
   const data = referral.data;

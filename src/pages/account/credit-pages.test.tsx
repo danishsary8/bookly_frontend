@@ -1,13 +1,14 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { creditApi, type GiftCard } from "@/api/endpoints/credit";
 import { renderWithProviders } from "@/test/render";
+import { clearSession, setSession } from "@/api/session";
 import GiftCardsPage from "./GiftCardsPage";
 import ReferralsPage from "./ReferralsPage";
 
 const card: GiftCard = { id: 3, amount_usd: "10.00", recipient_name: "Reader", recipient_email: "reader@example.test", message: null, send_on: "2026-11-06", status: "pending_payment", last_four: "ABCD", expires_at: null, can_reveal: false, email_sent_at: null, email_failed_at: null };
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => { vi.restoreAllMocks(); clearSession("customer"); });
 
 it("hides disabled customer features without requesting protected data", async () => {
   vi.spyOn(creditApi, "features").mockResolvedValue({ gift_cards: false, referrals: false });
@@ -56,4 +57,16 @@ it("shows referral terms, status and safe share links without friend personal da
   expect(screen.getByText(/Reward credited/)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Facebook" })).toHaveAttribute("rel", "noopener noreferrer");
   expect(screen.getByRole("link", { name: "Telegram" })).toHaveAttribute("href", expect.stringContaining("ABCDEF1234567890"));
+});
+
+it("clears a revealed code when the signed-in customer changes", async () => {
+  setSession("customer", { token: "local-first", expiresAt: null, user: { id: 1, email_verified: true } });
+  vi.spyOn(creditApi, "features").mockResolvedValue({ gift_cards: true, referrals: false });
+  vi.spyOn(creditApi, "purchases").mockResolvedValue({ data: [{ ...card, status: "active", can_reveal: true }], balance_usd: "0.00", current_page: 1, last_page: 1 });
+  vi.spyOn(creditApi, "reveal").mockResolvedValue("ABCDEFGHJKLMNPQR");
+  const user = userEvent.setup(); renderWithProviders(<GiftCardsPage />);
+  await user.click(await screen.findByRole("button", { name: "Show code once" }));
+  await screen.findByText("ABCDEFGHJKLMNPQR");
+  act(() => setSession("customer", { token: "local-second", expiresAt: null, user: { id: 2, email_verified: true } }));
+  expect(screen.queryByText("ABCDEFGHJKLMNPQR")).not.toBeInTheDocument();
 });

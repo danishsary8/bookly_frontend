@@ -9,7 +9,7 @@ import { useT } from "@/i18n";
 export function GiftCardPayment({ id, onPaid }: { id: number; onPaid: () => void }) {
   const { dict } = useT();
   const t = dict.credit;
-  const state = useQuery({ queryKey: ["gift-payment", id], queryFn: () => creditApi.payment(id), refetchInterval: (q) => q.state.data?.data.status === "pending_payment" ? 5000 : false, retry: false });
+  const state = useQuery({ queryKey: ["account", "gift-payment", id], queryFn: () => creditApi.payment(id), refetchInterval: (q) => q.state.data?.data.status === "pending_payment" ? 5000 : false, retry: false });
   const [image, setImage] = useState("");
   const qr = state.data?.payment?.mode === "bakong" ? state.data.payment.qr_payload : null;
   useEffect(() => {
