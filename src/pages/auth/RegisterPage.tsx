@@ -118,7 +118,32 @@ export default function RegisterPage() {
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
         {anySocialEnabled() && step === 0 ? <SocialButtons next={next} /> : null}
 
-        <Stepper steps={steps} current={step} label={s.signUpSteps} status={s.stepOf(step + 1, steps.length, steps[step])}>
+        <Stepper
+          steps={steps}
+          current={step}
+          label={s.signUpSteps}
+          status={s.stepOf(step + 1, steps.length, steps[step])}
+          footer={
+            <>
+              {step > 0 ? (
+                <Button type="button" variant="ghost" size="lg" className="shrink-0 px-4" onClick={() => setStep(step - 1)}>
+                  {s.stepBack}
+                </Button>
+              ) : null}
+              {step < 2 ? (
+                <Button type="submit" variant="cta" size="lg" className="flex-1">
+                  {s.stepContinue}
+                </Button>
+              ) : (
+                <CtaGlare block className="flex-1">
+                  <Button type="submit" variant="cta" size="lg" className="w-full" loading={isSubmitting}>
+                    {isSubmitting ? s.creating : s.create}
+                  </Button>
+                </CtaGlare>
+              )}
+            </>
+          }
+        >
           {step === 0 ? (
             <div className="grid gap-5">
               <TextField label={s.fullName} autoComplete="name" error={errors.name?.message} {...register("name")} />
@@ -178,24 +203,6 @@ export default function RegisterPage() {
           )}
         </Stepper>
 
-        <div className="flex gap-3">
-          {step > 0 ? (
-            <Button type="button" variant="outline" size="lg" className="shrink-0" onClick={() => setStep(step - 1)}>
-              {s.stepBack}
-            </Button>
-          ) : null}
-          {step < 2 ? (
-            <Button type="submit" variant="cta" size="lg" className="flex-1">
-              {s.stepContinue}
-            </Button>
-          ) : (
-            <CtaGlare block className="flex-1">
-              <Button type="submit" variant="cta" size="lg" className="w-full" loading={isSubmitting}>
-                {isSubmitting ? s.creating : s.create}
-              </Button>
-            </CtaGlare>
-          )}
-        </div>
 
         {anySocialEnabled() || step > 0 ? null : <SocialButtons next={next} />}
         <AgreeNote />

@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, BookOpen } from "lucide-react";
-import { CoverSwap } from "@/features/auth/CoverSwap";
+import { CoverWall } from "@/features/auth/CoverWall";
 import { brand } from "@/config/brand";
 import { useT } from "@/i18n";
 
 /*
  * Shared frame for Sign in / Create account / Forgot password / Reset password ("paper & cloth", matches the splash).
  * Warm paper page (.auth-paper tokens in index.css); at ≥1024px a lapis cloth "book cover" panel with a gold-ruled
- * frame sits beside the form, showing the shop's best-seller covers (CoverSwap) unless a page passes its own panel. The panel is decorative context, so the page's <h1> always lives in the form column.
+ * frame sits beside the form, showing a slow wall of the shop's covers (CoverWall) unless a page passes its own panel. The panel is decorative context, so the page's <h1> always lives in the form column.
  * At ≥1024px the page fits the screen height; only the form column scrolls if a step is ever taller.
  */
 
@@ -34,10 +34,10 @@ export const AuthShell = ({ children, panel }: AuthShellProps) => {
   const { dict } = useT();
   return (
     <div className="auth-paper min-h-dvh bg-background text-foreground lg:h-dvh lg:overflow-hidden">
-      <div className="mx-auto grid min-h-dvh max-w-[1360px] lg:h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-10 lg:p-5">
-        <aside className="hero-lapis auth-cover hidden min-h-0 flex-col justify-between gap-6 overflow-hidden rounded-[10px] p-10 lg:flex xl:p-12">
+      <div className="mx-auto grid min-h-dvh max-w-[1360px] lg:h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-10 lg:p-4">
+        <aside className="hero-lapis auth-cover hidden min-h-0 flex-col justify-between gap-6 overflow-hidden rounded-[14px] p-9 lg:flex xl:p-11">
           <Wordmark onLapis />
-          {panel ?? <CoverSwap />}
+          {panel ?? <CoverWall />}
         </aside>
 
         <main id="content" tabIndex={-1} className="flex min-h-0 flex-col px-4 py-5 sm:px-6 lg:overflow-y-auto lg:px-2 lg:py-4">
@@ -48,7 +48,7 @@ export const AuthShell = ({ children, panel }: AuthShellProps) => {
               {dict.content.backToStore}
             </Link>
           </div>
-          <div className="flex flex-1 items-center justify-center py-6 lg:py-4">
+          <div className="flex flex-1 items-center justify-center py-6 lg:py-2">
             <div className="w-full max-w-[28rem]">{children}</div>
           </div>
         </main>

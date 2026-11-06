@@ -95,20 +95,19 @@ export default function LoginPage() {
       lead={s.loginLead}
       footer={
         <>
-          {/* Create-account invitation: a clear second path, not small print. */}
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-dashed border-input/60 px-4 py-2.5 text-left">
-            <span className="text-foreground">{dict.auth.dontHaveAccount}</span>
-            <Link
-              to={withNext("/register", next)}
-              className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-[filter,transform] duration-150 hover:brightness-110 active:scale-[0.98]"
-            >
-              {dict.auth.signUp}
+          {/* One quiet row: a second path to create an account, and browsing as a guest. */}
+          <p className="flex flex-wrap items-center justify-center gap-x-4">
+            <span>
+              {dict.auth.dontHaveAccount}{" "}
+              <Link to={withNext("/register", next)} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
+                {dict.auth.signUp}
+              </Link>
+            </span>
+            <Link to="/books" className="group inline-flex min-h-11 items-center gap-1.5 font-semibold text-muted-foreground transition-colors duration-150 hover:text-foreground">
+              {s.guest}
+              <ArrowRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
             </Link>
-          </div>
-          <Link to="/books" className="group mx-auto inline-flex min-h-11 items-center gap-1.5 font-semibold text-muted-foreground transition-colors duration-150 hover:text-foreground">
-            {s.guest}
-            <ArrowRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
-          </Link>
+          </p>
         </>
       }
     >
@@ -129,30 +128,32 @@ export default function LoginPage() {
             }}
             noValidate
           >
-            <Stepper steps={steps} current={step} label={s.signInSteps} status={s.stepOf(step + 1, steps.length, steps[step])}>
-              {step === 0 ? (
-                <div className="grid gap-5">
-                  <TextField label={dict.auth.email} type="email" autoComplete="username email" inputMode="email" placeholder="name@example.com" error={errors.email?.message} {...register("email")} />
+            <Stepper
+              steps={steps}
+              current={step}
+              label={s.signInSteps}
+              status={s.stepOf(step + 1, steps.length, steps[step])}
+              footer={
+                step === 0 ? (
                   <Button type="submit" variant="cta" size="lg" className="w-full">
                     {s.stepContinue}
                   </Button>
-                  {telegram ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="lg"
-                      className="w-full gap-2 font-semibold"
-                      onClick={() => {
-                        setFormError(null);
-                        setMode("phone");
-                      }}
-                    >
-                      <Smartphone className="size-[18px]" aria-hidden="true" />
-                      {s.usePhone}
+                ) : (
+                  <>
+                    <Button type="button" variant="ghost" size="lg" className="shrink-0 px-4" onClick={() => setStep(0)}>
+                      {s.stepBack}
                     </Button>
-                  ) : null}
-                  {buttonsOnTop ? null : <SocialButtons next={next} />}
-                </div>
+                    <CtaGlare block className="flex-1">
+                      <Button type="submit" variant="cta" size="lg" className="w-full" loading={isSubmitting}>
+                        {isSubmitting ? s.signingIn : dict.auth.signIn}
+                      </Button>
+                    </CtaGlare>
+                  </>
+                )
+              }
+            >
+              {step === 0 ? (
+                <TextField label={dict.auth.email} type="email" autoComplete="username email" inputMode="email" placeholder="name@example.com" error={errors.email?.message} {...register("email")} />
               ) : (
                 <div className="grid gap-5">
                   {/* Who is signing in, with a way back to change it. The hidden username helps password managers. */}
@@ -183,17 +184,32 @@ export default function LoginPage() {
                   </div>
 
                   {turnstile.widget}
-
-                  <CtaGlare block>
-                    <Button type="submit" variant="cta" size="lg" className="w-full" loading={isSubmitting}>
-                      {isSubmitting ? s.signingIn : dict.auth.signIn}
-                    </Button>
-                  </CtaGlare>
                 </div>
               )}
             </Stepper>
           </form>
-        ) : (
+        ) : null}
+        {mode === "email" && step === 0 ? (
+          <div className="grid gap-3">
+            {telegram ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="w-full gap-2 font-semibold"
+                onClick={() => {
+                  setFormError(null);
+                  setMode("phone");
+                }}
+              >
+                <Smartphone className="size-[18px]" aria-hidden="true" />
+                {s.usePhone}
+              </Button>
+            ) : null}
+            {buttonsOnTop ? null : <SocialButtons next={next} />}
+          </div>
+        ) : null}
+        {mode === "email" ? null : (
           <div className="grid gap-4">
             <div className="grid gap-4 rounded-xl border border-border bg-card p-4 sm:p-5">
               <p className="text-sm text-muted-foreground">{s.phoneSignInLead}</p>

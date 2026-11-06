@@ -27,7 +27,7 @@ export function AuthPage({
   return (
     <AuthShell panel={panel}>
       {/* The form sits on a card of better paper, like a bookplate; links to other pages sit under it. */}
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-[0_28px_56px_-34px_rgb(60_40_10/0.45)] sm:p-8">
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-[0_28px_56px_-34px_rgb(60_40_10/0.45)] sm:p-8 [@media(min-width:1024px)_and_(max-height:820px)]:p-6">
         <p className="eyebrow">{eyebrow}</p>
         <h1 className="mt-2.5 text-[clamp(1.9rem,3vw,2.4rem)] leading-[1.08] text-foreground" aria-label={title}>
           <BlurText
@@ -43,9 +43,9 @@ export function AuthPage({
           />
         </h1>
         <div className="mt-2 text-[15px] text-muted-foreground">{lead}</div>
-        <div className="mt-6">{children}</div>
+        <div className="mt-6 [@media(max-height:820px)]:mt-4">{children}</div>
       </div>
-      {footer ? <div className="mt-5 grid gap-2 text-center text-sm text-muted-foreground">{footer}</div> : null}
+      {footer ? <div className="mt-3 grid gap-1 text-center text-sm text-muted-foreground">{footer}</div> : null}
     </AuthShell>
   );
 }
