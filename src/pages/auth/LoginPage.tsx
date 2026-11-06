@@ -2,7 +2,9 @@ import { useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, Smartphone } from "lucide-react";
+import { AgreeNote } from "@/features/auth/AgreeNote";
+import { Stepper } from "@/components/ui/stepper";
 import { authApi } from "@/api/endpoints/auth";
 import type { Customer } from "@/api/types";
 import { CtaGlare } from "@/components/CtaGlare";
@@ -36,7 +38,9 @@ export default function LoginPage() {
   const alertRef = useRef<HTMLDivElement>(null);
   const buttonsOnTop = anySocialEnabled();
 
-  const { register, handleSubmit, setError, resetField, control, formState } = useForm<LoginValues>({
+  // Two steps, like Apple/Google: email first, then password. A remembered email starts on the password step.
+  const [step, setStep] = useState(state?.email ? 1 : 0);
+  const { register, handleSubmit, setError, resetField, control, formState, trigger, getFieldState } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: state?.email ?? "", password: "" },
   });
@@ -68,6 +72,7 @@ export default function LoginPage() {
     } catch (error) {
       const message = applyApiErrors(error, setError, ["email", "password"]);
       resetField("password");
+      if (getFieldState("email").invalid) setStep(0);
       if (message) {
         setFormError(message);
         requestAnimationFrame(() => alertRef.current?.focus());
@@ -77,6 +82,12 @@ export default function LoginPage() {
     }
   };
 
+  const continueToPassword = async () => {
+    setFormError(null);
+    if (await trigger("email")) setStep(1);
+  };
+  const steps = [s.stepEmail, dict.auth.password];
+
   return (
     <AuthPage
       eyebrow={s.welcomeBack}
@@ -84,64 +95,122 @@ export default function LoginPage() {
       lead={s.loginLead}
       footer={
         <>
-          <p>
-            {dict.auth.dontHaveAccount}{" "}
-            <Link to={withNext("/register", next)} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
-              {dict.auth.signUp}
+          {/* One quiet row: a second path to create an account, and browsing as a guest. */}
+          <p className="flex flex-wrap items-center justify-center gap-x-4">
+            <span>
+              {dict.auth.dontHaveAccount}{" "}
+              <Link to={withNext("/register", next)} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
+                {dict.auth.signUp}
+              </Link>
+            </span>
+            <Link to="/books" className="group inline-flex min-h-11 items-center gap-1.5 font-semibold text-muted-foreground transition-colors duration-150 hover:text-foreground">
+              {s.guest}
+              <ArrowRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
             </Link>
           </p>
-          <Link to="/books" className="mx-auto inline-flex min-h-11 items-center font-semibold text-foreground underline-offset-4 hover:underline">
-            {s.guest}
-          </Link>
         </>
       }
     >
       <div className="grid gap-5">
         {state?.notice && !formError && !telegramError ? <FormAlert tone="success">{state.notice}</FormAlert> : null}
         {formError || telegramError ? <FormAlert ref={alertRef} title={formError ?? telegramError ?? undefined} /> : null}
-        {buttonsOnTop ? <SocialButtons next={next} /> : null}
+        {buttonsOnTop && (mode !== "email" || step === 0) ? <SocialButtons next={next} /> : null}
 
         {mode === "email" ? (
-          <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid gap-5">
-            <TextField label={dict.auth.email} type="email" autoComplete="email" inputMode="email" placeholder="name@example.com" error={errors.email?.message} {...register("email")} />
+          <form
+            onSubmit={(event) => {
+              if (step === 0) {
+                event.preventDefault();
+                void continueToPassword();
+                return;
+              }
+              void handleSubmit(submit)(event);
+            }}
+            noValidate
+          >
+            <Stepper
+              steps={steps}
+              current={step}
+              label={s.signInSteps}
+              status={s.stepOf(step + 1, steps.length, steps[step])}
+              footer={
+                step === 0 ? (
+                  <Button type="submit" variant="cta" size="lg" className="w-full">
+                    {s.stepContinue}
+                  </Button>
+                ) : (
+                  <>
+                    <Button type="button" variant="ghost" size="lg" className="shrink-0 px-4" onClick={() => setStep(0)}>
+                      {s.stepBack}
+                    </Button>
+                    <CtaGlare block className="flex-1">
+                      <Button type="submit" variant="cta" size="lg" className="w-full" loading={isSubmitting}>
+                        {isSubmitting ? s.signingIn : dict.auth.signIn}
+                      </Button>
+                    </CtaGlare>
+                  </>
+                )
+              }
+            >
+              {step === 0 ? (
+                <TextField label={dict.auth.email} type="email" autoComplete="email" inputMode="email" placeholder="name@example.com" error={errors.email?.message} {...register("email")} />
+              ) : (
+                <div className="grid gap-5">
+                  {/* Who is signing in, with a way back to change it. The hidden username helps password managers. */}
+                  <div className="flex items-center gap-3 rounded-full border border-border bg-card py-1.5 pl-1.5 pr-2">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary font-display text-base text-primary-foreground" aria-hidden="true">
+                      {(email?.trim()[0] ?? "?").toUpperCase()}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{email}</span>
+                    <button
+                      type="button"
+                      onClick={() => setStep(0)}
+                      className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+                    >
+                      {s.stepChange}
+                    </button>
+                  </div>
+                  <input type="email" name="username" autoComplete="username" value={email ?? ""} readOnly hidden />
 
-            <div className="grid gap-1.5">
-              <PasswordField label={dict.auth.password} autoComplete="current-password" error={errors.password?.message} {...register("password")} />
-              <Link
-                to={withNext("/forgot-password", next)}
-                state={{ email: email?.trim() }}
-                className="inline-flex min-h-11 w-max items-center text-sm font-semibold text-primary underline-offset-4 hover:underline"
-              >
-                {dict.auth.forgotPassword}
-              </Link>
-            </div>
+                  <div className="grid gap-1.5">
+                    <PasswordField label={dict.auth.password} autoComplete="current-password" error={errors.password?.message} {...register("password")} />
+                    <Link
+                      to={withNext("/forgot-password", next)}
+                      state={{ email: email?.trim() }}
+                      className="inline-flex min-h-11 w-max items-center text-sm font-semibold text-primary underline-offset-4 hover:underline"
+                    >
+                      {dict.auth.forgotPassword}
+                    </Link>
+                  </div>
 
-            {turnstile.widget}
-
-            <CtaGlare block>
-              <Button type="submit" variant="cta" size="lg" className="w-full" loading={isSubmitting}>
-                {isSubmitting ? s.signingIn : dict.auth.signIn}
-              </Button>
-            </CtaGlare>
-
-            {telegram ? (
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormError(null);
-                    setMode("phone");
-                  }}
-                  className="inline-flex min-h-11 items-center text-sm font-semibold text-primary underline-offset-4 hover:underline"
-                >
-                  {s.signInWithPhone}
-                </button>
-              </div>
-            ) : null}
-
-            {buttonsOnTop ? null : <SocialButtons next={next} />}
+                </div>
+              )}
+            </Stepper>
+            {/* The security check stays mounted across both steps so it is ready by the time the password is in. */}
+            {turnstile.widget ? <div className="mt-4">{turnstile.widget}</div> : null}
           </form>
-        ) : (
+        ) : null}
+        {mode === "email" && step === 0 ? (
+          <div className="grid gap-3">
+            {telegram ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="w-full gap-2 font-semibold"
+                onClick={() => {
+                  setFormError(null);
+                  setMode("phone");
+                }}
+              >
+                <Smartphone className="size-[18px]" aria-hidden="true" />
+                {s.signInWithPhone}
+              </Button>
+            ) : null}
+            {buttonsOnTop ? null : <SocialButtons next={next} />}
+          </div>
+        ) : null}
+        {mode === "email" ? null : (
           <div className="grid gap-4">
             <div className="grid gap-4 rounded-xl border border-border bg-card p-4 sm:p-5">
               <p className="text-sm text-muted-foreground">{s.phoneSignInLead}</p>
@@ -188,7 +257,9 @@ export default function LoginPage() {
             {buttonsOnTop ? null : <SocialButtons next={next} />}
           </div>
         )}
+        <AgreeNote />
       </div>
     </AuthPage>
   );
 }
+

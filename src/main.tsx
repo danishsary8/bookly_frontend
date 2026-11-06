@@ -8,6 +8,8 @@ import { QueryProvider } from './api/QueryProvider'
 import { initMonitoring } from './lib/monitoring'
 import { syncReducedMotion } from './lib/reducedMotion'
 
+import { dismissSplash } from './lib/splash'
+
 initMonitoring()
 syncReducedMotion()
 
@@ -20,3 +22,6 @@ createRoot(document.getElementById('root')!).render(
     </QueryProvider>
   </StrictMode>,
 )
+
+// The app has painted underneath: let the splash finish its opening and leave.
+requestAnimationFrame(dismissSplash)

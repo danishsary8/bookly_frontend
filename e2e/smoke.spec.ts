@@ -53,6 +53,7 @@ test("customer: book → cart → cash on delivery → order page", async ({ pag
 
   await page.goto("/login?next=%2Fcart");
   await page.getByLabel("Email").fill(CUSTOMER.email);
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByLabel("Password", { exact: true }).fill(CUSTOMER.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.waitForURL(/\/cart$/);

@@ -66,7 +66,8 @@ describe("LoginPage", () => {
     const post = vi.spyOn(api, "post").mockResolvedValue({ token: "tok", expires_at: null, customer: customer(true) });
     app("/login?next=%2Fbooks%2F7");
     await user.type(screen.getByLabelText("Email"), "dara@example.com");
-    await user.type(passwordInput("Password"), "reading123");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.type(await screen.findByLabelText("Password", { selector: "input" }), "reading123");
     await user.click(screen.getByRole("button", { name: "Sign in" }));
     await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/books/7"));
     expect(post).toHaveBeenCalledWith("/auth/login", { email: "dara@example.com", password: "reading123" });
@@ -78,7 +79,8 @@ describe("LoginPage", () => {
     vi.spyOn(api, "post").mockRejectedValue(new ApiError({ kind: "unauthenticated", status: 401, message: "Invalid email or password." }));
     app("/login");
     await user.type(screen.getByLabelText("Email"), "dara@example.com");
-    await user.type(passwordInput("Password"), "wrongpass1");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.type(await screen.findByLabelText("Password", { selector: "input" }), "wrongpass1");
     await user.click(screen.getByRole("button", { name: "Sign in" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Invalid email or password.");
     expect(passwordInput("Password")).toHaveValue("");
@@ -88,9 +90,9 @@ describe("LoginPage", () => {
     const user = userEvent.setup();
     const post = vi.spyOn(api, "post");
     app("/login");
-    await user.click(screen.getByRole("button", { name: "Sign in" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(await screen.findByText("Enter your email address.")).toBeInTheDocument();
-    expect(screen.getByText("Enter your password.")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Password", { selector: "input" })).toBeNull();
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -99,7 +101,8 @@ describe("LoginPage", () => {
     vi.spyOn(api, "post").mockResolvedValue({ token: "tok", expires_at: null, customer: customer(false) });
     app("/login?next=%2Fcheckout");
     await user.type(screen.getByLabelText("Email"), "dara@example.com");
-    await user.type(passwordInput("Password"), "reading123");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.type(await screen.findByLabelText("Password", { selector: "input" }), "reading123");
     await user.click(screen.getByRole("button", { name: "Sign in" }));
     await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/verify-email?via=email&next=%2Fcheckout"));
   });
@@ -114,9 +117,11 @@ describe("RegisterPage", () => {
     app("/register");
     await user.type(screen.getByLabelText("Full name"), "Sok Dara");
     await user.type(screen.getByLabelText("Email"), "dara@example.com");
-    await user.type(passwordInput("Password"), "reading123");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.type(await screen.findByLabelText("Password", { selector: "input" }), "reading123");
     await user.type(passwordInput("Confirm password"), "reading123");
-    await user.click(screen.getByRole("button", { name: "Create account" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(await screen.findByRole("button", { name: "Create account" }));
     expect(await screen.findByText("The email has already been taken.")).toBeInTheDocument();
     expect(screen.getByLabelText("Email")).toHaveAttribute("aria-invalid", "true");
   });
@@ -160,7 +165,7 @@ describe("password reset", () => {
     await user.click(screen.getByRole("button", { name: "Save new password" }));
     expect(await screen.findByText("Password updated. Sign in with your new password.")).toBeInTheDocument();
     expect(post).toHaveBeenLastCalledWith("/auth/reset-password", { email: "dara@example.com", code: "654321", password: "newreading4", password_confirmation: "newreading4" });
-    expect(screen.getByLabelText("Email")).toHaveValue("dara@example.com");
+    expect(screen.getByText("dara@example.com")).toBeInTheDocument();
   });
 });
 
