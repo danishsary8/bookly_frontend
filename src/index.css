@@ -1106,6 +1106,7 @@
     --muted-foreground: #CDBFA6;
     --border: #5E5345;
     --input: #A8997F;
+    --accent-text: #FFB59E; /* warm coral that stays readable (≈7:1) on the dark paper card */
 }
 /* The lapis panel as a cloth book cover: spine shadow, lift, and a double gold rule like the splash frame. */
 .auth-cover {
