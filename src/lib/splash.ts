@@ -6,7 +6,7 @@ import { getLanguage, translations } from "@/i18n";
  * Once the app has rendered, this fills in the translated tagline, waits for the drawing and a short rest (it never holds
  * a ready app longer than that), then fades the splash out. A click, tap or key press skips it straight away.
  */
-const OPEN_MS = 2450; // drawn and named by ~2.2s, then a short rest; with the exit about 3s in all
+const OPEN_MS = 2420; // drawn and named by ~2.2s, a short rest, then the 0.58s exit: gone at 3s in all
 const STILL_MS = 300; // reduced motion: a short look at a static page
 const EXIT_MS = 580;
 export const SPLASH_SEEN_KEY = "bookly-splash-seen";
