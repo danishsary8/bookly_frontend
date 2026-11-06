@@ -23,6 +23,10 @@ export interface TrendDay {
   previous_average_order_usd: Usd;
   new_customers: number;
   previous_new_customers: number;
+  books_sold?: number;
+  previous_books_sold?: number;
+  ebooks_sold?: number;
+  previous_ebooks_sold?: number;
 }
 
 export interface DashboardInsights {
@@ -40,8 +44,13 @@ export interface DashboardInsights {
   stock_value: { copies: number; value_usd: Usd; value_khr: Khr; basis: "selling_price" };
   top_authors: Array<{ author_id: number; name: string; copies_sold: number; sales_usd: Usd; sales_khr: Khr }>;
   provinces: Array<{ code: string | null; name: string; name_km: string | null; orders: number; total_usd: Usd; total_khr: Khr }>;
-  promotions: { orders: number; offer_orders: number; offer_discount_usd: Usd; coupon_orders: number; coupon_discount_usd: Usd; plain_orders: number };
+  promotions: { orders: number; offer_orders: number; offer_discount_usd: Usd; coupon_orders: number; coupon_discount_usd: Usd; gift_orders?: number; plain_orders: number };
   repeat_customer_rate: { customers: number; returning: number; percent: number };
+  cart_reminder_recovery?: { sent: number; recovered: number; percent: number };
+  payment_methods?: Array<{ method: string; orders: number; total_usd: Usd; percent: number }>;
+  attention?: { pending_orders: number; open_returns: number; low_stock: number; waiting_orders: number; recent_reviews: number; open_chats: number };
+  activity?: Array<{ id: number; action: string; entity_type: string; entity_id: number; staff_name: string | null; created_at: string }>;
+  delivery_areas?: { phnom_penh: number; provinces: number; unknown: number };
 }
 
 export const insightsApi = {

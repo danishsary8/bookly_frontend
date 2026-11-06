@@ -8,6 +8,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { ListState } from "@/features/admin/listKit";
 import { useListParams } from "@/features/admin/useListParams";
+import { useT } from "@/i18n";
 import { orderDateTime } from "@/features/orders/format";
 import { rangeSummary } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
@@ -116,17 +117,19 @@ function Entry({ entry }: { entry: AuditEntry }) {
  * (?entity_type=order&entity_id=12).
  */
 export default function AuditLogPage() {
+  const { dict } = useT();
   const { get, page, set, hrefFor } = useListParams();
   const staffId = Number(get("staff")) || undefined;
   const entityType = get("entity_type") || undefined;
   const entityId = Number(get("entity_id")) || undefined;
+  const action = get("action") || undefined;
   const from = get("from") || undefined;
   const to = get("to") || undefined;
-  const log = useQuery(opsQueries.audit({ staff_user_id: staffId, entity_type: entityType, entity_id: entityId, from, to, page, per_page: 30 }));
+  const log = useQuery(opsQueries.audit({ staff_user_id: staffId, action, entity_type: entityType, entity_id: entityId, from, to, page, per_page: 30 }));
   const members = useQuery(opsQueries.members({ per_page: 100 }));
   const meta = log.data?.meta;
   const list = log.data?.data ?? [];
-  const filtered = Boolean(staffId || entityType || entityId || from || to);
+  const filtered = Boolean(staffId || action || entityType || entityId || from || to);
   const from1 = meta ? (meta.current_page - 1) * (meta.per_page ?? 30) + 1 : 0;
 
   return (
@@ -151,6 +154,7 @@ export default function AuditLogPage() {
             </option>
           ))}
         </SelectField>
+        <TextField label={dict.auditAction} maxLength={100} value={action ?? ""} onChange={(e) => set({ action: e.target.value || undefined })} />
         <TextField label="From" type="date" value={from ?? ""} max={to} onChange={(e) => set({ from: e.target.value || undefined })} />
         <TextField label="To" type="date" value={to ?? ""} min={from} onChange={(e) => set({ to: e.target.value || undefined })} />
       </div>
@@ -161,7 +165,7 @@ export default function AuditLogPage() {
               Showing the history of <span className="font-semibold">{`${entityLabel(entityType ?? "")} #${entityId}`}</span>
             </span>
           ) : null}
-          <Button variant="ghost" size="sm" onClick={() => set({ staff: undefined, entity_type: undefined, entity_id: undefined, from: undefined, to: undefined })}>
+          <Button variant="ghost" size="sm" onClick={() => set({ staff: undefined, action: undefined, entity_type: undefined, entity_id: undefined, from: undefined, to: undefined })}>
             <X aria-hidden="true" /> Clear filters
           </Button>
         </div>

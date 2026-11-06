@@ -262,7 +262,9 @@ export interface DashboardComparison {
   average_order_value_khr?: Khr;
   orders_placed: number;
   new_customers: number;
-  change_percent: Record<"gross_revenue" | "refunds" | "net_revenue" | "delivered_orders" | "average_order_value" | "orders_placed" | "new_customers", number>;
+  books_sold?: number;
+  ebooks_sold?: number;
+  change_percent: Record<"gross_revenue" | "refunds" | "net_revenue" | "delivered_orders" | "average_order_value" | "orders_placed" | "new_customers", number> & Partial<Record<"books_sold" | "ebooks_sold", number>>;
 }
 
 export interface DashboardSummary {
@@ -274,6 +276,8 @@ export interface DashboardSummary {
   orders_placed: number;
   orders_by_status: Record<string, number>;
   new_customers: number;
+  books_sold?: number;
+  ebooks_sold?: number;
   best_sellers: Array<{ book_id: number; title: string; copies_sold: number; sales_usd: string; sales_khr?: Khr }>;
   top_categories?: Array<{ category_id: number; name: string; copies_sold: number; sales_usd: string; sales_khr?: Khr }>;
   open_returns: number;

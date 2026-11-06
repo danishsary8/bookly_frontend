@@ -9522,7 +9522,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** (admin) Revenue (cash basis, USD + KHR), orders, best sellers, top categories, low stock, comparison with the previous period */
+        /** (admin) Revenue, orders, books and ebook copies sold, best sellers, categories, low stock and previous-period comparison */
         get: {
             parameters: {
                 query?: {
@@ -9601,8 +9601,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * (admin) Dashboard extras - daily trends with the previous period, dead stock, stock value, top authors, provinces, promotions, repeat customers
-         * @description trend: one row per day of the period with the same day index of the previous period (net revenue, orders placed, average delivered order, new verified customers). dead_stock: printed formats in stock with no copy in a non-cancelled order in the last 60 days (count, copies, value at selling price, top 10 by value with last_sold_at). stock_value: printed active copies in stock at selling price (no cost price exists). top_authors: top 10 by copies in orders placed. provinces: top 10 by orders placed, province detected from the order address ("Unknown" when not found). promotions: orders with an offer / a coupon / neither. repeat_customer_rate: customers who ordered in the period and before it. Cancelled and deleted orders never count. 5-minute cache.
+         * (admin) Dashboard extras - daily trends including book and ebook copies, dead stock, stock value, authors, provinces, promotions, repeat customers
+         * @description Daily trends include book and ebook copies. Payment-method totals are non-cancelled placed order amounts, not cash received. Gift orders and cart-reminder recovery are included; recovery only counts sent reminders with a completed seven-day window. The remaining insights include stock, authors, provinces, promotions and returning customers. 5-minute cache.
          */
         get: {
             parameters: {
@@ -9645,7 +9645,7 @@ export interface paths {
         };
         /**
          * (admin) Physical stock purchase list, including waiting reservations
-         * @description Stock is already reduced by checkout reservations. Quantity to buy replenishes net stock to the threshold, without adding waiting quantities twice.
+         * @description Stock is already reduced by checkout reservations. Quantity to buy replenishes net stock to one above the low-stock threshold, without adding waiting quantities twice.
          */
         get: {
             parameters: {

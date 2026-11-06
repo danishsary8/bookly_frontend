@@ -9,7 +9,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
  * prints, and the A4 sheets below it. With ?autoprint=1 (the buttons that open this page
  * in a new tab) the print dialog opens once the sheets are ready.
  */
-export function PrintFrame({ title, summary, backTo, backLabel, ready, children }: { title: string; summary?: ReactNode; backTo: string; backLabel: string; ready: boolean; children: ReactNode }) {
+export function PrintFrame({ title, summary, backTo, backLabel, ready, children, printLabel = "Print" }: { title: string; summary?: ReactNode; backTo: string; backLabel: string; ready: boolean; children: ReactNode; printLabel?: string }) {
   useDocumentTitle(title, { noindex: true });
   const [params] = useSearchParams();
   const autoprint = params.get("autoprint") === "1";
@@ -33,7 +33,7 @@ export function PrintFrame({ title, summary, backTo, backLabel, ready, children 
           <div className="flex flex-wrap items-center gap-3">
             {summary ? <p className="text-sm text-muted-foreground">{summary}</p> : null}
             <Button onClick={() => window.print()} disabled={!ready}>
-              <Printer aria-hidden="true" /> Print
+              <Printer aria-hidden="true" /> {printLabel}
             </Button>
           </div>
         </div>
