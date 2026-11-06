@@ -50,6 +50,8 @@ const StaffResetPasswordPage = lazy(() => import("../pages/admin/auth/StaffReset
 const AdminShell = lazy(() => import("../features/admin/AdminShell").then((m) => ({ default: m.AdminShell })));
 const DashboardPage = lazy(() => import("../pages/admin/DashboardPage"));
 const ReportsPage = lazy(() => import("../pages/admin/ReportsPage"));
+const PurchaseListPage = lazy(() => import("../pages/admin/PurchaseListPage"));
+const DashboardPrintPage = lazy(() => import("../pages/admin/DashboardPrintPage"));
 const AdminBooksPage = lazy(() => import("../pages/admin/BooksPage"));
 const StockAdminPage = lazy(() => import("../pages/admin/StockAdminPage"));
 const BookEditPage = lazy(() => import("../pages/admin/BookEditPage"));
@@ -198,6 +200,9 @@ const AppRoutes = () => {
           <Route element={<RequireStaff />}>
             {/* Printable sheets sit outside the admin frame so only the paper prints. */}
             <Route path="/admin/print" element={<OrderDocumentsPrintPage />} />
+            <Route element={<RequireAdminRole />}>
+              <Route path="/admin/reports/print" element={<DashboardPrintPage />} />
+            </Route>
             <Route path="/admin" element={<AdminShell />}>
               <Route index element={<DashboardPage />} />
               <Route path="books" element={<AdminBooksPage />} />
@@ -228,6 +233,7 @@ const AppRoutes = () => {
               <Route element={<RequireAdminRole />}>
                 <Route path="newsletter" element={<NewsletterAdminPage />} />
                 <Route path="reports" element={<ReportsPage />} />
+                <Route path="purchases" element={<PurchaseListPage />} />
                 <Route path="members" element={<MembersAdminPage />} />
                 <Route path="exchange-rates" element={<ExchangeRatesPage />} />
                 <Route path="audit-log" element={<AuditLogPage />} />

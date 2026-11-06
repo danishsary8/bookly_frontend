@@ -1,9 +1,10 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router-dom";
 import { insightsApi, type DashboardInsights, type TrendDay } from "@/api/endpoints/dashboardInsights";
 import { staffApi, type DailySales, type DashboardSummary, type StaffUser } from "@/api/endpoints/staff";
+import { opsApi } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
 import { clearSession, setSession } from "@/api/session";
 import { RequireStaff } from "@/routes/adminGuards";
@@ -56,8 +57,56 @@ afterEach(() => {
   vi.restoreAllMocks();
   clearSession("staff");
 });
+beforeEach(() => {
+  vi.spyOn(opsApi, "orders").mockResolvedValue({ data: [], links: {}, meta: { current_page: 1, last_page: 1, per_page: 5, total: 0 } });
+});
 
 describe("dashboard redesign", () => {
+  it("shows real book and ebook copy counts when supplied", async () => {
+    setSession("staff", { token: "t", expiresAt: null, user: admin });
+    vi.spyOn(staffApi, "summary").mockResolvedValue({ ...summary, books_sold: 8, ebooks_sold: 3 });
+    vi.spyOn(staffApi, "sales").mockResolvedValue(sales);
+    vi.spyOn(insightsApi, "get").mockResolvedValue(insights);
+    app();
+    expect(await screen.findByRole("region", { name: "Books sold" })).toHaveTextContent("8");
+    expect(screen.getByRole("region", { name: "Ebooks sold" })).toHaveTextContent("3");
+  });
+
+  it("shows payment shares and completed reminder recovery without claiming causation", async () => {
+    setSession("staff", { token: "t", expiresAt: null, user: admin });
+    vi.spyOn(staffApi, "summary").mockResolvedValue(summary);
+    vi.spyOn(staffApi, "sales").mockResolvedValue(sales);
+    vi.spyOn(insightsApi, "get").mockResolvedValue({ ...insights, payment_methods: [{ method: "cod", orders: 2, total_usd: "12.00", percent: 75 }], cart_reminder_recovery: { sent: 4, recovered: 1, percent: 25 }, repeat_customer_rate: { customers: 3, returning: 1, percent: 33.3 }, promotions: { orders: 2, offer_orders: 0, offer_discount_usd: "0.00", coupon_orders: 0, coupon_discount_usd: "0.00", gift_orders: 1, plain_orders: 2 } });
+    app();
+    expect(await screen.findByRole("rowheader", { name: "Cash on delivery" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Cart reminder recovery" })).toHaveTextContent("1 (25%)");
+    expect(screen.getByText(/may not have been caused by the reminder/)).toBeInTheDocument();
+    expect(screen.getByText("First-time customers").nextElementSibling).toHaveTextContent("2");
+  });
+
+  it("shows attention counts and staff activity in accessible tabs", async () => {
+    setSession("staff", { token: "t", expiresAt: null, user: admin });
+    vi.spyOn(staffApi, "summary").mockResolvedValue(summary);
+    vi.spyOn(staffApi, "sales").mockResolvedValue(sales);
+    vi.spyOn(insightsApi, "get").mockResolvedValue({ ...insights, attention: { pending_orders: 2, open_returns: 1, low_stock: 3, waiting_orders: 1, recent_reviews: 4, open_chats: 2 }, activity: [{ id: 9, action: "order.updated", entity_type: "order", entity_id: 12, staff_name: "Dara", created_at: "2026-10-10T10:00:00Z" }] });
+    app();
+    expect(await screen.findByRole("link", { name: /New orders 2/ })).toHaveAttribute("href", "/admin/orders?status=pending");
+    await userEvent.click(screen.getByRole("tab", { name: "Activity" }));
+    expect(screen.getByText(/Dara/)).toBeInTheDocument();
+    expect(screen.getByText(/order.updated/)).toBeInTheDocument();
+  });
+
+  it("keeps unknown delivery locations separate from the provinces", async () => {
+    setSession("staff", { token: "t", expiresAt: null, user: admin });
+    vi.spyOn(staffApi, "summary").mockResolvedValue(summary);
+    vi.spyOn(staffApi, "sales").mockResolvedValue(sales);
+    vi.spyOn(insightsApi, "get").mockResolvedValue({ ...insights, delivery_areas: { phnom_penh: 2, provinces: 3, unknown: 1 } });
+    app();
+    const area = await screen.findByRole("region", { name: "Delivery areas" });
+    expect(within(area).getByText("Unknown location").nextElementSibling).toHaveTextContent("1");
+    expect(within(area).getByText("Provinces").nextElementSibling).toHaveTextContent("3");
+  });
+
   it("shows KPI cards with a trend line and a View link each", async () => {
     setSession("staff", { token: "t", expiresAt: null, user: admin });
     vi.spyOn(staffApi, "summary").mockResolvedValue(summary);

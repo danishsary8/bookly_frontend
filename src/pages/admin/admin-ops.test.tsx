@@ -645,6 +645,14 @@ describe("exchange rate", () => {
 });
 
 describe("audit log", () => {
+  it("passes the action filter from the URL to the API", async () => {
+    signIn(admin);
+    vi.spyOn(opsApi, "members").mockResolvedValue(page([]));
+    const audit = vi.spyOn(opsApi, "audit").mockResolvedValue(page([], { per_page: 30, entity_types: [] }));
+    app("/admin/audit-log?action=order.status_changed");
+    expect(await screen.findByLabelText("Action")).toHaveValue("order.status_changed");
+    await waitFor(() => expect(audit).toHaveBeenCalledWith(expect.objectContaining({ action: "order.status_changed" })));
+  });
   it("says who changed what, with the fields before and after", async () => {
     signIn(admin);
     const entry: AuditEntry = {

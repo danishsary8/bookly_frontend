@@ -1,9 +1,10 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { catalogApi } from "@/api/endpoints/catalog";
 import { staffApi, staffAuthApi, type DailySales, type DashboardSummary, type StaffBook, type StaffUser } from "@/api/endpoints/staff";
+import { opsApi } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
 import { clearSession, getSession, setSession } from "@/api/session";
 import { Toaster } from "@/components/ui/toaster";
@@ -78,6 +79,9 @@ afterEach(() => {
   vi.restoreAllMocks();
   dismissToast();
   clearSession("staff");
+});
+beforeEach(() => {
+  vi.spyOn(opsApi, "orders").mockResolvedValue({ data: [], links: {}, meta: { current_page: 1, last_page: 1, per_page: 5, total: 0 } });
 });
 
 describe("adminNext", () => {

@@ -2,6 +2,16 @@
 import { support } from "./support-en";
 import { assistant } from "./assistant-en";
 export const en = {
+  dashboardPeriods: { ninetyDays: "90 days", twelveMonths: "12 months" },
+  dashboardCopies: { books: "Books sold", ebooks: "Ebooks sold", detail: "Copies in non-cancelled orders", view: "View product report" },
+  dashboardAnalysis: { payments: "Payment methods", paymentNote: "Order totals at placement; not cash received.", method: "Method", amount: "Order total", share: "Share", orders: "Orders", empty: "No orders in this period.", reminder: "Cart reminder recovery", reminderNote: "Sent reminders with a complete seven-day window; an order may not have been caused by the reminder.", recovered: "Recovered", sent: "Reminders sent", gifts: "Orders with a free gift", cod: "Cash on delivery", khqr: "Bakong KHQR", card: "Card" },
+  dashboardPrint: { title: "Dashboard report", back: "Back to reports", print: "Print / Save as PDF", period: "Period", revenue: "Net revenue", orders: "Orders placed", customers: "New customers", average: "Average delivered order", statuses: "Orders by status", best: "Top books", categories: "Top categories", copies: "Copies", repeat: "Repeat customer rate", ratings: "Average order rating", returning: "Returning customers", firstTime: "First-time customers", provinces: "Orders by province", promotions: "Promotions", offer: "Orders with an offer", coupon: "Orders with a coupon", gift: "Orders with a free gift", none: "No data", loading: "Loading report…", open: "Print / Save as PDF" },
+  dashboardAudit: { action: "Action" },
+  dashboardBuyers: { title: "Customers who ordered" },
+  dashboardActivity: { title: "Shop activity", attention: "Needs attention", activity: "Activity", pending: "New orders", returns: "Open returns", stock: "Low stock", waiting: "Orders waiting for stock", reviews: "Reviews in the last seven days", chats: "Open support chats", empty: "No recent staff activity.", unknown: "Staff member" },
+  recentOrders: { title: "Recent orders", order: "Order", status: "Status", total: "Total", action: "Action", processing: "Confirm", shipped: "Mark shipped", question: "Change the order status?", confirm: "Confirm change", cancel: "Cancel", failed: "Could not update the order. Open it for details and try again.", empty: "No orders yet.", loading: "Loading recent orders…" },
+  dashboardAreas: { title: "Delivery areas", phnomPenh: "Phnom Penh", provinces: "Provinces", unknown: "Unknown location", note: "Non-cancelled orders placed during this period." },
+  purchaseList: { title: "Stock purchase list", lead: "Stock already includes reservations. Buy quantities replenish stock above the low-stock threshold.", export: "Export CSV", book: "Book", format: "Format", sku: "SKU", stock: "Stock", threshold: "Threshold", waiting: "Waiting", buy: "Buy", empty: "No stock needs attention.", loading: "Loading purchase list…", failed: "Could not download the purchase list." },
   support,
   assistant,
   ratings: { title: "Order ratings", rateOrder: "Rate your order", comment: "Comment (optional)", editWindow: "You can edit your rating for seven days.", save: "Save rating", saved: (stars: number) => `Your rating: ${stars} out of 5`, store: (average: string, count: number) => `★ ${average} · ${count} orders rated`, all: "All ratings", hide: "Hide comment", previous: "Previous", next: "Next" },

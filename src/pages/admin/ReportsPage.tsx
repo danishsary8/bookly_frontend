@@ -18,6 +18,7 @@ import { formatLabel } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { formatUsd } from "@/stores/currency";
 import { toast } from "@/stores/toast";
+import { useT } from "@/i18n";
 
 /*
  * /admin/reports (admin only): the shop's numbers for a period, one subject per tab, each with a CSV export.
@@ -598,6 +599,7 @@ function OffersTab({ range }: { range: ReportRange }) {
 }
 
 export default function ReportsPage() {
+  const { dict } = useT();
   const [params, setParams] = useSearchParams();
   const range = rangeFromParams(params);
   const days = rangeDays(range);
@@ -664,6 +666,7 @@ export default function ReportsPage() {
       actions={
         <div className="grid justify-items-end gap-3">
           <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button asChild variant="outline"><Link to={`/admin/reports/print?${new URLSearchParams(rangeToParams(range)).toString()}`}>{dict.dashboardPrint.open}</Link></Button>
             <PeriodPicker
               active={active}
               onPick={(value) => {

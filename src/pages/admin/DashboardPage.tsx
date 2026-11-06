@@ -9,6 +9,9 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { IncomeChart } from "@/features/admin/dashboard/IncomeChart";
 import { InsightsWidgets } from "@/features/admin/dashboard/InsightsWidgets";
+import { PaymentMethods } from "@/features/admin/dashboard/PaymentMethods";
+import { DashboardActivity } from "@/features/admin/dashboard/DashboardActivity";
+import { RecentOrders } from "@/features/admin/dashboard/RecentOrders";
 import { Sparkline } from "@/features/admin/dashboard/Sparkline";
 import { StatusDonut } from "@/features/admin/dashboard/StatusDonut";
 import { SalesChart } from "@/features/admin/SalesChart";
@@ -83,6 +86,7 @@ export default function DashboardPage() {
       lead={s ? `${day(s.period.from)}${s.period.from !== s.period.to ? ` to ${day(s.period.to)}` : ""} · Phnom Penh time` : `Hello${firstName ? `, ${firstName}` : ""}`}
       actions={
         <div className="grid justify-items-end gap-3">
+          {session?.user.role === "admin" ? <Link to="/admin/purchases" className="text-sm font-semibold text-primary underline-offset-4 hover:underline">{dict.purchaseList.title}</Link> : null}
           <PeriodPicker
             active={active}
             onPick={(value) => {
@@ -151,6 +155,35 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {s.books_sold !== undefined && s.ebooks_sold !== undefined ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Kpi id="books-sold" label={dict.dashboardCopies.books} value={s.books_sold} detail={dict.dashboardCopies.detail}
+                change={c ? <Change percent={c.change_percent.books_sold} previous={c.books_sold} versus={versus} /> : null}
+                trend={trend?.every((d) => d.books_sold !== undefined) ? series(trend, (d) => d.books_sold ?? 0) : undefined}
+                view={{ to: "/admin/reports?tab=products", label: dict.dashboardCopies.view }} />
+              <Kpi id="ebooks-sold" label={dict.dashboardCopies.ebooks} value={s.ebooks_sold} detail={dict.dashboardCopies.detail}
+                change={c ? <Change percent={c.change_percent.ebooks_sold} previous={c.ebooks_sold} versus={versus} /> : null}
+                trend={trend?.every((d) => d.ebooks_sold !== undefined) ? series(trend, (d) => d.ebooks_sold ?? 0) : undefined}
+                view={{ to: "/admin/reports?tab=products", label: dict.dashboardCopies.view }} />
+            </div>
+          ) : null}
+
+          {insights.data?.payment_methods && insights.data.cart_reminder_recovery ? (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Panel id="payment-methods" title={dict.dashboardAnalysis.payments} action={<span className="text-sm text-muted-foreground">{dict.dashboardAnalysis.paymentNote}</span>}>
+                <PaymentMethods rows={insights.data.payment_methods} />
+              </Panel>
+              <Panel id="reminder-recovery" title={dict.dashboardAnalysis.reminder}>
+                <p className="text-sm text-muted-foreground">{dict.dashboardAnalysis.reminderNote}</p>
+                <dl className="grid grid-cols-2 gap-3"><div><dt>{dict.dashboardAnalysis.recovered}</dt><dd className="text-xl font-semibold tabular-nums">{insights.data.cart_reminder_recovery.recovered} ({insights.data.cart_reminder_recovery.percent}%)</dd></div><div><dt>{dict.dashboardAnalysis.sent}</dt><dd className="text-xl font-semibold tabular-nums">{insights.data.cart_reminder_recovery.sent}</dd></div>{insights.data.promotions.gift_orders !== undefined ? <div><dt>{dict.dashboardAnalysis.gifts}</dt><dd className="text-xl font-semibold tabular-nums">{insights.data.promotions.gift_orders}</dd></div> : null}</dl>
+              </Panel>
+            </div>
+          ) : null}
+          {insights.data ? <DashboardActivity data={insights.data} /> : null}
+          {insights.data?.delivery_areas ? <Panel id="delivery-areas" title={dict.dashboardAreas.title} action={<span className="text-sm text-muted-foreground">{dict.dashboardAreas.note}</span>}><dl className="grid grid-cols-3 gap-3">{[[dict.dashboardAreas.phnomPenh, insights.data.delivery_areas.phnom_penh], [dict.dashboardAreas.provinces, insights.data.delivery_areas.provinces], [dict.dashboardAreas.unknown, insights.data.delivery_areas.unknown]].map(([label, count]) => <div key={label}><dt>{label}</dt><dd className="text-xl font-semibold tabular-nums">{count}</dd></div>)}</dl></Panel> : null}
+          {insights.data?.repeat_customer_rate ? <Panel id="buyers" title={dict.dashboardBuyers.title}><dl className="grid grid-cols-2 gap-3"><div><dt>{dict.dashboardPrint.firstTime}</dt><dd className="text-xl font-semibold tabular-nums">{insights.data.repeat_customer_rate.customers - insights.data.repeat_customer_rate.returning}</dd></div><div><dt>{dict.dashboardPrint.returning}</dt><dd className="text-xl font-semibold tabular-nums">{insights.data.repeat_customer_rate.returning}</dd></div></dl></Panel> : null}
+          <RecentOrders user={session?.user} />
+
           {trend?.length ? (
             <Panel id="sales-chart" title="Income report" action={<span className="text-sm text-muted-foreground">this period vs the previous one · by delivery date, less refunds</span>}>
               <IncomeChart days={trend} />
@@ -187,6 +220,7 @@ export default function DashboardPage() {
                           <Link to={`/admin/books/${b.book_id}`} className="font-semibold underline-offset-4 hover:text-primary hover:underline">
                             {b.title}
                           </Link>
+                          <span aria-hidden="true" className="mt-1 block h-1.5 rounded-full bg-secondary"><span className="block h-full rounded-full bg-primary" style={{ width: `${Math.max(0, b.copies_sold) / Math.max(1, ...s.best_sellers.map((book) => book.copies_sold)) * 100}%` }} /></span>
                         </th>
                         <td className="py-2 pl-4 text-right">{b.copies_sold}</td>
                         <td className="whitespace-nowrap py-2 pl-4 text-right">
