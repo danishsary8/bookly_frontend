@@ -16,6 +16,7 @@ import { useNewOrderWatch } from "./orders/newOrders";
 import { useAdminAutoRefresh } from "./autoRefresh";
 import { useStaff, useStaffSignOut } from "./staffSession";
 import { SupportMenuBadge } from "@/features/support/SupportMenuBadge";
+import { StaffAssistantDialog } from "@/features/assistant/StaffAssistantDialog";
 
 const itemClass =
   "flex min-h-11 cursor-pointer select-none items-center gap-3 rounded-md px-3 text-[15px] text-foreground outline-none data-[highlighted]:bg-secondary";
@@ -24,7 +25,7 @@ function Wordmark() {
   return (
     <Link to="/admin" className="flex items-center gap-2.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring">
       <span className="font-display text-[1.6rem] leading-none text-primary">Bookly</span>
-      <span className="rounded-[4px] border max-[359px]:sr-only border-border px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Staff</span>
+      <span className="rounded-[4px] border max-sm:sr-only border-border px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Staff</span>
     </Link>
   );
 }
@@ -164,6 +165,7 @@ export function AdminShell() {
           </div>
           <QuickJump />
           <div className="ml-auto flex items-center gap-1">
+            <StaffAssistantDialog />
             <NotificationsBell />
             <UserMenu />
           </div>

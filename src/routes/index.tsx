@@ -29,6 +29,8 @@ const AddressesPage = lazy(() => import("../pages/account/AddressesPage"));
 const WishlistPage = lazy(() => import("../pages/account/WishlistPage"));
 const SupportPage = lazy(() => import("../pages/account/SupportPage"));
 const SupportInboxPage = lazy(() => import("../pages/admin/SupportInboxPage"));
+const AssistantPage = lazy(() => import("../pages/admin/AssistantPage"));
+const AssistantKnowledgePage = lazy(() => import("../pages/admin/AssistantKnowledgePage"));
 const ReadingListsPage = lazy(() => import("../pages/account/ReadingListsPage"));
 const ReadingListPage = lazy(() => import("../pages/catalog/ReadingListPage"));
 const ReadingListPicksPage = lazy(() => import("../pages/admin/ReadingListPicksPage"));
@@ -217,6 +219,8 @@ const AppRoutes = () => {
               <Route path="returns/:id" element={<ReturnAdminPage />} />
               <Route path="reviews" element={<ReviewsAdminPage />} />
               <Route path="support" element={<SupportInboxPage />} />
+              <Route path="assistant" element={<AssistantPage />} />
+              <Route path="assistant/knowledge" element={<AssistantKnowledgePage />} />
               <Route path="coupons" element={<CouponsAdminPage />} />
               <Route path="offers" element={<OffersAdminPage />} />
               <Route path="gifts" element={<GiftsPage />} />

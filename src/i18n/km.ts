@@ -2,6 +2,7 @@
 // Khmer has no spaces between words: put a space between phrases in long headings so they can wrap.
 import type { Translations } from "./en";
 import { support } from "./support-km";
+import { assistant } from "./assistant-km";
 
 /** Khmer translations for Bookly storefront. */
 export const km: Translations = {
@@ -15,6 +16,7 @@ export const km: Translations = {
   dashboardAreas: { title: "តំបន់ដឹកជញ្ជូន", phnomPenh: "ភ្នំពេញ", provinces: "ខេត្ត", unknown: "មិនស្គាល់ទីតាំង", note: "ការបញ្ជាទិញដែលមិនបានបោះបង់ក្នុងរយៈពេលនេះ។" },
   purchaseList: { title: "បញ្ជីទិញស្តុក", lead: "ស្តុកបានគិតការកក់រួចហើយ។ បរិមាណទិញបំពេញស្តុកឱ្យលើសកម្រិតជូនដំណឹង។", export: "ទាញយក CSV", book: "សៀវភៅ", format: "ទម្រង់", sku: "លេខ SKU", stock: "ស្តុក", threshold: "កម្រិតជូនដំណឹង", waiting: "កំពុងរង់ចាំ", buy: "ត្រូវទិញ", empty: "មិនមានស្តុកដែលត្រូវពិនិត្យទេ។", loading: "កំពុងផ្ទុកបញ្ជីទិញ…", failed: "មិនអាចទាញយកបញ្ជីទិញបានទេ។" },
   support,
+  assistant,
   ratings: { title: "ការវាយតម្លៃការបញ្ជាទិញ", rateOrder: "វាយតម្លៃការបញ្ជាទិញរបស់អ្នក", comment: "មតិយោបល់ (មិនបាច់បំពេញក៏បាន)", editWindow: "អ្នកអាចកែសម្រួលការវាយតម្លៃក្នុងរយៈពេលប្រាំពីរថ្ងៃ។", save: "រក្សាទុកការវាយតម្លៃ", saved: (stars: number) => `ការវាយតម្លៃរបស់អ្នក៖ ${stars} ក្នុងចំណោម 5`, store: (average: string, count: number) => `★ ${average} · ការបញ្ជាទិញ ${count} បានវាយតម្លៃ`, all: "ការវាយតម្លៃទាំងអស់", hide: "លាក់មតិយោបល់", previous: "មុន", next: "បន្ទាប់" },
   readingLists: {
     title: "បញ្ជីអាន", listTitle: "ចំណងជើងបញ្ជី", description: "សេចក្ដីពិពណ៌នា", public: "បញ្ជីសាធារណៈ", save: "រក្សាទុកបញ្ជី", delete: "លុបបញ្ជី", create: "បង្កើតបញ្ជី", openPublic: "បើកបញ្ជីសាធារណៈ", note: "កំណត់ចំណាំ", up: "ផ្លាស់ឡើងលើ", down: "ផ្លាស់ចុះក្រោម", remove: "ដកសៀវភៅចេញ", addToList: "បន្ថែមទៅបញ្ជី", choose: "ជ្រើសរើសបញ្ជី", manage: "គ្រប់គ្រងបញ្ជីអាន", added: "បានបន្ថែមទៅបញ្ជីអាន", loading: "កំពុងផ្ទុកបញ្ជីអាន…", by: (name: string) => `ដោយ ${name}`, addAll: "ដាក់ទាំងអស់ចូលកន្ត្រក", addResult: (added: number, skipped: number) => `បានដាក់ ${added} ចូលកន្ត្រក · រំលង ${skipped}`, share: "ចែករំលែកបញ្ជី", copy: "ចម្លងតំណ", copied: "បានចម្លងតំណ", copyFailed: "មិនអាចចម្លងតំណបានទេ។ សូមប្រើរបារអាសយដ្ឋានរបស់កម្មវិធីរុករក។", staffPick: "ជម្រើសរបស់បុគ្គលិក", limits: "រហូតដល់ 20 បញ្ជី ដោយបញ្ជីនីមួយៗអាចមានសៀវភៅ 200 ក្បាល។ បញ្ជីថ្មីជាបញ្ជីឯកជន។",

@@ -1,5 +1,6 @@
 /** English translations for Bookly storefront. */
 import { support } from "./support-en";
+import { assistant } from "./assistant-en";
 export const en = {
   dashboardPeriods: { ninetyDays: "90 days", twelveMonths: "12 months" },
   dashboardCopies: { books: "Books sold", ebooks: "Ebooks sold", detail: "Copies in non-cancelled orders", view: "View product report" },
@@ -11,6 +12,7 @@ export const en = {
   dashboardAreas: { title: "Delivery areas", phnomPenh: "Phnom Penh", provinces: "Provinces", unknown: "Unknown location", note: "Non-cancelled orders placed during this period." },
   purchaseList: { title: "Stock purchase list", lead: "Stock already includes reservations. Buy quantities replenish stock above the low-stock threshold.", export: "Export CSV", book: "Book", format: "Format", sku: "SKU", stock: "Stock", threshold: "Threshold", waiting: "Waiting", buy: "Buy", empty: "No stock needs attention.", loading: "Loading purchase list…", failed: "Could not download the purchase list." },
   support,
+  assistant,
   ratings: { title: "Order ratings", rateOrder: "Rate your order", comment: "Comment (optional)", editWindow: "You can edit your rating for seven days.", save: "Save rating", saved: (stars: number) => `Your rating: ${stars} out of 5`, store: (average: string, count: number) => `★ ${average} · ${count} orders rated`, all: "All ratings", hide: "Hide comment", previous: "Previous", next: "Next" },
   readingLists: {
     title: "Reading lists", listTitle: "List title", description: "Description", public: "Public list", save: "Save list", delete: "Delete list", create: "Create list", openPublic: "Open public list", note: "Note", up: "Move up", down: "Move down", remove: "Remove book", addToList: "Add to list", choose: "Choose a list", manage: "Manage reading lists", added: "Added to reading list", loading: "Loading reading list…", by: (name: string) => `By ${name}`, addAll: "Add all to cart", addResult: (added: number, skipped: number) => `${added} added to cart · ${skipped} skipped`, share: "Share list", copy: "Copy link", copied: "Link copied", copyFailed: "Could not copy the link. Use your browser’s address bar.", staffPick: "Staff pick", limits: "Up to 20 lists with 200 books each. Lists start private.",

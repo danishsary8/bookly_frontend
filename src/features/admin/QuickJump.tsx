@@ -18,7 +18,7 @@ import { useStaff } from "./staffSession";
 
 type Item = { key: string; group: "Pages" | "Orders" | "Books" | "Customers"; label: string; detail?: string; to: string; Icon: React.ComponentType<{ className?: string }> };
 
-const EXTRA_PAGES = [{ to: "/admin/security", label: "Security & sessions" }];
+const EXTRA_PAGES = [{ to: "/admin/security", label: "Security & sessions" }, { to: "/admin/assistant", label: "Staff assistant" }];
 
 export function QuickJump() {
   const [open, setOpen] = useState(false);
