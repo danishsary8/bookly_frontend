@@ -4,7 +4,7 @@ import { AuthShell } from "@/components/AuthShell";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 /*
- * Frame for every customer auth page: AuthShell (lapis quote panel at ≥ 1024px),
+ * Frame for every customer auth page: AuthShell (cover panel at ≥ 1024px), a paper card holding
  * an eyebrow, the page's h1 (BlurText, MASTER §5) with a plain-text accessible
  * name, a lead line, the form, and an optional footer row of links.
  */
@@ -26,23 +26,26 @@ export function AuthPage({
   useDocumentTitle(title);
   return (
     <AuthShell panel={panel}>
-      <p className="eyebrow">{eyebrow}</p>
-      <h1 className="mt-3 text-[clamp(2.25rem,4vw,3.05rem)] leading-[1.08] text-foreground" aria-label={title}>
-        <BlurText
-          key={title}
-          as="span"
-          text={title}
-          delay={60}
-          animateBy="words"
-          animationFrom={{ filter: "blur(8px)", opacity: 0, y: 24 }}
-          animationTo={[{ filter: "blur(0px)", opacity: 1, y: 0 }]}
-          stepDuration={0.3}
-          easing={[0.16, 1, 0.3, 1]}
-        />
-      </h1>
-      <div className="mt-3 text-base text-muted-foreground">{lead}</div>
-      <div className="mt-8">{children}</div>
-      {footer ? <div className="mt-8 grid gap-2 border-t border-border pt-6 text-center text-sm text-muted-foreground">{footer}</div> : null}
+      {/* The form sits on a card of better paper, like a bookplate; links to other pages sit under it. */}
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-[0_28px_56px_-34px_rgb(60_40_10/0.45)] sm:p-8">
+        <p className="eyebrow">{eyebrow}</p>
+        <h1 className="mt-2.5 text-[clamp(1.9rem,3vw,2.4rem)] leading-[1.08] text-foreground" aria-label={title}>
+          <BlurText
+            key={title}
+            as="span"
+            text={title}
+            delay={60}
+            animateBy="words"
+            animationFrom={{ filter: "blur(8px)", opacity: 0, y: 24 }}
+            animationTo={[{ filter: "blur(0px)", opacity: 1, y: 0 }]}
+            stepDuration={0.3}
+            easing={[0.16, 1, 0.3, 1]}
+          />
+        </h1>
+        <div className="mt-2 text-[15px] text-muted-foreground">{lead}</div>
+        <div className="mt-6">{children}</div>
+      </div>
+      {footer ? <div className="mt-5 grid gap-2 text-center text-sm text-muted-foreground">{footer}</div> : null}
     </AuthShell>
   );
 }

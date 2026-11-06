@@ -1073,3 +1073,59 @@
 :lang(km).eyebrow {
   letter-spacing: normal;
 }
+
+/* Auth pages "paper & cloth" (matches the splash; design-system/bookly/pages/auth.md).
+   Scoped token overrides: warm paper in Daylight, a lamp-lit desk in Night. Contrast checked like MASTER §2.3. */
+.auth-paper {
+    --background: #F1E9D8;
+    --card: #FBF7EE;
+    --popover: #FBF7EE;
+    --surface-2: #E8DEC9;
+    --secondary: #E8DEC9;
+    --muted: #E8DEC9;
+    --foreground: #1B1A2E;
+    --card-foreground: #1B1A2E;
+    --popover-foreground: #1B1A2E;
+    --secondary-foreground: #1B1A2E;
+    --muted-foreground: #5B5566;
+    --border: #DCCFB4;
+    --input: #8C8170;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .27 0 0 0 0 .15 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.dark .auth-paper {
+    --background: #3B332B;
+    --card: #463D33;
+    --popover: #463D33;
+    --surface-2: #51473C;
+    --secondary: #51473C;
+    --muted: #51473C;
+    --foreground: #F3E9D6;
+    --card-foreground: #F3E9D6;
+    --popover-foreground: #F3E9D6;
+    --secondary-foreground: #F3E9D6;
+    --muted-foreground: #CDBFA6;
+    --border: #5E5345;
+    --input: #A8997F;
+}
+/* The lapis panel as a cloth book cover: spine shadow, lift, and a double gold rule like the splash frame. */
+.auth-cover {
+    position: relative;
+    box-shadow: inset 12px 0 20px -14px rgb(0 0 0 / 0.55), 0 30px 60px -32px rgb(40 30 10 / 0.55);
+}
+.auth-cover::after {
+    content: "";
+    position: absolute;
+    inset: 14px;
+    border: 1px solid rgb(201 162 75 / 0.55);
+    outline: 1px solid rgb(201 162 75 / 0.25);
+    outline-offset: -6px;
+    border-radius: 6px;
+    pointer-events: none;
+}
+.auth-progress {
+    animation: auth-progress linear both;
+}
+@keyframes auth-progress {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}
