@@ -187,7 +187,7 @@ export default function LoginPage() {
                   setFormError(null);
                   setMode("phone");
                 }}
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.04)] transition-colors duration-150 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="mx-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <Smartphone className="size-4 text-muted-foreground" aria-hidden="true" />
                 {s.signInWithPhone}
