@@ -1314,6 +1314,8 @@ export const km: Translations = {
     yourHistory: "ប្រវត្តិរបស់អ្នក",
     recentlyViewed: "បានមើលថ្មីៗ",
     clear: "សម្អាត",
+    viewBook: "មើលសៀវភៅ",
+    shelfHint: "អូសធ្នើ ប្រើព្រួញ ឬចុចលើខ្នងសៀវភៅ។",
     heroEyebrow: "Bookly · ភ្នំពេញ",
     topRated: "សៀវភៅផ្កាយខ្ពស់បំផុត",
     cover: (title: string) => `គម្របសៀវភៅ ${title}`,

@@ -1308,6 +1308,8 @@ export const en = {
     yourHistory: "Your history",
     recentlyViewed: "Recently viewed",
     clear: "Clear",
+    viewBook: "View book",
+    shelfHint: "Drag the shelf, use the arrows, or click a spine.",
     heroEyebrow: "Bookly · Phnom Penh",
     topRated: "Top rated books",
     cover: (title: string) => `${title} cover`,
