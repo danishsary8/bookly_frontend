@@ -117,12 +117,12 @@ export default function LoginPage() {
               hideIndicator
               footer={
                 step === 0 ? (
-                  <Button type="submit" variant="cta" size="lg" className="w-full">
+                  <Button key="continue" type="submit" variant="cta" size="lg" className="w-full">
                     {s.stepContinue}
                   </Button>
                 ) : (
                   <>
-                    <Button type="button" variant="ghost" size="lg" className="shrink-0 px-4" onClick={() => setStep(0)}>
+                    <Button key="back" type="button" variant="ghost" size="lg" className="shrink-0 px-4" onClick={() => setStep(0)}>
                       {s.stepBack}
                     </Button>
                     <CtaGlare block className="flex-1">
@@ -167,6 +167,12 @@ export default function LoginPage() {
                 </div>
               )}
             </Stepper>
+            {step === 0 ? (
+              <Link to="/books" className="group mx-auto mt-2 flex min-h-10 w-max items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground">
+                {s.guest}
+                <ArrowRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
+              </Link>
+            ) : null}
           </form>
         ) : null}
         {mode === "email" && step === 0 ? (
@@ -234,19 +240,12 @@ export default function LoginPage() {
             <SocialButtons next={next} />
           </div>
         )}
-        {/* Other paths, inside the card: create an account, or just browse. */}
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border pt-2 text-sm text-muted-foreground">
-          <p className="text-sm">
-            {dict.auth.dontHaveAccount}{" "}
-            <Link to={withNext("/register", next)} className="font-semibold text-primary underline-offset-4 hover:underline">
-              {dict.auth.signUp}
-            </Link>
-          </p>
-          <Link to="/books" className="group inline-flex min-h-10 items-center gap-1.5 font-medium transition-colors duration-150 hover:text-foreground">
-            {s.guest}
-            <ArrowRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
+        <p className="border-t border-border pt-4 text-center text-sm text-muted-foreground">
+          {dict.auth.dontHaveAccount}{" "}
+          <Link to={withNext("/register", next)} className="font-semibold text-primary underline-offset-4 hover:underline">
+            {dict.auth.signUp}
           </Link>
-        </div>
+        </p>
       </div>
     </AuthPage>
   );

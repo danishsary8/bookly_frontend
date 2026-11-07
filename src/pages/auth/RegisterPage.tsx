@@ -121,12 +121,12 @@ export default function RegisterPage() {
           footer={
             <>
               {step > 0 ? (
-                <Button type="button" variant="ghost" size="lg" className="shrink-0 px-4" onClick={() => setStep(step - 1)}>
+                <Button key="back" type="button" variant="ghost" size="lg" className="shrink-0 px-4" onClick={() => setStep(step - 1)}>
                   {s.stepBack}
                 </Button>
               ) : null}
               {step < LAST ? (
-                <Button type="submit" variant="cta" size="lg" className="flex-1">
+                <Button key="continue" type="submit" variant="cta" size="lg" className="flex-1">
                   {s.stepContinue}
                 </Button>
               ) : (

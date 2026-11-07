@@ -14,7 +14,7 @@ import { useT } from "@/i18n";
 /*
  * "Continue with Google / Facebook". A provider shows once its id is configured (src/features/auth/social.ts);
  * with neither configured the buttons stay visible but disabled, marked "coming soon".
- * Pages put them under the email form, after an "or" divider, side by side.
+ * Pages put them under the email form, after an "or" divider, one full-width button each.
  * `telegram` (sign-in page, while the API's bot is on) adds "Continue with Telegram": the bot asks the
  * customer to share their phone number, and the account that proved that number is signed in.
  */
@@ -105,11 +105,11 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
     return (
       <div className="grid gap-3">
         <Divider>{s.or}</Divider>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3">
           {(["google", "facebook"] as const).map((p) => (
             <button key={p} type="button" disabled aria-describedby="social-soon" className={cn(buttonClass, "cursor-not-allowed opacity-60")}>
               {ICONS[p]}
-              {NAMES[p]}
+              {s.continueWith(NAMES[p])}
             </button>
           ))}
         </div>
@@ -182,7 +182,7 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
       <Divider>{s.or}</Divider>
       {error || telegramError ? <FormAlert title={error ?? telegramError ?? undefined} /> : null}
       <div className="grid gap-3">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3">
         {enabled.map((p) => (
           <button
             key={p}
@@ -190,14 +190,13 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
             onClick={() => start(p)}
             disabled={busy !== null}
             aria-busy={busy === p || undefined}
-            aria-label={s.continueWith(NAMES[p])}
             className={cn(
               buttonClass,
               "outline-none hover:border-foreground/40 hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-70",
             )}
           >
             {busy === p ? <Loader2 className="size-[18px] animate-spin motion-reduce:animate-none" aria-hidden="true" /> : ICONS[p]}
-            {NAMES[p]}
+            {s.continueWith(NAMES[p])}
           </button>
         ))}
         </div>

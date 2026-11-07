@@ -61,6 +61,16 @@ afterEach(() => {
 });
 
 describe("LoginPage", () => {
+  it("goes back from the password step to the email step", async () => {
+    const user = userEvent.setup();
+    app("/login");
+    await user.type(screen.getByLabelText("Email"), "dara@example.com");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await screen.findByLabelText("Password", { selector: "input" });
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(await screen.findByLabelText("Email")).toHaveValue("dara@example.com");
+  });
+
   it("signs in and returns to a safe ?next=", async () => {
     const user = userEvent.setup();
     const post = vi.spyOn(api, "post").mockResolvedValue({ token: "tok", expires_at: null, customer: customer(true) });
