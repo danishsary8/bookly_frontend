@@ -28,7 +28,7 @@ import { referralSignup } from "@/features/account/referralAttribution";
 
 const FIELDS = ["name", "email", "phone", "password", "password_confirmation", "verify_by"] as const;
 /** Which step shows each field, so a server error can send the person back to it. */
-const STEP_FIELDS = [["name", "email", "phone", "verify_by"], ["password", "password_confirmation"]] as const;
+const STEP_FIELDS = [["name", "email", "verify_by"], ["password", "password_confirmation"], ["phone"]] as const;
 
 export default function RegisterPage() {
   const [params] = useSearchParams();
@@ -140,6 +140,7 @@ export default function RegisterPage() {
           {step === 0 ? (
             <div className="grid gap-5">
               <TextField label={s.fullName} autoComplete="name" error={errors.name?.message} {...register("name")} />
+              {telegram ? <ChannelPicker value={byTelegram ? "telegram" : "email"} field={register("verify_by")} /> : null}
               <TextField
                 label={dict.auth.email}
                 optional={byTelegram}
@@ -151,7 +152,19 @@ export default function RegisterPage() {
                 error={errors.email?.message}
                 {...register("email")}
               />
-              {telegram ? <ChannelPicker value={byTelegram ? "telegram" : "email"} field={register("verify_by")} /> : null}
+            </div>
+          ) : step === 1 ? (
+            <div className="grid gap-5">
+              <input type="email" name="username" autoComplete="username" value={email ?? ""} readOnly hidden />
+              <div className="grid gap-3">
+                <PasswordField label={dict.auth.password} autoComplete="new-password" aria-describedby="password-rules" error={errors.password?.message} {...register("password")} />
+                <PasswordChecklist id="password-rules" value={password ?? ""} />
+              </div>
+              <PasswordField label={s.confirmPassword} autoComplete="new-password" error={errors.password_confirmation?.message} {...register("password_confirmation")} />
+            </div>
+          ) : (
+            <div className="grid gap-5">
+              {/* Optional extras live on the last step, so the first one stays short. */}
               {byTelegram ? null : (
                 <TextField
                   label={s.phone}
@@ -165,24 +178,10 @@ export default function RegisterPage() {
                   {...register("phone")}
                 />
               )}
-            </div>
-          ) : step === 1 ? (
-            <div className="grid gap-5">
-              <input type="email" name="username" autoComplete="username" value={email ?? ""} readOnly hidden />
-              <div className="grid gap-3">
-                <PasswordField label={dict.auth.password} autoComplete="new-password" aria-describedby="password-rules" error={errors.password?.message} {...register("password")} />
-                <PasswordChecklist id="password-rules" value={password ?? ""} />
-              </div>
-              <PasswordField label={s.confirmPassword} autoComplete="new-password" error={errors.password_confirmation?.message} {...register("password_confirmation")} />
-            </div>
-          ) : (
-            <div className="grid gap-5">
-              <p className="text-sm text-muted-foreground">{s.reviewLead}</p>
-              <dl className="grid gap-3 rounded-xl border border-border bg-card p-4 text-sm">
+              <dl className="grid gap-2.5 border-y border-border py-4 text-sm">
                 {[
                   [s.fullName, values.name],
                   [dict.auth.email, values.email || "—"],
-                  ...(byTelegram ? [] : [[s.phone, values.phone || "—"]]),
                   [s.verifyWith, byTelegram ? "Telegram" : dict.auth.email],
                 ].map(([term, detail]) => (
                   <div key={term} className="flex items-baseline justify-between gap-4">
