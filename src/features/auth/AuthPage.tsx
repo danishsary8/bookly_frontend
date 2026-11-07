@@ -41,12 +41,13 @@ export function AuthPage({
             to="/"
             aria-label={dict.content.backToStore}
             title={dict.content.backToStore}
-            className="hidden size-10 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground lg:grid"
+            className="hidden h-9 shrink-0 items-center gap-1.5 rounded-full border border-border pl-2.5 pr-3.5 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground lg:inline-flex"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
+            <span aria-hidden="true">{dict.signin.store}</span>
           </Link>
         </div>
-        <h1 className="mt-1 text-[clamp(1.75rem,2.6vw,2.2rem)] leading-[1.08] short:text-[1.65rem] text-foreground" aria-label={title}>
+        <h1 className="mt-2 text-[clamp(1.75rem,2.6vw,2.2rem)] leading-[1.08] short:text-[1.65rem] text-foreground" aria-label={title}>
           <BlurText
             key={title}
             as="span"
@@ -59,7 +60,7 @@ export function AuthPage({
             easing={[0.16, 1, 0.3, 1]}
           />
         </h1>
-        <div className="mt-2 text-[15px] text-muted-foreground short:mt-1 short:text-sm">{lead}</div>
+        <div className="mt-3 text-[15px] text-muted-foreground short:mt-2 short:text-sm">{lead}</div>
         <div className="mt-6 short:mt-3">{children}</div>
       </div>
       {footer ? <div className="mt-3 grid gap-1 text-center text-sm text-muted-foreground">{footer}</div> : null}

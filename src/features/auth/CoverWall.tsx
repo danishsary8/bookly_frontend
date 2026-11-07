@@ -67,7 +67,11 @@ export function CoverWall() {
                     style={{ backgroundColor: tile.tone }}
                   >
                     {tile.cover ? (
-                      <img src={tile.cover} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
+                      <>
+                        <img src={tile.cover} alt="" loading="lazy" decoding="async" className="size-full object-cover grayscale-[35%] sepia-[15%]" />
+                        {/* A lapis wash so any cover photo reads as part of the same blue book cloth. */}
+                        <span className="pointer-events-none absolute inset-0 bg-[#14207A]/30 mix-blend-multiply" />
+                      </>
                     ) : (
                       <span className="grid size-full place-items-center font-display text-4xl text-gold/70">B</span>
                     )}
@@ -80,14 +84,14 @@ export function CoverWall() {
         </div>
       </div>
 
-      <div className="relative -mt-24 flex items-end justify-between gap-6">
+      <div className="relative -mt-10 flex items-end justify-between gap-6">
         <div className="min-w-0">
           <p className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-gold">
             <span className="h-px w-8 bg-gold" aria-hidden="true" />
             {s.shelfEyebrow}
           </p>
           {/* Slide show: each line rises in from below with a soft blur and leaves upward. Fixed height, so nothing jumps. */}
-          <div className="relative mt-3 h-[6.5rem] overflow-hidden">
+          <div className="relative mt-3 h-[7.25rem] overflow-hidden">
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.figure
                 key={index}
@@ -96,9 +100,9 @@ export function CoverWall() {
                 animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
                 exit={{ y: -28, opacity: 0, filter: "blur(6px)" }}
                 transition={{ duration: 0.7, ease }}
-                className="absolute inset-x-0 bottom-0"
+                className="absolute inset-x-0 top-0"
               >
-                <blockquote className="line-clamp-2 max-w-[24ch] font-display text-[clamp(1.45rem,2.2vw,1.95rem)] leading-[1.15] text-on-lapis">
+                <blockquote className="max-w-[26ch] text-balance font-display text-[clamp(1.3rem,1.9vw,1.7rem)] leading-[1.2] text-on-lapis">
                   {line.author ? `“${line.text}”` : line.text}
                 </blockquote>
                 {line.author ? <figcaption className="mt-1.5 text-sm text-on-lapis-muted">— {line.author}</figcaption> : null}

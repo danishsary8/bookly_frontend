@@ -61,7 +61,7 @@ export function Stepper({ steps, current, label, status, children, footer, befor
               <motion.span
                 className="absolute inset-0 origin-left rounded-full bg-primary"
                 initial={false}
-                animate={{ scaleX: i <= current ? 1 : 0 }}
+                animate={{ scaleX: i < current ? 1 : i === current ? 0.35 : 0 }}
                 transition={{ duration: 0.45, ease }}
               />
             </span>

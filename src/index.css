@@ -1137,7 +1137,7 @@
 }
 
 /* Sign-in cover wall (src/features/auth/CoverWall.tsx): endless columns that fade into the cloth top and bottom. */
-.auth-wall { mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 62%, transparent 92%); }
+.auth-wall { mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 50%, transparent 78%); }
 .auth-wall-track { animation: auth-wall linear infinite; will-change: transform; }
 @keyframes auth-wall { to { transform: translateY(calc(-50% - 0.5rem)); } }
 @media (prefers-reduced-motion: reduce) { .auth-wall-track { animation: none; } }
