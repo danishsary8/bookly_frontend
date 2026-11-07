@@ -94,14 +94,7 @@ export default function RegisterPage() {
       title={s.createTitle}
       lead={s.createLead}
       panel={<LibraryCard name={name} channel={byTelegram ? "telegram" : "email"} destination={byTelegram ? null : email} />}
-      footer={
-        <p>
-          {dict.auth.alreadyHaveAccount}{" "}
-          <Link to={withNext("/login", next)} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
-            {dict.auth.signIn}
-          </Link>
-        </p>
-      }
+      footer={<AgreeNote />}
     >
       <form
         onSubmit={(event) => {
@@ -205,7 +198,12 @@ export default function RegisterPage() {
 
 
         {anySocialEnabled() || step > 0 ? null : <SocialButtons next={next} />}
-        <AgreeNote />
+        <p className="border-t border-border pt-4 text-center text-sm text-muted-foreground">
+          {dict.auth.alreadyHaveAccount}{" "}
+          <Link to={withNext("/login", next)} className="font-semibold text-primary underline-offset-4 hover:underline">
+            {dict.auth.signIn}
+          </Link>
+        </p>
       </form>
     </AuthPage>
   );

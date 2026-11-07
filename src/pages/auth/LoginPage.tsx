@@ -95,19 +95,11 @@ export default function LoginPage() {
       lead={s.loginLead}
       footer={
         <>
-          {/* One quiet row: a second path to create an account, and browsing as a guest. */}
-          <p className="flex flex-wrap items-center justify-center gap-x-4">
-            <span>
-              {dict.auth.dontHaveAccount}{" "}
-              <Link to={withNext("/register", next)} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
-                {dict.auth.signUp}
-              </Link>
-            </span>
-            <Link to="/books" className="group inline-flex min-h-11 items-center gap-1.5 font-semibold text-muted-foreground transition-colors duration-150 hover:text-foreground">
-              {s.guest}
-              <ArrowRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
-            </Link>
-          </p>
+          <Link to="/books" className="group mx-auto inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground">
+            {s.guest}
+            <ArrowRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
+          </Link>
+          <AgreeNote />
         </>
       }
     >
@@ -263,7 +255,13 @@ export default function LoginPage() {
             {buttonsOnTop ? null : <SocialButtons next={next} />}
           </div>
         )}
-        <AgreeNote />
+        {/* Second path, inside the card where people look for it. */}
+        <p className="border-t border-border pt-4 text-center text-sm text-muted-foreground">
+          {dict.auth.dontHaveAccount}{" "}
+          <Link to={withNext("/register", next)} className="font-semibold text-primary underline-offset-4 hover:underline">
+            {dict.auth.signUp}
+          </Link>
+        </p>
       </div>
     </AuthPage>
   );
