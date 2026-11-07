@@ -33,7 +33,7 @@ export function AuthPage({
   return (
     <AuthShell panel={panel} legal={legal}>
       {/* The form sits on a card of better paper, like a bookplate; links to other pages sit under it. */}
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgb(20_32_122/0.06),0_30px_60px_-36px_rgb(20_32_122/0.35)] sm:px-10 sm:py-7 lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-14 lg:py-8 [@media(min-width:1024px)_and_(max-height:860px)]:py-6">
+      <div className="auth-card rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgb(20_32_122/0.06),0_30px_60px_-36px_rgb(20_32_122/0.35)] sm:px-10 sm:py-7 lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-14 lg:py-8 short:py-4">
         <div className="flex items-center justify-between gap-4">
           <p className="eyebrow">{eyebrow}</p>
           {/* Desktop back to the shop, inside the card so it never overlaps anything. */}
@@ -46,7 +46,7 @@ export function AuthPage({
             <ArrowLeft className="size-4" aria-hidden="true" />
           </Link>
         </div>
-        <h1 className="mt-1 text-[clamp(1.75rem,2.6vw,2.2rem)] leading-[1.08] text-foreground" aria-label={title}>
+        <h1 className="mt-1 text-[clamp(1.75rem,2.6vw,2.2rem)] leading-[1.08] short:text-[1.65rem] text-foreground" aria-label={title}>
           <BlurText
             key={title}
             as="span"
@@ -59,8 +59,8 @@ export function AuthPage({
             easing={[0.16, 1, 0.3, 1]}
           />
         </h1>
-        <div className="mt-2 text-[15px] text-muted-foreground">{lead}</div>
-        <div className="mt-6 [@media(max-height:860px)]:mt-5">{children}</div>
+        <div className="mt-2 text-[15px] text-muted-foreground short:mt-1 short:text-sm">{lead}</div>
+        <div className="mt-6 short:mt-3">{children}</div>
       </div>
       {footer ? <div className="mt-3 grid gap-1 text-center text-sm text-muted-foreground">{footer}</div> : null}
     </AuthShell>

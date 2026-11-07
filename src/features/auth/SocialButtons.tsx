@@ -60,7 +60,7 @@ export const TELEGRAM_ICON = (
 );
 
 const buttonClass =
-  "inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-input bg-card px-4 text-[15px] font-semibold text-foreground transition-[background-color,border-color] duration-150";
+  "inline-flex h-11 items-center justify-center gap-2 rounded-lg border short:h-10 border-input bg-card px-4 text-[15px] font-semibold text-foreground transition-[background-color,border-color] duration-150";
 
 function Divider({ children }: { children: string }) {
   return (
@@ -178,11 +178,11 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
   };
 
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-3 short:gap-2">
       <Divider>{s.or}</Divider>
       {error || telegramError ? <FormAlert title={error ?? telegramError ?? undefined} /> : null}
-      <div className="grid gap-3">
-        <div className="grid gap-3">
+      <div className="grid gap-3 short:gap-2">
+        <div className="grid gap-3 short:gap-2">
         {enabled.map((p) => (
           <button
             key={p}

@@ -92,7 +92,7 @@ export default function LoginPage() {
       lead={s.loginLead}
       legal
     >
-      <div className="grid gap-5">
+      <div className="grid gap-5 short:gap-3">
         {state?.notice && !formError && !telegramError ? <FormAlert tone="success">{state.notice}</FormAlert> : null}
         {formError || telegramError ? <FormAlert ref={alertRef} title={formError ?? telegramError ?? undefined} /> : null}
 
@@ -115,6 +115,7 @@ export default function LoginPage() {
               status={s.stepOf(step + 1, steps.length, steps[step])}
               beforeFooter={turnstile.widget}
               hideIndicator
+              className="short:gap-3"
               footer={
                 step === 0 ? (
                   <Button key="continue" type="submit" variant="cta" size="lg" className="w-full">
@@ -168,7 +169,7 @@ export default function LoginPage() {
               )}
             </Stepper>
             {step === 0 ? (
-              <Link to="/books" className="group mx-auto mt-1 flex min-h-9 w-max items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground">
+              <Link to="/books" className="group mx-auto mt-1 flex min-h-9 w-max short:mt-0 short:min-h-8 items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground">
                 {s.guest}
                 <ArrowRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
               </Link>
@@ -176,7 +177,7 @@ export default function LoginPage() {
           </form>
         ) : null}
         {mode === "email" && step === 0 ? (
-          <div className="grid gap-3">
+          <div className="grid gap-3 short:gap-2">
             <SocialButtons next={next} />
             {telegram ? (
               <button
@@ -185,9 +186,9 @@ export default function LoginPage() {
                   setFormError(null);
                   setMode("phone");
                 }}
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-input bg-card px-4 text-[15px] font-semibold text-foreground transition-[background-color,border-color] duration-150 hover:border-foreground/40 hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="mx-auto inline-flex min-h-9 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold text-foreground/80 underline-offset-4 transition-colors duration-150 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <Smartphone className="size-[18px]" aria-hidden="true" />
+                <Smartphone className="size-4" aria-hidden="true" />
                 {s.signInWithPhone}
               </button>
             ) : null}
@@ -240,7 +241,7 @@ export default function LoginPage() {
             <SocialButtons next={next} />
           </div>
         )}
-        <p className="border-t border-border pt-4 text-center text-sm text-muted-foreground">
+        <p className="border-t border-border pt-4 text-center text-sm text-muted-foreground short:pt-3">
           {dict.auth.dontHaveAccount}{" "}
           <Link to={withNext("/register", next)} className="font-semibold text-primary underline-offset-4 hover:underline">
             {dict.auth.signUp}

@@ -2,6 +2,8 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+/* Laptop screens with little height (e.g. 1366×768 or 125% Windows scaling): auth pages tighten to fit. */
+@custom-variant short (@media (min-width: 1024px) and (max-height: 820px));
 
 /* Bookly design system v3 "Lapis & Vermilion" — see design-system/bookly/MASTER.md */
 @theme {
@@ -1139,3 +1141,9 @@
 .auth-wall-track { animation: auth-wall linear infinite; will-change: transform; }
 @keyframes auth-wall { to { transform: translateY(calc(-50% - 0.5rem)); } }
 @media (prefers-reduced-motion: reduce) { .auth-wall-track { animation: none; } }
+
+/* Auth card on short laptop screens: slightly slimmer fields and buttons so the whole card fits without scrolling. */
+@media (min-width: 1024px) and (max-height: 820px) {
+  .auth-card input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]),
+  .auth-card [data-slot="button"] { height: 2.75rem; }
+}
