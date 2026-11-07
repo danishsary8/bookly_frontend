@@ -5,8 +5,7 @@ import { cn } from "@/lib/utils";
 import { useT } from "@/i18n";
 
 /*
- * "How should we confirm your account?" on sign-up (and Facebook sign-up): the same radio cards as payment at
- * checkout. Email sends a 6-digit code; Telegram opens the Bookly bot, where one tap shares the phone number.
+ * "How should we confirm your account?" on sign-up (and Facebook sign-up): a compact segmented control (two radios). Email sends a 6-digit code; Telegram opens the Bookly bot, where one tap shares the phone number.
  */
 const OPTIONS = [
   { value: "email", label: "channelEmail", detail: "channelEmailDetail", Icon: Mail },
@@ -24,30 +23,28 @@ export function ChannelPicker({
 }) {
   const { dict } = useT();
   const s = dict.signin;
+  const current = OPTIONS.find((option) => option.value === value) ?? OPTIONS[0];
   return (
     <fieldset className="grid gap-2">
-      <legend className="mb-2 text-[15px] font-semibold text-foreground">{legend ?? s.howConfirm}</legend>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {OPTIONS.map(({ value: option, label, detail, Icon }) => (
+      <legend className="mb-2 text-sm font-medium text-foreground">{legend ?? s.howConfirm}</legend>
+      {/* Minimal segmented control: two options in one quiet track; the chosen one lifts onto paper. */}
+      <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+        {OPTIONS.map(({ value: option, label, Icon }) => (
           <label
             key={option}
             className={cn(
-              "flex cursor-pointer items-start gap-3 rounded-xl border bg-card p-4 transition-colors duration-150",
-              "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-background",
-              value === option ? "border-primary bg-lapis-tint" : "border-border hover:border-foreground/30",
+              "flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md text-sm font-medium transition-[background-color,color,box-shadow] duration-200",
+              "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
+              value === option ? "bg-card text-foreground shadow-[0_1px_3px_rgb(0_0_0/0.12)]" : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <input type="radio" value={option} className="mt-1 size-[18px] shrink-0 accent-primary outline-none" {...field} />
-            <span className="grid gap-0.5">
-              <span className="flex items-center gap-2 font-semibold">
-                <Icon className="size-4 text-primary" aria-hidden="true" />
-                {s[label]}
-              </span>
-              <span className="text-sm text-muted-foreground">{s[detail]}</span>
-            </span>
+            <input type="radio" value={option} className="sr-only" {...field} />
+            <Icon className="size-4" aria-hidden="true" />
+            {s[label]}
           </label>
         ))}
       </div>
+      <p className="text-xs leading-5 text-muted-foreground" aria-live="polite">{s[current.detail]}</p>
     </fieldset>
   );
 }

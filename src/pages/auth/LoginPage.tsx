@@ -109,6 +109,7 @@ export default function LoginPage() {
             {s.guest}
             <ArrowRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
           </Link>
+          <AgreeNote />
         </>
       }
     >

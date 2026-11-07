@@ -165,7 +165,7 @@ describe("password reset", () => {
     await user.click(screen.getByRole("button", { name: "Save new password" }));
     expect(await screen.findByText("Password updated. Sign in with your new password.")).toBeInTheDocument();
     expect(post).toHaveBeenLastCalledWith("/auth/reset-password", { email: "dara@example.com", code: "654321", password: "newreading4", password_confirmation: "newreading4" });
-    expect(screen.getByLabelText("Email")).toHaveValue("dara@example.com");
+    expect(screen.getByText("dara@example.com")).toBeInTheDocument();
   });
 });
 

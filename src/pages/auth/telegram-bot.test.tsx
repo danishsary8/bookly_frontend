@@ -87,9 +87,11 @@ describe("Sign-up with Telegram", () => {
     expect(screen.getByText("(optional)", { selector: "label span" })).toBeInTheDocument();
     expect(document.querySelector(".library-card")).toHaveTextContent("Confirm withTelegram");
     await user.type(screen.getByLabelText("Full name"), "Sok Dara");
-    await user.type(screen.getByLabelText("Password", { selector: "input" }), "reading123");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.type(await screen.findByLabelText("Password", { selector: "input" }), "reading123");
     await user.type(screen.getByLabelText("Confirm password", { selector: "input" }), "reading123");
-    await user.click(screen.getByRole("button", { name: "Create account" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(await screen.findByRole("button", { name: "Create account" }));
 
     await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/verify-email?via=telegram"));
     const body = post.mock.calls[0][1] as Record<string, unknown>;
@@ -106,12 +108,10 @@ describe("Sign-up with Telegram", () => {
     const post = vi.spyOn(api, "post");
     app("/register");
 
-    expect(await screen.findByLabelText(/^Phone/)).toBeInTheDocument();
+    expect(await screen.findByLabelText("Full name")).toBeInTheDocument();
     expect(screen.queryByRole("radio", { name: /Telegram/ })).not.toBeInTheDocument();
     await user.type(screen.getByLabelText("Full name"), "Sok Dara");
-    await user.type(screen.getByLabelText("Password", { selector: "input" }), "reading123");
-    await user.type(screen.getByLabelText("Confirm password", { selector: "input" }), "reading123");
-    await user.click(screen.getByRole("button", { name: "Create account" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(await screen.findByText("Enter your email address.")).toBeInTheDocument();
     expect(post).not.toHaveBeenCalled();
   });
@@ -203,7 +203,7 @@ describe("Continue with Telegram", () => {
     const post = telegramApi([{ status: "pending" }, { status: "done", customer: confirmed, token: "tok", token_type: "Bearer", expires_at: null }]);
     app("/login?next=%2Fcart");
 
-    await user.click(await screen.findByRole("button", { name: "Sign in with phone number?" }));
+    await user.click(await screen.findByRole("button", { name: "Continue with phone number" }));
     await user.click(await screen.findByRole("button", { name: "Continue with Telegram" }));
     expect(post).toHaveBeenCalledWith("/auth/telegram");
     expect(open).toHaveBeenCalledWith(LINK.url, "_blank", "noopener");
@@ -224,7 +224,7 @@ describe("Continue with Telegram", () => {
     telegramApi([{ status: "failed", message: "No Bookly account uses the number of this Telegram account (+855 12 345 678). Create an account, or sign in with your email." }]);
     app("/login");
 
-    await user.click(await screen.findByRole("button", { name: "Sign in with phone number?" }));
+    await user.click(await screen.findByRole("button", { name: "Continue with phone number" }));
     await user.click(await screen.findByRole("button", { name: "Continue with Telegram" }));
     await user.click(screen.getByRole("button", { name: "Cancel" }));
     expect(screen.queryByRole("link", { name: "Open Telegram" })).not.toBeInTheDocument();
@@ -236,7 +236,7 @@ describe("Continue with Telegram", () => {
 
     await user.click(screen.getByRole("button", { name: "Sign in with email and password?" }));
     expect(screen.getByLabelText("Email")).toBeInTheDocument();
-    expect(screen.getByLabelText("Password", { selector: "input" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
   });
 
   it("isn't offered while the bot is off", async () => {
@@ -244,7 +244,7 @@ describe("Continue with Telegram", () => {
     app("/login");
     expect(await screen.findByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Continue with Telegram" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Sign in with phone number?" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Continue with phone number" })).not.toBeInTheDocument();
   });
 });
 

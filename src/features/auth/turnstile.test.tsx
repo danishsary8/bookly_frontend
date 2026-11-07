@@ -29,8 +29,9 @@ const app = () =>
 async function signIn() {
   const user = userEvent.setup();
   await user.type(screen.getByLabelText("Email"), "dara@example.com");
+  await user.click(screen.getByRole("button", { name: "Continue" }));
   await user.type(
-    screen.getByLabelText("Password", { selector: "input" }),
+    await screen.findByLabelText("Password", { selector: "input" }),
     "reading123",
   );
   await user.click(screen.getByRole("button", { name: "Sign in" }));
