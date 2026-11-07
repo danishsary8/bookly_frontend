@@ -9,7 +9,6 @@ import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { Stepper } from "@/components/ui/stepper";
 import { AuthPage } from "@/features/auth/AuthPage";
-import { AgreeNote } from "@/features/auth/AgreeNote";
 import { ChannelPicker } from "@/features/auth/ChannelPicker";
 import { LibraryCard } from "@/features/auth/LibraryCard";
 import { PasswordChecklist } from "@/features/auth/PasswordChecklist";
@@ -97,7 +96,7 @@ export default function RegisterPage() {
       title={s.createTitle}
       lead={s.createLead}
       panel={<LibraryCard name={name} channel={byTelegram ? "telegram" : "email"} destination={byTelegram ? null : email} />}
-      footer={<AgreeNote />}
+      legal
     >
       <form
         onSubmit={(event) => {
@@ -109,7 +108,7 @@ export default function RegisterPage() {
           void handleSubmit(submit)(event);
         }}
         noValidate
-        className="grid gap-5"
+        className="grid gap-4"
       >
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
 
@@ -196,7 +195,7 @@ export default function RegisterPage() {
         </Stepper>
 
         {step === 0 ? <SocialButtons next={next} /> : null}
-        <p className="border-t border-border pt-4 text-center text-sm text-muted-foreground">
+        <p className="border-t border-border pt-3 text-center text-sm text-muted-foreground">
           {dict.auth.alreadyHaveAccount}{" "}
           <Link to={withNext("/login", next)} className="font-semibold text-primary underline-offset-4 hover:underline">
             {dict.auth.signIn}

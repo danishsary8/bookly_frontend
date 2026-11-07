@@ -72,7 +72,7 @@ export function useTurnstile(action: string, active = true) {
           action,
           theme: document.documentElement.classList.contains("dark") ? "dark" : "light",
           size: "flexible",
-          appearance: "interaction-only", // invisible unless Cloudflare needs the person to click, so the form stays short
+          appearance: "always",
           callback: (value: string) => {
             token.current = value;
             setProblem(false);

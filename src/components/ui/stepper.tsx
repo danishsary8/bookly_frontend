@@ -22,12 +22,14 @@ interface StepperProps {
   footer?: ReactNode;
   /** Stays mounted across steps, between the panel and the footer (e.g. the security check). */
   beforeFooter?: ReactNode;
+  /** Hide the visible step discs (sign-in's two steps explain themselves); screen readers still hear the step. */
+  hideIndicator?: boolean;
   className?: string;
 }
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-export function Stepper({ steps, current, label, status, children, footer, beforeFooter, className }: StepperProps) {
+export function Stepper({ steps, current, label, status, children, footer, beforeFooter, hideIndicator = false, className }: StepperProps) {
   const [shown, setShown] = useState(current);
   const [direction, setDirection] = useState(1);
   const [moved, setMoved] = useState(false);
@@ -51,7 +53,7 @@ export function Stepper({ steps, current, label, status, children, footer, befor
   return (
     <div className={cn("grid gap-5", className)}>
       {/* Quiet progress: small discs on one hairline; the current disc gets a soft ring, done discs a check. */}
-      <ol aria-label={label} className="flex items-center gap-3">
+      <ol aria-label={label} className={cn("flex items-center gap-3", hideIndicator && "sr-only")}>
         {steps.map((title, i) => {
           const done = i < current;
           const active = i === current;

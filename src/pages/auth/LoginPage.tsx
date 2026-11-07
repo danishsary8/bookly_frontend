@@ -3,7 +3,6 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { ArrowRight, Loader2, Smartphone } from "lucide-react";
-import { AgreeNote } from "@/features/auth/AgreeNote";
 import { Stepper } from "@/components/ui/stepper";
 import { authApi } from "@/api/endpoints/auth";
 import type { Customer } from "@/api/types";
@@ -91,17 +90,9 @@ export default function LoginPage() {
       eyebrow={s.welcomeBack}
       title={dict.auth.signIn}
       lead={s.loginLead}
-      footer={
-        <>
-          <Link to="/books" className="group mx-auto inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground">
-            {s.guest}
-            <ArrowRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
-          </Link>
-          <AgreeNote />
-        </>
-      }
+      legal
     >
-      <div className="grid gap-5">
+      <div className="grid gap-4">
         {state?.notice && !formError && !telegramError ? <FormAlert tone="success">{state.notice}</FormAlert> : null}
         {formError || telegramError ? <FormAlert ref={alertRef} title={formError ?? telegramError ?? undefined} /> : null}
 
@@ -123,6 +114,7 @@ export default function LoginPage() {
               label={s.signInSteps}
               status={s.stepOf(step + 1, steps.length, steps[step])}
               beforeFooter={turnstile.widget}
+              hideIndicator
               footer={
                 step === 0 ? (
                   <Button type="submit" variant="cta" size="lg" className="w-full">
@@ -242,13 +234,19 @@ export default function LoginPage() {
             <SocialButtons next={next} />
           </div>
         )}
-        {/* Second path, inside the card where people look for it. */}
-        <p className="border-t border-border pt-4 text-center text-sm text-muted-foreground">
-          {dict.auth.dontHaveAccount}{" "}
-          <Link to={withNext("/register", next)} className="font-semibold text-primary underline-offset-4 hover:underline">
-            {dict.auth.signUp}
+        {/* Other paths, inside the card: create an account, or just browse. */}
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border pt-3 text-sm text-muted-foreground">
+          <p className="text-sm">
+            {dict.auth.dontHaveAccount}{" "}
+            <Link to={withNext("/register", next)} className="font-semibold text-primary underline-offset-4 hover:underline">
+              {dict.auth.signUp}
+            </Link>
+          </p>
+          <Link to="/books" className="group inline-flex min-h-11 items-center gap-1.5 font-medium transition-colors duration-150 hover:text-foreground">
+            {s.guest}
+            <ArrowRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
           </Link>
-        </p>
+        </div>
       </div>
     </AuthPage>
   );

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import { CoverWall } from "@/features/auth/CoverWall";
+import { AgreeNote } from "@/features/auth/AgreeNote";
 import { brand } from "@/config/brand";
 import { useT } from "@/i18n";
 
@@ -28,9 +29,11 @@ interface AuthShellProps {
   children: ReactNode;
   /** Replaces the quotes on the lapis panel (sign-up and verify show the library card). */
   panel?: ReactNode;
+  /** Show the terms/privacy line: on the blue panel at ≥1024px, under the card on smaller screens. */
+  legal?: boolean;
 }
 
-export const AuthShell = ({ children, panel }: AuthShellProps) => {
+export const AuthShell = ({ children, panel, legal = false }: AuthShellProps) => {
   const { dict } = useT();
   return (
     <div className="auth-paper min-h-dvh bg-background text-foreground lg:h-dvh lg:overflow-hidden">
@@ -38,6 +41,7 @@ export const AuthShell = ({ children, panel }: AuthShellProps) => {
         <aside className="hero-lapis auth-cover hidden min-h-0 flex-col justify-between gap-6 overflow-hidden rounded-[14px] p-9 lg:flex xl:p-11">
           <Wordmark onLapis />
           {panel ?? <CoverWall />}
+          {legal ? <div className="border-t border-on-lapis-muted/20 pt-4"><AgreeNote onLapis /></div> : null}
         </aside>
 
         <main id="content" tabIndex={-1} className="relative flex min-h-0 flex-col px-4 py-5 sm:px-6 lg:overflow-y-auto lg:px-2 lg:py-0">
@@ -54,7 +58,10 @@ export const AuthShell = ({ children, panel }: AuthShellProps) => {
             </Link>
           </div>
           <div className="flex flex-1 items-start justify-center py-6 lg:py-0">
-            <div className="w-full max-w-[34rem]">{children}</div>
+            <div className="w-full max-w-[34rem]">
+              {children}
+              {legal ? <div className="mt-4 lg:hidden"><AgreeNote /></div> : null}
+            </div>
           </div>
         </main>
       </div>

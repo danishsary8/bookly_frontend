@@ -93,7 +93,7 @@ describe("Turnstile", () => {
     expect(options).toMatchObject({
       sitekey: "site-key",
       action: "login",
-      appearance: "interaction-only",
+      appearance: "always",
     });
 
     // Submitting before the check finishes waits for its token.
