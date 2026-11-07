@@ -896,6 +896,7 @@ export const en = {
     cardReaderName: "Bookly reader",
   },
   navLinks: {
+    browse: "Browse",
     books: "Books",
     authors: "Authors",
     series: "Series",
@@ -922,6 +923,7 @@ export const en = {
     help: "Help",
   },
   shell: {
+    preferences: "Language, currency and theme",
     accountMenuFor: (name: string) => `Account menu for ${name}`,
     you: "you",
     signedInAs: "Signed in as",

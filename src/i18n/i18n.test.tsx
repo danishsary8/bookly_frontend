@@ -116,14 +116,15 @@ describe("i18n system", () => {
     const user = userEvent.setup();
     renderWithProviders(<SiteHeader />);
 
-    // Books link in English
-    expect(screen.getByRole("link", { name: "Books" })).toBeInTheDocument();
+    // New arrivals link in English
+    expect(screen.getByRole("link", { name: "New arrivals" })).toBeInTheDocument();
 
-    const kmRadios = screen.getAllByRole("radio", { name: "ភាសាខ្មែរ" });
-    await user.click(kmRadios[0]);
+    // Language lives in the one "EN · $" settings menu.
+    await user.click(screen.getByRole("button", { name: "Language, currency and theme" }));
+    await user.click(await screen.findByRole("radio", { name: "ភាសាខ្មែរ" }));
 
-    // Books link in Khmer
-    expect(screen.getByRole("link", { name: "សៀវភៅ" })).toBeInTheDocument();
+    // The same link in Khmer
+    expect(screen.getByRole("link", { name: "សៀវភៅមកដល់ថ្មី" })).toBeInTheDocument();
   });
 
   it("saves locale to profile when signed in as customer", async () => {

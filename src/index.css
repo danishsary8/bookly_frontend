@@ -1147,3 +1147,16 @@
   .auth-card input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]),
   .auth-card [data-slot="button"] { height: 2.75rem; }
 }
+
+/* Header popovers (Browse, preferences): fade + 6px drop in, a little quicker out. */
+.nav-pop[data-state="open"] { animation: nav-pop-in 180ms cubic-bezier(0.16, 1, 0.3, 1); }
+.nav-pop[data-state="closed"] { animation: nav-pop-out 120ms ease-in forwards; }
+@keyframes nav-pop-in { from { opacity: 0; transform: translateY(-6px) scale(0.985); } }
+@keyframes nav-pop-out { to { opacity: 0; transform: translateY(-4px); } }
+/* Cart count: a small pop when it changes. */
+.badge-pop { animation: badge-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes badge-pop { from { transform: scale(0.6); } }
+@media (prefers-reduced-motion: reduce) {
+  .nav-pop[data-state], .badge-pop { animation: none; }
+  .site-header { transition: none; }
+}

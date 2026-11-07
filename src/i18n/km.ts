@@ -902,6 +902,7 @@ export const km: Translations = {
     cardReaderName: "អ្នកអាន Bookly",
   },
   navLinks: {
+    browse: "រុករក",
     books: "សៀវភៅ",
     authors: "អ្នកនិពន្ធ",
     series: "ឈុតសៀវភៅ",
@@ -928,6 +929,7 @@ export const km: Translations = {
     help: "ជំនួយ",
   },
   shell: {
+    preferences: "ភាសា រូបិយប័ណ្ណ និងរចនាប័ទ្ម",
     accountMenuFor: (name: string) => `ម៉ឺនុយគណនីសម្រាប់ ${name}`,
     you: "អ្នក",
     signedInAs: "បានចូលជា",
