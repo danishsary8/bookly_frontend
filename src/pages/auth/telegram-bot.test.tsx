@@ -108,7 +108,7 @@ describe("Sign-up with Telegram", () => {
     const post = vi.spyOn(api, "post");
     app("/register");
 
-    expect(await screen.findByLabelText(/^Phone/)).toBeInTheDocument();
+    expect(await screen.findByLabelText("Full name")).toBeInTheDocument();
     expect(screen.queryByRole("radio", { name: /Telegram/ })).not.toBeInTheDocument();
     await user.type(screen.getByLabelText("Full name"), "Sok Dara");
     await user.click(screen.getByRole("button", { name: "Continue" }));
