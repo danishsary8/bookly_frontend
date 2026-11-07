@@ -45,8 +45,8 @@ export const AuthShell = ({ children, panel, legal = false }: AuthShellProps) =>
         </aside>
 
         <main id="content" tabIndex={-1} className="relative flex min-h-0 flex-col px-4 py-5 sm:px-6 lg:overflow-y-auto lg:px-2 lg:py-0">
-          {/* Mobile: wordmark + back. Desktop: a single round back button in the corner, so the card can sit level with the panel. */}
-          <div className="flex items-center justify-between gap-4 lg:absolute lg:right-4 lg:top-4 lg:z-10">
+          {/* Mobile: wordmark + back. Desktop: the back button sits in the card header (AuthPage). */}
+          <div className="flex items-center justify-between gap-4 lg:hidden">
             <span className="lg:hidden"><Wordmark /></span>
             <Link
               to="/"

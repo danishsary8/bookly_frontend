@@ -2,6 +2,9 @@ import type { ReactNode } from "react";
 import BlurText from "@/components/BlurText";
 import { AuthShell } from "@/components/AuthShell";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { useT } from "@/i18n";
 
 /*
  * Frame for every customer auth page: AuthShell (cover panel at ≥ 1024px), a paper card holding
@@ -26,12 +29,24 @@ export function AuthPage({
   legal?: boolean;
 }) {
   useDocumentTitle(title);
+  const { dict } = useT();
   return (
     <AuthShell panel={panel} legal={legal}>
       {/* The form sits on a card of better paper, like a bookplate; links to other pages sit under it. */}
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgb(20_32_122/0.06),0_30px_60px_-36px_rgb(20_32_122/0.35)] sm:px-10 sm:py-7 lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-14 lg:py-10 [@media(min-width:1024px)_and_(max-height:820px)]:py-6">
-        <p className="eyebrow">{eyebrow}</p>
-        <h1 className="mt-2.5 text-[clamp(1.75rem,2.6vw,2.2rem)] leading-[1.08] text-foreground" aria-label={title}>
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgb(20_32_122/0.06),0_30px_60px_-36px_rgb(20_32_122/0.35)] sm:px-10 sm:py-7 lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-14 lg:py-8 [@media(min-width:1024px)_and_(max-height:860px)]:py-6">
+        <div className="flex items-center justify-between gap-4">
+          <p className="eyebrow">{eyebrow}</p>
+          {/* Desktop back to the shop, inside the card so it never overlaps anything. */}
+          <Link
+            to="/"
+            aria-label={dict.content.backToStore}
+            title={dict.content.backToStore}
+            className="hidden size-10 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground lg:grid"
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+          </Link>
+        </div>
+        <h1 className="mt-1 text-[clamp(1.75rem,2.6vw,2.2rem)] leading-[1.08] text-foreground" aria-label={title}>
           <BlurText
             key={title}
             as="span"
@@ -45,7 +60,7 @@ export function AuthPage({
           />
         </h1>
         <div className="mt-2 text-[15px] text-muted-foreground">{lead}</div>
-        <div className="mt-5 [@media(max-height:820px)]:mt-4">{children}</div>
+        <div className="mt-6 [@media(max-height:860px)]:mt-5">{children}</div>
       </div>
       {footer ? <div className="mt-3 grid gap-1 text-center text-sm text-muted-foreground">{footer}</div> : null}
     </AuthShell>
