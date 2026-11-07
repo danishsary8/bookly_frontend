@@ -749,6 +749,7 @@ export const km: Translations = {
     protectedBy: "ការពារដោយ Cloudflare Turnstile",
     stepEmail: "អ៊ីមែល",
     stepYou: "អំពីអ្នក",
+    stepContact: "ទំនាក់ទំនង",
     stepConfirm: "បញ្ជាក់",
     signInSteps: "ជំហានចូលគណនី",
     signUpSteps: "ជំហានបង្កើតគណនី",

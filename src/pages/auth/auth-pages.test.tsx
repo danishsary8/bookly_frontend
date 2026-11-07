@@ -116,10 +116,10 @@ describe("RegisterPage", () => {
     );
     app("/register");
     await user.type(screen.getByLabelText("Full name"), "Sok Dara");
-    await user.type(screen.getByLabelText("Email"), "dara@example.com");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.type(await screen.findByLabelText("Email"), "dara@example.com");
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.type(await screen.findByLabelText("Password", { selector: "input" }), "reading123");
-    await user.type(passwordInput("Confirm password"), "reading123");
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(await screen.findByRole("button", { name: "Create account" }));
     expect(await screen.findByText("The email has already been taken.")).toBeInTheDocument();

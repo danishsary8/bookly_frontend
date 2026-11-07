@@ -35,10 +35,10 @@ test("new customer: sign up → email code → verified", async ({ page }) => {
 
   await page.goto("/register");
   await page.getByLabel("Full name").fill("Test Reader");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByRole("textbox", { name: /^Email/ }).fill(email);
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByLabel("Password", { exact: true }).fill(password);
-  await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByRole("button", { name: /Create/ }).click();
   await page.waitForURL(/\/verify-email/);

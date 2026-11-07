@@ -82,16 +82,17 @@ describe("Sign-up with Telegram", () => {
     const post = telegramApi([{ status: "pending" }], { "/auth/register": { token: "tok", expires_at: null, verify_by: "telegram", customer: pending } });
     app("/register");
 
+    await user.type(await screen.findByLabelText("Full name"), "Sok Dara");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(await screen.findByRole("radio", { name: /Telegram/ }));
-    expect(screen.queryByLabelText(/^Phone/)).not.toBeInTheDocument();
     expect(screen.getByText("(optional)", { selector: "label span" })).toBeInTheDocument();
     expect(document.querySelector(".library-card")).toHaveTextContent("Confirm withTelegram");
-    await user.type(screen.getByLabelText("Full name"), "Sok Dara");
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.type(await screen.findByLabelText("Password", { selector: "input" }), "reading123");
-    await user.type(screen.getByLabelText("Confirm password", { selector: "input" }), "reading123");
     await user.click(screen.getByRole("button", { name: "Continue" }));
-    await user.click(await screen.findByRole("button", { name: "Create account" }));
+    expect(await screen.findByRole("button", { name: "Create account" })).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Phone/)).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Create account" }));
 
     await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/verify-email?via=telegram"));
     const body = post.mock.calls[0][1] as Record<string, unknown>;
@@ -108,9 +109,10 @@ describe("Sign-up with Telegram", () => {
     const post = vi.spyOn(api, "post");
     app("/register");
 
-    expect(await screen.findByLabelText("Full name")).toBeInTheDocument();
+    await user.type(await screen.findByLabelText("Full name"), "Sok Dara");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await screen.findByLabelText("Email");
     expect(screen.queryByRole("radio", { name: /Telegram/ })).not.toBeInTheDocument();
-    await user.type(screen.getByLabelText("Full name"), "Sok Dara");
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(await screen.findByText("Enter your email address.")).toBeInTheDocument();
     expect(post).not.toHaveBeenCalled();

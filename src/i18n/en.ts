@@ -743,6 +743,7 @@ export const en = {
     protectedBy: "Protected by Cloudflare Turnstile",
     stepEmail: "Email",
     stepYou: "About you",
+    stepContact: "Contact",
     stepConfirm: "Confirm",
     signInSteps: "Sign-in steps",
     signUpSteps: "Sign-up steps",

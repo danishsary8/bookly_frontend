@@ -40,15 +40,20 @@ export const AuthShell = ({ children, panel }: AuthShellProps) => {
           {panel ?? <CoverWall />}
         </aside>
 
-        <main id="content" tabIndex={-1} className="flex min-h-0 flex-col px-4 py-5 sm:px-6 lg:overflow-y-auto lg:px-2 lg:py-4">
-          <div className="flex items-center justify-between gap-4 lg:justify-end">
+        <main id="content" tabIndex={-1} className="relative flex min-h-0 flex-col px-4 py-5 sm:px-6 lg:overflow-y-auto lg:px-2 lg:py-0">
+          {/* Mobile: wordmark + back. Desktop: a single round back button in the corner, so the card can sit level with the panel. */}
+          <div className="flex items-center justify-between gap-4 lg:absolute lg:right-4 lg:top-4 lg:z-10">
             <span className="lg:hidden"><Wordmark /></span>
-            <Link to="/" className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-muted-foreground transition-colors duration-150 hover:text-foreground">
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              {dict.content.backToStore}
+            <Link
+              to="/"
+              aria-label={dict.content.backToStore}
+              title={dict.content.backToStore}
+              className="grid size-11 place-items-center rounded-full border border-border bg-card text-foreground shadow-[0_1px_3px_rgb(0_0_0/0.08)] transition-[background-color,transform] duration-150 hover:bg-muted active:scale-95"
+            >
+              <ArrowLeft className="size-[18px]" aria-hidden="true" />
             </Link>
           </div>
-          <div className="flex flex-1 items-start justify-center py-6 lg:py-2 lg:pt-[4vh]">
+          <div className="flex flex-1 items-start justify-center py-6 lg:py-0">
             <div className="w-full max-w-[28rem]">{children}</div>
           </div>
         </main>

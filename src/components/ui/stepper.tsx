@@ -78,7 +78,7 @@ export function Stepper({ steps, current, label, status, children, footer, befor
                     </motion.span>
                   </AnimatePresence>
                 </span>
-                <span className={cn("whitespace-nowrap text-[13px] transition-colors duration-300", active ? "font-semibold text-foreground" : done ? "font-medium text-foreground/80" : "text-muted-foreground", !active && "max-sm:sr-only")}>
+                <span className={cn("whitespace-nowrap text-[13px] transition-colors duration-300", active ? "font-semibold text-foreground" : done ? "font-medium text-foreground/80" : "text-muted-foreground", !active && (steps.length > 3 ? "sr-only" : "max-sm:sr-only"))}>
                   {title}
                 </span>
               </span>

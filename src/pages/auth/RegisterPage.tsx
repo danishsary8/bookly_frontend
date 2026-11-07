@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useSearchParams } from "react-router-dom";
@@ -27,7 +27,9 @@ import { referralSignup } from "@/features/account/referralAttribution";
 
 const FIELDS = ["name", "email", "phone", "password", "password_confirmation", "verify_by"] as const;
 /** Which step shows each field, so a server error can send the person back to it. */
-const STEP_FIELDS = [["name", "email", "verify_by"], ["password", "password_confirmation"], ["phone"]] as const;
+// One question per step: name → how we reach you → password → optional phone + review.
+const STEP_FIELDS = [["name"], ["email", "verify_by"], ["password", "password_confirmation"], ["phone"]] as const;
+const LAST = STEP_FIELDS.length - 1;
 
 export default function RegisterPage() {
   const [params] = useSearchParams();
@@ -40,13 +42,15 @@ export default function RegisterPage() {
   const features = useQuery(shopFeaturesQuery());
 
   const [step, setStep] = useState(0);
-  const { register, handleSubmit, setError, control, formState, trigger, getFieldState, getValues } = useForm<RegisterValues>({
+  const { register, handleSubmit, setError, control, formState, trigger, getFieldState, getValues, setValue } = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { name: "", email: "", phone: "", password: "", password_confirmation: "", verify_by: "email" },
   });
   const { errors, isSubmitting } = formState;
   const [password, name, email, channel] = useWatch({ control, name: ["password", "name", "email", "verify_by"] });
   const telegram = useTelegramBot();
+  // One password box with a show/hide eye replaces "type it again"; the API still gets both fields.
+  useEffect(() => setValue("password_confirmation", password ?? ""), [password, setValue]);
   const byTelegram = telegram && channel === "telegram";
   const turnstile = useTurnstile("register");
 
@@ -80,7 +84,7 @@ export default function RegisterPage() {
     }
   };
 
-  const steps = [s.stepYou, dict.auth.password, s.stepConfirm];
+  const steps = [s.stepYou, s.stepContact, dict.auth.password, s.stepConfirm];
   const goNext = async () => {
     setFormError(null);
     if (await trigger([...STEP_FIELDS[step]])) setStep(step + 1);
@@ -97,7 +101,7 @@ export default function RegisterPage() {
     >
       <form
         onSubmit={(event) => {
-          if (step < 2) {
+          if (step < LAST) {
             event.preventDefault();
             void goNext();
             return;
@@ -122,7 +126,7 @@ export default function RegisterPage() {
                   {s.stepBack}
                 </Button>
               ) : null}
-              {step < 2 ? (
+              {step < LAST ? (
                 <Button type="submit" variant="cta" size="lg" className="flex-1">
                   {s.stepContinue}
                 </Button>
@@ -137,8 +141,9 @@ export default function RegisterPage() {
           }
         >
           {step === 0 ? (
+            <TextField label={s.fullName} autoComplete="name" error={errors.name?.message} {...register("name")} />
+          ) : step === 1 ? (
             <div className="grid gap-5">
-              <TextField label={s.fullName} autoComplete="name" error={errors.name?.message} {...register("name")} />
               {telegram ? <ChannelPicker value={byTelegram ? "telegram" : "email"} field={register("verify_by")} /> : null}
               <TextField
                 label={dict.auth.email}
@@ -152,14 +157,11 @@ export default function RegisterPage() {
                 {...register("email")}
               />
             </div>
-          ) : step === 1 ? (
-            <div className="grid gap-5">
+          ) : step === 2 ? (
+            <div className="grid gap-3">
               <input type="email" name="username" autoComplete="username" value={email ?? ""} readOnly hidden />
-              <div className="grid gap-3">
-                <PasswordField label={dict.auth.password} autoComplete="new-password" aria-describedby="password-rules" error={errors.password?.message} {...register("password")} />
-                <PasswordChecklist id="password-rules" value={password ?? ""} />
-              </div>
-              <PasswordField label={s.confirmPassword} autoComplete="new-password" error={errors.password_confirmation?.message} {...register("password_confirmation")} />
+              <PasswordField label={dict.auth.password} autoComplete="new-password" aria-describedby="password-rules" error={errors.password?.message ?? errors.password_confirmation?.message} {...register("password")} />
+              <PasswordChecklist id="password-rules" value={password ?? ""} />
             </div>
           ) : (
             <div className="grid gap-5">
@@ -192,7 +194,6 @@ export default function RegisterPage() {
             </div>
           )}
         </Stepper>
-
 
         {step === 0 ? <SocialButtons next={next} /> : null}
         <p className="border-t border-border pt-4 text-center text-sm text-muted-foreground">
