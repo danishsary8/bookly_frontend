@@ -1334,6 +1334,7 @@ export const km: Translations = {
     loadingCategories: "កំពុងផ្ទុកប្រភេទ…",
   },
   cards: {
+    add: "បន្ថែម",
     untitled: "គ្មានចំណងជើង",
     saveToWishlist: (title: string) => `រក្សាទុក ${title} ក្នុងបញ្ជីប្រាថ្នា`,
     from: "ចាប់ពី",

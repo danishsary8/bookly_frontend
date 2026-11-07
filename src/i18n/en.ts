@@ -1328,6 +1328,7 @@ export const en = {
     loadingCategories: "Loading categories…",
   },
   cards: {
+    add: "Add",
     untitled: "Untitled",
     saveToWishlist: (title: string) => `Save ${title} to your wishlist`,
     from: "from",
