@@ -50,7 +50,7 @@ afterEach(() => {
 async function openPhoneSignIn() {
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
   app();
-  await user.click(await screen.findByRole("button", { name: "Sign in with phone number?" }));
+  await user.click(await screen.findByRole("button", { name: "Continue with phone number" }));
   return user;
 }
 
@@ -115,7 +115,7 @@ describe("Sign in with a code from Telegram", () => {
     setLanguage("km");
     try {
       app();
-      const toggle = await screen.findByRole("button", { name: "ចូលដោយប្រើលេខទូរសព្ទ?" });
+      const toggle = await screen.findByRole("button", { name: "បន្តដោយប្រើលេខទូរសព្ទ" });
       await userEvent.setup({ advanceTimers: vi.advanceTimersByTime }).click(toggle);
       expect(screen.getByLabelText("លេខទូរសព្ទ")).toHaveAccessibleDescription(/^លេខកូដផ្ញើទៅតែលេខដែលបានបញ្ជាក់ប៉ុណ្ណោះ។/);
     } finally {
