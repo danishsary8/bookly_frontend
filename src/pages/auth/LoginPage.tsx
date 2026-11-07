@@ -13,7 +13,6 @@ import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { AuthPage } from "@/features/auth/AuthPage";
 import { SocialButtons, TELEGRAM_ICON } from "@/features/auth/SocialButtons";
-import { anySocialEnabled } from "@/features/auth/social";
 import { loginSchema, type LoginValues } from "@/features/auth/schemas";
 import { useAfterSignIn } from "@/features/auth/useAfterSignIn";
 import { openTelegram, useTelegramLink } from "@/features/auth/telegram";
@@ -36,7 +35,6 @@ export default function LoginPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [mode, setMode] = useState<"email" | "phone">("email");
   const alertRef = useRef<HTMLDivElement>(null);
-  const buttonsOnTop = anySocialEnabled();
 
   // Two steps, like Apple/Google: email first, then password. A remembered email starts on the password step.
   const [step, setStep] = useState(state?.email ? 1 : 0);
@@ -106,7 +104,6 @@ export default function LoginPage() {
       <div className="grid gap-5">
         {state?.notice && !formError && !telegramError ? <FormAlert tone="success">{state.notice}</FormAlert> : null}
         {formError || telegramError ? <FormAlert ref={alertRef} title={formError ?? telegramError ?? undefined} /> : null}
-        {buttonsOnTop && (mode !== "email" || step === 0) ? <SocialButtons next={next} /> : null}
 
         {mode === "email" ? (
           <form
@@ -182,28 +179,20 @@ export default function LoginPage() {
         ) : null}
         {mode === "email" && step === 0 ? (
           <div className="grid gap-3">
+            <SocialButtons next={next} />
             {telegram ? (
-              <>
-                {/* Common "or" divider, then a quiet secondary option styled like the social buttons. */}
-                <div className="flex items-center gap-3 text-xs text-muted-foreground" aria-hidden="true">
-                  <span className="h-px flex-1 bg-border" />
-                  {s.or}
-                  <span className="h-px flex-1 bg-border" />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormError(null);
-                    setMode("phone");
-                  }}
-                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.04)] transition-colors duration-150 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <Smartphone className="size-4 text-muted-foreground" aria-hidden="true" />
-                  {s.signInWithPhone}
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={() => {
+                  setFormError(null);
+                  setMode("phone");
+                }}
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.04)] transition-colors duration-150 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <Smartphone className="size-4 text-muted-foreground" aria-hidden="true" />
+                {s.signInWithPhone}
+              </button>
             ) : null}
-            {buttonsOnTop ? null : <SocialButtons next={next} />}
           </div>
         ) : null}
         {mode === "email" ? null : (
@@ -250,7 +239,7 @@ export default function LoginPage() {
               </button>
             </div>
 
-            {buttonsOnTop ? null : <SocialButtons next={next} />}
+            <SocialButtons next={next} />
           </div>
         )}
         {/* Second path, inside the card where people look for it. */}

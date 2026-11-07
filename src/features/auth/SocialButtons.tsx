@@ -14,7 +14,7 @@ import { useT } from "@/i18n";
 /*
  * "Continue with Google / Facebook". A provider shows once its id is configured (src/features/auth/social.ts);
  * with neither configured the buttons stay visible but disabled, marked "coming soon".
- * Pages put the buttons above the email form when they work, below it while they don't.
+ * Pages put them under the email form, after an "or" divider, side by side.
  * `telegram` (sign-in page, while the API's bot is on) adds "Continue with Telegram": the bot asks the
  * customer to share their phone number, and the account that proved that number is signed in.
  */
@@ -178,9 +178,11 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
   };
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-3">
+      <Divider>{s.or}</Divider>
       {error || telegramError ? <FormAlert title={error ?? telegramError ?? undefined} /> : null}
       <div className="grid gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
         {enabled.map((p) => (
           <button
             key={p}
@@ -188,6 +190,7 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
             onClick={() => start(p)}
             disabled={busy !== null}
             aria-busy={busy === p || undefined}
+            aria-label={s.continueWith(NAMES[p])}
             aria-describedby={p === "facebook" && facebookTestersOnly() ? "facebook-testing" : undefined}
             className={cn(
               buttonClass,
@@ -195,9 +198,10 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
             )}
           >
             {busy === p ? <Loader2 className="size-[18px] animate-spin motion-reduce:animate-none" aria-hidden="true" /> : ICONS[p]}
-            {s.continueWith(NAMES[p])}
+            {NAMES[p]}
           </button>
         ))}
+        </div>
         {enabled.includes("facebook") && facebookTestersOnly() ? (
           <p id="facebook-testing" className="-mt-1 text-center text-xs text-muted-foreground">
             {s.facebookTesting}
@@ -227,7 +231,6 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
           )
         ) : null}
       </div>
-      <Divider>{s.orEmail}</Divider>
     </div>
   );
 }

@@ -59,13 +59,13 @@ describe("social sign-in", () => {
     expect(screen.getByText("Google and Facebook sign-in are coming soon.")).toBeInTheDocument();
   });
 
-  it("signs in with Google above the email form and goes back to ?next=", async () => {
+  it("signs in with Google under the email form and goes back to ?next=", async () => {
     vi.stubEnv("VITE_GOOGLE_CLIENT_ID", "client-1");
     fakeGoogle();
     const post = vi.spyOn(api, "post").mockResolvedValue({ token: "tok", expires_at: null, customer });
     app();
     expect(screen.queryByRole("button", { name: /Facebook/ })).not.toBeInTheDocument();
-    expect(screen.getByText("or use your email")).toBeInTheDocument();
+    expect(screen.getByText("or")).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
     expect(requestAccessToken).toHaveBeenCalled();

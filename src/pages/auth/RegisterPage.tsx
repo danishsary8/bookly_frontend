@@ -14,7 +14,6 @@ import { ChannelPicker } from "@/features/auth/ChannelPicker";
 import { LibraryCard } from "@/features/auth/LibraryCard";
 import { PasswordChecklist } from "@/features/auth/PasswordChecklist";
 import { SocialButtons } from "@/features/auth/SocialButtons";
-import { anySocialEnabled } from "@/features/auth/social";
 import { registerSchema, type RegisterValues } from "@/features/auth/schemas";
 import { useAfterSignIn } from "@/features/auth/useAfterSignIn";
 import { applyApiErrors, withNext } from "@/lib/forms";
@@ -109,7 +108,6 @@ export default function RegisterPage() {
         className="grid gap-5"
       >
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
-        {anySocialEnabled() && step === 0 ? <SocialButtons next={next} /> : null}
 
         <Stepper
           steps={steps}
@@ -196,7 +194,7 @@ export default function RegisterPage() {
         </Stepper>
 
 
-        {anySocialEnabled() || step > 0 ? null : <SocialButtons next={next} />}
+        {step === 0 ? <SocialButtons next={next} /> : null}
         <p className="border-t border-border pt-4 text-center text-sm text-muted-foreground">
           {dict.auth.alreadyHaveAccount}{" "}
           <Link to={withNext("/login", next)} className="font-semibold text-primary underline-offset-4 hover:underline">
