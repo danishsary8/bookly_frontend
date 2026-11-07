@@ -125,7 +125,7 @@ describe("social sign-in", () => {
     await waitFor(() => expect(post).toHaveBeenCalledWith("/auth/social/facebook", { access_token: "fb-token" }));
   });
 
-  it("while the Facebook app is for testers only, says so by the button and when the sign-in doesn't finish", async () => {
+  it("while the Facebook app is for testers only, stays quiet by the button and explains the sign-in doesn't finish", async () => {
     vi.stubEnv("VITE_FACEBOOK_APP_ID", "app-1");
     // Someone not on the tester list: Facebook shows its own error, the popup closes without a token.
     window.FB = { init: vi.fn(), login: vi.fn((cb: (r: { status: string }) => void) => cb({ status: "unknown" })) };
@@ -133,7 +133,7 @@ describe("social sign-in", () => {
     app();
 
     const button = screen.getByRole("button", { name: "Continue with Facebook" });
-    expect(button).toHaveAccessibleDescription(/only works for invited accounts/);
+    expect(screen.queryByText(/only works for invited accounts/)).not.toBeInTheDocument();
     await userEvent.click(button);
     expect(await screen.findByText(/Facebook sign-in didn't finish/)).toBeInTheDocument();
     expect(post).not.toHaveBeenCalled();

@@ -57,12 +57,18 @@ export function Stepper({ steps, current, label, status, children, footer, befor
           const active = i === current;
           return (
             <li key={title} aria-current={active ? "step" : undefined} className={cn("flex min-w-0 items-center gap-3", i < steps.length - 1 && "flex-1")}>
-              <span className="flex shrink-0 items-center gap-2">
+              {/* The current step is a soft tinted pill (disc + name); the others are plain discs. */}
+              <span
+                className={cn(
+                  "flex shrink-0 items-center gap-2 rounded-full transition-[background-color,padding] duration-300",
+                  active && "bg-[color-mix(in_srgb,var(--primary)_9%,transparent)] py-1 pl-1 pr-3",
+                )}
+              >
                 <span
                   className={cn(
                     "grid size-6 place-items-center rounded-full text-[11px] font-semibold tabular-nums transition-all duration-300",
                     done && "bg-primary text-primary-foreground",
-                    active && "bg-primary text-primary-foreground ring-[3px] ring-primary/20 ring-offset-2 ring-offset-card",
+                    active && "bg-primary text-primary-foreground",
                     !done && !active && "bg-muted text-muted-foreground",
                   )}
                 >

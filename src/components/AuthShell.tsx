@@ -54,7 +54,7 @@ export const AuthShell = ({ children, panel }: AuthShellProps) => {
             </Link>
           </div>
           <div className="flex flex-1 items-start justify-center py-6 lg:py-0">
-            <div className="w-full max-w-[28rem]">{children}</div>
+            <div className="w-full max-w-[34rem]">{children}</div>
           </div>
         </main>
       </div>

@@ -191,7 +191,6 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
             disabled={busy !== null}
             aria-busy={busy === p || undefined}
             aria-label={s.continueWith(NAMES[p])}
-            aria-describedby={p === "facebook" && facebookTestersOnly() ? "facebook-testing" : undefined}
             className={cn(
               buttonClass,
               "outline-none hover:border-foreground/40 hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-70",
@@ -202,11 +201,6 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
           </button>
         ))}
         </div>
-        {enabled.includes("facebook") && facebookTestersOnly() ? (
-          <p id="facebook-testing" className="-mt-1 text-center text-xs text-muted-foreground">
-            {s.facebookTesting}
-          </p>
-        ) : null}
         {telegram ? (
           telegramState.phase === "waiting" || telegramState.phase === "done" ? (
             telegramState.phase === "waiting" ? <TelegramWait url={telegramState.link.url} signIn onCancel={telegramLink.cancel} /> : null
