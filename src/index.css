@@ -1077,9 +1077,9 @@
 /* Auth pages "paper & cloth" (matches the splash; design-system/bookly/pages/auth.md).
    Scoped token overrides: warm paper in Daylight, a lamp-lit desk in Night. Contrast checked like MASTER §2.3. */
 .auth-paper {
-    --background: #F1E9D8;
-    --card: #FBF7EE;
-    --popover: #FBF7EE;
+    --background: #E9E1D2; /* a shade deeper and less yellow, so the card reads as a sheet on the desk */
+    --card: #FFFCF6; /* brighter paper for the form */
+    --popover: #FFFCF6;
     --surface-2: #E8DEC9;
     --secondary: #E8DEC9;
     --muted: #E8DEC9;
@@ -1088,7 +1088,7 @@
     --popover-foreground: #1B1A2E;
     --secondary-foreground: #1B1A2E;
     --muted-foreground: #5B5566;
-    --border: #DCCFB4;
+    --border: #D9CCB2;
     --input: #8C8170;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .27 0 0 0 0 .15 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
