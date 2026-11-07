@@ -51,7 +51,7 @@ export function Stepper({ steps, current, label, status, children, footer, befor
   }, []);
 
   return (
-    <div className={cn("grid gap-5", className)}>
+    <div className={cn("grid gap-4", className)}>
       {/* Quiet progress: small discs on one hairline; the current disc gets a soft ring, done discs a check. */}
       <ol aria-label={label} className={cn("flex items-center gap-3", hideIndicator && "sr-only")}>
         {steps.map((title, i) => {
