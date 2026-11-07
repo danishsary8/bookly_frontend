@@ -20,12 +20,14 @@ interface StepperProps {
   children: ReactNode;
   /** Back / Continue row under the panel. */
   footer?: ReactNode;
+  /** Stays mounted across steps, between the panel and the footer (e.g. the security check). */
+  beforeFooter?: ReactNode;
   className?: string;
 }
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-export function Stepper({ steps, current, label, status, children, footer, className }: StepperProps) {
+export function Stepper({ steps, current, label, status, children, footer, beforeFooter, className }: StepperProps) {
   const [shown, setShown] = useState(current);
   const [direction, setDirection] = useState(1);
   const [moved, setMoved] = useState(false);
@@ -48,21 +50,20 @@ export function Stepper({ steps, current, label, status, children, footer, class
 
   return (
     <div className={cn("grid gap-5", className)}>
-      <ol aria-label={label} className="flex items-center">
+      {/* Quiet progress: small discs on one hairline; the current disc gets a soft ring, done discs a check. */}
+      <ol aria-label={label} className="flex items-center gap-3">
         {steps.map((title, i) => {
           const done = i < current;
           const active = i === current;
           return (
-            <li key={title} aria-current={active ? "step" : undefined} className={cn("flex items-center", i < steps.length - 1 && "flex-1")}>
-              <span className="flex items-center gap-2">
-                <motion.span
-                  initial={false}
-                  animate={{ scale: active ? 1 : 0.88 }}
-                  transition={{ duration: 0.35, ease }}
+            <li key={title} aria-current={active ? "step" : undefined} className={cn("flex min-w-0 items-center gap-3", i < steps.length - 1 && "flex-1")}>
+              <span className="flex shrink-0 items-center gap-2">
+                <span
                   className={cn(
-                    "grid size-8 shrink-0 place-items-center rounded-full text-[13px] font-semibold tabular-nums transition-colors duration-300",
-                    done || active ? "bg-primary text-primary-foreground" : "border border-border bg-card text-muted-foreground",
-                    active && "shadow-[0_0_0_5px_color-mix(in_srgb,var(--primary)_15%,transparent)]",
+                    "grid size-6 place-items-center rounded-full text-[11px] font-semibold tabular-nums transition-all duration-300",
+                    done && "bg-primary text-primary-foreground",
+                    active && "bg-primary text-primary-foreground ring-[3px] ring-primary/20 ring-offset-2 ring-offset-card",
+                    !done && !active && "bg-muted text-muted-foreground",
                   )}
                 >
                   <AnimatePresence mode="wait" initial={false}>
@@ -73,16 +74,18 @@ export function Stepper({ steps, current, label, status, children, footer, class
                       exit={{ scale: 0.5, opacity: 0 }}
                       transition={{ duration: 0.2, ease }}
                     >
-                      {done ? <Check className="size-4" strokeWidth={2.75} aria-hidden="true" /> : i + 1}
+                      {done ? <Check className="size-3.5" strokeWidth={3} aria-hidden="true" /> : i + 1}
                     </motion.span>
                   </AnimatePresence>
-                </motion.span>
-                <span className={cn("whitespace-nowrap text-xs font-semibold", active ? "text-foreground" : "text-muted-foreground max-sm:sr-only")}>{title}</span>
+                </span>
+                <span className={cn("whitespace-nowrap text-[13px] transition-colors duration-300", active ? "font-semibold text-foreground" : done ? "font-medium text-foreground/80" : "text-muted-foreground", !active && "max-sm:sr-only")}>
+                  {title}
+                </span>
               </span>
               {i < steps.length - 1 ? (
-                <span className="relative mx-3 h-0.5 min-w-4 flex-1 overflow-hidden rounded-full bg-border" aria-hidden="true">
+                <span className="relative h-px min-w-6 flex-1 bg-border" aria-hidden="true">
                   <motion.span
-                    className="absolute inset-0 origin-left rounded-full bg-primary"
+                    className="absolute inset-0 origin-left bg-primary"
                     initial={false}
                     animate={{ scaleX: done ? 1 : 0 }}
                     transition={{ duration: 0.45, ease }}
@@ -123,6 +126,7 @@ export function Stepper({ steps, current, label, status, children, footer, class
         </div>
       </motion.div>
 
+      {beforeFooter}
       {footer ? <div className="flex items-center gap-3">{footer}</div> : null}
     </div>
   );

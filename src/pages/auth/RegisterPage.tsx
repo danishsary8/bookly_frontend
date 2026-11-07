@@ -116,6 +116,7 @@ export default function RegisterPage() {
           current={step}
           label={s.signUpSteps}
           status={s.stepOf(step + 1, steps.length, steps[step])}
+          beforeFooter={turnstile.widget}
           footer={
             <>
               {step > 0 ? (
@@ -190,7 +191,6 @@ export default function RegisterPage() {
                   </div>
                 ))}
               </dl>
-              {turnstile.widget}
             </div>
           )}
         </Stepper>

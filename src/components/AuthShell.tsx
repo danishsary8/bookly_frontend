@@ -48,7 +48,7 @@ export const AuthShell = ({ children, panel }: AuthShellProps) => {
               {dict.content.backToStore}
             </Link>
           </div>
-          <div className="flex flex-1 items-center justify-center py-6 lg:py-2">
+          <div className="flex flex-1 items-start justify-center py-6 lg:py-2 lg:pt-[4vh]">
             <div className="w-full max-w-[28rem]">{children}</div>
           </div>
         </main>
