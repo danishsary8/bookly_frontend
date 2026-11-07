@@ -125,6 +125,7 @@ export default function LoginPage() {
               current={step}
               label={s.signInSteps}
               status={s.stepOf(step + 1, steps.length, steps[step])}
+              beforeFooter={turnstile.widget}
               footer={
                 step === 0 ? (
                   <Button type="submit" variant="cta" size="lg" className="w-full">
@@ -174,12 +175,9 @@ export default function LoginPage() {
                       {dict.auth.forgotPassword}
                     </Link>
                   </div>
-
                 </div>
               )}
             </Stepper>
-            {/* The security check stays mounted across both steps so it is ready by the time the password is in. */}
-            {turnstile.widget ? <div className="mt-4">{turnstile.widget}</div> : null}
           </form>
         ) : null}
         {mode === "email" && step === 0 ? (
