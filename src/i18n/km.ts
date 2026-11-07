@@ -763,7 +763,7 @@ export const km: Translations = {
     welcome: "សូមស្វាគមន៍មកកាន់ Bookly",
     welcomeName: (name: string) => `សូមស្វាគមន៍ ${name}`,
     loginLead: "បន្តពីកន្លែងដែលអ្នកបានឈប់៖ កន្ត្រក សៀវភៅដែលបានរក្សាទុក និងការបញ្ជាទិញរបស់អ្នក។",
-    signInWithPhone: "ចូលដោយប្រើលេខទូរសព្ទ?",
+    signInWithPhone: "បន្តដោយប្រើលេខទូរសព្ទ",
     signInWithEmail: "ចូលដោយប្រើអ៊ីមែល និងពាក្យសម្ងាត់វិញ?",
     phoneSignInLead: "បូត Telegram របស់ Bookly ផ្ញើលេខកូដចូលទៅលេខទូរសព្ទនៃគណនី Bookly របស់អ្នក។",
     phoneNumber: "លេខទូរសព្ទ",

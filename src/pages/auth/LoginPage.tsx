@@ -193,19 +193,25 @@ export default function LoginPage() {
         {mode === "email" && step === 0 ? (
           <div className="grid gap-3">
             {telegram ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                className="w-full gap-2 font-semibold"
-                onClick={() => {
-                  setFormError(null);
-                  setMode("phone");
-                }}
-              >
-                <Smartphone className="size-[18px]" aria-hidden="true" />
-                {s.signInWithPhone}
-              </Button>
+              <>
+                {/* Common "or" divider, then a quiet secondary option styled like the social buttons. */}
+                <div className="flex items-center gap-3 text-xs text-muted-foreground" aria-hidden="true">
+                  <span className="h-px flex-1 bg-border" />
+                  {s.or}
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormError(null);
+                    setMode("phone");
+                  }}
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.04)] transition-colors duration-150 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <Smartphone className="size-4 text-muted-foreground" aria-hidden="true" />
+                  {s.signInWithPhone}
+                </button>
+              </>
             ) : null}
             {buttonsOnTop ? null : <SocialButtons next={next} />}
           </div>

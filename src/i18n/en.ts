@@ -757,7 +757,7 @@ export const en = {
     welcome: "Welcome to Bookly",
     welcomeName: (name: string) => `Welcome, ${name}`,
     loginLead: "Pick up where you left off: your cart, saved books and orders.",
-    signInWithPhone: "Sign in with phone number?",
+    signInWithPhone: "Continue with phone number",
     signInWithEmail: "Sign in with email and password?",
     phoneSignInLead: "The Bookly Telegram bot sends a sign-in code to the phone number of your Bookly account.",
     phoneNumber: "Phone number",

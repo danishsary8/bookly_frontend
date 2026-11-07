@@ -7,9 +7,9 @@ import { useT } from "@/i18n";
 export function AgreeNote() {
   const { dict } = useT();
   const [before, middle, after] = dict.signin.agree.split(/\{terms\}|\{privacy\}/);
-  const link = "font-semibold text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground";
+  const link = "font-medium text-foreground/80 underline decoration-foreground/25 underline-offset-2 transition-colors hover:text-foreground hover:decoration-foreground";
   return (
-    <div className="grid gap-2 border-t border-border pt-4 text-center text-xs leading-5 text-muted-foreground">
+    <div className="mx-auto grid max-w-[22rem] gap-1.5 pt-1 text-center text-[11.5px] leading-[1.6] text-muted-foreground">
       <p>
         {before}
         <Link to="/terms" className={link}>{dict.footer.terms}</Link>
@@ -19,7 +19,7 @@ export function AgreeNote() {
       </p>
       {turnstileSiteKey() ? (
         <p className="inline-flex items-center justify-center gap-1.5">
-          <ShieldCheck className="size-3.5 text-success" aria-hidden="true" />
+          <ShieldCheck className="size-3 text-success" aria-hidden="true" />
           {dict.signin.protectedBy}
         </p>
       ) : null}
