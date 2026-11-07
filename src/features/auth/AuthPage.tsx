@@ -29,7 +29,7 @@ export function AuthPage({
   return (
     <AuthShell panel={panel} legal={legal}>
       {/* The form sits on a card of better paper, like a bookplate; links to other pages sit under it. */}
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgb(20_32_122/0.06),0_30px_60px_-36px_rgb(20_32_122/0.35)] sm:px-10 sm:py-7 [@media(min-width:1024px)_and_(max-height:820px)]:py-6">
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgb(20_32_122/0.06),0_30px_60px_-36px_rgb(20_32_122/0.35)] sm:px-10 sm:py-7 lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-14 lg:py-10 [@media(min-width:1024px)_and_(max-height:820px)]:py-6">
         <p className="eyebrow">{eyebrow}</p>
         <h1 className="mt-2.5 text-[clamp(1.75rem,2.6vw,2.2rem)] leading-[1.08] text-foreground" aria-label={title}>
           <BlurText

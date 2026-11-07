@@ -57,8 +57,8 @@ export const AuthShell = ({ children, panel, legal = false }: AuthShellProps) =>
               <ArrowLeft className="size-[18px]" aria-hidden="true" />
             </Link>
           </div>
-          <div className="flex flex-1 items-start justify-center py-6 lg:py-0">
-            <div className="w-full max-w-[34rem]">
+          <div className="flex flex-1 items-start justify-center py-6 lg:items-stretch lg:py-0">
+            <div className="w-full max-w-[34rem] lg:flex lg:max-w-[36rem] lg:flex-col">
               {children}
               {legal ? <div className="mt-4 lg:hidden"><AgreeNote /></div> : null}
             </div>
