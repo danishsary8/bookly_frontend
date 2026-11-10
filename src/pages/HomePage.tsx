@@ -7,6 +7,8 @@ import { BookShelf } from "@/components/catalog/BookShelf";
 import { CatalogRows } from "@/components/catalog/CatalogRows";
 import { collectionQueries, collectionText } from "@/api/endpoints/collections";
 import { CategoryTiles } from "@/components/home/CategoryTiles";
+import { HomeHero } from "@/components/home/HomeHero";
+import { readingListsApi } from "@/api/endpoints/readingLists";
 import { ShelfHero } from "@/components/home/ShelfHero";
 import { StaffPicks } from "@/components/home/StaffPicks";
 import { StoreRatingBadge } from "@/components/ratings/StoreRatingBadge";
@@ -53,6 +55,10 @@ export default function HomePage() {
   const h = dict.homePage;
   // Seasonal collections (owner 2026-11-01): up to 2 live ones, above New arrivals. None, or an older API: no row.
   const collections = useQuery(collectionQueries.live());
+  const newest = useQuery(catalogQueries.books({ sort: "newest", per_page: 10 }));
+  // Hero: the staff's picks (same query StaffPicks uses, so no extra request); top rated until/unless there are some.
+  const picks = useQuery({ queryKey: ["reading-lists", "picks"], queryFn: readingListsApi.picks });
+  const picked = (picks.data ?? []).flatMap((list) => list.books.flatMap((entry) => (entry.book ? [entry.book] : []))).filter((b, i, all) => all.findIndex((x) => x.id === b.id) === i).slice(0, 6);
   const rated = useQuery(catalogQueries.books({ sort: "rating", per_page: 10 }));
   const categories = useQuery(catalogQueries.categories());
   const series = useQuery(catalogQueries.seriesList({ per_page: 20 }));
@@ -79,12 +85,16 @@ export default function HomePage() {
   return (
     <div className="overflow-x-clip">
       <JsonLd data={websiteJsonLd} />
-      {/* Full-bleed paper band with the 3D shelf. */}
-      <div className="home-paper border-b border-border">
-        <ShelfHero />
-      </div>
-      <div className="container-shell grid gap-20 pb-8 pt-12">
-
+      <HomeHero
+        featured={picked.length >= 2 ? picked : rated.data?.data.slice(0, 5)}
+        label={picked.length >= 2 ? dict.readingLists.staffPick : h.topRated}
+        stats={[
+          { label: h.books, value: newest.data?.meta.total },
+          { label: h.authors, value: authors.data?.meta.total },
+          { label: h.categories, value: categories.data?.length },
+        ]}
+      />
+      <div className="container-shell pt-10">
         <ul className="grid gap-4 sm:grid-cols-3" aria-label={h.why}>
           {promises.map(({ Icon, title, text }) => (
             <li key={title} className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
@@ -98,6 +108,12 @@ export default function HomePage() {
             </li>
           ))}
         </ul>
+      </div>
+      {/* Full-bleed paper band with the 3D shelf. */}
+      <div className="home-paper mt-16 border-y border-border">
+        <ShelfHero />
+      </div>
+      <div className="container-shell grid gap-20 pb-8 pt-16">
 
         {(collections.data ?? []).map((c) => {
           const text = collectionText(c, lang);

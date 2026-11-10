@@ -52,7 +52,7 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
   const reveal = "opacity-0 transition-[opacity,translate] duration-200 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100";
 
   return (
-    <article className={cn("group flex h-full flex-col", className)}>
+    <article className={cn("group relative flex h-full flex-col", className)}>
       <div className="relative">
         <Link to={href} onClick={(e) => morphTo(e, book, key)} tabIndex={-1} aria-hidden="true" className="block">
           <MorphCover

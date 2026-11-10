@@ -10,7 +10,7 @@ import { formatMoney, useCurrency } from "@/stores/currency";
 import { useT } from "@/i18n";
 
 /*
- * Home hero: an endless shelf of books standing spine-out on warm paper. The book in the middle is pulled out and
+ * Home "shelf" section (below the hero): an endless shelf of books standing spine-out on warm paper. The book in the middle is pulled out and
  * turned in 3D so its cover faces you, tilted a little and leaning towards the cursor (design-system/bookly/pages/home.md).
  * Change book: click a spine, the arrows, a row tab, drag, or ←/→ while the shelf has focus; it also drifts on by
  * itself every few seconds until someone interacts. Click the cover to open the book.
@@ -56,12 +56,19 @@ export function ShelfHero() {
   }));
 
   return (
-    <section aria-labelledby="shelf-title" className="shelf-hero relative overflow-hidden">
-      <h1 id="shelf-title" className="sr-only">{dict.splash.tagline}</h1>
+    <section aria-labelledby="shelf-title" className="shelf-hero relative overflow-clip [contain:paint]">
+      <div className="relative z-10 px-4 pt-14 text-center">
+        <p className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-accent-text">
+          <span className="h-px w-10 bg-current" aria-hidden="true" />
+          {h.shelfEyebrow}
+          <span className="h-px w-10 bg-current" aria-hidden="true" />
+        </p>
+        <h2 id="shelf-title" className="mt-2 font-display text-[clamp(1.75rem,3vw,2.4rem)] leading-tight">{h.shelfTitle}</h2>
+      </div>
 
       {/* Row tabs with a blue pill behind the active one. */}
       {available.length > 1 ? (
-        <nav aria-label={h.browse} className="relative z-10 mx-auto flex w-max max-w-full justify-center pt-6">
+        <nav aria-label={h.browse} className="relative z-10 mx-auto flex w-max max-w-full justify-center px-4 pt-5">
           <ul className="flex overflow-x-auto rounded-full border border-border bg-card/70 p-1 backdrop-blur-sm">
             {available.map((id) => (
               <li key={id}>
@@ -110,7 +117,7 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
   // Book size follows the hero height.
   useLayoutEffect(() => {
     const measure = () => {
-      const H = Math.max(220, Math.min(window.innerHeight * 0.46, window.innerWidth * 0.36, 440));
+      const H = Math.max(200, Math.min(window.innerHeight * 0.42, window.innerWidth * 0.3, 400));
       setDims({ H, ws: H * 0.15, d: H * (2 / 3), gap: H * 0.028 });
     };
     measure();
