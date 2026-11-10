@@ -54,7 +54,7 @@ function Summary() {
   const cartVersion = (data.items ?? []).map((i) => `${i.id}:${i.quantity}`).join(",") + `|${data.subtotal_usd}`;
 
   return (
-    <aside aria-labelledby="summary-title" className="shop-card grid gap-4 rounded-2xl border border-border bg-card p-5 sm:px-6 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
+    <aside aria-labelledby="summary-title" className="shop-card grid gap-4 rounded-2xl border border-border bg-card p-5 short:gap-3 short:py-4 sm:px-6 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
       <FreeGiftLine gift={data.free_gift} />
       <div className="group flex items-end justify-between gap-4">
         <div>
@@ -241,7 +241,7 @@ export default function CartPage() {
           crumbs={[{ label: dict.cartPage.home, to: "/" }, { label: dict.nav.cart }]}
           title={dict.cart.title}
           aside={count ? <CheckoutProgress current="cart" /> : undefined}
-          className="pb-6 sm:pt-6"
+          className="pb-6 sm:pt-6 short:gap-2 short:pb-4 short:pt-3 short:[&_h1]:text-[2.6rem]"
         />
         <CartGate headingLevel="h2">
           <CartContents />

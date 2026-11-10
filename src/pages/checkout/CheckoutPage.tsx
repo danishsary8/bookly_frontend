@@ -212,7 +212,7 @@ export default function CheckoutPage() {
           crumbs={[{ label: k.home, to: "/" }, { label: dict.nav.cart, to: "/cart" }, { label: dict.checkout.title }]}
           title={dict.checkout.title}
           aside={<CheckoutProgress current="details" withPay={paymentMethod === "khqr"} />}
-          className="pb-6 sm:pt-6"
+          className="pb-6 sm:pt-6 short:gap-2 short:pb-4 short:pt-3 short:[&_h1]:text-[2.6rem]"
         />
 
         <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-12 lg:gap-10">
@@ -304,7 +304,7 @@ export default function CheckoutPage() {
 
           <aside aria-labelledby="checkout-summary" className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:col-span-5 xl:col-span-4">
             <FreeGiftLine gift={data?.free_gift} />
-            <div className="shop-card grid gap-4 rounded-2xl border border-border bg-card p-5 sm:px-6">
+            <div className="shop-card grid gap-4 rounded-2xl border border-border bg-card p-5 short:gap-3 short:py-4 sm:px-6">
               <div className="group flex items-end justify-between gap-4">
                 <div>
                   <h2 id="checkout-summary" className="font-display text-[1.563rem] leading-tight">

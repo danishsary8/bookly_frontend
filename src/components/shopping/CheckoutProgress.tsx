@@ -7,7 +7,7 @@ import { useT } from "@/i18n";
  * The buying journey as one quiet rail (pages/shopping.md): Cart → Delivery & payment → (Pay, KHQR only) → Done.
  * Finished steps show a check (the cart step links back while checking out); the current one has
  * aria-current="step". The rule between two steps fills in lapis once the first is done. Below 640px only the
- * discs and the current label show.
+ * discs and the current label show (the other labels stay for screen readers).
  */
 
 export type CheckoutStep = "cart" | "details" | "pay" | "done";
@@ -40,7 +40,7 @@ export function CheckoutProgress({ current, withPay = false, className }: { curr
             </span>
           );
           const text = (
-            <span className={cn("text-sm font-semibold", state === "current" ? "text-foreground" : "hidden text-muted-foreground sm:inline")}>
+            <span className={cn("text-sm font-semibold", state === "current" ? "text-foreground" : "sr-only text-muted-foreground sm:not-sr-only")}>
               {label}
               {state === "done" ? <span className="sr-only"> ({s.stepDoneSr})</span> : null}
             </span>
@@ -50,7 +50,7 @@ export function CheckoutProgress({ current, withPay = false, className }: { curr
               {step === "cart" && state === "done" && current === "details" ? (
                 <Link to="/cart" className="group flex min-h-11 items-center gap-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   {disc}
-                  <span className="hidden text-sm font-semibold text-muted-foreground underline-offset-4 group-hover:text-foreground group-hover:underline sm:inline">
+                  <span className="sr-only text-sm font-semibold text-muted-foreground underline-offset-4 group-hover:text-foreground group-hover:underline sm:not-sr-only">
                     {label}
                     <span className="sr-only"> ({s.stepDoneSr})</span>
                   </span>
