@@ -156,7 +156,8 @@ export default function CheckoutPage() {
       queryClient.removeQueries({ queryKey: ["orders"] });
       // A KHQR order waits for payment: straight to its QR page.
       if (order.payment_method === "khqr" && order.status === "pending") navigate(`/account/orders/${order.id}/pay`, { replace: true });
-      else navigate(`/checkout/success/${order.id}`, { replace: true, state: { order } });
+      // The order's lines carry no covers, so the cart's go along for the thank-you page (display only).
+      else navigate(`/checkout/success/${order.id}`, { replace: true, state: { order, covers: (cart.data?.items ?? []).map((l) => ({ src: l.cover_image_url, title: l.book?.title })) } });
     },
     onError: (error) => {
       const apiError = ApiError.from(error);

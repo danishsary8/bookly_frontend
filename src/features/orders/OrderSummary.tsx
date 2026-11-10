@@ -5,6 +5,7 @@ import type { Order, OrderItem } from "@/api/types";
 import { formatAddressLines } from "@/features/account/address";
 import { mapsLink } from "@/features/maps/googleMaps";
 import { percentLabel } from "@/features/offers/percent";
+import { cn } from "@/lib/utils";
 import { formatMoney, formatUsd, useCurrency } from "@/stores/currency";
 import { formatName, useT } from "@/i18n";
 
@@ -18,9 +19,11 @@ export function OrderItemsCard({
   order,
   totalLabel,
   itemAction,
+  className,
 }: {
   order: Order;
   totalLabel?: string;
+  className?: string;
   /** Something to show beside a line, e.g. a review link once the order is delivered. */
   itemAction?: (item: OrderItem) => ReactNode;
 }) {
@@ -28,7 +31,7 @@ export function OrderItemsCard({
   const { dict } = useT();
   const t = dict.orderParts;
   return (
-    <section aria-labelledby={`order-items-${order.id}`} className="rounded-xl border border-border bg-card p-5 sm:p-6">
+    <section aria-labelledby={`order-items-${order.id}`} className={cn("rounded-xl border border-border bg-card p-5 sm:p-6", className)}>
       <h2 id={`order-items-${order.id}`} className="font-display text-[1.563rem] leading-tight">
         {t.items(order.item_count ?? 0)}
       </h2>
@@ -83,11 +86,11 @@ export function OrderItemsCard({
   );
 }
 
-export function DeliveryAddressCard({ address, title }: { address: Order["shipping_address"]; title?: string }) {
+export function DeliveryAddressCard({ address, title, className }: { address: Order["shipping_address"]; title?: string; className?: string }) {
   const { dict } = useT();
   if (!address) return null;
   return (
-    <section aria-labelledby="order-address" className="grid content-start gap-2 rounded-xl border border-border bg-card p-5 sm:p-6">
+    <section aria-labelledby="order-address" className={cn("grid content-start gap-2 rounded-xl border border-border bg-card p-5 sm:p-6", className)}>
       <h2 id="order-address" className="flex items-center gap-2 font-display text-[1.563rem] leading-tight">
         <MapPin className="size-5 text-primary" aria-hidden="true" /> {title ?? dict.orderParts.deliveringTo}
       </h2>
