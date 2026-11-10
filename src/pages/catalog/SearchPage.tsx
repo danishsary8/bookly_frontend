@@ -4,6 +4,7 @@ import { BookOpen, Clock, Folder, Search, SearchX, TrendingUp, X } from "lucide-
 import { Link, useSearchParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { CatalogBrowser } from "@/components/catalog/CatalogBrowser";
+import { coversOf, useCatalogListing } from "@/components/catalog/catalogListing";
 import { PageHeader } from "@/components/catalog/PageHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -32,6 +33,7 @@ export default function SearchPage() {
   const [lastQ, setLastQ] = useState(q);
 
   const recentSearches = useRecentSearches();
+  const listing = useCatalogListing({}, Boolean(q));
 
   const categoriesQuery = useQuery({
     ...catalogQueries.categories(),
@@ -68,6 +70,7 @@ export default function SearchPage() {
         crumbs={[{ label: p.home, to: "/" }, { label: s.title }]}
         title={q ? p.resultsFor(q) : s.title}
         lead={q ? undefined : p.searchLead}
+        covers={q ? coversOf(listing.data?.data, 4) : undefined}
       />
 
       <form role="search" onSubmit={submit} className="mb-6 flex max-w-2xl gap-3">
