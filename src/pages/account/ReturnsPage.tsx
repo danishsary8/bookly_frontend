@@ -27,7 +27,7 @@ function ReturnRow({ item }: { item: ReturnRequest }) {
     <li>
       <Link
         to={`/account/returns/${item.id}`}
-        className="group grid gap-3 rounded-xl border border-border bg-card p-4 outline-none transition-colors duration-150 hover:border-primary/50 focus-visible:ring-2 focus-visible:ring-ring sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5"
+        className="group grid gap-3 shop-card rounded-2xl border border-border bg-card p-4 outline-none transition-colors duration-150 hover:border-primary/50 focus-visible:ring-2 focus-visible:ring-ring sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5"
       >
         <span className="grid min-w-0 gap-1">
           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
