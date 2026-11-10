@@ -22,6 +22,7 @@ const trigger = (): Element | null => {
 
 /** The visible cover image closest to `from`: walks up a few ancestors and takes the first sized <img> inside. */
 const findCover = (from: Element | null): HTMLImageElement | null => {
+  if (from instanceof HTMLImageElement && from.complete && from.naturalWidth > 0) return from;
   let node: Element | null = from;
   for (let depth = 0; node && depth < 7; depth++, node = node.parentElement) {
     const explicit = node.querySelector<HTMLImageElement>("[data-fly-cover] img, img[data-fly-cover]");

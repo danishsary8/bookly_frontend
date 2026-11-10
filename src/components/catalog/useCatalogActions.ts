@@ -89,10 +89,11 @@ export function useAddToCart() {
   });
 
   return {
-    add: (book: BookCard, variantId?: number, quantity?: number) => {
+    /** `options.from`: the cover to fly from, when it isn't next to the button that was pressed. */
+    add: (book: BookCard, variantId?: number, quantity?: number, options?: { from?: Element | null }) => {
       if (!gate.check("signInToCart") || !book.id) return;
       // The cover flies into the header cart straight away; the toast confirms once the API answers.
-      flyToCart();
+      flyToCart(options?.from ?? undefined);
       mutation.mutate({ book, variantId, quantity });
     },
     pendingBookId: mutation.isPending ? mutation.variables?.book.id : undefined,

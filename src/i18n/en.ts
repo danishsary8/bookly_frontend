@@ -1348,6 +1348,7 @@ export const en = {
     playSlides: "Play slideshow",
     pauseSlides: "Pause slideshow",
     pageCount: (n: number) => `${n} pages`,
+    seeAllRow: (row: string) => `See all ${row.toLowerCase()}`,
     showBook: (title: string) => `Show ${title}`,
     inDays: (n: number) => (n <= 0 ? "Out today" : n === 1 ? "Tomorrow" : `In ${n} days`),
     releaseTimeline: "Release timeline",

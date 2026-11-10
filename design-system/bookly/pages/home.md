@@ -52,3 +52,10 @@ On `/` the header search hides (fade) while the hero search is on screen, and re
 - Caption centred: "Popular books · n of N", title, author with a gold price chip, then one fixed-height slot (vertically centred): the short description, or — when the book has none or it only repeats title and author — up to three fact chips (formats, year, pages). The controls never move between slides.
 - Controls: prev, View book (outlined; the gold slide timer runs along its bottom edge), next, pause.
 - Left side keeps the v3 changes (one CTA, three quiet category links, calmer background); the two columns are now equal.
+
+## Hero v5 + Shelf v2 (2026-11-10)
+- Hero: no fact chips; a description shows only when the book has one (two lines). Cover up to 330px, sized from the screen height; it leans toward the mouse (±6° Y, ±4° X) and lifts on hover.
+- Shelf: books stand on an oak board (a 3D floor that runs back plus a front lip drawn flat on top) with a soft contact shadow each; no reflections. Every book is a closed box with its own height (86–100%) and thickness (84–100%) from its id, bottoms aligned on the board. Spines take their cover's colour (canvas average, deepened 18%; covers without CORS keep a cloth colour) with ink chosen by luminance, the full title (two columns when long) and the author's surname instead of the "B" mark.
+- Caption: one card row — prev, title and author, rating and price, Add to cart (the open cover flies to the cart), View book, next; stacks on phones. "See all <row>" sits right of the tabs; the how-to hint is for screen readers and shows only while the shelf has keyboard focus.
+- Motion: slower pull (spring 4.2), a new row slides in from the side, autoplay 3.2 s.
+- Size: book height = (screen height − 405) / 1.12, 190–380px, so heading, tabs, shelf and caption fit one laptop screen (checked 1366×768, 1440×900, 1920×928).

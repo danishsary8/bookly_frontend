@@ -1220,7 +1220,6 @@
 .shelf-row-more { mask-image: linear-gradient(to right, #000 calc(100% - 3.5rem), transparent); }
 .shelf-row-less { mask-image: linear-gradient(to left, #000 calc(100% - 3.5rem), transparent); }
 .shelf-row-more.shelf-row-less { mask-image: linear-gradient(to right, transparent, #000 3.5rem, #000 calc(100% - 3.5rem), transparent); }
-.peer:focus-visible ~ * .shelf-hint { color: var(--primary); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
 
 /* Home "Coming soon" placeholder: the blank covers breathe gently. */
 .coming-ghost { animation: coming-ghost 3s ease-in-out infinite; }
@@ -1255,7 +1254,28 @@
 }
 /* Shelf: every face stands on a polished floor — a short, fading mirror image below it (Chromium and Safari;
    other browsers simply show no reflection). */
-.shelf-face { -webkit-box-reflect: below 2px linear-gradient(to bottom, transparent 74%, rgb(0 0 0 / 0.22)); }
+/* Shelf v2: books stand on an oak board, each with a soft contact shadow (no mirror images any more). */
+.shelf-floor {
+  background: linear-gradient(to top, #d9b98f 0%, #e6cfae 14%, rgb(236 222 200 / 0.75) 42%, rgb(236 222 200 / 0) 100%);
+  mask-image: linear-gradient(to right, transparent, #000 22%, #000 78%, transparent);
+}
+.shelf-lip {
+  background: linear-gradient(to bottom, #f1dcbc 0, #c9a274 2px, #a47b52 60%, #8d6844 100%);
+  box-shadow: 0 14px 22px -10px rgb(60 40 20 / 0.45);
+  mask-image: linear-gradient(to right, transparent, #000 22%, #000 78%, transparent);
+}
+.shelf-contact { background: radial-gradient(closest-side, rgb(50 32 14 / 0.42), rgb(50 32 14 / 0.12) 60%, transparent); }
+.shelf-pages { background: repeating-linear-gradient(90deg, #f4ecdc 0 2px, #e6dcc6 2px 3px); border-radius: 2px; }
+.dark .shelf-floor { background: linear-gradient(to top, #4a3a2c 0%, #3d3026 18%, rgb(40 32 26 / 0.6) 45%, rgb(40 32 26 / 0) 100%); }
+.dark .shelf-lip { background: linear-gradient(to bottom, #6b5440 0, #4f3d2e 2px, #3b2d22 100%); }
+.shelf-title { overflow-wrap: anywhere; }
+/* A new row slides in from the side. */
+.shelf-enter { animation: shelf-enter 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes shelf-enter { from { opacity: 0; translate: 8% 0; } }
+/* The how-to hint: read to screen readers, shown on screen only while the shelf has keyboard focus. */
+.shelf-hint { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.peer:focus-visible ~ * .shelf-hint { position: static; width: auto; height: auto; clip-path: none; white-space: normal; color: var(--primary); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .shelf-enter { animation: none; } }
 /* Mirror image under a standing cover (Top rated No. 1). */
 .mirror-floor {
   opacity: 0.3;
