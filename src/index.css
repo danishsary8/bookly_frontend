@@ -1208,3 +1208,16 @@
   .book-3d { transform: none; transition: none; }
   .ink-bleed, .rise > * { animation: none; }
 }
+
+/* Home hero caption card: text slides in per book; a gold bar times the slide. */
+.hero-caption { animation: hero-caption 500ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes hero-caption { from { opacity: 0; transform: translateX(14px); } }
+.hero-timer { animation: hero-timer linear both; }
+@keyframes hero-timer { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .hero-caption, .hero-timer { animation: none; } }
+
+/* Book rows: fade the edge that has more to scroll to. */
+.shelf-row-more { mask-image: linear-gradient(to right, #000 calc(100% - 3.5rem), transparent); }
+.shelf-row-less { mask-image: linear-gradient(to left, #000 calc(100% - 3.5rem), transparent); }
+.shelf-row-more.shelf-row-less { mask-image: linear-gradient(to right, transparent, #000 3.5rem, #000 calc(100% - 3.5rem), transparent); }
+.peer:focus-visible ~ * .shelf-hint { color: var(--primary); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }

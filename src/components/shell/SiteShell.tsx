@@ -9,7 +9,6 @@ import { OfflineBanner } from "./OfflineBanner";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 import { useT } from "@/i18n";
-import { SupportBubble } from "@/features/support/SupportBubble";
 
 /*
  * The storefront frame: skip link, sticky header, the routed page (transition +
@@ -80,7 +79,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         </PageTransition>
       </main>
       <SiteFooter />
-      <SupportBubble />
+      {/* The floating Support button is switched off for now (owner, 2026-11); features/support stays for later. */}
       <Suspense fallback={null}>
         {cartOpened ? <CartDrawer /> : null}
         {menuOpened ? <MobileMenu /> : null}

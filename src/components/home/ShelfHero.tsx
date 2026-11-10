@@ -29,8 +29,7 @@ const ROW_LINK: Record<RowId, string> = {
 const CLOTH = ["#14207A", "#7A2E2A", "#2F5D4A", "#C9A24B", "#4C5378", "#8A5A3B", "#1E4E5C", "#5B2A4E", "#E9E1CF", "#A0522D"];
 /** Light cloths get dark ink on the spine, dark ones cream ink. */
 const LIGHT_CLOTH = new Set(["#C9A24B", "#E9E1CF"]);
-const COPIES = 3;
-const AUTOPLAY_MS = 4500;
+const AUTOPLAY_MS = 3000;
 
 type Shelf = { id: string; book: BookCard | null; cloth: string; title: string; by: string };
 
@@ -57,7 +56,7 @@ export function ShelfHero() {
 
   return (
     <section aria-labelledby="shelf-title" className="shelf-hero relative overflow-clip [contain:paint]">
-      <div className="relative z-10 px-4 pt-14 text-center">
+      <div className="relative z-10 px-4 pt-10 text-center">
         <p className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-accent-text">
           <span className="h-px w-10 bg-current" aria-hidden="true" />
           {h.shelfEyebrow}
@@ -103,7 +102,10 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
   const navigate = useNavigate();
   const reduce = useReducedMotion() ?? false;
   const n = items.length;
-  const total = n * COPIES;
+  const [dims, setDims] = useState({ H: 360, ws: 56, d: 240, gap: 10, W: 1440 });
+  // Enough copies of the list to run past both screen edges at any size (the shelf is endless).
+  const copies = Math.max(3, Math.ceil((dims.W + dims.d * 4) / ((dims.ws + dims.gap) * n)) + 1);
+  const total = n * copies;
 
   // Motion state lives in refs; React only renders the caption.
   const stage = useRef<HTMLDivElement>(null);
@@ -112,13 +114,13 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
   const [active, setActive] = useState(0);
   const shownIdx = useRef(0);
   const [dir, setDir] = useState(1);
-  const [dims, setDims] = useState({ H: 360, ws: 56, d: 240, gap: 10 });
 
   // Book size follows the hero height.
   useLayoutEffect(() => {
     const measure = () => {
-      const H = Math.max(200, Math.min(window.innerHeight * 0.42, window.innerWidth * 0.3, 400));
-      setDims({ H, ws: H * 0.15, d: H * (2 / 3), gap: H * 0.028 });
+      // Sized so the whole section (heading, tabs, shelf, caption) fits one screen under the header.
+      const H = Math.max(190, Math.min(window.innerHeight - 620, window.innerWidth * 0.28, 380));
+      setDims({ H, ws: H * 0.15, d: H * (2 / 3), gap: H * 0.028, W: window.innerWidth });
     };
     measure();
     window.addEventListener("resize", measure);
@@ -134,6 +136,7 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
     const half = window.innerWidth / 2;
     const loop = (now: number) => {
       const m = st.current;
+      if (m.lift.length !== total) m.lift = new Float32Array(total);
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       if (!reduce && !m.interacted && !m.dragging && m.hover < 0 && now - idle > AUTOPLAY_MS) {
@@ -282,7 +285,7 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         onPointerLeave={onLeave}
-        className="relative mx-auto mt-4 cursor-grab select-none outline-none [perspective:2200px] [touch-action:pan-y] focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
+        className="relative mx-auto mt-4 cursor-grab select-none peer outline-none [perspective:2200px] [touch-action:pan-y] active:cursor-grabbing"
         style={{ height: H + 90 } as CSSProperties}
       >
         {/* soft floor shadow under the shelf */}
@@ -348,13 +351,13 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
       </div>
 
       {/* Caption: rolls through a mask whenever the book changes. */}
-      <div className="relative z-10 mx-auto -mt-2 grid max-w-xl justify-items-center gap-3 px-4 pb-10 text-center" aria-live="polite">
+      <div className="group/cap relative z-10 mx-auto mt-1 grid w-full max-w-2xl justify-items-center gap-2.5 px-4 pb-9 text-center" aria-live="polite">
         <div className="flex w-full items-center justify-between gap-4">
           <button type="button" onClick={() => go(-1)} aria-label={h.prevBook} className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-card text-foreground transition-[background-color,transform] hover:bg-muted active:scale-95">
             <ArrowLeft className="size-[18px]" aria-hidden="true" />
           </button>
           <div className="min-w-0 flex-1 overflow-hidden">
-            <p key={`t-${shown?.id}`} className={cn("shelf-roll truncate font-display text-[clamp(1.6rem,3vw,2.3rem)] leading-tight text-foreground", dir < 0 && "shelf-roll-down")}>
+            <p key={`t-${shown?.id}`} className={cn("shelf-roll truncate font-display text-[clamp(1.4rem,2.4vw,2rem)] leading-tight text-foreground", dir < 0 && "shelf-roll-down")}>
               {shown?.book ? shown.title : dict.splash.tagline}
             </p>
           </div>
@@ -377,7 +380,8 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
             {dict.shopExtras.viewAll}
           </Link>
         </div>
-        <p className="text-xs text-muted-foreground">{h.shelfHint}</p>
+        {/* The hint doubles as the keyboard-focus cue for the shelf (no ring across the page). */}
+        <p className="text-xs text-muted-foreground transition-colors shelf-hint">{h.shelfHint}</p>
       </div>
     </>
   );

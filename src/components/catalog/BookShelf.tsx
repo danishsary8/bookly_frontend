@@ -12,8 +12,9 @@ import { useAddToCart, useWishlist } from "./useCatalogActions";
 import { useT } from "@/i18n";
 
 /*
- * A titled row of book cards that scrolls sideways (scroll-snap) with Prev/Next
- * buttons, so several covers stay visible at once (MASTER §5, React Bits note).
+ * A titled row of book cards that scrolls sideways (scroll-snap) with Prev/Next buttons. It shows it scrolls:
+ * the next card peeks in, the far edge fades, and a thin track under the row follows the position.
+ * rows={2} stacks two rows that page together (MASTER §5; pages/home.md).
  * Keyboard users tab through the cards (each link scrolls into view), so the
  * Prev/Next buttons are for pointer users and stay out of the tab order.
  */
@@ -32,19 +33,26 @@ type BookShelfProps = {
   empty?: ReactNode;
   action?: ReactNode;
   className?: string;
+  /** 2 = two rows of cards that page sideways together (home "New arrivals"). */
+  rows?: 1 | 2;
 };
 
-export function BookShelf({ id, title, eyebrow, books, loading, error, onRetry, seeAllHref, seeAllLabel, empty = null, action, className }: BookShelfProps) {
+export function BookShelf({ id, title, eyebrow, books, loading, error, onRetry, seeAllHref, seeAllLabel, empty = null, action, className, rows = 1 }: BookShelfProps) {
   const { dict } = useT();
   const cart = useAddToCart();
   const wishlist = useWishlist();
   const scroller = useRef<HTMLUListElement>(null);
   const [edges, setEdges] = useState({ start: true, end: false });
+  const [bar, setBar] = useState({ size: 1, at: 0 });
 
   useEffect(() => {
     const el = scroller.current;
     if (!el) return;
-    const update = () => setEdges({ start: el.scrollLeft <= 4, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4 });
+    const update = () => {
+      setEdges({ start: el.scrollLeft <= 4, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4 });
+      const room = el.scrollWidth - el.clientWidth;
+      setBar({ size: Math.min(1, el.clientWidth / Math.max(el.scrollWidth, 1)), at: room > 0 ? el.scrollLeft / room : 0 });
+    };
     update();
     el.addEventListener("scroll", update, { passive: true });
     window.addEventListener("resize", update);
@@ -64,7 +72,11 @@ export function BookShelf({ id, title, eyebrow, books, loading, error, onRetry, 
   if (!loading && !error && books && books.length === 0 && !empty) return null;
 
   const headingId = `${id}-heading`;
-  const item = "w-[calc((100%-0.75rem)/2)] shrink-0 snap-start sm:w-[calc((100%-2.5rem)/3)] xl:w-[calc((100%-3.75rem)/4)]";
+  // Card widths leave a sliver of the next card showing, so the row reads as scrollable: 2.2 / 3.2 / 4.3 / 5.3 across.
+  const width = "calc((100% - var(--gap) * var(--n)) / var(--per))";
+  const cols = "[--gap:0.75rem] [--n:2] [--per:2.2] sm:[--gap:1.25rem] sm:[--n:3] sm:[--per:3.2] lg:[--n:4] lg:[--per:4.3] xl:[--n:5] xl:[--per:5.3]";
+  const item = "shrink-0 snap-start";
+  const scrollable = bar.size < 0.995;
 
   return (
     <section aria-labelledby={headingId} className={cn("grid gap-5", className)}>
@@ -103,7 +115,7 @@ export function BookShelf({ id, title, eyebrow, books, loading, error, onRetry, 
       {loading ? (
         <SkeletonGroup label={dict.cards.loadingShelf(title)} className="flex gap-3 overflow-hidden sm:gap-5">
           {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className={item}>
+            <div key={i} className="w-[calc((100%-0.75rem)/2)] shrink-0 sm:w-[calc((100%-2.5rem)/3)] lg:w-[calc((100%-3.75rem)/4)] xl:w-[calc((100%-5rem)/5)]">
               <BookCardSkeleton />
             </div>
           ))}
@@ -113,21 +125,39 @@ export function BookShelf({ id, title, eyebrow, books, loading, error, onRetry, 
       ) : books && books.length === 0 ? (
         empty
       ) : (
-        <ul ref={scroller} className="no-scrollbar -mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-1 px-1 pb-2 pt-1 sm:gap-5">
-          {(books ?? []).map((book, index) => (
-            <li key={book.id} className={item}>
-              <BookCard
-                book={book}
-                instanceKey={`${id}-${book.id}`}
-                eager={index < 2}
-                saved={wishlist.isSaved(book.id)}
-                adding={cart.pendingBookId === book.id}
-                onAddToCart={cart.add}
-                onToggleWishlist={wishlist.toggle}
-              />
-            </li>
-          ))}
-        </ul>
+        <div className="grid gap-4">
+          <ul
+            ref={scroller}
+            style={rows === 2 ? { gridAutoColumns: width } : undefined}
+            className={cn(
+              "shelf-row no-scrollbar -mx-1 snap-x snap-mandatory gap-(--gap) overflow-x-auto scroll-px-1 px-1 pb-2 pt-2",
+              cols,
+              rows === 2 ? "grid grid-flow-col grid-rows-2 gap-y-8" : "flex",
+              scrollable && !edges.end && "shelf-row-more",
+              scrollable && !edges.start && "shelf-row-less",
+            )}
+          >
+            {(books ?? []).map((book, index) => (
+              <li key={book.id} className={item} style={rows === 2 ? undefined : { width }}>
+                <BookCard
+                  book={book}
+                  instanceKey={`${id}-${book.id}`}
+                  eager={index < 2}
+                  saved={wishlist.isSaved(book.id)}
+                  adding={cart.pendingBookId === book.id}
+                  onAddToCart={cart.add}
+                  onToggleWishlist={wishlist.toggle}
+                />
+              </li>
+            ))}
+          </ul>
+          {/* Where you are in the row: a thin track whose thumb follows the scroll. */}
+          {scrollable ? (
+            <div className="mx-auto h-1 w-40 overflow-hidden rounded-full bg-border" aria-hidden="true">
+              <span className="block h-full rounded-full bg-primary transition-transform duration-150 ease-out" style={{ width: `${bar.size * 100}%`, transform: `translateX(${(bar.at * (1 - bar.size) * 100) / bar.size}%)` }} />
+            </div>
+          ) : null}
+        </div>
       )}
     </section>
   );
