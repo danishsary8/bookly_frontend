@@ -12,13 +12,13 @@ import { LiveSearch } from "@/components/shell/LiveSearch";
 import { CtaGlare } from "@/components/CtaGlare";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney, useCurrency } from "@/stores/currency";
-import { formatName, useT } from "@/i18n";
+import { useT } from "@/i18n";
 
 /*
  * Home hero (MASTER §2.1a, §5; pages/home.md): an inset lapis card. Left: eyebrow, BlurText headline, search, three
  * popular categories as quiet links and the page's one vermilion CTA. Right: a centred cover stack (current cover in
  * front on a glossy floor, neighbours peeking out on each side), then "n of N", title, author with a gold price chip,
- * a short description (or a line of facts when the book has none) and the controls: prev, View book (the slide timer
+ * a two-line description when the book has one, and the controls: prev, View book (the slide timer
  * runs along its bottom edge), next, pause. Autoplay (4 s) stops for pause, hover, focus, reduced motion, off screen.
  */
 
@@ -43,13 +43,6 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
   // Short description of the current book: cards don't carry one, so read the book (cached per book).
   const detail = useQuery({ ...catalogQueries.book(current?.id ?? 0), enabled: Boolean(current?.id), staleTime: 10 * 60_000 });
   const blurb = usefulBlurb(shortBlurb(detail.data?.description), current);
-  // Without a description: up to three facts instead (formats, year, pages), so the slot never looks empty.
-  const year = (detail.data?.publish_date ?? current?.publish_date ?? "").slice(0, 4);
-  const facts = [
-    (detail.data?.formats ?? current?.formats ?? []).slice(0, 2).map((f) => formatName(dict, f)).join(" · "),
-    /^\d{4}$/.test(year) ? year : "",
-    detail.data?.page_count ? h.pageCount(detail.data.page_count) : "",
-  ].filter(Boolean);
   // The slideshow only runs while the hero is on screen: no slide changes (or image loads) once scrolled past.
   const sectionRef = useRef<HTMLElement>(null);
   const [onScreen, setOnScreen] = useState(true);
@@ -98,7 +91,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
       ) : null}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(100deg,rgb(20_32_122/0.9)_0%,rgb(20_32_122/0.7)_45%,rgb(24_38_130/0.55)_100%)]" aria-hidden="true" />
 
-      <div className="grid grid-cols-1 items-center gap-12 px-6 py-12 sm:px-10 lg:h-[clamp(580px,calc(100svh-var(--header-h)-2.5rem),860px)] lg:grid-cols-12 lg:gap-x-8 lg:px-14 lg:py-10">
+      <div className="grid grid-cols-1 items-center gap-12 px-6 py-12 sm:px-10 lg:h-[clamp(580px,calc(100svh-var(--header-h)-2.5rem),860px)] lg:grid-cols-12 lg:gap-x-8 lg:px-14 lg:py-8">
         <div className="lg:col-span-6">
           <p className="eyebrow">{h.heroEyebrow}</p>
           <h1 id="home-hero-title" className="mt-4 font-display text-[clamp(2.4rem,3.9vw,3.4rem)] leading-[1.03] tracking-[-0.02em] text-on-lapis [@media(max-height:820px)]:text-[clamp(2.2rem,3.8vw,3.4rem)]">
@@ -173,7 +166,19 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
             >
               {/* The stack: the current cover in front, its neighbours peeking out behind on each side; every cover stands
                   on a glossy floor with a soft mirror image. Click a neighbour to bring it forward. */}
-              <div className="relative mx-auto w-[min(300px,58%,calc((100svh-var(--header-h)-23rem)*0.56))]">
+              <div
+                onPointerMove={(e) => {
+                  if (reduceMotion || e.pointerType !== "mouse") return;
+                  const r = e.currentTarget.getBoundingClientRect();
+                  e.currentTarget.style.setProperty("--tilt-y", `${(((e.clientX - r.left) / r.width) - 0.5) * 12}deg`);
+                  e.currentTarget.style.setProperty("--tilt-x", `${(0.5 - (e.clientY - r.top) / r.height) * 8}deg`);
+                }}
+                onPointerLeave={(e) => {
+                  e.currentTarget.style.setProperty("--tilt-y", "0deg");
+                  e.currentTarget.style.setProperty("--tilt-x", "0deg");
+                }}
+                className="hero-stack relative mx-auto w-[min(330px,64%,calc((100svh-var(--header-h)-20rem)*0.56))]"
+              >
                 <span className="pointer-events-none absolute left-1/2 top-[42%] -z-10 size-[210%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(130_160_255/0.3),transparent)]" aria-hidden="true" />
                 <div className="relative aspect-[2/3] [perspective:1400px]">
                   {books.map((book, i) => {
@@ -225,29 +230,19 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                           {h.from(formatMoney(current.price_from_usd, current.price_from_khr, currency))}
                         </span>
                       </p>
-                      {/* A short description, or (when the book has none) a line of facts. The slot keeps one height and
-                          centres what it holds, so the controls never jump and there is no empty gap. */}
-                      <div className="mx-auto mt-3 flex min-h-[4.6rem] max-w-md items-center justify-center">
-                        {blurb ? (
-                          <p className="line-clamp-3 text-[15px] leading-relaxed text-on-lapis/80">{blurb}</p>
-                        ) : detail.isPending && current.id ? (
-                          <span className="grid w-full justify-items-center gap-2" aria-hidden="true">
-                            <Skeleton className="h-3 w-11/12 bg-on-lapis/10" />
-                            <Skeleton className="h-3 w-4/5 bg-on-lapis/10" />
-                            <Skeleton className="h-3 w-3/5 bg-on-lapis/10" />
-                          </span>
-                        ) : facts.length ? (
-                          <ul className="flex flex-wrap items-center justify-center gap-2">
-                            {facts.map((fact) => (
-                              <li key={fact} className="rounded-full bg-on-lapis/[0.08] px-3 py-1 text-[13px] font-medium text-on-lapis/85 ring-1 ring-inset ring-on-lapis/15">{fact}</li>
-                            ))}
-                          </ul>
-                        ) : null}
-                      </div>
+                      {/* A short description (two lines). Books without one simply show none: the column stays centred. */}
+                      {blurb ? (
+                        <p className="mx-auto mt-3 line-clamp-2 max-w-md text-[15px] leading-relaxed text-on-lapis/80">{blurb}</p>
+                      ) : detail.isPending && current.id ? (
+                        <span className="mx-auto mt-4 grid max-w-sm justify-items-center gap-2" aria-hidden="true">
+                          <Skeleton className="h-3 w-11/12 bg-on-lapis/10" />
+                          <Skeleton className="h-3 w-3/5 bg-on-lapis/10" />
+                        </span>
+                      ) : null}
                     </div>
                   </div>
 
-                  <div className="mt-4 flex items-center justify-center gap-3">
+                  <div className="mt-5 flex items-center justify-center gap-3">
                     <button type="button" onClick={() => step(-1)} className={iconButton} aria-label={h.prevBook}>
                       <ChevronLeft className="size-4" aria-hidden="true" />
                     </button>

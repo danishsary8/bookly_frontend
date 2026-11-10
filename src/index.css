@@ -1247,8 +1247,9 @@
   filter: blur(0.5px) saturate(0.9);
   mask-image: linear-gradient(to bottom, #000, rgb(0 0 0 / 0.45) 7%, transparent 17%);
 }
-.hero-front { transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1); }
-.hero-front:hover { transform: translateY(-4px); }
+/* The front cover leans toward the mouse (set on .hero-stack as --tilt-x / --tilt-y) and lifts a little. */
+.hero-front { transform: perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)); transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.hero-front:hover { transform: perspective(900px) translateY(-4px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)); }
 @media (prefers-reduced-motion: reduce) {
   .hero-front, .hero-front:hover { transition: none; transform: none; }
 }
