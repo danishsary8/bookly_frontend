@@ -54,11 +54,12 @@ export default function HomePage() {
   const h = dict.homePage;
   // Seasonal collections (owner 2026-11-01): up to 2 live ones, above New arrivals. None, or an older API: no row.
   const collections = useQuery(collectionQueries.live());
-  // Hero: the staff's picks (same query StaffPicks uses, so no extra request); top rated until/unless there are some.
+  // Hero carousel: staff picks first (if any), then the shop's most popular books, 15 in all.
   const picks = useQuery({ queryKey: ["reading-lists", "picks"], queryFn: readingListsApi.picks });
-  const picked = (picks.data ?? []).flatMap((list) => list.books.flatMap((entry) => (entry.book ? [entry.book] : []))).filter((b, i, all) => all.findIndex((x) => x.id === b.id) === i).slice(0, 6);
-  const newest = useQuery(catalogQueries.books({ sort: "newest", per_page: 10 }));
-  const rated = useQuery(catalogQueries.books({ sort: "rating", per_page: 10 }));
+  const popular = useQuery(catalogQueries.books({ sort: "best_selling", per_page: 15 }));
+  const picked = (picks.data ?? []).flatMap((list) => list.books.flatMap((entry) => (entry.book ? [entry.book] : [])));
+  const newest = useQuery(catalogQueries.books({ sort: "newest", per_page: 20 }));
+  const featured = [...picked, ...(popular.data?.data ?? [])].filter((b, i, all) => all.findIndex((x) => x.id === b.id) === i).slice(0, 15);
   const categories = useQuery(catalogQueries.categories());
   const series = useQuery(catalogQueries.seriesList({ per_page: 20 }));
   const authors = useQuery(catalogQueries.authors({ per_page: 6 }));
@@ -85,8 +86,8 @@ export default function HomePage() {
     <div className="overflow-x-clip">
       <JsonLd data={websiteJsonLd} />
       <HomeHero
-        featured={picked.length >= 2 ? picked : rated.data?.data.slice(0, 5)}
-        label={picked.length >= 2 ? dict.readingLists.staffPick : h.topRated}
+featured={popular.isPending && picks.isPending ? undefined : featured}
+        label={dict.home.popularBooks}
       />
       {/* Full-bleed paper band with the 3D shelf. */}
       <div className="home-paper border-b border-border">
@@ -127,6 +128,7 @@ export default function HomePage() {
         })}
         <BookShelf
           id="new-arrivals"
+          rows={2}
           eyebrow={h.justIn}
           title={h.newArrivals}
           books={newest.data?.data}
