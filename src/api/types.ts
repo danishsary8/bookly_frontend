@@ -9,8 +9,10 @@ export type Amount = Schemas["Amount"];
 export type PageMeta = Schemas["PageMeta"];
 export type PageLinks = Schemas["PageLinks"];
 
-export type BookCard = Schemas["BookCard"];
-export type BookDetail = Schemas["BookDetail"];
+/** Reader rating: a public score the shop enters per book with its source (e.g. 4.3, "Goodreads"), shown until customers review. */
+export type ReaderRating = { reader_rating?: number | string | null; reader_rating_source?: string | null };
+export type BookCard = Schemas["BookCard"] & ReaderRating;
+export type BookDetail = Schemas["BookDetail"] & ReaderRating;
 export type BookVariant = Schemas["Variant"];
 export type BookFormat = BookVariant["format"];
 export type Author = Schemas["Author"];

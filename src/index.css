@@ -1221,3 +1221,20 @@
 .shelf-row-less { mask-image: linear-gradient(to left, #000 calc(100% - 3.5rem), transparent); }
 .shelf-row-more.shelf-row-less { mask-image: linear-gradient(to right, transparent, #000 3.5rem, #000 calc(100% - 3.5rem), transparent); }
 .peer:focus-visible ~ * .shelf-hint { color: var(--primary); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+
+/* Home "Coming soon" placeholder: the blank covers breathe gently. */
+.coming-ghost { animation: coming-ghost 3s ease-in-out infinite; }
+@keyframes coming-ghost { 50% { translate: 0 -6px; } }
+@media (prefers-reduced-motion: reduce) { .coming-ghost { animation: none; } }
+
+/* Home hero cover stack: the front cover with its neighbours peeking out behind. */
+.hero-card { transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 500ms ease, filter 500ms ease; will-change: transform; }
+.hero-card[data-pos="front"] { z-index: 3; }
+.hero-card[data-pos="next"] { z-index: 2; transform: translateX(48%) scale(0.8); opacity: 0.7; filter: saturate(0.75) brightness(0.8); }
+.hero-card[data-pos="prev"] { z-index: 2; transform: translateX(-48%) scale(0.8); opacity: 0.7; filter: saturate(0.75) brightness(0.8); }
+.hero-card[data-pos="far-next"] { z-index: 1; transform: translateX(80%) scale(0.62); opacity: 0; }
+.hero-card[data-pos="far-prev"] { z-index: 1; transform: translateX(-80%) scale(0.62); opacity: 0; }
+.hero-card[data-pos="next"]:hover, .hero-card[data-pos="prev"]:hover { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .hero-card { transition: none; } }
+/* Home shelf: the row of spines fades into the paper at both ends. */
+.shelf-stage { mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent); }

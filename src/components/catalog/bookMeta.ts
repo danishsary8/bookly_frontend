@@ -9,3 +9,7 @@ export function isNewRelease(publishDate: string | null | undefined, now = Date.
 
 export const authorNames = (authors: { name?: string }[] | undefined) =>
   (authors ?? []).map((a) => a.name).filter(Boolean).join(", ");
+
+/** True when the book has any rating to show (its own reviews or the shop's Reader rating). */
+export const hasScore = (book: { review_count?: unknown; rating_avg?: unknown; reader_rating?: unknown }) =>
+  (Number(book.review_count) > 0 && Number(book.rating_avg) > 0) || Number(book.reader_rating) > 0;

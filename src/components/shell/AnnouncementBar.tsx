@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Truck, X } from "lucide-react";
+import { ArrowRight, PackageSearch, Truck, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useT } from "@/i18n";
 
@@ -33,8 +33,9 @@ export function AnnouncementBar() {
       aria-label={dict.shell.announcementDelivery}
       className="relative z-30 border-b border-primary/20 bg-primary text-primary-foreground select-none"
     >
-      <div className="container-shell flex items-center justify-between gap-3 py-2 text-xs sm:text-sm">
-        <div className="flex flex-1 items-center justify-center gap-2 text-center">
+      {/* Slim utility strip: what the shop promises on the left, the two things people look for on the right. */}
+      <div className="container-shell flex min-h-9 items-center justify-between gap-4 py-1.5 text-xs sm:text-[13px]">
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-2 text-center lg:justify-start lg:text-left">
           <Truck className="size-4 shrink-0 text-amber-300" aria-hidden="true" />
           <p className="font-medium tracking-tight">
             <span>{dict.shell.announcementDelivery}</span>{" "}
@@ -47,6 +48,14 @@ export function AnnouncementBar() {
             </Link>
           </p>
         </div>
+        <nav aria-label={dict.homePage.help} className="hidden shrink-0 items-center gap-5 font-medium lg:flex">
+          <Link to="/account/orders" className="inline-flex items-center gap-1.5 text-primary-foreground/85 underline-offset-4 transition-colors hover:text-primary-foreground hover:underline">
+            <PackageSearch className="size-4" aria-hidden="true" /> {dict.homePage.trackOrder}
+          </Link>
+          <Link to="/faq" className="text-primary-foreground/85 underline-offset-4 transition-colors hover:text-primary-foreground hover:underline">
+            {dict.homePage.help}
+          </Link>
+        </nav>
         <button
           type="button"
           onClick={handleDismiss}

@@ -18,7 +18,7 @@ export function ContinueStrip({ books }: { books: BookCard[] }) {
     <section aria-labelledby="continue-title" className="min-w-0 rounded-2xl border border-border bg-card p-5 sm:p-6">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent-text">{h.yourHistory}</p>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{h.yourHistory}</p>
           <h2 id="continue-title" className="mt-1 font-display text-2xl leading-tight">{h.continueTitle}</h2>
         </div>
         <button type="button" onClick={clearRecentlyViewed} className="inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">

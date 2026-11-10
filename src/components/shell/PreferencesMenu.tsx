@@ -26,7 +26,7 @@ export function PreferencesMenu({ className }: { className?: string }) {
         )}
       >
         <Globe className="size-4 text-muted-foreground" aria-hidden="true" />
-        <span aria-hidden="true">
+        <span aria-hidden="true" className="whitespace-nowrap">
           {lang.toUpperCase()} · {currency === "USD" ? "$" : "៛"}
         </span>
         <ChevronDown className="size-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" aria-hidden="true" />

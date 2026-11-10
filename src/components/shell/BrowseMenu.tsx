@@ -21,7 +21,7 @@ export function BrowseMenu({ className }: { className?: string }) {
   const top = (tree.data ?? []).filter((c) => c.slug).slice(0, 6);
   // If categories cannot load (or there are none), the panel shows just the quick links.
   const showCategories = !tree.isError && (tree.isLoading || top.length > 0);
-  const newest = new URLSearchParams(location.search).get("sort") === "newest";
+  const newest = ["newest", "best_selling"].includes(new URLSearchParams(location.search).get("sort") ?? "");
   const active = (location.pathname.startsWith("/books") && !newest) || location.pathname.startsWith("/categories") || location.pathname.startsWith("/series");
 
   const hover = (next: boolean) => (event: React.PointerEvent) => {

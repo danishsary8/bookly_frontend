@@ -165,6 +165,8 @@ export interface StaffBook {
 }
 
 export interface BookInput {
+  reader_rating?: number | null;
+  reader_rating_source?: string | null;
   title?: string;
   description?: string | null;
   status?: BookStatus;

@@ -30,6 +30,10 @@ const CLOTH = ["#14207A", "#7A2E2A", "#2F5D4A", "#C9A24B", "#4C5378", "#8A5A3B",
 /** Light cloths get dark ink on the spine, dark ones cream ink. */
 const LIGHT_CLOTH = new Set(["#C9A24B", "#E9E1CF"]);
 const AUTOPLAY_MS = 3000;
+/** The shelf is a framed row (about 13 spines beside the open book), not an edge-to-edge wall. */
+const SHELF_MAX = 1180;
+/** Spines shown beside the open book. */
+const SPINES = 13;
 
 type Shelf = { id: string; book: BookCard | null; cloth: string; title: string; by: string };
 
@@ -57,7 +61,7 @@ export function ShelfHero() {
   return (
     <section aria-labelledby="shelf-title" className="shelf-hero relative overflow-clip [contain:paint]">
       <div className="relative z-10 px-4 pt-10 text-center">
-        <p className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-accent-text">
+        <p className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
           <span className="h-px w-10 bg-current" aria-hidden="true" />
           {h.shelfEyebrow}
           <span className="h-px w-10 bg-current" aria-hidden="true" />
@@ -104,7 +108,7 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
   const n = items.length;
   const [dims, setDims] = useState({ H: 360, ws: 56, d: 240, gap: 10, W: 1440 });
   // Enough copies of the list to run past both screen edges at any size (the shelf is endless).
-  const copies = Math.max(3, Math.ceil((dims.W + dims.d * 4) / ((dims.ws + dims.gap) * n)) + 1);
+  const copies = Math.max(3, Math.ceil((Math.min(dims.W, SHELF_MAX) + dims.d * 4) / ((dims.ws + dims.gap) * n)) + 1);
   const total = n * copies;
 
   // Motion state lives in refs; React only renders the caption.
@@ -119,8 +123,8 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
   useLayoutEffect(() => {
     const measure = () => {
       // Sized so the whole section (heading, tabs, shelf, caption) fits one screen under the header.
-      const H = Math.max(190, Math.min(window.innerHeight - 620, window.innerWidth * 0.28, 380));
-      setDims({ H, ws: H * 0.15, d: H * (2 / 3), gap: H * 0.028, W: window.innerWidth });
+      const H = Math.max(230, Math.min(window.innerHeight - 580, window.innerWidth * 0.3, 400));
+      setDims({ H, ws: H * 0.17, d: H * (2 / 3), gap: H * 0.034, W: window.innerWidth });
     };
     measure();
     window.addEventListener("resize", measure);
@@ -133,7 +137,7 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
     let last = performance.now();
     let idle = performance.now();
     const { H, ws, d, gap } = dims;
-    const half = window.innerWidth / 2;
+    const half = Math.min(window.innerWidth, SHELF_MAX, SPINES * (ws + gap) + d * 1.4) / 2;
     const loop = (now: number) => {
       const m = st.current;
       if (m.lift.length !== total) m.lift = new Float32Array(total);
@@ -285,8 +289,8 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         onPointerLeave={onLeave}
-        className="relative mx-auto mt-4 cursor-grab select-none peer outline-none [perspective:2200px] [touch-action:pan-y] active:cursor-grabbing"
-        style={{ height: H + 90 } as CSSProperties}
+        className="shelf-stage relative mx-auto mt-4 cursor-grab select-none overflow-hidden peer outline-none [perspective:2200px] [touch-action:pan-y] active:cursor-grabbing"
+        style={{ height: H + 90, maxWidth: Math.min(SHELF_MAX, SPINES * (ws + dims.gap) + d * 1.4) } as CSSProperties}
       >
         {/* soft floor shadow under the shelf */}
         <span

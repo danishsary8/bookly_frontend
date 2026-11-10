@@ -37,6 +37,9 @@ export const bookSchema = z
     age_min: optionalInt(0, 18, "Use an age from 0 to 18."),
     age_max: optionalInt(0, 18, "Use an age from 0 to 18."),
     school_grade: z.string(),
+    // Reader rating from a public source (optional): shown on the storefront, labelled, until customers review.
+    reader_rating: z.string().trim().refine((v) => v === "" || (/^\d(\.\d)?$/.test(v) && Number(v) >= 1 && Number(v) <= 5), "Use a score from 1.0 to 5.0."),
+    reader_rating_source: z.string().trim().max(60),
     level: z.string(),
     publish_date: z.string(),
     description: z
@@ -84,6 +87,8 @@ export const bookDefaults = (book?: StaffBook | null): BookValues => ({
   age_min: book?.age_min != null ? String(book.age_min) : "",
   age_max: book?.age_max != null ? String(book.age_max) : "",
   school_grade: book?.school_grade != null ? String(book.school_grade) : "",
+  reader_rating: (book as { reader_rating?: number | string | null } | undefined)?.reader_rating != null ? String((book as { reader_rating?: number | string | null }).reader_rating) : "",
+  reader_rating_source: (book as { reader_rating_source?: string | null } | undefined)?.reader_rating_source ?? "",
   level: book?.level ?? "",
   publish_date: book?.publish_date ?? "",
   description: book?.description ?? "",
@@ -107,6 +112,8 @@ export const toBookInput = (
     age_min: numOrNull(v.age_min),
     age_max: numOrNull(v.age_max),
     school_grade: numOrNull(v.school_grade),
+    reader_rating: v.reader_rating ? Number(v.reader_rating) : null,
+    reader_rating_source: v.reader_rating ? v.reader_rating_source.trim() || "Goodreads" : null,
     level: v.level || null,
     publish_date: v.publish_date || null,
     description: v.description.trim() || null,

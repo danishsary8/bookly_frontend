@@ -1,12 +1,12 @@
 import { useEffect, useState, type FocusEvent, type KeyboardEvent } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play, ShoppingBag } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 import { Link } from "react-router-dom";
 import type { BookCard } from "@/api/types";
 import BlurText from "@/components/BlurText";
 import { BookCover } from "@/components/catalog/BookCover";
 import { authorNames } from "@/components/catalog/bookMeta";
-import Carousel from "@/components/Carousel";
+import { useAddToCart } from "@/components/catalog/useCatalogActions";
 import { useQuery } from "@tanstack/react-query";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { LiveSearch } from "@/components/shell/LiveSearch";
@@ -23,7 +23,7 @@ import { useT } from "@/i18n";
  * prev/next buttons and an "n of N" label announced when not autoplaying.
  */
 
-const SLIDE_MS = 3500;
+const SLIDE_MS = 4000;
 
 const iconButton =
   "inline-flex size-9 items-center justify-center rounded-full border border-on-lapis-muted/40 text-on-lapis transition-[background-color,transform] duration-150 hover:bg-on-lapis/10 active:scale-95";
@@ -35,6 +35,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
   const { dict, lang } = useT();
   const h = dict.homePage;
   const reduceMotion = useReducedMotion();
+  const cart = useAddToCart();
   const books = featured ?? [];
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -136,7 +137,12 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
 
         <div className="lg:col-span-5">
           {books.length === 0 ? (
-            <Skeleton className="mx-auto aspect-[2/3] w-full max-w-[300px] bg-on-lapis/10" />
+            <div className="mx-auto grid w-full max-w-[400px] justify-items-center gap-5" aria-hidden="true">
+              <Skeleton className="aspect-[2/3] w-[min(260px,60%)] bg-on-lapis/10" />
+              <Skeleton className="h-6 w-3/5 bg-on-lapis/10" />
+              <Skeleton className="h-4 w-2/5 bg-on-lapis/10" />
+              <Skeleton className="h-11 w-4/5 rounded-full bg-on-lapis/10" />
+            </div>
           ) : (
             <div
               role="region"
@@ -148,62 +154,77 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
               onMouseLeave={() => setHovered(false)}
               onFocus={() => setFocused(true)}
               onBlur={onBlur}
-              className="mx-auto w-full max-w-[360px] rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-8 focus-visible:ring-offset-transparent"
+              className="mx-auto w-full max-w-[420px] rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-8 focus-visible:ring-offset-transparent"
             >
-              <div className="relative mx-auto max-w-[min(360px,calc((100svh-var(--header-h)-17.5rem)*0.66))]">
-                {/* soft pool of light under the book */}
+              {/* The stack: the current cover in front, its neighbours peeking out behind on each side. */}
+              <div className="relative mx-auto aspect-[2/3] w-[min(280px,62%,calc((100svh-var(--header-h)-20rem)*0.66))]">
                 <span className="pointer-events-none absolute -bottom-6 left-1/2 h-10 w-4/5 -translate-x-1/2 rounded-[50%] bg-black/45 blur-2xl" aria-hidden="true" />
-                <Carousel
-                  fluid
-                  loop
-                  rotate={24}
-                  showIndicators={false}
-                  index={index}
-                  onIndexChange={setIndex}
-                  className="aspect-[2/3] rounded-md border-0 bg-surface-2 shadow-[0_40px_70px_-30px_rgb(0_0_0/0.75)]"
-                  slides={books.map((book) => (
-                    <Link key={book.id} to={`/books/${book.id}`} tabIndex={-1} className="relative block size-full select-none" draggable={false}>
-                      <BookCover src={book.cover_image_url} title={book.title} alt={h.cover(book.title ?? "")} className="size-full" />
-                      <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgb(0_0_0/0.25)_0_2%,rgb(255_255_255/0.18)_3%,transparent_8%),linear-gradient(120deg,rgb(255_255_255/0.14),transparent_45%)]" aria-hidden="true" />
-                    </Link>
-                  ))}
-                />
+                {books.map((book, i) => {
+                  const n = books.length;
+                  const off = ((i - index + n) % n + n) % n;
+                  const pos = off === 0 ? "front" : off === 1 ? "next" : off === n - 1 ? "prev" : off === 2 ? "far-next" : off === n - 2 ? "far-prev" : "hidden";
+                  if (pos === "hidden") return null;
+                  const front = pos === "front";
+                  return (
+                    <div key={book.id} data-pos={pos} className="hero-card absolute inset-0">
+                      {front ? (
+                        <Link to={`/books/${book.id}`} tabIndex={-1} className="relative block size-full overflow-hidden rounded-md shadow-[0_40px_70px_-30px_rgb(0_0_0/0.8)]">
+                          <BookCover src={book.cover_image_url} title={book.title} alt={h.cover(book.title ?? "")} eager className="size-full" />
+                          <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgb(0_0_0/0.25)_0_2%,rgb(255_255_255/0.18)_3%,transparent_8%),linear-gradient(120deg,rgb(255_255_255/0.14),transparent_45%)]" aria-hidden="true" />
+                        </Link>
+                      ) : (
+                        <button type="button" tabIndex={-1} aria-hidden="true" onClick={() => setIndex(i)} className="block size-full overflow-hidden rounded-md shadow-[0_24px_40px_-24px_rgb(0_0_0/0.8)]">
+                          <BookCover src={book.cover_image_url} title={book.title} className="size-full" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
               {current ? (
-                <div className="mt-5 overflow-hidden rounded-2xl border border-on-lapis-muted/25 bg-on-lapis/[0.06] backdrop-blur-md" aria-live={autoplaying ? "off" : "polite"} aria-atomic="true">
-                  <div className="flex items-center justify-between gap-3 px-4 pt-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-on-lapis-muted">
-                      {label ?? h.topRated} <span className="ml-1.5 tabular-nums opacity-80">{h.nOfM(index + 1, books.length)}</span>
-                    </p>
-                    <div className="flex items-center gap-1">
-                      <button type="button" onClick={() => step(-1)} className={iconButton} aria-label={h.prevBook}>
-                        <ChevronLeft className="size-4" aria-hidden="true" />
-                      </button>
-                      <button type="button" onClick={() => step(1)} className={iconButton} aria-label={h.nextBook}>
-                        <ChevronRight className="size-4" aria-hidden="true" />
-                      </button>
-                      {!reduceMotion && books.length > 1 ? (
-                        <button type="button" onClick={() => setPaused((p) => !p)} className={iconButton} aria-label={paused ? h.playSlides : h.pauseSlides}>
-                          {paused ? <Play className="size-3.5" aria-hidden="true" /> : <Pause className="size-3.5" aria-hidden="true" />}
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                  {/* Title and byline slide in with each book. */}
-                  <div key={current.id} className="hero-caption px-4 pb-3.5 pt-1">
-                    <p className="truncate font-display text-xl text-on-lapis">
+                <div className="mt-7 text-center" aria-live={autoplaying ? "off" : "polite"} aria-atomic="true">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-on-lapis-muted">
+                    {label ?? h.topRated} <span className="ml-1.5 tabular-nums opacity-80">{h.nOfM(index + 1, books.length)}</span>
+                  </p>
+                  <div key={current.id} className="hero-caption mt-1.5">
+                    <p className="truncate font-display text-[1.6rem] leading-tight text-on-lapis">
                       <Link to={`/books/${current.id}`} className="underline-offset-4 hover:underline">
                         {current.title}
                       </Link>
                     </p>
-                    <p className="mt-0.5 flex items-center justify-between gap-3 text-sm text-on-lapis-muted">
-                      <span className="truncate">{h.by(authorNames(current.authors) || h.unknownAuthor)}</span>
-                      <span className="shrink-0 font-semibold tabular-nums text-gold">{h.from(formatMoney(current.price_from_usd, current.price_from_khr, currency))}</span>
+                    <p className="mt-0.5 truncate text-sm text-on-lapis-muted">
+                      {h.by(authorNames(current.authors) || h.unknownAuthor)} · <span className="font-semibold tabular-nums text-gold">{h.from(formatMoney(current.price_from_usd, current.price_from_khr, currency))}</span>
                     </p>
                   </div>
-                  {/* A thin gold bar fills while this book is on screen, then the next one slides in. */}
-                  <span className="block h-0.5 bg-on-lapis-muted/20" aria-hidden="true">
+                  <div className="mt-4 flex items-center justify-center gap-2">
+                    <button type="button" onClick={() => step(-1)} className={iconButton} aria-label={h.prevBook}>
+                      <ChevronLeft className="size-4" aria-hidden="true" />
+                    </button>
+                    <Link to={`/books/${current.id}`} className="inline-flex h-11 items-center rounded-full border border-on-lapis-muted/50 px-5 text-sm font-semibold text-on-lapis transition-colors hover:bg-on-lapis/10">
+                      {h.viewBook}
+                    </Link>
+                    {current.in_stock === false ? null : (
+                      <button
+                        type="button"
+                        onClick={() => cart.add(current)}
+                        disabled={cart.pendingBookId === current.id}
+                        className="inline-flex h-11 items-center gap-2 rounded-full bg-on-lapis px-5 text-sm font-semibold text-primary transition-[filter,transform] hover:brightness-95 active:scale-[0.98] disabled:opacity-70"
+                      >
+                        <ShoppingBag className="size-4" aria-hidden="true" /> {h.addToCart}
+                      </button>
+                    )}
+                    <button type="button" onClick={() => step(1)} className={iconButton} aria-label={h.nextBook}>
+                      <ChevronRight className="size-4" aria-hidden="true" />
+                    </button>
+                    {!reduceMotion && books.length > 1 ? (
+                      <button type="button" onClick={() => setPaused((p) => !p)} className={iconButton} aria-label={paused ? h.playSlides : h.pauseSlides}>
+                        {paused ? <Play className="size-3.5" aria-hidden="true" /> : <Pause className="size-3.5" aria-hidden="true" />}
+                      </button>
+                    ) : null}
+                  </div>
+                  {/* A thin gold line fills while this book is on screen. */}
+                  <span className="mx-auto mt-4 block h-0.5 w-40 overflow-hidden rounded-full bg-on-lapis-muted/25" aria-hidden="true">
                     <span key={`${index}-${autoplaying}`} className="hero-timer block h-full origin-left bg-gold" style={autoplaying ? { animationDuration: `${SLIDE_MS}ms` } : { animation: "none", transform: "scaleX(0)" }} />
                   </span>
                 </div>
