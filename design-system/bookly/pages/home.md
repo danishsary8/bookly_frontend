@@ -1,5 +1,9 @@
 # Home — deviations from MASTER
 
+## Page order
+Search-first hero (staff picks carousel, fits one screen) → 3D shelf → "Continue where you left off" (returning visitors only) → Shop by category → Staff picks → seasonal collections (when live) → New arrivals → Series spotlight → Authors → delivery promises + store rating.
+On `/` the header search hides (fade) while the hero search is on screen, and returns once it scrolls away.
+
 ## Hero: 3D bookshelf (`src/components/home/ShelfHero.tsx`)
 - Full-bleed warm paper band (`.home-paper`, faint grain) under the header.
 - Row tabs (Best sellers / New arrivals / Coming soon / Ebooks under $5) from `/catalog/rows`; only rows with 3+ books show.

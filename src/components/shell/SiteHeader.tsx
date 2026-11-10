@@ -69,6 +69,39 @@ const links = [
   { label: "authors", to: "/authors" },
 ] as const;
 
+/** On the home page the hero has its own big search; the header one waits until the hero's has scrolled away. */
+function useHeroSearchInView(pathname: string) {
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    if (pathname !== "/") return;
+    let frame = 0;
+    const check = () => {
+      const el = document.getElementById("hero-search");
+      setInView(el ? el.getBoundingClientRect().bottom > 80 : false);
+    };
+    const onScroll = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(check);
+    };
+    check();
+    // The home page is loaded after the header: keep checking briefly until the hero's search exists.
+    let tries = 0;
+    const late = window.setInterval(() => {
+      check();
+      if (++tries > 15 || document.getElementById("hero-search")) window.clearInterval(late);
+    }, 200);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearInterval(late);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [pathname]);
+  return pathname === "/" && inView;
+}
+
 export function SiteHeader() {
   const location = useLocation();
   const panel = useShellPanel();
@@ -76,6 +109,7 @@ export function SiteHeader() {
   const signedIn = Boolean(useSession("customer"));
   const { dict } = useT();
   const { scrolled, hidden } = useHeaderScroll(panel !== null);
+  const heroSearch = useHeroSearchInView(location.pathname);
   const newest = location.pathname === "/books" && new URLSearchParams(location.search).get("sort") === "newest";
   const activeLink = newest ? "/books?sort=newest" : isActivePath(location.pathname, "/authors") ? "/authors" : undefined;
 
@@ -120,7 +154,14 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <LiveSearch id="header-search" shortcut className="ml-auto hidden w-full max-w-sm min-[900px]:block xl:max-w-md" />
+        <LiveSearch
+          id="header-search"
+          shortcut
+          className={cn(
+            "ml-auto hidden w-full max-w-sm transition-[opacity,translate] duration-300 min-[900px]:block xl:max-w-md",
+            heroSearch && "pointer-events-none invisible -translate-y-1 opacity-0",
+          )}
+        />
 
         <div className="ml-auto flex items-center gap-1 min-[900px]:ml-0">
           <PreferencesMenu className="mr-1 hidden min-[900px]:inline-flex" />

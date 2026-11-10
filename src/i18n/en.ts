@@ -1314,6 +1314,8 @@ export const en = {
     recentlyViewed: "Recently viewed",
     clear: "Clear",
     shelfEyebrow: "From the shelves",
+    popularCategories: "Popular",
+    continueTitle: "Continue where you left off",
     shelfTitle: "Pull a book off the shelf",
     viewBook: "View book",
     shelfHint: "Drag the shelf, use the arrows, or click a spine.",

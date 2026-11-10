@@ -4,24 +4,23 @@ import { Link } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { AuthorAvatar } from "@/components/catalog/AuthorAvatar";
 import { BookShelf } from "@/components/catalog/BookShelf";
-import { CatalogRows } from "@/components/catalog/CatalogRows";
 import { collectionQueries, collectionText } from "@/api/endpoints/collections";
 import { CategoryTiles } from "@/components/home/CategoryTiles";
 import { HomeHero } from "@/components/home/HomeHero";
+import { ContinueStrip } from "@/components/home/ContinueStrip";
 import { readingListsApi } from "@/api/endpoints/readingLists";
 import { ShelfHero } from "@/components/home/ShelfHero";
 import { StaffPicks } from "@/components/home/StaffPicks";
 import { StoreRatingBadge } from "@/components/ratings/StoreRatingBadge";
 import { SeriesSpotlight } from "@/components/home/SeriesSpotlight";
 import AnimatedContent from "@/components/AnimatedContent";
-import { Button } from "@/components/ui/button";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { clearRecentlyViewed, useRecentlyViewed } from "@/stores/recentlyViewed";
+import { useRecentlyViewed } from "@/stores/recentlyViewed";
 import { useT } from "@/i18n";
 
 /*
- * Home: 3D shelf hero → service promises → new arrivals → categories → best rated →
+ * Home (pages/home.md): search-first hero → 3D shelf → continue strip → categories → staff picks →
  * series spotlight → authors → recently viewed. Each section loads on its own,
  * so a slow or failing request only affects that section.
  */
@@ -55,10 +54,10 @@ export default function HomePage() {
   const h = dict.homePage;
   // Seasonal collections (owner 2026-11-01): up to 2 live ones, above New arrivals. None, or an older API: no row.
   const collections = useQuery(collectionQueries.live());
-  const newest = useQuery(catalogQueries.books({ sort: "newest", per_page: 10 }));
   // Hero: the staff's picks (same query StaffPicks uses, so no extra request); top rated until/unless there are some.
   const picks = useQuery({ queryKey: ["reading-lists", "picks"], queryFn: readingListsApi.picks });
   const picked = (picks.data ?? []).flatMap((list) => list.books.flatMap((entry) => (entry.book ? [entry.book] : []))).filter((b, i, all) => all.findIndex((x) => x.id === b.id) === i).slice(0, 6);
+  const newest = useQuery(catalogQueries.books({ sort: "newest", per_page: 10 }));
   const rated = useQuery(catalogQueries.books({ sort: "rating", per_page: 10 }));
   const categories = useQuery(catalogQueries.categories());
   const series = useQuery(catalogQueries.seriesList({ per_page: 20 }));
@@ -88,52 +87,14 @@ export default function HomePage() {
       <HomeHero
         featured={picked.length >= 2 ? picked : rated.data?.data.slice(0, 5)}
         label={picked.length >= 2 ? dict.readingLists.staffPick : h.topRated}
-        stats={[
-          { label: h.books, value: newest.data?.meta.total },
-          { label: h.authors, value: authors.data?.meta.total },
-          { label: h.categories, value: categories.data?.length },
-        ]}
       />
-      <div className="container-shell pt-10">
-        <ul className="grid gap-4 sm:grid-cols-3" aria-label={h.why}>
-          {promises.map(({ Icon, title, text }) => (
-            <li key={title} className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
-              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-lapis-tint text-primary">
-                <Icon className="size-5" aria-hidden="true" />
-              </span>
-              <span>
-                <span className="block font-semibold">{h[title]}</span>
-                <span className="text-sm text-muted-foreground">{h[text]}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
       {/* Full-bleed paper band with the 3D shelf. */}
-      <div className="home-paper mt-16 border-y border-border">
+      <div className="home-paper border-b border-border">
         <ShelfHero />
       </div>
-      <div className="container-shell grid gap-20 pb-8 pt-16">
-
-        {(collections.data ?? []).map((c) => {
-          const text = collectionText(c, lang);
-          return (
-            <BookShelf
-              key={c.id}
-              id={`collection-${c.slug}`}
-              eyebrow={dict.collections.eyebrow}
-              title={text.title}
-              books={c.books}
-              seeAllHref={`/collections/${c.slug}`}
-              seeAllLabel={dict.collections.seeAll}
-            />
-          );
-        })}
-
-        <CatalogRows />
-        <StoreRatingBadge />
-        <StaffPicks />
-
+      <div className="container-shell grid gap-20 pb-8 pt-14">
+        {/* Order (pages/home.md): hero → shelf → continue → categories → staff picks → (seasonal) → new arrivals → series → authors → promises. */}
+        <ContinueStrip books={recent} />
         <AnimatedContent distance={32} duration={0.7} threshold={0.15}>
           <section aria-labelledby="categories-title">
             <SectionHeading
@@ -149,22 +110,34 @@ export default function HomePage() {
             <CategoryTiles categories={categories.data} loading={categories.isPending} />
           </section>
         </AnimatedContent>
-
+        <StaffPicks />
+        {(collections.data ?? []).map((c) => {
+          const text = collectionText(c, lang);
+          return (
+            <BookShelf
+              key={c.id}
+              id={`collection-${c.slug}`}
+              eyebrow={dict.collections.eyebrow}
+              title={text.title}
+              books={c.books}
+              seeAllHref={`/collections/${c.slug}`}
+              seeAllLabel={dict.collections.seeAll}
+            />
+          );
+        })}
         <BookShelf
-          id="best-rated"
-          eyebrow={h.readersLove}
-          title={h.bestRated}
-          books={rated.data?.data}
-          loading={rated.isPending}
-          error={rated.isError ? rated.error : undefined}
-          onRetry={() => rated.refetch()}
-          seeAllHref="/books?sort=rating"
+          id="new-arrivals"
+          eyebrow={h.justIn}
+          title={h.newArrivals}
+          books={newest.data?.data}
+          loading={newest.isPending}
+          error={newest.isError ? newest.error : undefined}
+          onRetry={() => newest.refetch()}
+          seeAllHref="/books?sort=newest"
         />
-
         <AnimatedContent distance={32} duration={0.7} threshold={0.15}>
           <SeriesSpotlight series={series.data?.data} />
         </AnimatedContent>
-
         {authors.data?.data.length ? (
           <AnimatedContent distance={32} duration={0.7} threshold={0.15}>
             <section aria-labelledby="authors-title">
@@ -197,18 +170,22 @@ export default function HomePage() {
             </section>
           </AnimatedContent>
         ) : null}
-
-        <BookShelf
-          id="recently-viewed"
-          eyebrow={h.yourHistory}
-          title={h.recentlyViewed}
-          books={recent}
-          action={
-            <Button variant="ghost" size="sm" onClick={clearRecentlyViewed}>
-              {h.clear}
-            </Button>
-          }
-        />
+        <div className="grid gap-6">
+          <ul className="grid gap-4 sm:grid-cols-3" aria-label={h.why}>
+            {promises.map(({ Icon, title, text }) => (
+              <li key={title} className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-lapis-tint text-primary">
+                  <Icon className="size-5" aria-hidden="true" />
+                </span>
+                <span>
+                  <span className="block font-semibold">{h[title]}</span>
+                  <span className="text-sm text-muted-foreground">{h[text]}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <StoreRatingBadge />
+        </div>
       </div>
     </div>
   );
