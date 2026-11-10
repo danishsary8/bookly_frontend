@@ -83,7 +83,7 @@ export function BookShelf({ id, title, eyebrow, books, loading, error, onRetry, 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           {eyebrow ? (
-            <p className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-accent-text">
+            <p className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
               <span className="h-px w-12 bg-current" aria-hidden="true" />
               {eyebrow}
             </p>

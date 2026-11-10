@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { m } from "motion/react";
-import { Heart, Menu, ShoppingBag } from "lucide-react";
+import { Heart, Menu, Search, ShoppingBag } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CountBadge } from "@/components/ui/badge";
@@ -65,8 +65,9 @@ function useHeaderScroll(locked: boolean) {
 }
 
 const links = [
-  { label: "newArrivals", to: "/books?sort=newest" },
-  { label: "authors", to: "/authors" },
+  { label: "newArrivals", to: "/books?sort=newest", sort: "newest" },
+  { label: "bestSellers", to: "/books?sort=best_selling", sort: "best_selling" },
+  { label: "authors", to: "/authors", sort: null },
 ] as const;
 
 /** On the home page the hero has its own big search; the header one waits until the hero's has scrolled away. */
@@ -110,8 +111,8 @@ export function SiteHeader() {
   const { dict } = useT();
   const { scrolled, hidden } = useHeaderScroll(panel !== null);
   const heroSearch = useHeroSearchInView(location.pathname);
-  const newest = location.pathname === "/books" && new URLSearchParams(location.search).get("sort") === "newest";
-  const activeLink = newest ? "/books?sort=newest" : isActivePath(location.pathname, "/authors") ? "/authors" : undefined;
+  const sort = location.pathname === "/books" ? new URLSearchParams(location.search).get("sort") : null;
+  const activeLink = links.find((item) => (item.sort ? item.sort === sort : isActivePath(location.pathname, item.to)))?.to;
 
   return (
     <header
@@ -133,7 +134,7 @@ export function SiteHeader() {
             {links.map((item) => {
               const active = activeLink === item.to;
               return (
-                <li key={item.to}>
+                <li key={item.to} className={item.label === "bestSellers" ? "hidden xl:block" : undefined}>
                   <NavLink
                     to={item.to}
                     aria-current={active ? "page" : undefined}
@@ -143,7 +144,7 @@ export function SiteHeader() {
                       active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                     )}
                   >
-                    {dict.navLinks[item.label]}
+                    {item.label === "bestSellers" ? dict.homePage.bestSellers : dict.navLinks[item.label]}
                     {active ? (
                       <m.span layoutId="header-underline" transition={transitions.toggle} className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-primary" aria-hidden="true" />
                     ) : null}
@@ -165,16 +166,26 @@ export function SiteHeader() {
 
         <div className="ml-auto flex items-center gap-1 min-[900px]:ml-0">
           <PreferencesMenu className="mr-1 hidden min-[900px]:inline-flex" />
-          {signedIn ? (
-            <Link
-              to="/account/wishlist"
-              aria-label={dict.navLinks.wishlist}
-              title={dict.navLinks.wishlist}
+          {/* On the home page, while the hero's big search is on screen, a small button jumps to it. */}
+          {heroSearch ? (
+            <button
+              type="button"
+              onClick={() => document.getElementById("hero-search")?.focus()}
+              aria-label={dict.homePage.searchOpen}
+              title={dict.homePage.searchOpen}
               className="hidden size-11 place-items-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-[900px]:grid"
             >
-              <Heart className="size-5" aria-hidden="true" />
-            </Link>
+              <Search className="size-5" aria-hidden="true" />
+            </button>
           ) : null}
+          <Link
+            to={signedIn ? "/account/wishlist" : "/login?next=%2Faccount%2Fwishlist"}
+            aria-label={dict.navLinks.wishlist}
+            title={dict.navLinks.wishlist}
+            className="hidden size-11 place-items-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-[900px]:grid"
+          >
+            <Heart className="size-5" aria-hidden="true" />
+          </Link>
           <Button
             variant="ghost"
             size="icon"

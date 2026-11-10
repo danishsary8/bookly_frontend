@@ -4,7 +4,7 @@ import type { BookCard as Book } from "@/api/types";
 import { LowStockBadge, NewBadge, OutOfStockBadge } from "@/components/BookBadge";
 import { MorphCover } from "@/components/MorphCover";
 import { OfferBadge } from "@/features/offers/offerText";
-import { StarRating } from "@/components/StarRating";
+import { ReaderScore } from "@/components/ReaderScore";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { BookCover } from "./BookCover";
@@ -117,7 +117,7 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
       <div className="mt-3.5 flex flex-1 flex-col px-0.5">
         {formats || audienceTag ? (
           <div className="flex items-center justify-between gap-1.5">
-            {formats ? <p className="line-clamp-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-text">{formats}</p> : <span />}
+            {formats ? <p className="line-clamp-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{formats}</p> : <span />}
             {audienceTag ? <span className="shrink-0 rounded bg-muted/80 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">{audienceTag}</span> : null}
           </div>
         ) : null}
@@ -130,7 +130,7 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-3">
           <div className="min-w-0">
-            <StarRating value={book.rating_avg} count={book.review_count} compact />
+            <ReaderScore book={book} />
             {book.sold_count ? <p className="mt-0.5 text-xs text-muted-foreground">{dict.shopExtras.sold(book.sold_count)}</p> : null}
           </div>
           <p className={cn("shrink-0 text-right tabular-nums", outOfStock ? "text-muted-foreground" : "text-foreground")}>

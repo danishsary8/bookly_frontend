@@ -19,3 +19,13 @@ On `/` the header search hides (fade) while the hero search is on screen, and re
 - Shop by category: typographic index of top-level categories (number, name, sub-genres, count), 2 columns, hairlines; hover slides the name, draws a blue rule and brings in an arrow; first 8 + "Show all".
 - Book rows (`BookShelf`): 2.2 / 3.2 / 4.3 / 5.3 cards across so the next card peeks; the far edge fades; a thin track under the row follows the scroll. `rows={2}` (New arrivals) stacks two rows that page together.
 - The floating Support button is off for now.
+
+## Final pass (2026-11)
+- Order: hero → shelf → continue → Shop by category → New arrivals → Top rated → Coming soon → staff picks / seasonal → promises. Authors and series left the home page (they have their own pages).
+- Accent: section eyebrows and card format lines are muted; orange is kept for the hero's one CTA.
+- Hero right side: a cover stack (front cover, neighbours at ±48% / 0.8 scale / dimmed, click to bring forward), centred caption, View book + Add to cart, 4 s per slide with a gold timer line. Skeleton mirrors the layout.
+- Shelf: a framed row of about 13 spines beside the open book (width follows the spine size), edges fade into the paper.
+- Shop by category: six tiles (name, sub-genres, count) with three real covers fanned on the right that spread on hover; the rest behind "View all categories".
+- New arrivals: one row of cards. Top rated: a ranked chart (No. 1 feature panel + Nos. 2–5 rows); needs a rating. Coming soon: ticket cards with the release date, or a dashed placeholder panel when there are none.
+- Ratings on cards (`ReaderScore`): customer reviews if any; else the shop's Reader rating as "★ 4.3 · Source" (API fields `reader_rating`, `reader_rating_source`); else nothing.
+- Header: utility strip (delivery line, Track order, Help), Best sellers link (≥1280px), wishlist heart for everyone, and a search button on the home page while the hero search is on screen.

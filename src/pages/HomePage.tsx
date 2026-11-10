@@ -2,17 +2,17 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, RotateCcw, Truck, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
-import { AuthorAvatar } from "@/components/catalog/AuthorAvatar";
 import { BookShelf } from "@/components/catalog/BookShelf";
 import { collectionQueries, collectionText } from "@/api/endpoints/collections";
 import { CategoryTiles } from "@/components/home/CategoryTiles";
 import { HomeHero } from "@/components/home/HomeHero";
 import { ContinueStrip } from "@/components/home/ContinueStrip";
+import { TopRated } from "@/components/home/TopRated";
+import { ComingSoon } from "@/components/home/ComingSoon";
 import { readingListsApi } from "@/api/endpoints/readingLists";
 import { ShelfHero } from "@/components/home/ShelfHero";
 import { StaffPicks } from "@/components/home/StaffPicks";
 import { StoreRatingBadge } from "@/components/ratings/StoreRatingBadge";
-import { SeriesSpotlight } from "@/components/home/SeriesSpotlight";
 import AnimatedContent from "@/components/AnimatedContent";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -29,7 +29,7 @@ function SectionHeading({ id, eyebrow, title, action }: { id: string; eyebrow: s
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <p className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-accent-text">
+        <p className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
           <span className="h-px w-12 bg-current" aria-hidden="true" />
           {eyebrow}
         </p>
@@ -58,11 +58,9 @@ export default function HomePage() {
   const picks = useQuery({ queryKey: ["reading-lists", "picks"], queryFn: readingListsApi.picks });
   const popular = useQuery(catalogQueries.books({ sort: "best_selling", per_page: 15 }));
   const picked = (picks.data ?? []).flatMap((list) => list.books.flatMap((entry) => (entry.book ? [entry.book] : [])));
-  const newest = useQuery(catalogQueries.books({ sort: "newest", per_page: 20 }));
+  const newest = useQuery(catalogQueries.books({ sort: "newest", per_page: 12 }));
   const featured = [...picked, ...(popular.data?.data ?? [])].filter((b, i, all) => all.findIndex((x) => x.id === b.id) === i).slice(0, 15);
   const categories = useQuery(catalogQueries.categories());
-  const series = useQuery(catalogQueries.seriesList({ per_page: 20 }));
-  const authors = useQuery(catalogQueries.authors({ per_page: 6 }));
   const recent = useRecentlyViewed();
 
   const websiteJsonLd = {
@@ -93,8 +91,8 @@ featured={popular.isPending && picks.isPending ? undefined : featured}
       <div className="home-paper border-b border-border">
         <ShelfHero />
       </div>
-      <div className="container-shell grid gap-20 pb-8 pt-14">
-        {/* Order (pages/home.md): hero → shelf → continue → categories → staff picks → (seasonal) → new arrivals → series → authors → promises. */}
+      <div className="container-shell grid gap-24 pb-10 pt-16">
+        {/* Order (pages/home.md): hero → shelf → continue → categories → new arrivals → top rated → coming soon → staff picks / seasonal → promises. */}
         <ContinueStrip books={recent} />
         <AnimatedContent distance={32} duration={0.7} threshold={0.15}>
           <section aria-labelledby="categories-title">
@@ -111,6 +109,24 @@ featured={popular.isPending && picks.isPending ? undefined : featured}
             <CategoryTiles categories={categories.data} loading={categories.isPending} />
           </section>
         </AnimatedContent>
+        <AnimatedContent distance={32} duration={0.7} threshold={0.1}>
+          <BookShelf
+            id="new-arrivals"
+            eyebrow={h.justIn}
+            title={h.newArrivals}
+            books={newest.data?.data}
+            loading={newest.isPending}
+            error={newest.isError ? newest.error : undefined}
+            onRetry={() => newest.refetch()}
+            seeAllHref="/books?sort=newest"
+          />
+        </AnimatedContent>
+        <AnimatedContent distance={32} duration={0.7} threshold={0.1}>
+          <TopRated />
+        </AnimatedContent>
+        <AnimatedContent distance={32} duration={0.7} threshold={0.1}>
+          <ComingSoon />
+        </AnimatedContent>
         <StaffPicks />
         {(collections.data ?? []).map((c) => {
           const text = collectionText(c, lang);
@@ -126,52 +142,6 @@ featured={popular.isPending && picks.isPending ? undefined : featured}
             />
           );
         })}
-        <BookShelf
-          id="new-arrivals"
-          rows={2}
-          eyebrow={h.justIn}
-          title={h.newArrivals}
-          books={newest.data?.data}
-          loading={newest.isPending}
-          error={newest.isError ? newest.error : undefined}
-          onRetry={() => newest.refetch()}
-          seeAllHref="/books?sort=newest"
-        />
-        <AnimatedContent distance={32} duration={0.7} threshold={0.15}>
-          <SeriesSpotlight series={series.data?.data} />
-        </AnimatedContent>
-        {authors.data?.data.length ? (
-          <AnimatedContent distance={32} duration={0.7} threshold={0.15}>
-            <section aria-labelledby="authors-title">
-              <SectionHeading
-                id="authors-title"
-                eyebrow={h.writers}
-                title={h.meetAuthors}
-                action={
-                  <Link to="/authors" className="inline-flex h-11 items-center gap-1.5 px-2 text-[15px] font-semibold text-primary underline-offset-4 hover:underline">
-                    {h.allAuthors} <ArrowRight className="size-4" aria-hidden="true" />
-                  </Link>
-                }
-              />
-              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-                {authors.data.data.map((author) => (
-                  <li key={author.id}>
-                    <Link
-                      to={`/authors/${author.id}`}
-                      className="group grid h-full justify-items-center gap-3 rounded-xl border border-border bg-card p-5 text-center transition-[border-color,box-shadow] duration-150 hover:border-input hover:shadow-lift outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      <AuthorAvatar name={author.name ?? ""} photoUrl={author.photo_url} className="size-20 text-2xl transition-transform duration-200 group-hover:scale-105 motion-reduce:group-hover:scale-100" />
-                      <span className="font-display text-lg leading-tight underline-offset-4 group-hover:underline">{author.name}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {dict.pages.bookCount(author.books_count ?? 0)}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          </AnimatedContent>
-        ) : null}
         <div className="grid gap-6">
           <ul className="grid gap-4 sm:grid-cols-3" aria-label={h.why}>
             {promises.map(({ Icon, title, text }) => (
