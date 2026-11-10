@@ -62,7 +62,7 @@ function ProfileForm({ customer }: { customer: Customer }) {
 
   return (
     <AccountSection title={a.profile} lead={a.profileLead}>
-      <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid max-w-xl gap-5 rounded-xl border border-border bg-card p-5 sm:p-6">
+      <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid max-w-xl gap-5 shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
         <TextField label={a.fullName} autoComplete="name" error={errors.name?.message} {...register("name")} />
         <TextField
@@ -109,24 +109,24 @@ function ProfileForm({ customer }: { customer: Customer }) {
         </div>
       </form>
 
-      <div className="mt-8 max-w-xl rounded-xl border border-border bg-card p-5 sm:p-6">
+      <div className="mt-8 max-w-xl shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
         <NewsletterToggle customer={customer} />
       </div>
 
       {/* Only when the API knows the setting (an older API leaves it out). */}
       {typeof customer.price_drop_alerts === "boolean" ? (
-        <div className="mt-4 max-w-xl rounded-xl border border-border bg-card p-5 sm:p-6">
+        <div className="mt-4 max-w-xl shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
           <PriceDropToggle customer={customer} />
         </div>
       ) : null}
 
       {typeof customer.cart_reminders === "boolean" ? (
-        <div className="mt-4 max-w-xl rounded-xl border border-border bg-card p-5 sm:p-6">
+        <div className="mt-4 max-w-xl shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
           <CartReminderToggle customer={customer} />
         </div>
       ) : null}
 
-      <div className="mt-4 max-w-xl rounded-xl border border-border bg-card p-5 sm:p-6">
+      <div className="mt-4 max-w-xl shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
         <TelegramOrderUpdatesCard customer={customer} />
       </div>
     </AccountSection>

@@ -38,7 +38,7 @@ export default function ReferralsPage() {
       {copyResult ? <p role="status">{copyResult}</p> : null}
       <h2 className="font-display text-2xl">{t.history}</h2>
       {data.history.length === 0 ? <p>{t.noReferrals}</p> : null}
-      <ul className="grid gap-3">{data.history.map((row) => <li key={row.id} className="rounded-xl border border-border bg-card p-4">#{row.id} · {t.status[row.status]} · {formatUsd(row.reward_cents / 100)}</li>)}</ul>
+      <ul className="grid gap-3">{data.history.map((row) => <li key={row.id} className="shop-card rounded-2xl border border-border bg-card p-4">#{row.id} · {t.status[row.status]} · {formatUsd(row.reward_cents / 100)}</li>)}</ul>
       <div className="flex gap-3"><Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>{t.previous}</Button><Button variant="outline" disabled={page >= data.last_page} onClick={() => setPage(page + 1)}>{t.next}</Button></div>
     </> : null}
   </div>;

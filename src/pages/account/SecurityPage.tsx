@@ -89,7 +89,7 @@ function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
           {hasPassword ? a.changePasswordLead : a.setPasswordLead}
         </p>
       </div>
-      <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid max-w-xl gap-5 rounded-xl border border-border bg-card p-5 sm:p-6">
+      <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid max-w-xl gap-5 shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
         {/* Lets password managers match the change to the right account. */}
         <input type="text" name="username" autoComplete="username" hidden readOnly />

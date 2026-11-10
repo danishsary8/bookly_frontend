@@ -101,7 +101,7 @@ export default function MyEbooksPage() {
               return (
                 <div
                   key={book.id}
-                  className="flex flex-col justify-between rounded-xl border border-border bg-card p-4 shadow-xs transition-shadow hover:shadow-sm"
+                  className="flex flex-col justify-between shop-card rounded-2xl border border-border bg-card p-4 shadow-xs transition-shadow hover:shadow-sm"
                 >
                   <div className="flex gap-3">
                     <CoverThumb src={book.cover_image_url} className="w-14 aspect-[2/3] rounded-md shadow-xs shrink-0" />
@@ -196,7 +196,7 @@ export default function MyEbooksPage() {
               return (
                 <div
                   key={device.id}
-                  className="flex flex-col justify-between rounded-xl border border-border bg-card p-4 shadow-xs"
+                  className="flex flex-col justify-between shop-card rounded-2xl border border-border bg-card p-4 shadow-xs"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2.5">
