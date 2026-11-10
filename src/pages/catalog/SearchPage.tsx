@@ -215,6 +215,7 @@ export default function SearchPage() {
       ) : (
         /* Results View */
         <CatalogBrowser
+          searchBox={false}
           noun={dict.nouns.result}
           empty={
             <EmptyState

@@ -1,5 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ChevronDown } from "lucide-react";
 import type { BookFacets, BookFilters } from "@/api/endpoints/catalog";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { Button } from "@/components/ui/button";
@@ -24,20 +25,42 @@ type Props = {
   locked?: Partial<BookFilters>;
   idPrefix: string;
   facets?: BookFacets;
+  /** The category chips above the results already cover categories. */
+  hideCategories?: boolean;
 };
 
 /** Facet count for a choice; undefined while counts are not known (then everything is shown). */
 const countOf = (counts: Record<string, number> | undefined, key: string | number) => (counts ? (counts[String(key)] ?? 0) : undefined);
 const shown = (count: number | undefined, selected: boolean) => selected || count === undefined || count > 0;
 
-function Group({ legend, children }: { legend: string; children: ReactNode }) {
+/** A collapsible filter group (native <details>: keyboard and screen readers get it for free). */
+function Group({ legend, children, defaultOpen = true }: { legend: string; children: ReactNode; defaultOpen?: boolean }) {
   return (
-    <div className="border-t border-border pt-5">
-      <fieldset className="grid gap-1">
-        <legend className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">{legend}</legend>
+    <details open={defaultOpen} className="group/f border-t border-border pt-4">
+      <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between rounded-md text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+        {legend}
+        <ChevronDown className="size-4 transition-transform duration-200 group-open/f:rotate-180" aria-hidden="true" />
+      </summary>
+      <fieldset className="grid gap-0.5 pb-1 pt-1">
+        <legend className="sr-only">{legend}</legend>
         {children}
       </fieldset>
-    </div>
+    </details>
+  );
+}
+
+/** Long lists show the first few, with a toggle for the rest. */
+function Trimmed({ items, keep = 6 }: { items: ReactNode[]; keep?: number }) {
+  const { dict } = useT();
+  const [all, setAll] = useState(false);
+  if (items.length <= keep + 1) return <>{items}</>;
+  return (
+    <>
+      {all ? items : items.slice(0, keep)}
+      <button type="button" onClick={() => setAll((v) => !v)} aria-expanded={all} className="mt-1 inline-flex min-h-9 w-max items-center px-1 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+        {all ? dict.browse.showFewer : dict.browse.showAllN(items.length)}
+      </button>
+    </>
   );
 }
 
@@ -104,7 +127,7 @@ function PriceRange({ filters, onChange, idPrefix }: Props) {
   );
 }
 
-export function CatalogFilters({ filters, onChange, locked = {}, idPrefix, facets }: Props) {
+export function CatalogFilters({ filters, onChange, locked = {}, idPrefix, facets, hideCategories = false }: Props) {
   const tree = useQuery(catalogQueries.categoryTree());
   const publishers = useQuery(catalogQueries.publishers({ per_page: 100 }));
   const { dict } = useT();
@@ -139,7 +162,7 @@ export function CatalogFilters({ filters, onChange, locked = {}, idPrefix, facet
         ) : null}
       </div>
 
-      {locked.category_id === undefined && tops.length > 0 ? (
+      {!hideCategories && locked.category_id === undefined && tops.length > 0 ? (
         <Group legend={t.category}>
           <Choice name={`${idPrefix}-category`} checked={filters.category_id === undefined} onSelect={() => set("category_id", undefined)} label={t.allCategories} />
           {tops
@@ -183,7 +206,7 @@ export function CatalogFilters({ filters, onChange, locked = {}, idPrefix, facet
         <PriceRange filters={filters} onChange={onChange} idPrefix={idPrefix} />
       </Group>
 
-      <Group legend={t.language}>
+      <Group legend={t.language} defaultOpen={filters.language !== undefined}>
         <Choice name={`${idPrefix}-language`} checked={filters.language === undefined} onSelect={() => set("language", undefined)} label={t.anyLanguage} />
         {languages
           .filter((l) => shown(countOf(facets?.languages, l), filters.language === l))
@@ -220,11 +243,13 @@ export function CatalogFilters({ filters, onChange, locked = {}, idPrefix, facet
       ) : null}
 
       {locked.publisher_id === undefined && (publishers.data?.data.length ?? 0) > 0 ? (
-        <Group legend={t.publisher}>
+        <Group legend={t.publisher} defaultOpen={filters.publisher_id !== undefined}>
           <Choice name={`${idPrefix}-publisher`} checked={filters.publisher_id === undefined} onSelect={() => set("publisher_id", undefined)} label={t.anyPublisher} />
-          {(publishers.data?.data ?? []).map((p) => (
-            <Choice key={p.id} name={`${idPrefix}-publisher`} checked={filters.publisher_id === p.id} onSelect={() => set("publisher_id", p.id)} label={p.name ?? ""} count={p.books_count} />
-          ))}
+          <Trimmed
+            items={(publishers.data?.data ?? []).map((p) => (
+              <Choice key={p.id} name={`${idPrefix}-publisher`} checked={filters.publisher_id === p.id} onSelect={() => set("publisher_id", p.id)} label={p.name ?? ""} count={p.books_count} />
+            ))}
+          />
         </Group>
       ) : null}
     </div>

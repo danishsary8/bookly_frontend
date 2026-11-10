@@ -1187,3 +1187,8 @@
 .hero-wash { animation: hero-wash 900ms ease both; }
 @keyframes hero-wash { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .hero-wash { animation: none; } }
+
+/* Category chip rows scroll sideways on small screens: fade the right edge as a hint. */
+@media (max-width: 1023px) {
+  .chip-row { mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent); }
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { SearchX, SlidersHorizontal, SpellCheck } from "lucide-react";
+import { Search, SearchX, SlidersHorizontal, SpellCheck } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import type { BookFilters, BookSort } from "@/api/endpoints/catalog";
 import { catalogQueries } from "@/api/endpoints/catalog";
@@ -16,6 +16,7 @@ import { PER_PAGE, SORTS, activeFilterCount, clearFilters, effectiveSort, parseB
 import { ActiveFilters } from "./ActiveFilters";
 import { BookGrid } from "./BookGrid";
 import { CatalogFilters } from "./CatalogFilters";
+import { CategoryChips } from "./CategoryChips";
 import { rangeText, useT } from "@/i18n";
 
 /*
@@ -31,9 +32,11 @@ type Props = {
   noun?: (n: number) => string;
   /** Replaces the default "no results" state. */
   empty?: ReactNode;
+  /** The search-in-catalogue box (off on /search, which has its own). */
+  searchBox?: boolean;
 };
 
-export function CatalogBrowser({ locked = {}, noun: nounFor, empty }: Props) {
+export function CatalogBrowser({ locked = {}, noun: nounFor, empty, searchBox = true }: Props) {
   const { dict } = useT();
   const t = dict.browse;
   const noun = nounFor ?? dict.nouns.book;
@@ -72,7 +75,14 @@ export function CatalogBrowser({ locked = {}, noun: nounFor, empty }: Props) {
     );
   }, [pageTooFar, lastPage, setSearchParams]);
 
-  const filterPanel = (prefix: string) => <CatalogFilters filters={filters} onChange={apply} locked={locked} idPrefix={prefix} facets={query.data?.facets} />;
+  const chips = locked.category_id === undefined;
+  const filterPanel = (prefix: string) => <CatalogFilters filters={filters} onChange={apply} locked={locked} idPrefix={prefix} facets={query.data?.facets} hideCategories={chips} />;
+  const [term, setTerm] = useState(filters.q ?? "");
+  const [termFor, setTermFor] = useState(filters.q);
+  if (termFor !== filters.q) {
+    setTermFor(filters.q);
+    setTerm(filters.q ?? "");
+  }
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10">
@@ -84,16 +94,36 @@ export function CatalogBrowser({ locked = {}, noun: nounFor, empty }: Props) {
       </aside>
 
       <div className="grid min-w-0 content-start gap-6">
+        {chips ? <CategoryChips filters={filters} onChange={apply} counts={filters.category_id === undefined ? query.data?.facets?.categories : undefined} /> : null}
         {filters.q && query.data?.search?.typo_tolerant ? (
           <p className="flex items-start gap-2 rounded-lg border border-border bg-muted/50 px-4 py-3 text-[15px]" role="status">
             <SpellCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             <span>{t.similarSpelling(filters.q)}</span>
           </p>
         ) : null}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-[15px] text-muted-foreground" role="status" aria-live="polite">
-            {meta ? rangeText(dict, meta.from, meta.to, meta.total ?? 0, noun(meta.total ?? 0)) : " "}
-          </p>
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Search inside the catalogue (keeps the other filters). */}
+          {searchBox ? (
+          <form
+            role="search"
+            onSubmit={(e) => {
+              e.preventDefault();
+              apply(withFilter(filters, "q", term.trim() || undefined));
+            }}
+            className="relative min-w-[min(100%,16rem)] flex-1"
+          >
+            <label htmlFor="catalog-search" className="sr-only">{t.searchWithinLabel}</label>
+            <Search className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <input
+              id="catalog-search"
+              type="search"
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              placeholder={t.searchWithin}
+              className="h-12 w-full rounded-full border border-input bg-card pl-11 pr-4 text-base outline-none transition-shadow placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/15"
+            />
+          </form>
+          ) : null}
           <div className="flex items-center gap-2">
             <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
               <DrawerTrigger asChild>
@@ -139,7 +169,12 @@ export function CatalogBrowser({ locked = {}, noun: nounFor, empty }: Props) {
           </div>
         </div>
 
-        <ActiveFilters filters={filters} onChange={apply} locked={locked} />
+        <div className="-mt-2 grid gap-3">
+          <p className="text-[15px] text-muted-foreground" role="status" aria-live="polite">
+            {meta ? rangeText(dict, meta.from, meta.to, meta.total ?? 0, noun(meta.total ?? 0)) : " "}
+          </p>
+          <ActiveFilters filters={filters} onChange={apply} locked={locked} />
+        </div>
 
         {query.isError && !query.data ? (
           <ErrorState error={query.error} onRetry={() => query.refetch()} />

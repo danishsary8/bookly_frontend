@@ -116,8 +116,8 @@ describe("BooksPage", () => {
       </>,
       { route: "/books?page=2" },
     );
-    const sidebar = await screen.findByRole("complementary", { name: "Filters" });
-    await user.click(await within(sidebar).findByRole("radio", { name: /Fiction/ }));
+    const chips = await screen.findByRole("navigation", { name: "Category" });
+    await user.click(await within(chips).findByRole("button", { name: /Fiction/ }));
     expect(screen.getByTestId("where")).toHaveTextContent("/books?category_id=1");
   });
 
@@ -139,22 +139,23 @@ describe("BooksPage", () => {
       { route: "/books" },
     );
     const sidebar = await screen.findByRole("complementary", { name: "Filters" });
-    await within(sidebar).findByRole("radio", { name: /Fiction/ });
-    expect(within(sidebar).queryByRole("radio", { name: /Classics/ })).not.toBeInTheDocument(); // 0 with these filters
+    const chips = await screen.findByRole("navigation", { name: "Category" });
+    await within(chips).findByRole("button", { name: /Fiction/ });
+    expect(within(chips).queryByRole("button", { name: /Classics/ })).not.toBeInTheDocument(); // 0 with these filters
     expect(within(sidebar).queryByRole("radio", { name: /Hardcover/ })).not.toBeInTheDocument();
     expect(within(sidebar).queryByRole("radio", { name: /Khmer/ })).not.toBeInTheDocument();
     expect(within(sidebar).getByRole("radio", { name: /Grade 9/ })).toBeInTheDocument();
     expect(within(sidebar).queryByRole("group", { name: "English level" })).not.toBeInTheDocument();
     expect(within(sidebar).queryByText("Reader age")).not.toBeInTheDocument();
     expect(within(sidebar).getByRole("switch", { name: "Has an ebook" })).toBeInTheDocument();
-    expect(within(sidebar).queryByRole("radio", { name: /Fantasy/ })).not.toBeInTheDocument();
+    expect(within(chips).queryByRole("button", { name: /Fantasy/ })).not.toBeInTheDocument();
 
-    await user.click(within(sidebar).getByRole("radio", { name: /Fiction/ }));
-    expect(await within(sidebar).findByRole("radio", { name: /Fantasy/ })).toBeInTheDocument();
+    await user.click(within(chips).getByRole("button", { name: /Fiction/ }));
+    expect(await within(chips).findByRole("button", { name: /Fantasy/ })).toBeInTheDocument();
     // With a category chosen, the other categories stay (counts are the categories' own totals).
-    expect(within(sidebar).getByRole("radio", { name: /Classics/ })).toHaveAccessibleName(/Classics/);
-    expect(within(sidebar).getByRole("radio", { name: /Fiction/ }).closest("label")).toHaveTextContent("6");
-    await user.click(within(sidebar).getByRole("radio", { name: /Fantasy/ }));
+    expect(within(chips).getByRole("button", { name: /Classics/ })).toBeInTheDocument();
+    expect(within(chips).getByRole("button", { name: /^Fiction/ })).toHaveTextContent("6");
+    await user.click(within(chips).getByRole("button", { name: /Fantasy/ }));
     expect(screen.getByTestId("where")).toHaveTextContent("/books?category_id=3");
     await user.click(within(sidebar).getByRole("radio", { name: /Grade 9/ }));
     expect(screen.getByTestId("where")).toHaveTextContent("/books?category_id=3&school_grade=9");
