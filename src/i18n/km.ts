@@ -1314,6 +1314,8 @@ export const km: Translations = {
     yourHistory: "ប្រវត្តិរបស់អ្នក",
     recentlyViewed: "បានមើលថ្មីៗ",
     clear: "សម្អាត",
+    viewBook: "មើលសៀវភៅ",
+    shelfHint: "អូសធ្នើ ប្រើព្រួញ ឬចុចលើខ្នងសៀវភៅ។",
     heroEyebrow: "Bookly · ភ្នំពេញ",
     topRated: "សៀវភៅផ្កាយខ្ពស់បំផុត",
     cover: (title: string) => `គម្របសៀវភៅ ${title}`,
@@ -1332,6 +1334,7 @@ export const km: Translations = {
     loadingCategories: "កំពុងផ្ទុកប្រភេទ…",
   },
   cards: {
+    add: "បន្ថែម",
     untitled: "គ្មានចំណងជើង",
     saveToWishlist: (title: string) => `រក្សាទុក ${title} ក្នុងបញ្ជីប្រាថ្នា`,
     from: "ចាប់ពី",

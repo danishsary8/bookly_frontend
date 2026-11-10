@@ -1308,6 +1308,8 @@ export const en = {
     yourHistory: "Your history",
     recentlyViewed: "Recently viewed",
     clear: "Clear",
+    viewBook: "View book",
+    shelfHint: "Drag the shelf, use the arrows, or click a spine.",
     heroEyebrow: "Bookly · Phnom Penh",
     topRated: "Top rated books",
     cover: (title: string) => `${title} cover`,
@@ -1326,6 +1328,7 @@ export const en = {
     loadingCategories: "Loading categories…",
   },
   cards: {
+    add: "Add",
     untitled: "Untitled",
     saveToWishlist: (title: string) => `Save ${title} to your wishlist`,
     from: "from",
