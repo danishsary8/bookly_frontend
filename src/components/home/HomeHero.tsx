@@ -40,12 +40,9 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const current = books[index % Math.max(books.length, 1)];
-  // Five thumbs centred on the current book (fewer when the list is short).
-  const dockSize = Math.min(5, books.length);
-  const dock = Array.from({ length: dockSize }, (_, k) => {
-    const i = (((index + k - Math.floor(dockSize / 2)) % books.length) + books.length) % books.length;
-    return { book: books[i], i };
-  });
+  // Short description of the current book: cards don't carry one, so read the book (cached per book).
+  const detail = useQuery({ ...catalogQueries.book(current?.id ?? 0), enabled: Boolean(current?.id), staleTime: 10 * 60_000 });
+  const blurb = shortBlurb(detail.data?.description);
   const autoplaying = books.length > 1 && !reduceMotion && !paused && !hovered && !focused;
 
   useEffect(() => {
@@ -84,7 +81,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
       ) : null}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(80%_70%_at_25%_40%,rgb(20_32_122/0.85),rgb(20_32_122/0.45)_60%,rgb(10_16_60/0.8))]" aria-hidden="true" />
 
-      <div className="grid grid-cols-1 items-center gap-12 px-6 py-12 sm:px-10 lg:h-[clamp(520px,calc(100svh-var(--header-h)-5rem),800px)] lg:grid-cols-12 lg:gap-x-10 lg:px-14 lg:py-10">
+      <div className="grid grid-cols-1 items-center gap-12 px-6 py-12 sm:px-10 lg:h-[clamp(560px,calc(100svh-var(--header-h)-2.5rem),840px)] lg:grid-cols-12 lg:gap-x-10 lg:px-14 lg:py-10">
         <div className="lg:col-span-7">
           <p className="eyebrow">{h.heroEyebrow}</p>
           <h1 id="home-hero-title" className="mt-4 font-display text-[clamp(2.4rem,4.4vw,4rem)] leading-[1.03] tracking-[-0.02em] text-on-lapis [@media(max-height:820px)]:text-[clamp(2.2rem,3.8vw,3.4rem)]">
@@ -164,7 +161,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
             >
               {/* The stack: the current cover in front, its neighbours peeking out behind on each side.
                   Each cover stands on a glossy floor: a soft mirror image fades out below it. */}
-              <div className="relative mx-auto w-[min(270px,60%,calc((100svh-var(--header-h)-26rem)*0.66))]">
+              <div className="relative mx-auto w-[min(320px,70%,calc((100svh-var(--header-h)-24rem)*0.66))]">
                 <span className="pointer-events-none absolute left-1/2 top-[38%] -z-10 size-[150%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(120_150_255/0.28),transparent)]" aria-hidden="true" />
                 <div className="relative aspect-[2/3]">
                   {books.map((book, i) => {
@@ -196,9 +193,9 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                   })}
                 </div>
                 {/* the glossy floor line the covers stand on */}
-                <span className="pointer-events-none absolute left-1/2 top-[86.2%] block h-px w-[190%] -translate-x-1/2 bg-[linear-gradient(90deg,transparent,rgb(255_255_255/0.22),transparent)]" aria-hidden="true" />
+                <span className="pointer-events-none absolute left-1/2 top-[90.4%] block h-px w-[190%] -translate-x-1/2 bg-[linear-gradient(90deg,transparent,rgb(255_255_255/0.22),transparent)]" aria-hidden="true" />
                 {/* room for the reflection */}
-                <div className="aspect-[25/6]" aria-hidden="true" />
+                <div className="aspect-[25/4]" aria-hidden="true" />
               </div>
 
               {current ? (
@@ -219,35 +216,25 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                 </div>
               ) : null}
 
-              {/* The dock: a strip of the covers around the current one. The current thumb is raised, framed in gold
-                  and carries the slide timer; click any thumb to bring that book forward. */}
-              <div className="mt-5 flex items-center justify-center gap-2">
+              {/* A short description of the current book, then quiet slide controls: a gold timer line between prev / next, and pause. */}
+              <div key={`d-${current?.id}`} className="hero-caption mx-auto mt-2.5 min-h-[4.25rem] max-w-sm text-center [animation-delay:80ms]">
+                {blurb ? (
+                  <p className="line-clamp-3 text-[14.5px] leading-relaxed text-on-lapis-muted">{blurb}</p>
+                ) : detail.isPending && current?.id ? (
+                  <span className="grid justify-items-center gap-2" aria-hidden="true">
+                    <Skeleton className="h-3 w-11/12 bg-on-lapis/10" />
+                    <Skeleton className="h-3 w-4/5 bg-on-lapis/10" />
+                    <Skeleton className="h-3 w-3/5 bg-on-lapis/10" />
+                  </span>
+                ) : null}
+              </div>
+              <div className="mt-3 flex items-center justify-center gap-3">
                 <button type="button" onClick={() => step(-1)} className={iconButton} aria-label={h.prevBook}>
                   <ChevronLeft className="size-4" aria-hidden="true" />
                 </button>
-                <ul className="hero-dock flex items-end gap-1.5 rounded-2xl bg-on-lapis/[0.07] p-1.5 ring-1 ring-inset ring-on-lapis/10 backdrop-blur-sm">
-                  {dock.map(({ book, i }) => {
-                    const active = i === index;
-                    return (
-                      <li key={book.id} className="hero-dock-item">
-                        <button
-                          type="button"
-                          onClick={() => setIndex(i)}
-                          aria-label={h.showBook(book.title ?? "")}
-                          aria-current={active || undefined}
-                          className={`relative block overflow-hidden rounded-[5px] transition-[width,transform,opacity,box-shadow] duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${active ? "w-11 -translate-y-1 opacity-100 shadow-[0_0_0_2px_var(--gold),0_10px_18px_-8px_rgb(0_0_0/0.7)]" : "w-8 opacity-55 hover:-translate-y-0.5 hover:opacity-90"}`}
-                        >
-                          <BookCover src={book.cover_image_url} title={book.title} className="block" />
-                          {active ? (
-                            <span className="absolute inset-x-0 bottom-0 h-[3px] bg-black/40" aria-hidden="true">
-                              <span key={`${index}-${autoplaying}`} className="hero-timer block h-full origin-left bg-gold" style={autoplaying ? { animationDuration: `${SLIDE_MS}ms` } : { animation: "none", transform: "scaleX(1)" }} />
-                            </span>
-                          ) : null}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
+                <span className="block h-0.5 w-32 overflow-hidden rounded-full bg-on-lapis-muted/25" aria-hidden="true">
+                  <span key={`${index}-${autoplaying}`} className="hero-timer block h-full origin-left bg-gold" style={autoplaying ? { animationDuration: `${SLIDE_MS}ms` } : { animation: "none", transform: "scaleX(1)" }} />
+                </span>
                 <button type="button" onClick={() => step(1)} className={iconButton} aria-label={h.nextBook}>
                   <ChevronRight className="size-4" aria-hidden="true" />
                 </button>
@@ -264,4 +251,14 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
     </section>
     </div>
   );
+}
+
+/** First two sentences of a description as plain text, at most ~220 characters. */
+function shortBlurb(text: string | null | undefined) {
+  const plain = (text ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  if (!plain) return "";
+  const sentences = plain.match(/[^.!?។]+[.!?។]+/g) ?? [plain];
+  let out = sentences.slice(0, 2).join(" ").trim();
+  if (out.length > 220) out = `${out.slice(0, 217).replace(/\s+\S*$/, "")}…`;
+  return out;
 }

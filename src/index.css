@@ -1248,11 +1248,8 @@
 }
 .hero-front { transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1); }
 .hero-front:hover { transform: translateY(-4px); }
-.hero-dock-item { animation: hero-dock-in 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-@keyframes hero-dock-in { from { opacity: 0; transform: translateY(6px); } }
 @media (prefers-reduced-motion: reduce) {
   .hero-front, .hero-front:hover { transition: none; transform: none; }
-  .hero-dock-item { animation: none; }
 }
 /* Shelf: every face stands on a polished floor — a short, fading mirror image below it (Chromium and Safari;
    other browsers simply show no reflection). */
