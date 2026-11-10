@@ -59,7 +59,7 @@ export function TopRated() {
               <BookCover src={first.cover_image_url} title={first.title} eager className="rounded-md shadow-[0_24px_40px_-22px_rgb(20_16_10/0.6)]" />
             </Link>
             <div className="flex min-w-0 flex-1 flex-col">
-              <span className="font-display text-5xl leading-none text-primary/25" aria-hidden="true">01</span>
+              <span className="font-display text-5xl leading-none text-muted-foreground" aria-hidden="true">01</span>
               <h3 className="mt-2 font-display text-2xl leading-tight">
                 <Link to={`/books/${first.id}`} className="line-clamp-2 underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">{first.title}</Link>
               </h3>
@@ -89,7 +89,7 @@ export function TopRated() {
                   to={`/books/${book.id}`}
                   className="group relative flex items-center gap-4 border-b border-border py-3 outline-none first:border-t focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <span className="w-10 shrink-0 font-display text-3xl leading-none text-primary/25 transition-colors duration-300 group-hover:text-primary" aria-hidden="true">{String(i + 2).padStart(2, "0")}</span>
+                  <span className="w-10 shrink-0 font-display text-3xl leading-none text-muted-foreground transition-colors duration-300 group-hover:text-primary" aria-hidden="true">{String(i + 2).padStart(2, "0")}</span>
                   <span className="w-11 shrink-0"><BookCover src={book.cover_image_url} title={book.title} className="shadow-[0_8px_14px_-10px_rgb(20_16_10/0.6)]" /></span>
                   <span className="min-w-0 flex-1 transition-transform duration-300 group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0">
                     <span className="block truncate font-display text-[17px] leading-snug">{book.title}</span>
