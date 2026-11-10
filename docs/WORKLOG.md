@@ -753,3 +753,9 @@ Added longer periods, sales and recovery analysis, recent-order actions, activit
 
 ## Home polish (2026-11-10, main)
 Hero dock (cover thumbs with the slide timer) replaces View book / Add to cart; mirror reflections under hero, Top rated and Coming soon covers; shelf books drawn as full boxes with a floor reflection; one page background (no paper band); Top rated rebuilt as No. 1 panel + 2×2 rank cards with score meters; Coming soon rebuilt as a release timeline with date-stub tickets and countdowns; add-to-cart flight (cover morphs into the header cart, `src/lib/flyToCart.ts`). New EN/KM strings: showBook, inDays, releaseTimeline, rank. Details in design-system/bookly/pages/home.md. Checked in headless Chromium against a mocked API (live API not reachable from the build machine): 1440, 1920 and 390 widths, shelf settled, hero dock, add-to-cart flight from Top rated (header tucked) and from a New arrivals card.
+
+## Home follow-ups and performance pass (2026-11-10, main)
+- Hero: short book description (first two sentences, from GET /books/{id}) replaces the cover strip; larger front cover; whole home page on the warm paper of the first shelf version, down to the footer.
+- Top rated: score bars removed; Coming soon: timeline stops centred over each ticket with countdown labels, line only between first and last stop.
+- Performance and bugs: `motion.*` → `m.*` in TopRated, ComingSoon, the stepper and the auth CoverWall (they pulled the full Motion bundle into the main chunk: main JS 590 kB → about 505 kB); shelf rAF loop and hero autoplay pause off screen / in hidden tabs; account overview no longer crashes when a wishlist response has no `meta`.
+- Checked: console sweep (no errors or React warnings) on 15 storefront and 7 signed-in routes against a mocked API; screenshots at 1440 and 390. Not changed: both language files (~160 kB source) still load up front; loading Khmer on demand would need an async language switch.

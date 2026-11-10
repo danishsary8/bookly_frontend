@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { Pause, Play } from "lucide-react";
 import { catalogApi } from "@/api/endpoints/catalog";
 import { useT } from "@/i18n";
@@ -93,7 +93,7 @@ export function CoverWall() {
           {/* Slide show: each line rises in from below with a soft blur and leaves upward. Fixed height, so nothing jumps. */}
           <div className="relative mt-3 h-[7.25rem] overflow-hidden">
             <AnimatePresence mode="popLayout" initial={false}>
-              <motion.figure
+              <m.figure
                 key={index}
                 lang={line.lang}
                 initial={{ y: 28, opacity: 0, filter: "blur(6px)" }}
@@ -106,7 +106,7 @@ export function CoverWall() {
                   {line.author ? `“${line.text}”` : line.text}
                 </blockquote>
                 {line.author ? <figcaption className="mt-1.5 text-sm text-on-lapis-muted">— {line.author}</figcaption> : null}
-              </motion.figure>
+              </m.figure>
             </AnimatePresence>
           </div>
           <div className="mt-3 flex gap-1.5" aria-hidden="true">

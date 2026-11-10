@@ -78,7 +78,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
           </RouteErrorBoundary>
         </PageTransition>
       </main>
-      <SiteFooter />
+      {/* Home runs its warm paper right down to the footer (its own bottom padding replaces the footer gap). */}
+      <SiteFooter className={pathname === "/" ? "mt-0" : undefined} />
       {/* The floating Support button is switched off for now (owner, 2026-11); features/support stays for later. */}
       <Suspense fallback={null}>
         {cartOpened ? <CartDrawer /> : null}

@@ -60,7 +60,7 @@ export default function AccountOverviewPage() {
   const tiles = [
     { to: "/account/profile", label: a.profile, Icon: UserRound, detail: customer?.phone ? customer.phone : a.addPhone },
     { to: "/account/addresses", label: a.addresses, Icon: MapPin, detail: addresses.data ? a.savedCount(addresses.data.length) : " " },
-    { to: "/account/wishlist", label: a.wishlist, Icon: Heart, detail: wishlist.data ? a.savedBooks(wishlist.data.meta.total ?? 0) : " " },
+    { to: "/account/wishlist", label: a.wishlist, Icon: Heart, detail: wishlist.data ? a.savedBooks(wishlist.data.meta?.total ?? 0) : " " },
     { to: "/account/security", label: a.security, Icon: KeyRound, detail: customer?.phone_verified ? a.securityDone : a.securityTodo },
   ];
 

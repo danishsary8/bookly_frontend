@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -58,7 +58,7 @@ export function Stepper({ steps, current, label, status, children, footer, befor
         <div className="flex gap-1.5" aria-hidden="true">
           {steps.map((title, i) => (
             <span key={title} className="relative h-1 flex-1 overflow-hidden rounded-full bg-border">
-              <motion.span
+              <m.span
                 className="absolute inset-0 origin-left rounded-full bg-primary"
                 initial={false}
                 animate={{ scaleX: i < current ? 1 : i === current ? 0.35 : 0 }}
@@ -90,7 +90,7 @@ export function Stepper({ steps, current, label, status, children, footer, befor
                   )}
                 >
                   <AnimatePresence mode="wait" initial={false}>
-                    <motion.span
+                    <m.span
                       key={done ? "done" : "n"}
                       initial={{ scale: 0.5, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
@@ -98,7 +98,7 @@ export function Stepper({ steps, current, label, status, children, footer, befor
                       transition={{ duration: 0.2, ease }}
                     >
                       {done ? <Check className="size-3.5" strokeWidth={3} aria-hidden="true" /> : i + 1}
-                    </motion.span>
+                    </m.span>
                   </AnimatePresence>
                 </span>
                 <span className={cn("whitespace-nowrap text-[13px] transition-colors duration-300", active ? "font-semibold text-foreground" : done ? "font-medium text-foreground/80" : "text-muted-foreground", !active && (steps.length > 3 ? "sr-only" : "max-sm:sr-only"))}>
@@ -107,7 +107,7 @@ export function Stepper({ steps, current, label, status, children, footer, befor
               </span>
               {i < steps.length - 1 ? (
                 <span className="relative h-px min-w-6 flex-1 bg-border" aria-hidden="true">
-                  <motion.span
+                  <m.span
                     className="absolute inset-0 origin-left bg-primary"
                     initial={false}
                     animate={{ scaleX: done ? 1 : 0 }}
@@ -121,10 +121,10 @@ export function Stepper({ steps, current, label, status, children, footer, befor
       </ol>
       <p className="sr-only" aria-live="polite" aria-atomic="true">{moved ? status : ""}</p>
 
-      <motion.div initial={false} animate={{ height }} transition={{ duration: 0.35, ease }} className="relative -mx-1 overflow-hidden px-1">
+      <m.div initial={false} animate={{ height }} transition={{ duration: 0.35, ease }} className="relative -mx-1 overflow-hidden px-1">
         <div ref={inner} className="py-1">
           <AnimatePresence mode="wait" initial={false} custom={direction}>
-            <motion.div
+            <m.div
               key={current}
               custom={direction}
               variants={{
@@ -144,10 +144,10 @@ export function Stepper({ steps, current, label, status, children, footer, befor
               data-step-panel=""
             >
               {children}
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         </div>
-      </motion.div>
+      </m.div>
 
       {beforeFooter}
       {footer ? <div className="flex items-center gap-3">{footer}</div> : null}

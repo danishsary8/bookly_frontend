@@ -196,10 +196,34 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
         setDir(m.T >= m.s ? 1 : -1);
         setActive(idx);
       }
-      frame = requestAnimationFrame(loop);
+      frame = visible ? requestAnimationFrame(loop) : 0;
     };
+    // Only animate while the shelf is on screen (and the tab is visible): no work at all once scrolled past.
+    let visible = true;
+    let onScreen = true;
+    const resume = () => {
+      if (visible && !frame) {
+        last = performance.now();
+        frame = requestAnimationFrame(loop);
+      }
+    };
+    const observer = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting;
+      visible = onScreen && document.visibilityState === "visible";
+      resume();
+    });
+    if (stage.current) observer?.observe(stage.current);
+    const onVisibility = () => {
+      visible = onScreen && document.visibilityState === "visible";
+      resume();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
     frame = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer?.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [dims, n, total, reduce]);
 
   const go = (delta: number) => {

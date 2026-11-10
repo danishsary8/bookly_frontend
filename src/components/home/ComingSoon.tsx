@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, BellRing, CalendarClock } from "lucide-react";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { Link } from "react-router-dom";
 import { catalogApi } from "@/api/endpoints/catalog";
 import { BookCover } from "@/components/catalog/BookCover";
@@ -10,9 +10,9 @@ import { cn } from "@/lib/utils";
 import { useT } from "@/i18n";
 
 /*
- * Home "Coming soon" (pages/home.md), from GET /catalog/upcoming, drawn as a release timeline: a hairline with one
- * node per book (the nearest release pulses), and under it a ticket per book — a tear-off calendar stub (month, day)
- * on the left, then the cover, title, author and a countdown ("In 12 days"). Pre-orders link to their page;
+ * Home "Coming soon" (pages/home.md), from GET /catalog/upcoming, drawn as a release timeline: a line with one stop
+ * per ticket (labelled with its countdown, the nearest release pulses), and under it a ticket per book — a tear-off calendar stub
+ * (month, day) on the cover stage, then title, author, and on small screens the countdown chip. Pre-orders link to their page;
  * scheduled books that are not public yet show the same ticket without a link ("Announced").
  * With no upcoming books a calm placeholder panel stands in, so the section never looks broken.
  */
@@ -39,6 +39,8 @@ export function ComingSoon() {
       days: Math.max(0, Math.round((at.getTime() - today.getTime()) / DAY)),
     };
   };
+
+  const cols = books.length >= 4 ? "lg:grid-cols-4" : books.length === 3 ? "lg:grid-cols-3" : "lg:grid-cols-2";
 
   return (
     <section aria-labelledby="coming-soon-title" className="grid gap-6">
@@ -84,26 +86,33 @@ export function ComingSoon() {
         </div>
       ) : (
         <div className="relative">
-          {/* the timeline: a hairline that draws in, with a node above each ticket */}
-          <div className="relative mb-5 hidden h-3 lg:block" aria-hidden="true">
-            <motion.span
-              className="absolute inset-x-0 top-1/2 h-px origin-left bg-[linear-gradient(90deg,var(--primary),color-mix(in_srgb,var(--primary)_25%,transparent))]"
+          {/* the timeline (wide screens): one stop above the middle of each ticket, labelled with its countdown; the line
+              runs from the first stop to the last and draws in; a short stem drops from each stop to its ticket. */}
+          <div className="relative mb-1 hidden lg:block" aria-hidden="true">
+            <m.span
+              className="absolute top-[30px] h-0.5 origin-left rounded-full bg-[linear-gradient(90deg,var(--primary),color-mix(in_srgb,var(--primary)_30%,transparent))]"
+              style={{ left: `calc((100% - ${books.length - 1}rem) / ${books.length * 2})`, right: `calc((100% - ${books.length - 1}rem) / ${books.length * 2})` }}
               initial={{ scaleX: 0 }}
               whileInView={{ scaleX: 1 }}
               viewport={{ once: true, amount: 0.5 }}
               transition={{ duration: 1.2, ease }}
             />
-            <ul className={cn("relative grid h-full gap-4", books.length >= 4 ? "grid-cols-4" : books.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
-              {books.map((book, i) => (
-                <li key={book.id} className="relative">
-                  <span className={cn("absolute left-[2.1rem] top-1/2 size-3 -translate-y-1/2 rounded-full border-2 border-primary bg-background", i === 0 && "timeline-now bg-primary")} />
-                </li>
-              ))}
+            <ul className={cn("relative grid gap-4", cols)}>
+              {books.map((book, i) => {
+                const when = parts(book.coming_on ?? book.publish_date);
+                return (
+                  <li key={book.id} className="grid justify-items-center">
+                    <span className={cn("text-xs font-semibold", i === 0 ? "text-primary" : "text-muted-foreground")}>{when ? h.inDays(when.days) : "\u00a0"}</span>
+                    <span className={cn("relative mt-2 size-3.5 rounded-full border-2 border-primary", i === 0 ? "timeline-now bg-primary" : "bg-background")} />
+                    <span className="h-4 w-px bg-border" />
+                  </li>
+                );
+              })}
             </ul>
           </div>
           <span className="sr-only">{h.releaseTimeline}</span>
 
-          <ul className={cn("grid gap-4 sm:grid-cols-2", books.length >= 4 ? "lg:grid-cols-4" : books.length === 3 ? "lg:grid-cols-3" : "")}>
+          <ul className={cn("grid gap-4 sm:grid-cols-2", cols)}>
             {books.map((book, i) => {
               const when = parts(book.coming_on ?? book.publish_date);
               const body = (
@@ -138,7 +147,7 @@ export function ComingSoon() {
                     <span className="mt-0.5 truncate text-sm text-muted-foreground">{authorNames(book.authors) || h.unknownAuthor}</span>
                     <span className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-3">
                       {when ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-lapis-tint px-2.5 py-1 text-xs font-semibold text-primary">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-lapis-tint px-2.5 py-1 text-xs font-semibold text-primary lg:hidden">
                           <BellRing className="size-3.5" aria-hidden="true" /> {h.inDays(when.days)}
                         </span>
                       ) : <span />}
@@ -155,7 +164,7 @@ export function ComingSoon() {
               );
               const card = "group flex h-full flex-col rounded-2xl border border-border bg-card p-3 pb-4";
               return (
-                <motion.li
+                <m.li
                   key={book.id}
                   initial={{ opacity: 0, y: 28 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -173,7 +182,7 @@ export function ComingSoon() {
                       {body}
                     </Link>
                   )}
-                </motion.li>
+                </m.li>
               );
             })}
           </ul>

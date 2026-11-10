@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Crown, ShoppingBag } from "lucide-react";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { Link } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import type { BookCard } from "@/api/types";
@@ -16,29 +16,15 @@ import { useT } from "@/i18n";
 /*
  * Home "Top rated" (pages/home.md): a ranked chart, not another row of cards.
  * No. 1 is a feature panel: a large cover standing on a glossy floor (mirror image), a gold crown, the score
- * in big type with a meter, price and Add to cart. Nos. 2–5 are a 2×2 grid of rank cards: a large outlined
- * numeral behind the cover, title, author, a score meter that fills when it scrolls into view, and the price.
+ * in big type beside the stars, price and Add to cart. Nos. 2–5 are a 2×2 grid of rank cards: a large outlined
+ * numeral behind the cover, title, author, and a footer line with the stars and the price.
  * Only books with a rating (customer reviews, or the shop's Reader rating) appear; with none, the section hides.
  */
 
-/** The number the meter shows: customer reviews first, else the shop's Reader rating. */
+/** The big score on No. 1: customer reviews first, else the shop's Reader rating. */
 const scoreOf = (b: BookCard) => (toNumber(b.review_count) > 0 && toNumber(b.rating_avg) > 0 ? toNumber(b.rating_avg) : toNumber(b.reader_rating));
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
-
-function Meter({ value, className }: { value: number; className?: string }) {
-  return (
-    <span className={`block h-1.5 overflow-hidden rounded-full bg-muted ${className ?? ""}`} aria-hidden="true">
-      <motion.span
-        className="block h-full origin-left rounded-full bg-[linear-gradient(90deg,var(--primary),color-mix(in_srgb,var(--primary)_55%,var(--gold)))]"
-        initial={{ scaleX: 0 }}
-        whileInView={{ scaleX: Math.min(1, value / 5) }}
-        viewport={{ once: true, amount: 0.6 }}
-        transition={{ duration: 1.1, ease, delay: 0.15 }}
-      />
-    </span>
-  );
-}
 
 export function TopRated() {
   const { dict } = useT();
@@ -77,7 +63,7 @@ export function TopRated() {
       ) : (
         <div className="grid gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
           {/* No. 1 */}
-          <motion.article
+          <m.article
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
@@ -113,10 +99,7 @@ export function TopRated() {
               <p className="mt-1 truncate text-sm text-muted-foreground">{h.by(authorNames(first.authors) || h.unknownAuthor)}</p>
               <div className="mt-4 flex items-end gap-3">
                 <span className="font-display text-5xl leading-none tabular-nums">{scoreOf(first).toFixed(1)}</span>
-                <span className="grid flex-1 gap-1.5 pb-1">
-                  <ReaderScore book={first} className="text-[13px]" />
-                  <Meter value={scoreOf(first)} />
-                </span>
+                <ReaderScore book={first} className="pb-1.5 text-[13px]" />
               </div>
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <span className="text-xl font-semibold tabular-nums">{price(first)}</span>
@@ -132,12 +115,12 @@ export function TopRated() {
                 )}
               </div>
             </div>
-          </motion.article>
+          </m.article>
 
           {/* Nos. 2–5 */}
           <ol start={2} className="grid gap-4 sm:grid-cols-2">
             {rest.map((book, i) => (
-              <motion.li
+              <m.li
                 key={book.id}
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -159,16 +142,13 @@ export function TopRated() {
                     <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{h.rank(i + 2)}</span>
                     <span className="mt-1 line-clamp-2 font-display text-[17px] leading-snug">{book.title}</span>
                     <span className="mt-0.5 truncate text-[13px] text-muted-foreground">{authorNames(book.authors) || h.unknownAuthor}</span>
-                    <span className="mt-auto grid gap-1.5 pt-3">
-                      <span className="flex items-center justify-between gap-2">
-                        <ReaderScore book={book} className="text-[13px]" />
-                        <span className="text-[15px] font-semibold tabular-nums">{price(book)}</span>
-                      </span>
-                      <Meter value={scoreOf(book)} />
+                    <span className="mt-auto flex items-center justify-between gap-2 border-t border-border/70 pt-3">
+                      <ReaderScore book={book} className="text-[13px]" />
+                      <span className="text-[15px] font-semibold tabular-nums">{price(book)}</span>
                     </span>
                   </span>
                 </Link>
-              </motion.li>
+              </m.li>
             ))}
           </ol>
         </div>

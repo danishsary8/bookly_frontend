@@ -80,7 +80,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="home-paper overflow-x-clip">
+    <div className="home-paper overflow-x-clip pb-16">
       <JsonLd data={websiteJsonLd} />
       <HomeHero
 featured={popular.isPending && picks.isPending ? undefined : featured}

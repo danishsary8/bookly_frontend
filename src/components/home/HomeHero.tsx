@@ -1,4 +1,4 @@
-import { useEffect, useState, type FocusEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 import { Link } from "react-router-dom";
@@ -43,7 +43,17 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
   // Short description of the current book: cards don't carry one, so read the book (cached per book).
   const detail = useQuery({ ...catalogQueries.book(current?.id ?? 0), enabled: Boolean(current?.id), staleTime: 10 * 60_000 });
   const blurb = shortBlurb(detail.data?.description);
-  const autoplaying = books.length > 1 && !reduceMotion && !paused && !hovered && !focused;
+  // The slideshow only runs while the hero is on screen: no slide changes (or image loads) once scrolled past.
+  const sectionRef = useRef<HTMLElement>(null);
+  const [onScreen, setOnScreen] = useState(true);
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => setOnScreen(entry.isIntersecting), { threshold: 0.15 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  const autoplaying = books.length > 1 && !reduceMotion && !paused && !hovered && !focused && onScreen;
 
   useEffect(() => {
     if (!autoplaying) return;
@@ -68,7 +78,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
   return (
     // An inset card: its edges line up with the sections below, with a strip of page showing around it.
     <div className="container-shell pb-8 pt-3 sm:pb-10 sm:pt-4">
-    <section className="hero-lapis relative isolate overflow-hidden rounded-[1.75rem] shadow-[0_30px_60px_-40px_rgb(20_32_122/0.6)]" aria-labelledby="home-hero-title">
+    <section ref={sectionRef} className="hero-lapis relative isolate overflow-hidden rounded-[1.75rem] shadow-[0_30px_60px_-40px_rgb(20_32_122/0.6)]" aria-labelledby="home-hero-title">
       {/* The current cover, hugely blurred, tints the band so each slide brings its own colour. */}
       {current?.cover_image_url ? (
         <img
