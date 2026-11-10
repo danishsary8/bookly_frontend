@@ -40,6 +40,10 @@
 
 @theme inline {
     --color-surface-2: var(--surface-2);
+    /* surface-1 / surface-3 were used in several components but never defined (no background); derived from the
+       existing tokens, lighter and deeper than surface-2. MASTER §2 note, 2026-11-10. */
+    --color-surface-1: color-mix(in oklab, var(--surface-2) 50%, var(--card));
+    --color-surface-3: color-mix(in oklab, var(--surface-2) 65%, var(--border));
     --color-lapis-tint: var(--lapis-tint);
     --color-accent-text: var(--accent-text);
     --color-star: var(--star);

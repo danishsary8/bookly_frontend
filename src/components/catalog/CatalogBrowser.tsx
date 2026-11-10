@@ -1,9 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Search, SearchX, SlidersHorizontal, SpellCheck } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import type { BookFilters, BookSort } from "@/api/endpoints/catalog";
-import { catalogQueries } from "@/api/endpoints/catalog";
 import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,15 +10,17 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Pagination } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
-import { PER_PAGE, SORTS, activeFilterCount, clearFilters, effectiveSort, parseBookFilters, toSearchParams, withFilter } from "@/lib/catalog";
+import { SORTS, activeFilterCount, clearFilters, effectiveSort, parseBookFilters, toSearchParams, withFilter } from "@/lib/catalog";
 import { ActiveFilters } from "./ActiveFilters";
+import { useCatalogListing } from "./catalogListing";
 import { BookGrid } from "./BookGrid";
 import { CatalogFilters } from "./CatalogFilters";
 import { CategoryChips } from "./CategoryChips";
 import { rangeText, useT } from "@/i18n";
 
 /*
- * The catalogue body shared by /books, /search, category and publisher pages:
+ * The catalogue body shared by /books, /search, category and publisher pages (pages/catalogue.md: the filters sit
+ * on a card on the warm paper):
  * filters (sidebar ≥ 1024px, drawer below), active-filter chips, result count,
  * sort, the grid and pagination. Everything reads from and writes to the URL;
  * `locked` filters come from the page (e.g. the category being viewed).
@@ -44,7 +44,7 @@ export function CatalogBrowser({ locked = {}, noun: nounFor, empty, searchBox = 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const urlFilters = parseBookFilters(searchParams);
   const filters: BookFilters = { ...urlFilters, ...locked };
-  const query = useQuery(catalogQueries.books({ ...filters, per_page: PER_PAGE, facets: true }));
+  const query = useCatalogListing(locked);
   const showSkeleton = useSkeletonVisible(query.isPending);
 
   const apply = (next: BookFilters) => {
@@ -87,8 +87,15 @@ export function CatalogBrowser({ locked = {}, noun: nounFor, empty, searchBox = 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10">
       <aside aria-label={t.filters} className="hidden lg:block">
-        <div className="sticky top-[calc(var(--header-h)+1.5rem)] max-h-[calc(100dvh-var(--header-h)-3rem)] overflow-y-auto pb-6 pr-2">
-          <h2 className="mb-5 font-display text-xl">{t.filters}</h2>
+        <div className="shop-card sticky top-[calc(var(--header-h)+1.5rem)] max-h-[calc(100dvh-var(--header-h)-3rem)] overflow-y-auto rounded-2xl border border-border bg-card p-5">
+          <h2 className="mb-5 flex items-center justify-between gap-2 font-display text-xl">
+            {t.filters}
+            {count > 0 ? (
+              <Badge tone="info" shape="solid" className="h-5 px-1.5 font-sans tracking-normal">
+                {count}
+              </Badge>
+            ) : null}
+          </h2>
           {filterPanel("side")}
         </div>
       </aside>
@@ -120,7 +127,7 @@ export function CatalogBrowser({ locked = {}, noun: nounFor, empty, searchBox = 
               value={term}
               onChange={(e) => setTerm(e.target.value)}
               placeholder={t.searchWithin}
-              className="h-12 w-full rounded-full border border-input bg-card pl-11 pr-4 text-base outline-none transition-shadow placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/15"
+              className="h-12 w-full rounded-full border border-input bg-card pl-11 pr-4 text-base shadow-[0_10px_24px_-20px_rgb(20_32_122/0.5)] outline-none transition-shadow placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/15"
             />
           </form>
           ) : null}
