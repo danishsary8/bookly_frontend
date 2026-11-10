@@ -140,13 +140,13 @@ export default function OrderDetailPage() {
         <div className="grid content-start gap-6">
           <DeliveryAddressCard address={o.shipping_address} title={t.deliveryAddress} />
           {o.delivery_note ? (
-            <section aria-labelledby="delivery-note" className="grid gap-2 rounded-xl border border-border bg-card p-5 sm:p-6">
+            <section aria-labelledby="delivery-note" className="grid gap-2 shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
               <h2 id="delivery-note" className="font-display text-[1.563rem] leading-tight">{t.deliveryNote}</h2>
               <p className="text-muted-foreground whitespace-pre-wrap">{o.delivery_note}</p>
             </section>
           ) : null}
           {o.is_gift ? (
-            <section aria-labelledby="order-gift" className="grid gap-2 rounded-xl border border-border bg-card p-5 sm:p-6">
+            <section aria-labelledby="order-gift" className="grid gap-2 shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
               <h2 id="order-gift" className="flex items-center gap-2 font-display text-[1.563rem] leading-tight">
                 <Gift className="size-5 text-primary" aria-hidden="true" /> {dict.gift.orderTitle}
               </h2>
@@ -154,7 +154,7 @@ export default function OrderDetailPage() {
               <p className="whitespace-pre-wrap">{o.gift_message || dict.gift.noMessage}</p>
             </section>
           ) : null}
-          <section aria-labelledby="order-payment" className="grid gap-2 rounded-xl border border-border bg-card p-5 sm:p-6">
+          <section aria-labelledby="order-payment" className="grid gap-2 shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
             <h2 id="order-payment" className="flex items-center gap-2 font-display text-[1.563rem] leading-tight">
               <Banknote className="size-5 text-primary" aria-hidden="true" /> {t.payment}
             </h2>
