@@ -42,9 +42,9 @@ export function PaymentOptions({
           <label
             key={id}
             className={cn(
-              "flex items-center gap-4 rounded-xl border bg-card p-4 transition-colors duration-150",
-              !available && "cursor-not-allowed border-border opacity-60",
-              available && (checked ? "cursor-pointer border-primary bg-lapis-tint" : "cursor-pointer border-border hover:border-primary/50"),
+              "flex items-center gap-4 rounded-2xl border bg-card p-4 transition-[border-color,background-color,box-shadow] duration-200 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-background",
+              !available && "cursor-not-allowed border-dashed border-border bg-transparent",
+              available && (checked ? "cursor-pointer border-primary bg-lapis-tint/70 shadow-[0_18px_32px_-26px_rgb(20_32_122/0.6)]" : "cursor-pointer border-border hover:border-input"),
             )}
           >
             <input
@@ -56,11 +56,16 @@ export function PaymentOptions({
               onChange={() => (id === "cod" || id === "khqr") && onChange(id)}
               className="size-[18px] shrink-0 accent-primary"
             />
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-card text-primary">
+            <span
+              className={cn(
+                "grid size-11 shrink-0 place-items-center rounded-xl transition-colors duration-200",
+                checked ? "bg-primary text-primary-foreground" : available ? "bg-lapis-tint text-primary" : "bg-surface-2 text-muted-foreground",
+              )}
+            >
               <Icon className="size-5" aria-hidden="true" />
             </span>
-            <span className="grid">
-              <span className="font-semibold">{label}</span>
+            <span className="grid min-w-0">
+              <span className={cn("font-semibold", !available && "text-muted-foreground")}>{label}</span>
               <span className="text-sm text-muted-foreground">{detail}</span>
             </span>
           </label>
