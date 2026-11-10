@@ -791,3 +791,16 @@ unchanged.
 - Open (needs owner OK, backend): order lines have no cover, so the confirmation's covers come from the checkout and
   disappear after a reload. Proposal: add `cover_image_url` to `Order.items[]` (nullable string, the variant's book
   cover) in OrderResource + `public/openapi.yaml`.
+
+## Redesign phase 2 — catalogue pages (2026-11-10, branch `design/catalogue-pages`, stacked on `design/shopping-pages`)
+All books, search, category, publisher, author, authors, series list, series, collection, shared reading list and the
+book page; decisions in `design-system/bookly/pages/catalogue.md` (listed in MASTER §9). Behaviour, routes, filters,
+URL state and API calls unchanged (header covers reuse the grid's own query).
+- Shared: PageHeader `covers` / `panel` / `media` / `meta`; `useCatalogListing` + `coversOf`; filters on a card; warm
+  paper on catalogue routes. MASTER §2: `surface-1` and `surface-3` defined (were used, never defined). LowStockBadge
+  solid tint (was unreadable on dark covers).
+- Checks (mocked API shaped from `public/openapi.yaml`): lint 0 errors (existing warning), typecheck, tests, build.
+  Browser + axe on the 10 routes above at 1366×768, 1440×900, 1920×930, 1440 dark, 1440 Khmer, 390×844: axe 0, no
+  console errors; fixed before commit: a phone-width overflow in the series and reading-list grids, Add to cart below
+  the fold on the book page, "0 books" (mock field name). Not exercised: real search ranking/typo tolerance, facets
+  with real counts, reader pages.

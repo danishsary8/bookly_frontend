@@ -69,7 +69,7 @@ export default function ReadingListPage() {
       <ul className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-5 md:grid-cols-3 xl:grid-cols-4">
         {data.books.map((entry) =>
           entry.book ? (
-            <li key={entry.book.id} className="grid content-start gap-3">
+            <li key={entry.book.id} className="grid min-w-0 content-start gap-3 [&>*]:min-w-0">
               <BookCard book={entry.book} headingLevel="h2" />
               {entry.note ? (
                 <p className="relative whitespace-pre-wrap break-words rounded-xl border border-border bg-card px-3.5 py-3 text-sm italic text-muted-foreground before:absolute before:-top-1.5 before:left-5 before:size-3 before:rotate-45 before:border-l before:border-t before:border-border before:bg-card">

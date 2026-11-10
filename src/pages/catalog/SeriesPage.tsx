@@ -95,7 +95,7 @@ export default function SeriesPage() {
       ) : (
         <Stagger as="ol" className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
           {books.map((book, index) => (
-            <StaggerItem as="li" key={book.id} index={index} className="grid content-start gap-3">
+            <StaggerItem as="li" key={book.id} index={index} className="grid min-w-0 content-start gap-3 [&>*]:min-w-0">
               <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground">
                 <span className="grid size-7 place-items-center rounded-full bg-primary font-sans text-[13px] tracking-normal text-primary-foreground" aria-hidden="true">{index + 1}</span>
                 {p.bookN(index + 1)}
