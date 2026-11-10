@@ -12,6 +12,9 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
 import { useT } from "@/i18n";
 
+const SPINES = ["#14207A", "#7A2E2A", "#2F5D4A", "#8A5A3B", "#4C5378", "#1E4E5C", "#5B3A66"];
+
+/* /series (pages/catalogue.md): each series as a card with decorative cloth spines, one per book (up to 7). */
 export default function SeriesListPage() {
   const { dict } = useT();
   const p = dict.pages;
@@ -43,8 +46,20 @@ export default function SeriesListPage() {
             <StaggerItem as="li" key={s.id} index={index}>
               <Link
                 to={`/series/${s.id}`}
-                className="group grid h-full content-start gap-3 rounded-xl border border-border bg-card p-6 transition-[border-color,box-shadow] duration-150 hover:border-input hover:shadow-lift outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="shop-card group grid h-full grid-cols-[auto_minmax(0,1fr)] gap-x-6 rounded-2xl border border-border bg-card p-6 outline-none transition-[border-color,translate] duration-300 hover:-translate-y-1 hover:border-input focus-visible:ring-2 focus-visible:ring-ring motion-reduce:hover:translate-y-0"
               >
+                {/* Decorative cloth spines, one per book (up to 7): the series as it would stand on a shelf. */}
+                <span className="row-span-5 flex h-36 items-end gap-[3px] self-start" aria-hidden="true">
+                  {Array.from({ length: Math.min(7, Math.max(1, s.books_count ?? 1)) }, (_, i) => (
+                    <span
+                      key={i}
+                      className="w-[18px] rounded-[2px] shadow-[inset_-2px_0_0_rgb(0_0_0/0.18),inset_1px_0_0_rgb(255_255_255/0.18)] transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] group-hover:-translate-y-1 motion-reduce:transform-none"
+                      style={{ height: `${86 + ((((s.id ?? 0) + i) * 37) % 15)}%`, background: SPINES[((s.id ?? 0) + i) % SPINES.length], transitionDelay: `${i * 40}ms` }}
+                    >
+                      <span className="mx-auto mt-3 block h-px w-2.5 bg-[#F2C84B]/70" />
+                    </span>
+                  ))}
+                </span>
                 <span className="text-xs font-bold uppercase tracking-[0.16em] text-accent-text">
                   {p.bookCount(s.books_count ?? 0)}
                 </span>
