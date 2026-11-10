@@ -77,6 +77,10 @@ export const km: Translations = {
     km: "ភាសាខ្មែរ",
   },
   footer: {
+    weAccept: "បង់ប្រាក់តាមចិត្ត",
+    cod: "បង់ប្រាក់ពេលទទួល",
+    khqr: "Bakong KHQR",
+    allProvinces: "គ្រប់ ២៥ ខេត្ត",
     tagline: "បណ្ណាគារអនឡាញសម្រាប់ប្រទេសកម្ពុជា",
     about: "អំពីយើង",
     contact: "ទំនាក់ទំនង",

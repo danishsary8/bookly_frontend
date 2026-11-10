@@ -73,6 +73,10 @@ export const en = {
     km: "ភាសាខ្មែរ",
   },
   footer: {
+    weAccept: "Pay your way",
+    cod: "Cash on delivery",
+    khqr: "Bakong KHQR",
+    allProvinces: "All 25 provinces",
     tagline: "An online bookshop for Cambodia",
     about: "About",
     contact: "Contact",

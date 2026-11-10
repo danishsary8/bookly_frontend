@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { useTurnstile } from "@/features/auth/turnstile";
 
-export function NewsletterSignup() {
+/** `wide`: title and text on the left, the form on the right (the footer band). */
+export function NewsletterSignup({ wide = false }: { wide?: boolean }) {
   const { dict, lang } = useT();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -47,13 +48,15 @@ export function NewsletterSignup() {
   };
 
   return (
-    <div className="grid content-start gap-2.5">
-      <h3 className="font-serif text-base font-semibold text-foreground">
-        {dict.newsletter.title}
-      </h3>
-      <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
-        {dict.newsletter.subtitle}
-      </p>
+    <div className={wide ? "grid content-start items-center gap-x-10 gap-y-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]" : "grid content-start gap-2.5"}>
+      <div className="grid gap-1.5">
+        <h3 className={wide ? "font-display text-2xl leading-tight text-foreground" : "font-serif text-base font-semibold text-foreground"}>
+          {dict.newsletter.title}
+        </h3>
+        <p className={wide ? "max-w-md text-[15px] leading-relaxed text-muted-foreground" : "max-w-xs text-sm leading-relaxed text-muted-foreground"}>
+          {dict.newsletter.subtitle}
+        </p>
+      </div>
 
       {submitted ? (
         <div
@@ -84,12 +87,12 @@ export function NewsletterSignup() {
               }
               placeholder={dict.newsletter.emailPlaceholder}
               disabled={mutation.isPending}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className={wide ? "h-12 w-full rounded-full border border-input bg-background px-5 text-base text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring" : "h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"}
             />
             <Button
               type="submit"
               disabled={mutation.isPending || !email.trim()}
-              className="h-10 shrink-0 font-medium"
+              className={wide ? "h-12 shrink-0 rounded-full px-6 font-semibold" : "h-10 shrink-0 font-medium"}
             >
               {mutation.isPending
                 ? dict.newsletter.subscribing

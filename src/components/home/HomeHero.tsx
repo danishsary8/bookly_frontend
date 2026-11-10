@@ -78,7 +78,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
       ) : null}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(80%_70%_at_25%_40%,rgb(20_32_122/0.85),rgb(20_32_122/0.45)_60%,rgb(10_16_60/0.8))]" aria-hidden="true" />
 
-      <div className="mx-auto grid max-w-(--container-shell) grid-cols-1 items-center gap-12 px-6 py-14 lg:h-[clamp(540px,calc(100svh-var(--header-h)-2.75rem),820px)] lg:grid-cols-12 lg:gap-x-16 lg:px-12 lg:py-8">
+      <div className="container-shell grid grid-cols-1 items-center gap-12 py-14 lg:h-[clamp(540px,calc(100svh-var(--header-h)-2.75rem),820px)] lg:grid-cols-12 lg:gap-x-12 lg:py-10">
         <div className="lg:col-span-7">
           <p className="eyebrow">{h.heroEyebrow}</p>
           <h1 id="home-hero-title" className="mt-4 font-display text-[clamp(2.4rem,4.4vw,4rem)] leading-[1.03] tracking-[-0.02em] text-on-lapis [@media(max-height:820px)]:text-[clamp(2.2rem,3.8vw,3.4rem)]">

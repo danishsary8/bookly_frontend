@@ -337,8 +337,8 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
                 </div>
                 {/* cover (right side of the box) */}
                 <div
-                  className="shelf-face absolute overflow-hidden rounded-[3px] shadow-[0_34px_60px_-26px_rgb(20_16_10/0.6)] [backface-visibility:hidden]"
-                  style={{ width: d, height: H, left: -d / 2, top: -H / 2, background: item.cloth, transform: `rotateY(90deg) translateZ(${ws / 2}px)`, "--shade": "calc((1 - var(--o, 0)) * 0.5)" } as CSSProperties}
+                  className="shelf-face absolute overflow-hidden rounded-[3px] [backface-visibility:hidden]"
+                  style={{ width: d, height: H, left: -d / 2, top: -H / 2, background: item.cloth, transform: `rotateY(90deg) translateZ(${ws / 2}px)`, "--shade": "calc((1 - var(--o, 0)) * 0.5)", boxShadow: "0 34px 60px -26px rgb(20 16 10 / calc(var(--o, 0) * 0.6))" } as CSSProperties}
                 >
                   {item.book?.cover_image_url ? (
                     <img src={item.book.cover_image_url} alt="" draggable={false} loading={v >= n && v < 2 * n ? "eager" : "lazy"} className="size-full object-cover" />

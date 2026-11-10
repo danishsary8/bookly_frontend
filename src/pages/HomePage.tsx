@@ -12,7 +12,6 @@ import { ComingSoon } from "@/components/home/ComingSoon";
 import { readingListsApi } from "@/api/endpoints/readingLists";
 import { ShelfHero } from "@/components/home/ShelfHero";
 import { StaffPicks } from "@/components/home/StaffPicks";
-import { StoreRatingBadge } from "@/components/ratings/StoreRatingBadge";
 import AnimatedContent from "@/components/AnimatedContent";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -142,22 +141,20 @@ featured={popular.isPending && picks.isPending ? undefined : featured}
             />
           );
         })}
-        <div className="grid gap-6">
-          <ul className="grid gap-4 sm:grid-cols-3" aria-label={h.why}>
-            {promises.map(({ Icon, title, text }) => (
-              <li key={title} className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
-                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-lapis-tint text-primary">
-                  <Icon className="size-5" aria-hidden="true" />
-                </span>
-                <span>
-                  <span className="block font-semibold">{h[title]}</span>
-                  <span className="text-sm text-muted-foreground">{h[text]}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-          <StoreRatingBadge />
-        </div>
+        {/* Why shop here: one calm band, three promises divided by hairlines. */}
+        <ul aria-label={h.why} className="grid overflow-hidden rounded-2xl border border-border bg-card sm:grid-cols-3">
+          {promises.map(({ Icon, title, text }) => (
+            <li key={title} className="group flex items-start gap-4 border-border p-6 [&:not(:first-child)]:border-t sm:[&:not(:first-child)]:border-l sm:[&:not(:first-child)]:border-t-0">
+              <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-lapis-tint text-primary transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105 motion-reduce:group-hover:transform-none">
+                <Icon className="size-[22px]" aria-hidden="true" />
+              </span>
+              <span>
+                <span className="block font-display text-lg leading-tight">{h[title]}</span>
+                <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">{h[text]}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
