@@ -1316,3 +1316,11 @@
 @keyframes premiere-shine { 0% { left: -60%; opacity: 1; } 100% { left: 130%; opacity: 1; } }
 .premiere-stage { background: #0f1850; }
 @media (prefers-reduced-motion: reduce) { .group:hover .premiere-shine::after { animation: none; } }
+
+/* Shopping pages (design-system/bookly/pages/shopping.md). Cover fans (CoverStack) open a little on hover of their group. */
+.cover-fan { transform: translateX(var(--fan-x, 0)) rotate(var(--fan-r, 0deg)); transform-origin: 50% 100%; transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.group:hover .cover-fan { transform: translateX(calc(var(--fan-x, 0px) * 2.4)) rotate(calc(var(--fan-r, 0deg) * 1.8)) translateY(-3px); }
+/* Summary cards on the warm paper: a hairline, a white inner edge and a soft lift, like the home shelf caption. */
+.shop-card { box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 24px 48px -36px rgb(20 32 122 / 0.45); }
+.dark .shop-card { box-shadow: 0 24px 48px -36px rgb(0 0 0 / 0.7); }
+@media (prefers-reduced-motion: reduce) { .cover-fan, .group:hover .cover-fan { transition: none; transform: translateX(var(--fan-x, 0)) rotate(var(--fan-r, 0deg)); } }

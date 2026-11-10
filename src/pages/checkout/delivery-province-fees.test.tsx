@@ -61,7 +61,7 @@ describe("Delivery provinces and helpers", () => {
 
     // Meeting threshold ($50 / $50)
     rerender(<FreeShippingBar subtotalUsd="50.00" thresholdUsd="50.00" />);
-    expect(screen.getByText(/You've unlocked FREE delivery!/)).toBeInTheDocument();
+    expect(screen.getByText(/You've unlocked free delivery/)).toBeInTheDocument();
   });
 });
 

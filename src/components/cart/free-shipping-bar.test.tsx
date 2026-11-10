@@ -12,7 +12,7 @@ describe("FreeShippingBar", () => {
     const { rerender } = renderWithProviders(<FreeShippingBar subtotalUsd="47.00" thresholdUsd="50.00" />);
     expect(screen.getByRole("region", { name: "Free delivery progress" })).toHaveTextContent("Add $3.00 more for FREE delivery (orders over $50.00)");
     rerender(<FreeShippingBar subtotalUsd="52.00" thresholdUsd="50.00" />);
-    expect(screen.getByText("You've unlocked FREE delivery! 🎉")).toBeInTheDocument();
+    expect(screen.getByText("You've unlocked free delivery")).toBeInTheDocument();
   });
 
   it("speaks Khmer", () => {
