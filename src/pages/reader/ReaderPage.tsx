@@ -613,6 +613,7 @@ export default function ReaderPage() {
           size="sm"
           onClick={prevPage}
           disabled={currentPage <= 1}
+          aria-label={e.prevPage}
           className={cn("gap-1 min-w-[70px]", ghostTone)}
         >
           <ChevronLeft className="size-4" />
@@ -655,6 +656,7 @@ export default function ReaderPage() {
           size="sm"
           onClick={nextPage}
           disabled={currentPage >= totalPages}
+          aria-label={e.nextPage}
           className={cn("gap-1 min-w-[70px]", ghostTone)}
         >
           <span className="hidden sm:inline">{e.nextPage}</span>

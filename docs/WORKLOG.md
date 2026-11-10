@@ -804,3 +804,17 @@ URL state and API calls unchanged (header covers reuse the grid's own query).
   console errors; fixed before commit: a phone-width overflow in the series and reading-list grids, Add to cart below
   the fold on the book page, "0 books" (mock field name). Not exercised: real search ranking/typo tolerance, facets
   with real counts, reader pages.
+
+## Redesign phase 3 — account pages and reader (2026-11-10, branch `design/account-pages`, stacked on `design/catalogue-pages`)
+Account frame and every account page, plus the ebook reader; decisions in `design-system/bookly/pages/account.md`
+(listed in MASTER §9). Behaviour, routes, guards and API calls unchanged. Invoice print page unchanged (print.md).
+- Frame: warm paper, sidebar card with a lapis library-card header. All account cards as `.shop-card` sheets.
+- Overview figures strip; orders progress meter; reader night colours.
+- Bugs fixed on the way: wishlist cards were near-black with unreadable titles (SpotlightCard template colours);
+  reader toolbar/page buttons were lapis on the dark bar; reader page buttons had no name on phones; the sidebar
+  header used `bg-primary`, which turns periwinkle at night (gold label failed contrast) → fixed lapis tokens.
+- Checks (mocked API shaped from `public/openapi.yaml`): lint 0 errors (existing warning), typecheck, tests, build.
+  Browser + axe on /account, orders, order, return request, return detail, wishlist, lists, reviews, ebooks,
+  addresses, profile, security, support, KHQR pay, reader at 1366×768, 1440×900, 1440 dark, 1440 Khmer, 390×844:
+  axe 0, no sideways scroll, no console errors (two errors seen first came from wrong mock shapes). Not exercised:
+  editing forms end to end (profile, addresses, password), real reader pages, gift cards/referrals (feature flags off).

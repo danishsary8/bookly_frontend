@@ -80,7 +80,7 @@ export function AccountLayout() {
       <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 lg:mt-0 lg:grid-cols-[16.5rem_minmax(0,1fr)] lg:gap-10">
         <nav aria-label={dict.account.nav} className="lg:shop-card lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start lg:rounded-2xl lg:border lg:border-border lg:bg-card lg:p-3">
           {/* Laptops: a library-card header (initials, name, who is signed in) on top of the links. */}
-          <div className="relative mb-3 hidden items-center gap-3 overflow-hidden rounded-xl bg-primary px-4 py-4 text-primary-foreground lg:flex">
+          <div className="relative mb-3 hidden items-center gap-3 overflow-hidden rounded-xl bg-lapis px-4 py-4 text-on-lapis lg:flex">
             <span className="pointer-events-none absolute -right-6 -top-10 size-28 rounded-full bg-[radial-gradient(closest-side,rgb(154_166_255/0.45),transparent)]" aria-hidden="true" />
             <span className="grid size-11 shrink-0 place-items-center rounded-full bg-[#F2C84B] font-display text-lg text-[#0E1335]" aria-hidden="true">
               {(session?.user?.name ?? "?").trim().charAt(0).toUpperCase()}
@@ -88,7 +88,7 @@ export function AccountLayout() {
             <span className="relative grid min-w-0">
               <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#F2C84B]">{dict.account.eyebrow}</span>
               <span className="truncate font-semibold">{session?.user?.name}</span>
-              <span className="truncate text-xs text-primary-foreground/80">{firstName ? dict.account.signedInAs(session?.user?.email ?? session?.user?.phone ?? firstName) : " "}</span>
+              <span className="truncate text-xs text-on-lapis-muted">{firstName ? dict.account.signedInAs(session?.user?.email ?? session?.user?.phone ?? firstName) : " "}</span>
             </span>
           </div>
           <div className="relative">
