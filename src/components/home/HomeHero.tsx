@@ -65,7 +65,9 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
   };
 
   return (
-    <section className="hero-lapis relative isolate overflow-hidden rounded-none" aria-labelledby="home-hero-title">
+    // An inset card: its edges line up with the sections below, with a strip of page showing around it.
+    <div className="container-shell pb-8 pt-3 sm:pb-10 sm:pt-4">
+    <section className="hero-lapis relative isolate overflow-hidden rounded-[1.75rem] shadow-[0_30px_60px_-40px_rgb(20_32_122/0.6)]" aria-labelledby="home-hero-title">
       {/* The current cover, hugely blurred, tints the band so each slide brings its own colour. */}
       {current?.cover_image_url ? (
         <img
@@ -78,7 +80,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
       ) : null}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(80%_70%_at_25%_40%,rgb(20_32_122/0.85),rgb(20_32_122/0.45)_60%,rgb(10_16_60/0.8))]" aria-hidden="true" />
 
-      <div className="container-shell grid grid-cols-1 items-center gap-12 py-14 lg:h-[clamp(540px,calc(100svh-var(--header-h)-2.75rem),820px)] lg:grid-cols-12 lg:gap-x-12 lg:py-10">
+      <div className="grid grid-cols-1 items-center gap-12 px-6 py-12 sm:px-10 lg:h-[clamp(520px,calc(100svh-var(--header-h)-5rem),800px)] lg:grid-cols-12 lg:gap-x-10 lg:px-14 lg:py-10">
         <div className="lg:col-span-7">
           <p className="eyebrow">{h.heroEyebrow}</p>
           <h1 id="home-hero-title" className="mt-4 font-display text-[clamp(2.4rem,4.4vw,4rem)] leading-[1.03] tracking-[-0.02em] text-on-lapis [@media(max-height:820px)]:text-[clamp(2.2rem,3.8vw,3.4rem)]">
@@ -157,7 +159,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
               className="mx-auto w-full max-w-[420px] rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-8 focus-visible:ring-offset-transparent"
             >
               {/* The stack: the current cover in front, its neighbours peeking out behind on each side. */}
-              <div className="relative mx-auto aspect-[2/3] w-[min(280px,62%,calc((100svh-var(--header-h)-20rem)*0.66))]">
+              <div className="relative mx-auto aspect-[2/3] w-[min(280px,62%,calc((100svh-var(--header-h)-21.5rem)*0.66))]">
                 <span className="pointer-events-none absolute -bottom-6 left-1/2 h-10 w-4/5 -translate-x-1/2 rounded-[50%] bg-black/45 blur-2xl" aria-hidden="true" />
                 {books.map((book, i) => {
                   const n = books.length;
@@ -234,5 +236,6 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
         </div>
       </div>
     </section>
+    </div>
   );
 }

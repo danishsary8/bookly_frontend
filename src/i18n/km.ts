@@ -1332,6 +1332,7 @@ export const km: Translations = {
     readers: "អ្នកអាន",
     comingSoon: "នឹងមកដល់ឆាប់ៗ",
     comingSoonEyebrow: "កំពុងមក",
+    announced: "បានប្រកាស · មិនទាន់លក់",
     comingSoonEmptyTitle: "សៀវភៅថ្មីៗកំពុងមកដល់",
     comingSoonEmptyLead: "យើងកំពុងរៀបចំសៀវភៅចេញថ្មី។ សូមមើលសៀវភៅដែលទើបមកដល់សិន។",
     releases: (date: string) => `ចេញ ${date}`,

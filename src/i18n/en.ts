@@ -1326,6 +1326,7 @@ export const en = {
     readers: "Readers",
     comingSoon: "Coming soon",
     comingSoonEyebrow: "On the way",
+    announced: "Announced · not yet on sale",
     comingSoonEmptyTitle: "New titles are on the way",
     comingSoonEmptyLead: "We are lining up the next releases. Meanwhile, see what just arrived.",
     releases: (date: string) => `Out ${date}`,
