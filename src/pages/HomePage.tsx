@@ -86,10 +86,8 @@ export default function HomePage() {
 featured={popular.isPending && picks.isPending ? undefined : featured}
         label={dict.home.popularBooks}
       />
-      {/* Full-bleed paper band with the 3D shelf. */}
-      <div className="home-paper border-b border-border">
-        <ShelfHero />
-      </div>
+      {/* The 3D shelf sits on the same page colour as everything else (one calm background, no band). */}
+      <ShelfHero />
       <div className="container-shell grid gap-24 pb-10 pt-16">
         {/* Order (pages/home.md): hero → shelf → continue → categories → new arrivals → top rated → coming soon → staff picks / seasonal → promises. */}
         <ContinueStrip books={recent} />

@@ -1,12 +1,11 @@
 import { useEffect, useState, type FocusEvent, type KeyboardEvent } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play, ShoppingBag } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 import { Link } from "react-router-dom";
 import type { BookCard } from "@/api/types";
 import BlurText from "@/components/BlurText";
 import { BookCover } from "@/components/catalog/BookCover";
 import { authorNames } from "@/components/catalog/bookMeta";
-import { useAddToCart } from "@/components/catalog/useCatalogActions";
 import { useQuery } from "@tanstack/react-query";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { LiveSearch } from "@/components/shell/LiveSearch";
@@ -35,13 +34,18 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
   const { dict, lang } = useT();
   const h = dict.homePage;
   const reduceMotion = useReducedMotion();
-  const cart = useAddToCart();
   const books = featured ?? [];
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const current = books[index % Math.max(books.length, 1)];
+  // Five thumbs centred on the current book (fewer when the list is short).
+  const dockSize = Math.min(5, books.length);
+  const dock = Array.from({ length: dockSize }, (_, k) => {
+    const i = (((index + k - Math.floor(dockSize / 2)) % books.length) + books.length) % books.length;
+    return { book: books[i], i };
+  });
   const autoplaying = books.length > 1 && !reduceMotion && !paused && !hovered && !focused;
 
   useEffect(() => {
@@ -130,9 +134,9 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
             </CtaGlare>
             <Link
               to="/books?sort=newest"
-              className="inline-flex h-11 items-center gap-2 rounded-full border border-on-lapis-muted/70 px-6 text-[15px] font-semibold text-on-lapis backdrop-blur-sm transition-colors duration-150 hover:bg-on-lapis/10"
+              className="group/nr inline-flex h-11 items-center gap-1.5 px-3 text-[15px] font-semibold text-on-lapis underline-offset-[6px] hover:underline"
             >
-              {dict.home.newReleases}
+              {dict.home.newReleases} <ArrowRight className="size-4 transition-transform duration-200 group-hover/nr:translate-x-0.5" aria-hidden="true" />
             </Link>
           </div>
         </div>
@@ -158,34 +162,47 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
               onBlur={onBlur}
               className="mx-auto w-full max-w-[420px] rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-8 focus-visible:ring-offset-transparent"
             >
-              {/* The stack: the current cover in front, its neighbours peeking out behind on each side. */}
-              <div className="relative mx-auto aspect-[2/3] w-[min(280px,62%,calc((100svh-var(--header-h)-21.5rem)*0.66))]">
-                <span className="pointer-events-none absolute -bottom-6 left-1/2 h-10 w-4/5 -translate-x-1/2 rounded-[50%] bg-black/45 blur-2xl" aria-hidden="true" />
-                {books.map((book, i) => {
-                  const n = books.length;
-                  const off = ((i - index + n) % n + n) % n;
-                  const pos = off === 0 ? "front" : off === 1 ? "next" : off === n - 1 ? "prev" : off === 2 ? "far-next" : off === n - 2 ? "far-prev" : "hidden";
-                  if (pos === "hidden") return null;
-                  const front = pos === "front";
-                  return (
-                    <div key={book.id} data-pos={pos} className="hero-card absolute inset-0">
-                      {front ? (
-                        <Link to={`/books/${book.id}`} tabIndex={-1} className="relative block size-full overflow-hidden rounded-md shadow-[0_40px_70px_-30px_rgb(0_0_0/0.8)]">
-                          <BookCover src={book.cover_image_url} title={book.title} alt={h.cover(book.title ?? "")} eager className="size-full" />
-                          <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgb(0_0_0/0.25)_0_2%,rgb(255_255_255/0.18)_3%,transparent_8%),linear-gradient(120deg,rgb(255_255_255/0.14),transparent_45%)]" aria-hidden="true" />
-                        </Link>
-                      ) : (
-                        <button type="button" tabIndex={-1} aria-hidden="true" onClick={() => setIndex(i)} className="block size-full overflow-hidden rounded-md shadow-[0_24px_40px_-24px_rgb(0_0_0/0.8)]">
-                          <BookCover src={book.cover_image_url} title={book.title} className="size-full" />
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
+              {/* The stack: the current cover in front, its neighbours peeking out behind on each side.
+                  Each cover stands on a glossy floor: a soft mirror image fades out below it. */}
+              <div className="relative mx-auto w-[min(270px,60%,calc((100svh-var(--header-h)-26rem)*0.66))]">
+                <span className="pointer-events-none absolute left-1/2 top-[38%] -z-10 size-[150%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(120_150_255/0.28),transparent)]" aria-hidden="true" />
+                <div className="relative aspect-[2/3]">
+                  {books.map((book, i) => {
+                    const n = books.length;
+                    const off = ((i - index + n) % n + n) % n;
+                    const pos = off === 0 ? "front" : off === 1 ? "next" : off === n - 1 ? "prev" : off === 2 ? "far-next" : off === n - 2 ? "far-prev" : "hidden";
+                    if (pos === "hidden") return null;
+                    const front = pos === "front";
+                    return (
+                      <div key={book.id} data-pos={pos} className="hero-card absolute inset-0">
+                        {front ? (
+                          <Link to={`/books/${book.id}`} tabIndex={-1} data-fly-cover="" className="hero-front relative block size-full overflow-hidden rounded-md shadow-[0_40px_70px_-30px_rgb(0_0_0/0.8)]">
+                            <BookCover src={book.cover_image_url} title={book.title} alt={h.cover(book.title ?? "")} eager className="size-full" />
+                            <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgb(0_0_0/0.25)_0_2%,rgb(255_255_255/0.18)_3%,transparent_8%),linear-gradient(120deg,rgb(255_255_255/0.14),transparent_45%)]" aria-hidden="true" />
+                          </Link>
+                        ) : (
+                          <button type="button" tabIndex={-1} aria-hidden="true" onClick={() => setIndex(i)} className="block size-full overflow-hidden rounded-md shadow-[0_24px_40px_-24px_rgb(0_0_0/0.8)]">
+                            <BookCover src={book.cover_image_url} title={book.title} className="size-full" />
+                          </button>
+                        )}
+                        {/* mirror image on the floor */}
+                        {book.cover_image_url ? (
+                          <span className="hero-reflect pointer-events-none absolute inset-x-0 top-full mt-[3px] block h-full overflow-hidden rounded-md" aria-hidden="true">
+                            <img src={book.cover_image_url} alt="" aria-hidden="true" draggable={false} className="size-full -scale-y-100 object-cover" />
+                          </span>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* the glossy floor line the covers stand on */}
+                <span className="pointer-events-none absolute left-1/2 top-[86.2%] block h-px w-[190%] -translate-x-1/2 bg-[linear-gradient(90deg,transparent,rgb(255_255_255/0.22),transparent)]" aria-hidden="true" />
+                {/* room for the reflection */}
+                <div className="aspect-[25/6]" aria-hidden="true" />
               </div>
 
               {current ? (
-                <div className="mt-7 text-center" aria-live={autoplaying ? "off" : "polite"} aria-atomic="true">
+                <div className="text-center" aria-live={autoplaying ? "off" : "polite"} aria-atomic="true">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-on-lapis-muted">
                     {label ?? h.topRated} <span className="ml-1.5 tabular-nums opacity-80">{h.nOfM(index + 1, books.length)}</span>
                   </p>
@@ -199,38 +216,47 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                       {h.by(authorNames(current.authors) || h.unknownAuthor)} · <span className="font-semibold tabular-nums text-gold">{h.from(formatMoney(current.price_from_usd, current.price_from_khr, currency))}</span>
                     </p>
                   </div>
-                  <div className="mt-4 flex items-center justify-center gap-2">
-                    <button type="button" onClick={() => step(-1)} className={iconButton} aria-label={h.prevBook}>
-                      <ChevronLeft className="size-4" aria-hidden="true" />
-                    </button>
-                    <Link to={`/books/${current.id}`} className="inline-flex h-11 items-center rounded-full border border-on-lapis-muted/50 px-5 text-sm font-semibold text-on-lapis transition-colors hover:bg-on-lapis/10">
-                      {h.viewBook}
-                    </Link>
-                    {current.in_stock === false ? null : (
-                      <button
-                        type="button"
-                        onClick={() => cart.add(current)}
-                        disabled={cart.pendingBookId === current.id}
-                        className="inline-flex h-11 items-center gap-2 rounded-full bg-on-lapis px-5 text-sm font-semibold text-primary transition-[filter,transform] hover:brightness-95 active:scale-[0.98] disabled:opacity-70"
-                      >
-                        <ShoppingBag className="size-4" aria-hidden="true" /> {h.addToCart}
-                      </button>
-                    )}
-                    <button type="button" onClick={() => step(1)} className={iconButton} aria-label={h.nextBook}>
-                      <ChevronRight className="size-4" aria-hidden="true" />
-                    </button>
-                    {!reduceMotion && books.length > 1 ? (
-                      <button type="button" onClick={() => setPaused((p) => !p)} className={iconButton} aria-label={paused ? h.playSlides : h.pauseSlides}>
-                        {paused ? <Play className="size-3.5" aria-hidden="true" /> : <Pause className="size-3.5" aria-hidden="true" />}
-                      </button>
-                    ) : null}
-                  </div>
-                  {/* A thin gold line fills while this book is on screen. */}
-                  <span className="mx-auto mt-4 block h-0.5 w-40 overflow-hidden rounded-full bg-on-lapis-muted/25" aria-hidden="true">
-                    <span key={`${index}-${autoplaying}`} className="hero-timer block h-full origin-left bg-gold" style={autoplaying ? { animationDuration: `${SLIDE_MS}ms` } : { animation: "none", transform: "scaleX(0)" }} />
-                  </span>
                 </div>
               ) : null}
+
+              {/* The dock: a strip of the covers around the current one. The current thumb is raised, framed in gold
+                  and carries the slide timer; click any thumb to bring that book forward. */}
+              <div className="mt-5 flex items-center justify-center gap-2">
+                <button type="button" onClick={() => step(-1)} className={iconButton} aria-label={h.prevBook}>
+                  <ChevronLeft className="size-4" aria-hidden="true" />
+                </button>
+                <ul className="hero-dock flex items-end gap-1.5 rounded-2xl bg-on-lapis/[0.07] p-1.5 ring-1 ring-inset ring-on-lapis/10 backdrop-blur-sm">
+                  {dock.map(({ book, i }) => {
+                    const active = i === index;
+                    return (
+                      <li key={book.id} className="hero-dock-item">
+                        <button
+                          type="button"
+                          onClick={() => setIndex(i)}
+                          aria-label={h.showBook(book.title ?? "")}
+                          aria-current={active || undefined}
+                          className={`relative block overflow-hidden rounded-[5px] transition-[width,transform,opacity,box-shadow] duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${active ? "w-11 -translate-y-1 opacity-100 shadow-[0_0_0_2px_var(--gold),0_10px_18px_-8px_rgb(0_0_0/0.7)]" : "w-8 opacity-55 hover:-translate-y-0.5 hover:opacity-90"}`}
+                        >
+                          <BookCover src={book.cover_image_url} title={book.title} className="block" />
+                          {active ? (
+                            <span className="absolute inset-x-0 bottom-0 h-[3px] bg-black/40" aria-hidden="true">
+                              <span key={`${index}-${autoplaying}`} className="hero-timer block h-full origin-left bg-gold" style={autoplaying ? { animationDuration: `${SLIDE_MS}ms` } : { animation: "none", transform: "scaleX(1)" }} />
+                            </span>
+                          ) : null}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <button type="button" onClick={() => step(1)} className={iconButton} aria-label={h.nextBook}>
+                  <ChevronRight className="size-4" aria-hidden="true" />
+                </button>
+                {!reduceMotion && books.length > 1 ? (
+                  <button type="button" onClick={() => setPaused((p) => !p)} className={iconButton} aria-label={paused ? h.playSlides : h.pauseSlides}>
+                    {paused ? <Play className="size-3.5" aria-hidden="true" /> : <Pause className="size-3.5" aria-hidden="true" />}
+                  </button>
+                ) : null}
+              </div>
             </div>
           )}
         </div>

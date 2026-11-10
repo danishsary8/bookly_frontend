@@ -1238,3 +1238,43 @@
 @media (prefers-reduced-motion: reduce) { .hero-card { transition: none; } }
 /* Home shelf: the row of spines fades into the paper at both ends. */
 .shelf-stage { mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent); }
+
+/* Home hero v2 (pages/home.md, 2026-11-10): covers stand on a glossy floor with a fading mirror image; the dock of
+   thumbs replaces the View book / Add to cart buttons. */
+.hero-reflect {
+  opacity: 0.55;
+  filter: blur(0.5px) saturate(0.9);
+  mask-image: linear-gradient(to bottom, #000, rgb(0 0 0 / 0.45) 7%, transparent 17%);
+}
+.hero-front { transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.hero-front:hover { transform: translateY(-4px); }
+.hero-dock-item { animation: hero-dock-in 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes hero-dock-in { from { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) {
+  .hero-front, .hero-front:hover { transition: none; transform: none; }
+  .hero-dock-item { animation: none; }
+}
+/* Shelf: every face stands on a polished floor — a short, fading mirror image below it (Chromium and Safari;
+   other browsers simply show no reflection). */
+.shelf-face { -webkit-box-reflect: below 2px linear-gradient(to bottom, transparent 74%, rgb(0 0 0 / 0.22)); }
+/* Mirror image under a standing cover (Top rated No. 1). */
+.mirror-floor {
+  opacity: 0.3;
+  filter: blur(0.6px);
+  mask-image: linear-gradient(to bottom, #000, rgb(0 0 0 / 0.3) 10%, transparent 26%);
+}
+/* Top rated: big outlined rank numerals; they fill in faintly on hover. */
+.rank-numeral { color: transparent; -webkit-text-stroke: 1.5px color-mix(in srgb, var(--primary) 18%, transparent); }
+.group:hover .rank-numeral { color: color-mix(in srgb, var(--primary) 7%, transparent); }
+.top-cover { transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.group:hover .top-cover { transform: translateY(-6px) rotate(-1.5deg); }
+@media (prefers-reduced-motion: reduce) { .group:hover .top-cover { transform: none; } }
+/* Coming soon: the calendar stub has a perforated right edge; the nearest release node pulses. */
+.ticket-stub {
+  mask-image: radial-gradient(circle at 100% 6px, transparent 2.5px, #000 3px);
+  mask-size: 100% 12px;
+  mask-repeat: repeat-y;
+}
+.timeline-now { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 45%, transparent); animation: timeline-now 2.2s ease-out infinite; }
+@keyframes timeline-now { 70%, 100% { box-shadow: 0 0 0 10px transparent; } }
+@media (prefers-reduced-motion: reduce) { .timeline-now { animation: none; } }

@@ -6,6 +6,7 @@ import { catalogQueries } from "@/api/endpoints/catalog";
 import { ApiError } from "@/api/errors";
 import { useSession } from "@/api/session";
 import type { BookCard, BookVariant, Customer } from "@/api/types";
+import { flyToCart } from "@/lib/flyToCart";
 import { withNext } from "@/lib/forms";
 import { openShellPanel } from "@/stores/shell";
 import { toast } from "@/stores/toast";
@@ -90,6 +91,8 @@ export function useAddToCart() {
   return {
     add: (book: BookCard, variantId?: number, quantity?: number) => {
       if (!gate.check("signInToCart") || !book.id) return;
+      // The cover flies into the header cart straight away; the toast confirms once the API answers.
+      flyToCart();
       mutation.mutate({ book, variantId, quantity });
     },
     pendingBookId: mutation.isPending ? mutation.variables?.book.id : undefined,

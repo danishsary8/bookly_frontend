@@ -750,3 +750,6 @@ Added a clearly labelled automatic-assistant tab to the existing support dialog,
 ## Phase 9 ? Dashboard v2 (feature/dashboard-v2)
 
 Added longer periods, sales and recovery analysis, recent-order actions, activity, purchase planning, audit filtering and printable reports. Integrated the newly merged assistants work. Lint has zero errors, typecheck and build passed, and 629 tests passed with three existing opt-in skips. Local desktop/mobile browser smoke passed six axe checks without overflow.
+
+## Home polish (2026-11-10, main)
+Hero dock (cover thumbs with the slide timer) replaces View book / Add to cart; mirror reflections under hero, Top rated and Coming soon covers; shelf books drawn as full boxes with a floor reflection; one page background (no paper band); Top rated rebuilt as No. 1 panel + 2×2 rank cards with score meters; Coming soon rebuilt as a release timeline with date-stub tickets and countdowns; add-to-cart flight (cover morphs into the header cart, `src/lib/flyToCart.ts`). New EN/KM strings: showBook, inDays, releaseTimeline, rank. Details in design-system/bookly/pages/home.md. Checked in headless Chromium against a mocked API (live API not reachable from the build machine): 1440, 1920 and 390 widths, shelf settled, hero dock, add-to-cart flight from Top rated (header tucked) and from a New arrivals card.

@@ -29,3 +29,12 @@ On `/` the header search hides (fade) while the hero search is on screen, and re
 - New arrivals: one row of cards. Top rated: a ranked chart (No. 1 feature panel + Nos. 2–5 rows); needs a rating. Coming soon: ticket cards with the release date, or a dashed placeholder panel when there are none.
 - Ratings on cards (`ReaderScore`): customer reviews if any; else the shop's Reader rating as "★ 4.3 · Source" (API fields `reader_rating`, `reader_rating_source`); else nothing.
 - Header: utility strip (delivery line, Track order, Help), Best sellers link (≥1280px), wishlist heart for everyone, and a search button on the home page while the hero search is on screen.
+
+## Home v2 polish (2026-11-10)
+- One page colour: the shelf no longer sits on a separate warm paper band; the whole page uses `--background`.
+- Hero (right side): the View book / Add to cart buttons are gone. Under the caption a **dock** of five cover thumbs (centred on the current book) replaces them: the current thumb is wider, raised, framed in gold and carries the slide timer; clicking a thumb brings that book forward. Prev / next / pause stay on either side (pause keeps WCAG 2.2.2). Clicking the front cover still opens the book. Left side: Browse catalogue stays the one vermilion CTA; New releases became a quiet text link.
+- Covers stand on a glossy floor: a short mirror image (flipped cover, 55% → 0 within ~17% of its height, slight blur) under the hero stack, Top rated No. 1 and Coming soon covers, plus a faint floor line in the hero.
+- Shelf: every book is a full box (spine, front cover on its right side, back cover on its left side), so books on both sides of the open one read the same in 3D; faces carry a `-webkit-box-reflect` mirror (Chromium/Safari; no reflection elsewhere).
+- Top rated: No. 1 panel (cover + mirror, gold "No. 1" crown chip, score in big type with a meter, price, Add to cart) beside a 2×2 grid of rank cards (outlined numeral behind, cover, title, author, score meter that fills on view, price). Cards rise in with a short stagger.
+- Coming soon: a release timeline (hairline draws in, one node per book, nearest pulses) above up to 4 tickets: a cover stage on its own colour wash with a perforated date stub (month, day), title, author, "In N days" countdown, Pre-order / Announced.
+- Add to cart, everywhere: the cover morphs into the header cart (copy lifts, arcs, rounds into a chip, the cart button bounces). The header comes back if it was tucked away. Reduced motion: no flight.

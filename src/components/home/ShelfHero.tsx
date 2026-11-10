@@ -290,7 +290,7 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
         onPointerCancel={endDrag}
         onPointerLeave={onLeave}
         className="shelf-stage relative mx-auto mt-4 cursor-grab select-none overflow-hidden peer outline-none [perspective:2200px] [touch-action:pan-y] active:cursor-grabbing"
-        style={{ height: H + 90, maxWidth: Math.min(SHELF_MAX, SPINES * (ws + dims.gap) + d * 1.4) } as CSSProperties}
+        style={{ height: H + 90 + H * 0.2, maxWidth: Math.min(SHELF_MAX, SPINES * (ws + dims.gap) + d * 1.4) } as CSSProperties}
       >
         {/* soft floor shadow under the shelf */}
         <span
@@ -298,7 +298,7 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
           style={{ top: (H + 90) / 2 + H / 2 - 6 }}
           aria-hidden="true"
         />
-        <div className="absolute left-1/2 top-1/2 [transform-style:preserve-3d]" aria-hidden="true">
+        <div className="absolute left-1/2 [transform-style:preserve-3d]" style={{ top: (H + 90) / 2 }} aria-hidden="true">
           {Array.from({ length: total }, (_, v) => {
             const item = items[v % n];
             return (
@@ -338,7 +338,7 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
                 {/* cover (right side of the box) */}
                 <div
                   className="shelf-face absolute overflow-hidden rounded-[3px] [backface-visibility:hidden]"
-                  style={{ width: d, height: H, left: -d / 2, top: -H / 2, background: item.cloth, transform: `rotateY(90deg) translateZ(${ws / 2}px)`, "--shade": "calc((1 - var(--o, 0)) * 0.5)", boxShadow: "0 34px 60px -26px rgb(20 16 10 / calc(var(--o, 0) * 0.6))", opacity: "clamp(0, calc(var(--o, 0) * 6), 1)" } as CSSProperties}
+                  style={{ width: d, height: H, left: -d / 2, top: -H / 2, background: item.cloth, transform: `rotateY(90deg) translateZ(${ws / 2}px)`, "--shade": "calc((1 - var(--o, 0)) * 0.5)", boxShadow: "0 34px 60px -26px rgb(20 16 10 / calc(var(--o, 0) * 0.6))" } as CSSProperties}
                 >
                   {item.book?.cover_image_url ? (
                     <img src={item.book.cover_image_url} alt="" draggable={false} loading={v >= n && v < 2 * n ? "eager" : "lazy"} className="size-full object-cover" />
@@ -348,6 +348,11 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
                   {/* spine hinge + gloss */}
                   <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgb(0_0_0/0.32)_0_2.5%,rgb(255_255_255/0.2)_3.5%,transparent_9%),linear-gradient(115deg,rgb(255_255_255/0.16),transparent_40%)]" />
                 </div>
+                {/* back cover (left side of the box): books right of the open one show this edge, as books on the left show their front cover */}
+                <div
+                  className="shelf-face absolute rounded-[3px] [backface-visibility:hidden]"
+                  style={{ width: d, height: H, left: -d / 2, top: -H / 2, background: item.cloth, transform: `rotateY(-90deg) translateZ(${ws / 2}px)`, "--shade": 0.35 } as CSSProperties}
+                />
               </div>
             );
           })}
@@ -355,7 +360,7 @@ function Shelf({ items, row: current }: { items: Shelf[]; row: RowId }) {
       </div>
 
       {/* Caption: rolls through a mask whenever the book changes. */}
-      <div className="group/cap relative z-10 mx-auto mt-1 grid w-full max-w-2xl justify-items-center gap-2.5 px-4 pb-9 text-center" aria-live="polite">
+      <div className="group/cap relative z-10 mx-auto -mt-2 grid w-full max-w-2xl justify-items-center gap-2.5 px-4 pb-9 text-center" aria-live="polite">
         <div className="flex w-full items-center justify-between gap-4">
           <button type="button" onClick={() => go(-1)} aria-label={h.prevBook} className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-card text-foreground transition-[background-color,transform] hover:bg-muted active:scale-95">
             <ArrowLeft className="size-[18px]" aria-hidden="true" />

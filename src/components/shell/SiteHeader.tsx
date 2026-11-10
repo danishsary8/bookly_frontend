@@ -55,9 +55,13 @@ function useHeaderScroll(locked: boolean) {
         last = y;
       });
     };
+    // Something wants the cart button on screen for a moment (the add-to-cart flight): bring the header back.
+    const onPeek = () => setState((prev) => (prev.hidden ? { ...prev, hidden: false } : prev));
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("bookly:header-peek", onPeek);
     return () => {
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("bookly:header-peek", onPeek);
       cancelAnimationFrame(frame);
     };
   }, [locked]);
@@ -193,6 +197,7 @@ export function SiteHeader() {
             aria-haspopup="dialog"
             aria-expanded={panel === "cart"}
             aria-label={count > 0 ? dict.nav.cartCount(count) : dict.nav.cart}
+            data-cart-target=""
             className="relative"
           >
             <ShoppingBag aria-hidden="true" />
