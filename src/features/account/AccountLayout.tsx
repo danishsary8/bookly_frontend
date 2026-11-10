@@ -12,7 +12,8 @@ import { useQuery } from "@tanstack/react-query";
 import { shopFeaturesQuery } from "@/api/endpoints/credit";
 
 /*
- * The account area's frame: a side navigation at ≥ 1024px, a horizontally
+ * The account area's frame (pages/account.md): on laptops a sidebar card with a lapis "library card" header
+ * (initial, name, who is signed in) over the links; a side navigation at ≥ 1024px, a horizontally
  * scrolling link strip on phones (links, not tabs: each section is its own page
  * with its own URL), and the section page beside/below it.
  */
@@ -66,15 +67,30 @@ export function AccountLayout() {
   }, [pathname]);
 
   return (
-    <div className="container-shell pb-16 pt-6 sm:pt-8">
-      <p className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-accent-text">
-        <span className="h-px w-12 bg-current" aria-hidden="true" />
-        {dict.account.eyebrow}
-      </p>
-      <p className="mt-2 text-lg text-muted-foreground">{firstName ? dict.account.signedInAs(session?.user?.email ?? session?.user?.phone ?? firstName) : " "}</p>
+    <div className="container-shell pb-20 pt-6 sm:pt-8">
+      {/* Phones: the eyebrow and who is signed in above the link strip (the sidebar card shows them on laptops). */}
+      <div className="lg:hidden">
+        <p className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-accent-text">
+          <span className="h-px w-12 bg-current" aria-hidden="true" />
+          {dict.account.eyebrow}
+        </p>
+        <p className="mt-2 text-muted-foreground">{firstName ? dict.account.signedInAs(session?.user?.email ?? session?.user?.phone ?? firstName) : " "}</p>
+      </div>
 
-      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12">
-        <nav aria-label={dict.account.nav} className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 lg:mt-0 lg:grid-cols-[16.5rem_minmax(0,1fr)] lg:gap-10">
+        <nav aria-label={dict.account.nav} className="lg:shop-card lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start lg:rounded-2xl lg:border lg:border-border lg:bg-card lg:p-3">
+          {/* Laptops: a library-card header (initials, name, who is signed in) on top of the links. */}
+          <div className="relative mb-3 hidden items-center gap-3 overflow-hidden rounded-xl bg-primary px-4 py-4 text-primary-foreground lg:flex">
+            <span className="pointer-events-none absolute -right-6 -top-10 size-28 rounded-full bg-[radial-gradient(closest-side,rgb(154_166_255/0.45),transparent)]" aria-hidden="true" />
+            <span className="grid size-11 shrink-0 place-items-center rounded-full bg-[#F2C84B] font-display text-lg text-[#0E1335]" aria-hidden="true">
+              {(session?.user?.name ?? "?").trim().charAt(0).toUpperCase()}
+            </span>
+            <span className="relative grid min-w-0">
+              <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#F2C84B]">{dict.account.eyebrow}</span>
+              <span className="truncate font-semibold">{session?.user?.name}</span>
+              <span className="truncate text-xs text-primary-foreground/80">{firstName ? dict.account.signedInAs(session?.user?.email ?? session?.user?.phone ?? firstName) : " "}</span>
+            </span>
+          </div>
           <div className="relative">
           <ul ref={strip} onScroll={measure} className="no-scrollbar relative -mx-4 flex gap-1 overflow-x-auto border-b border-border px-4 lg:mx-0 lg:grid lg:border-b-0 lg:px-0">
             {accountSections.filter(({ key }) => key === "gifts" ? flags.data?.gift_cards && session?.user.email !== "demo@bookly.test" : key === "referrals" ? flags.data?.referrals && session?.user.email_verified && session?.user.email !== "demo@bookly.test" : true).map(({ to, key, Icon, ...rest }) => (
@@ -86,7 +102,7 @@ export function AccountLayout() {
                     cn(
                       "relative flex min-h-11 items-center gap-3 rounded-md px-3 text-[15px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring",
                       isActive
-                        ? "text-primary after:absolute after:inset-x-3 after:-bottom-px after:h-0.5 after:bg-primary lg:bg-lapis-tint lg:after:hidden"
+                        ? "text-primary after:absolute after:inset-x-3 after:-bottom-px after:h-0.5 after:bg-primary lg:bg-lapis-tint lg:font-semibold lg:after:inset-x-auto lg:after:inset-y-2 lg:after:left-0 lg:after:block lg:after:h-auto lg:after:w-[3px] lg:after:rounded-full"
                         : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                     )
                   }
@@ -100,7 +116,7 @@ export function AccountLayout() {
           {more.left ? <span data-testid="strip-fade-left" aria-hidden="true" className="pointer-events-none absolute inset-y-0 -left-4 w-10 bg-gradient-to-r from-background to-transparent lg:hidden" /> : null}
           {more.right ? <span data-testid="strip-fade-right" aria-hidden="true" className="pointer-events-none absolute inset-y-0 -right-4 w-10 bg-gradient-to-l from-background to-transparent lg:hidden" /> : null}
           </div>
-          <Button variant="ghost" onClick={() => void signOut()} className="mt-4 hidden w-full justify-start gap-3 px-3 font-medium text-muted-foreground lg:flex">
+          <Button variant="ghost" onClick={() => void signOut()} className="mt-2 hidden w-full justify-start gap-3 border-t border-border px-3 pt-2 font-medium text-muted-foreground lg:flex">
             <LogOut aria-hidden="true" /> {dict.account.signOut}
           </Button>
         </nav>

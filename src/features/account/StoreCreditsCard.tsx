@@ -106,7 +106,7 @@ export function StoreCreditsCard() {
   return (
     <section
       aria-labelledby="store-credits-heading"
-      className="rounded-xl border border-border bg-card p-5 sm:p-6"
+      className="shop-card rounded-2xl border border-border bg-card p-5 sm:p-6"
     >
       <div className="flex items-start gap-3">
         <span className="grid size-10 shrink-0 place-items-center rounded-full bg-lapis-tint text-primary">

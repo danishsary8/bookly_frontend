@@ -12,7 +12,7 @@ export function OrderTimeline({ history }: { history: History }) {
   const { dict, locale } = useT();
   if (history.length === 0) return null;
   return (
-    <section aria-labelledby="order-timeline" className="rounded-xl border border-border bg-card p-5 sm:p-6">
+    <section aria-labelledby="order-timeline" className="shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
       <h2 id="order-timeline" className="font-display text-[1.563rem] leading-tight">
         {dict.orderParts.timeline}
       </h2>

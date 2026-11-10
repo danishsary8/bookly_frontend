@@ -71,7 +71,7 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
   };
 
   return (
-    <section aria-labelledby="sign-in-methods" className="grid max-w-xl gap-4 rounded-xl border border-border bg-card p-5 sm:p-6">
+    <section aria-labelledby="sign-in-methods" className="grid max-w-xl gap-4 shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
       <div className="grid gap-1">
         <h2 id="sign-in-methods" className="font-display text-[1.563rem] leading-tight">
           {t.waysIn}

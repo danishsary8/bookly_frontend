@@ -31,7 +31,7 @@ export function OrderItemsCard({
   const { dict } = useT();
   const t = dict.orderParts;
   return (
-    <section aria-labelledby={`order-items-${order.id}`} className={cn("rounded-xl border border-border bg-card p-5 sm:p-6", className)}>
+    <section aria-labelledby={`order-items-${order.id}`} className={cn("shop-card rounded-2xl border border-border bg-card p-5 sm:p-6", className)}>
       <h2 id={`order-items-${order.id}`} className="font-display text-[1.563rem] leading-tight">
         {t.items(order.item_count ?? 0)}
       </h2>
@@ -90,7 +90,7 @@ export function DeliveryAddressCard({ address, title, className }: { address: Or
   const { dict } = useT();
   if (!address) return null;
   return (
-    <section aria-labelledby="order-address" className={cn("grid content-start gap-2 rounded-xl border border-border bg-card p-5 sm:p-6", className)}>
+    <section aria-labelledby="order-address" className={cn("grid content-start gap-2 shop-card rounded-2xl border border-border bg-card p-5 sm:p-6", className)}>
       <h2 id="order-address" className="flex items-center gap-2 font-display text-[1.563rem] leading-tight">
         <MapPin className="size-5 text-primary" aria-hidden="true" /> {title ?? dict.orderParts.deliveringTo}
       </h2>
