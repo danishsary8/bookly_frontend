@@ -121,9 +121,9 @@ export function ContentPage({
         </p>
       ) : null}
 
-      <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-10 lg:mt-16 lg:grid-cols-12 lg:gap-6">
+      <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-10 lg:mt-12 lg:grid-cols-12 lg:gap-6">
         <nav aria-label={dict.content.onThisPage} className="lg:col-span-3">
-          <div className="rounded-xl border border-border bg-card lg:hidden">
+          <div className="shop-card rounded-2xl border border-border bg-card lg:hidden">
             <button
               type="button"
               aria-expanded={open}
@@ -146,7 +146,7 @@ export function ContentPage({
           </div>
         </nav>
 
-        <article lang={textLang} className="grid gap-14 lg:col-span-8 lg:col-start-5" aria-labelledby="page-title">
+        <article lang={textLang} className="shop-card grid gap-14 rounded-2xl border border-border bg-card px-5 py-8 sm:px-10 sm:py-10 lg:col-span-8 lg:col-start-5 lg:px-14 lg:py-12" aria-labelledby="page-title">
           {notice}
           {sections.map((s, i) => (
             <section key={s.id} id={s.id} aria-labelledby={`${s.id}-title`} className="scroll-mt-[calc(var(--header-h)+1.5rem)]">
