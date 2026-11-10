@@ -39,3 +39,10 @@ On `/` the header search hides (fade) while the hero search is on screen, and re
 - Coming soon: on wide screens a release timeline sits above the tickets: one stop centred over each ticket, labelled with its countdown ("In 3 days"), the line runs only from the first stop to the last and draws in, the nearest stop pulses, a short stem drops to the ticket. Tickets: cover stage on its own colour wash with a perforated date stub (month, day), title, author, Pre-order / Announced; below `lg` the countdown is a chip inside the ticket.
 - Add to cart, everywhere: the cover morphs into the header cart (copy lifts, arcs, rounds into a chip, the cart button bounces). The header comes back if it was tucked away. Reduced motion: no flight.
 - Performance: the shelf's animation loop and the hero slideshow stop while they are off screen (and the shelf while the tab is hidden). Home sections use Motion's `m` components (LazyMotion), not `motion`, so the full Motion bundle stays out of the main chunk.
+
+## Hero v3 (2026-11-10)
+- Left (5/12): eyebrow, headline (max 3.4rem, two lines on desktop), subtitle, search, three popular categories as quiet underlined links, Browse catalogue (the one vermilion CTA, 48px). The New releases link left the hero (the header has New arrivals).
+- Right (7/12): a book card. A deck of covers: current in front on a glossy floor with a mirror image; the next two fanned out behind it to the right (darker, rotated 4° / 8°); the cover leaving slides off to the left. Beside it, left-aligned: "Popular books · n of N", title (2 lines max), author, short description (3 lines), a gold price chip and View book, then prev / timer line / next / pause.
+- Descriptions that only repeat the title and author (fewer than about eight other words) are hidden.
+- Calmer surface: even left-to-right lapis overlay instead of the dark corner vignette, spine texture at 3%.
+- Height: 84% of the screen under the header (540–740px), so the next section's heading shows below on a typical laptop.

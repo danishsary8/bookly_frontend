@@ -759,3 +759,6 @@ Hero dock (cover thumbs with the slide timer) replaces View book / Add to cart; 
 - Top rated: score bars removed; Coming soon: timeline stops centred over each ticket with countdown labels, line only between first and last stop.
 - Performance and bugs: `motion.*` → `m.*` in TopRated, ComingSoon, the stepper and the auth CoverWall (they pulled the full Motion bundle into the main chunk: main JS 590 kB → about 505 kB); shelf rAF loop and hero autoplay pause off screen / in hidden tabs; account overview no longer crashes when a wishlist response has no `meta`.
 - Checked: console sweep (no errors or React warnings) on 15 storefront and 7 signed-in routes against a mocked API; screenshots at 1440 and 390. Not changed: both language files (~160 kB source) still load up front; loading Khmer on demand would need an async language switch.
+
+## Hero v3 (2026-11-10, main)
+Hero rebuilt as headline + search on the left and a book card on the right (cover deck beside title, author, description, price chip, View book and the slide controls). Placeholder descriptions hidden, quieter category links, one CTA, calmer background, shorter hero so the shelf heading peeks. Checked at 1440×900, 1920×965 and 390×844 against the mocked API; axe clean.

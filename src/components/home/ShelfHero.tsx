@@ -60,7 +60,7 @@ export function ShelfHero() {
 
   return (
     <section aria-labelledby="shelf-title" className="shelf-hero relative overflow-clip [contain:paint]">
-      <div className="relative z-10 px-4 pt-10 text-center">
+      <div className="relative z-10 px-4 pt-8 text-center">
         <p className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
           <span className="h-px w-10 bg-current" aria-hidden="true" />
           {h.shelfEyebrow}
