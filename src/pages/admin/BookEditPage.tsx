@@ -158,6 +158,8 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
         "age_min",
         "age_max",
         "school_grade",
+        "reader_rating",
+        "reader_rating_source",
         "level",
         "publish_date",
         "description",
@@ -396,6 +398,23 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
             </option>
           ))}
         </SelectField>
+        <TextField
+          label="Reader rating"
+          optional
+          inputMode="decimal"
+          placeholder="4.3"
+          hint="A public score from 1.0 to 5.0. Shown with its source until customers review the book."
+          error={errors.reader_rating?.message}
+          {...register("reader_rating")}
+        />
+        <TextField
+          label="Rating source"
+          optional
+          placeholder="Goodreads"
+          hint="Where the score comes from."
+          error={errors.reader_rating_source?.message}
+          {...register("reader_rating_source")}
+        />
         <TextField
           label="Published"
           optional
