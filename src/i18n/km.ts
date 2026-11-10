@@ -1320,6 +1320,7 @@ export const km: Translations = {
     recentlyViewed: "បានមើលថ្មីៗ",
     clear: "សម្អាត",
     shelfEyebrow: "ពីធ្នើសៀវភៅ",
+    popularCategories: "ពេញនិយម",
     shelfTitle: "ទាញសៀវភៅមួយចេញពីធ្នើ",
     viewBook: "មើលសៀវភៅ",
     shelfHint: "អូសធ្នើ ប្រើព្រួញ ឬចុចលើខ្នងសៀវភៅ។",

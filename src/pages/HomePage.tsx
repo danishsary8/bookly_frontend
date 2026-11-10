@@ -55,7 +55,6 @@ export default function HomePage() {
   const h = dict.homePage;
   // Seasonal collections (owner 2026-11-01): up to 2 live ones, above New arrivals. None, or an older API: no row.
   const collections = useQuery(collectionQueries.live());
-  const newest = useQuery(catalogQueries.books({ sort: "newest", per_page: 10 }));
   // Hero: the staff's picks (same query StaffPicks uses, so no extra request); top rated until/unless there are some.
   const picks = useQuery({ queryKey: ["reading-lists", "picks"], queryFn: readingListsApi.picks });
   const picked = (picks.data ?? []).flatMap((list) => list.books.flatMap((entry) => (entry.book ? [entry.book] : []))).filter((b, i, all) => all.findIndex((x) => x.id === b.id) === i).slice(0, 6);
@@ -88,11 +87,6 @@ export default function HomePage() {
       <HomeHero
         featured={picked.length >= 2 ? picked : rated.data?.data.slice(0, 5)}
         label={picked.length >= 2 ? dict.readingLists.staffPick : h.topRated}
-        stats={[
-          { label: h.books, value: newest.data?.meta.total },
-          { label: h.authors, value: authors.data?.meta.total },
-          { label: h.categories, value: categories.data?.length },
-        ]}
       />
       <div className="container-shell pt-10">
         <ul className="grid gap-4 sm:grid-cols-3" aria-label={h.why}>
