@@ -3,7 +3,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import { newsletterApi } from "@/api/endpoints/newsletter";
 import { useT } from "@/i18n";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { StatusPanel } from "@/components/StatusPanel";
 
 export default function NewsletterConfirmPage() {
   const { dict } = useT();
@@ -34,52 +34,18 @@ export default function NewsletterConfirmPage() {
       });
   }, [token, dict]);
 
+  if (status === "loading") return <StatusPanel tone="loading" title={dict.newsletter.confirming} />;
   return (
-    <div className="container-shell flex min-h-[60vh] items-center justify-center py-16">
-      <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-xs sm:p-8">
-        {status === "loading" && (
-          <div className="flex flex-col items-center gap-4 py-8">
-            <Loader2 className="size-8 animate-spin text-primary" />
-            <h1 className="font-serif text-xl font-bold text-foreground">
-              {dict.newsletter.confirming}
-            </h1>
-          </div>
-        )}
-
-        {status === "success" && (
-          <div className="flex flex-col items-center gap-4 py-4">
-            <div className="flex size-12 items-center justify-center rounded-full bg-success-tint text-success">
-              <CheckCircle2 className="size-8" />
-            </div>
-            <h1 className="font-serif text-2xl font-bold text-foreground">
-              {dict.newsletter.confirmTitle}
-            </h1>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {message || dict.newsletter.confirmSuccess}
-            </p>
-            <Button asChild className="mt-4">
-              <Link to="/">{dict.newsletter.backToHome}</Link>
-            </Button>
-          </div>
-        )}
-
-        {status === "error" && (
-          <div className="flex flex-col items-center gap-4 py-4">
-            <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-              <AlertCircle className="size-8" />
-            </div>
-            <h1 className="font-serif text-2xl font-bold text-foreground">
-              {dict.newsletter.confirmTitle}
-            </h1>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {message || dict.newsletter.confirmError}
-            </p>
-            <Button asChild variant="outline" className="mt-4">
-              <Link to="/">{dict.newsletter.backToHome}</Link>
-            </Button>
-          </div>
-        )}
-      </div>
-    </div>
+    <StatusPanel
+      tone={status === "success" ? "success" : "error"}
+      title={dict.newsletter.confirmTitle}
+      actions={
+        <Button asChild variant={status === "success" ? "default" : "outline"}>
+          <Link to="/">{dict.newsletter.backToHome}</Link>
+        </Button>
+      }
+    >
+      <p>{message || (status === "success" ? dict.newsletter.confirmSuccess : dict.newsletter.confirmError)}</p>
+    </StatusPanel>
   );
 }

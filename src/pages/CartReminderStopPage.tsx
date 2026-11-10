@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { accountApi } from "@/api/endpoints/account";
 import { Button } from "@/components/ui/button";
+import { StatusPanel } from "@/components/StatusPanel";
 import { useT } from "@/i18n";
 
 /**
@@ -28,38 +28,23 @@ export default function CartReminderStopPage() {
     );
   }, [valid, customer, token]);
 
+  if (status === "loading") return <StatusPanel tone="loading" title={t.stopping} />;
   return (
-    <div className="container-shell flex min-h-[60vh] items-center justify-center py-16">
-      <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 text-center sm:p-8" aria-live="polite">
-        {status === "loading" ? (
-          <div className="flex flex-col items-center gap-4 py-8">
-            <Loader2 className="size-8 animate-spin text-primary" aria-hidden="true" />
-            <h1 className="font-display text-2xl">{t.stopping}</h1>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-4 py-4">
-            <div
-              className={
-                status === "done"
-                  ? "flex size-12 items-center justify-center rounded-full bg-success-tint text-success"
-                  : "flex size-12 items-center justify-center rounded-full bg-destructive-tint text-destructive"
-              }
-            >
-              {status === "done" ? <CheckCircle2 className="size-7" aria-hidden="true" /> : <AlertCircle className="size-7" aria-hidden="true" />}
-            </div>
-            <h1 className="font-display text-2xl">{t.stopTitle}</h1>
-            <p className="text-[15px] leading-relaxed text-muted-foreground">{status === "done" ? t.stopDone : t.stopInvalid}</p>
-            <div className="mt-2 flex flex-wrap justify-center gap-3">
-              <Button asChild>
-                <Link to="/">{t.backHome}</Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/account/profile">{t.turnBackOn}</Link>
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+    <StatusPanel
+      tone={status === "done" ? "success" : "error"}
+      title={t.stopTitle}
+      actions={
+        <>
+          <Button asChild>
+            <Link to="/">{t.backHome}</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/account/profile">{t.turnBackOn}</Link>
+          </Button>
+        </>
+      }
+    >
+      <p>{status === "done" ? t.stopDone : t.stopInvalid}</p>
+    </StatusPanel>
   );
 }
