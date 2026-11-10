@@ -8,6 +8,7 @@ import { CatalogRows } from "@/components/catalog/CatalogRows";
 import { collectionQueries, collectionText } from "@/api/endpoints/collections";
 import { CategoryTiles } from "@/components/home/CategoryTiles";
 import { HomeHero } from "@/components/home/HomeHero";
+import { readingListsApi } from "@/api/endpoints/readingLists";
 import { ShelfHero } from "@/components/home/ShelfHero";
 import { StaffPicks } from "@/components/home/StaffPicks";
 import { StoreRatingBadge } from "@/components/ratings/StoreRatingBadge";
@@ -55,6 +56,9 @@ export default function HomePage() {
   // Seasonal collections (owner 2026-11-01): up to 2 live ones, above New arrivals. None, or an older API: no row.
   const collections = useQuery(collectionQueries.live());
   const newest = useQuery(catalogQueries.books({ sort: "newest", per_page: 10 }));
+  // Hero: the staff's picks (same query StaffPicks uses, so no extra request); top rated until/unless there are some.
+  const picks = useQuery({ queryKey: ["reading-lists", "picks"], queryFn: readingListsApi.picks });
+  const picked = (picks.data ?? []).flatMap((list) => list.books.flatMap((entry) => (entry.book ? [entry.book] : []))).filter((b, i, all) => all.findIndex((x) => x.id === b.id) === i).slice(0, 6);
   const rated = useQuery(catalogQueries.books({ sort: "rating", per_page: 10 }));
   const categories = useQuery(catalogQueries.categories());
   const series = useQuery(catalogQueries.seriesList({ per_page: 20 }));
@@ -82,7 +86,8 @@ export default function HomePage() {
     <div className="overflow-x-clip">
       <JsonLd data={websiteJsonLd} />
       <HomeHero
-        featured={rated.data?.data.slice(0, 5)}
+        featured={picked.length >= 2 ? picked : rated.data?.data.slice(0, 5)}
+        label={picked.length >= 2 ? dict.readingLists.staffPick : h.topRated}
         stats={[
           { label: h.books, value: newest.data?.meta.total },
           { label: h.authors, value: authors.data?.meta.total },

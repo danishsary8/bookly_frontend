@@ -26,7 +26,7 @@ type Stat = { label: string; value: number | undefined };
 const iconButton =
   "inline-flex size-10 items-center justify-center rounded-full border border-on-lapis-muted/50 text-on-lapis transition-[background-color,transform] duration-150 hover:bg-on-lapis/10 active:scale-95";
 
-export function HomeHero({ featured, stats }: { featured: BookCard[] | undefined; stats: Stat[] }) {
+export function HomeHero({ featured, stats, label }: { featured: BookCard[] | undefined; stats: Stat[]; label?: string }) {
   const currency = useCurrency();
   const { dict, lang } = useT();
   const h = dict.homePage;
@@ -127,7 +127,7 @@ export function HomeHero({ featured, stats }: { featured: BookCard[] | undefined
             <div
               role="region"
               aria-roledescription="carousel"
-              aria-label={h.topRated}
+              aria-label={label ?? h.topRated}
               tabIndex={0}
               onKeyDown={onKeyDown}
               onMouseEnter={() => setHovered(true)}
@@ -159,7 +159,7 @@ export function HomeHero({ featured, stats }: { featured: BookCard[] | undefined
               {current ? (
                 <div className="mt-8 rounded-2xl border border-on-lapis-muted/25 bg-on-lapis/[0.06] p-4 backdrop-blur-md" aria-live={autoplaying ? "off" : "polite"} aria-atomic="true">
                   <p className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.18em] text-on-lapis-muted">
-                    <span>{h.topRated}</span>
+                    <span>{label ?? h.topRated}</span>
                     <span className="tabular-nums">{h.nOfM(index + 1, books.length)}</span>
                   </p>
                   <p className="mt-1.5 truncate font-display text-xl text-on-lapis">

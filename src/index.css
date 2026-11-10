@@ -1192,3 +1192,19 @@
 @media (max-width: 1023px) {
   .chip-row { mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent); }
 }
+
+/* Book detail (pages/book.md). */
+.book-3d { transform: rotateY(-14deg) rotateX(0deg); transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.ink-bleed { animation: ink-bleed 1400ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes ink-bleed {
+  from { opacity: 0; clip-path: circle(0% at 35% 40%); }
+  to { clip-path: circle(120% at 35% 40%); }
+}
+.rise { display: block; overflow: hidden; }
+.rise > * { display: block; animation: rise 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 75ms + 120ms); }
+@keyframes rise { from { transform: translateY(110%); } }
+.drop-cap::first-letter { float: left; font-family: var(--font-display); font-size: 3.6em; line-height: 0.85; padding: 0.06em 0.12em 0 0; color: var(--primary); }
+@media (prefers-reduced-motion: reduce) {
+  .book-3d { transform: none; transition: none; }
+  .ink-bleed, .rise > * { animation: none; }
+}

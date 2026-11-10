@@ -9,6 +9,7 @@ import { ApiError } from "@/api/errors";
 import { useSession } from "@/api/session";
 import type { BookCard, BookDetail, Customer } from "@/api/types";
 import { BookCover } from "@/components/catalog/BookCover";
+import { BookStage } from "@/components/catalog/BookStage";
 import { BookShelf } from "@/components/catalog/BookShelf";
 import { VolumePicker } from "@/components/catalog/VolumePicker";
 import { BookShareModal } from "@/components/catalog/BookShareModal";
@@ -544,16 +545,18 @@ export default function BookDetailPage() {
       ) : (
         <article className="mt-6 grid gap-10 lg:grid-cols-12 lg:gap-16" aria-labelledby="book-title">
           <div className="lg:col-span-5">
-            <div className="rounded-xl bg-surface-2 px-8 py-10 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
-              <MorphCover layoutId={coverLayoutId(bookId)} className="mx-auto w-full max-w-[300px] shadow-lift">
+            <BookStage cover={shown.cover_image_url} className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
+              <MorphCover layoutId={coverLayoutId(bookId)} className="w-full overflow-hidden rounded-[4px] shadow-[0_30px_50px_-24px_rgb(20_16_10/0.6)]">
                 <BookCover src={shown.cover_image_url} title={shown.title} alt={b.cover(shown.title ?? "")} eager />
+                <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgb(0_0_0/0.22)_0_2%,rgb(255_255_255/0.18)_3%,transparent_8%),linear-gradient(120deg,rgb(255_255_255/0.14),transparent_45%)]" aria-hidden="true" />
               </MorphCover>
-            </div>
+            </BookStage>
           </div>
 
           <div className="grid content-start gap-6 lg:col-span-7">
             <header className="grid gap-3">
               {book?.categories?.length ? (
+                <div className="rise" style={{ "--i": 0 } as React.CSSProperties}>
                 <p className="flex flex-wrap gap-x-3 text-xs font-bold uppercase tracking-[0.16em] text-accent-text">
                   {book.categories.map((c) => {
                     const { parent } = getCategoryHierarchy(c);
@@ -574,11 +577,15 @@ export default function BookDetailPage() {
                     );
                   })}
                 </p>
+                </div>
               ) : null}
-              <h1 id="book-title" className="font-display text-[2.441rem] leading-[1.1] sm:text-[3.052rem]">
-                {shown.title}
-              </h1>
+              <div className="rise pb-1" style={{ "--i": 1 } as React.CSSProperties}>
+                <h1 id="book-title" className="text-balance font-display text-[2.441rem] leading-[1.08] sm:text-[3.052rem]">
+                  {shown.title}
+                </h1>
+              </div>
               {authors.length ? (
+                <div className="rise" style={{ "--i": 2 } as React.CSSProperties}>
                 <p className="text-lg text-muted-foreground">
                   {b.by}{" "}
                   {authors.map((a, i) => (
@@ -590,7 +597,9 @@ export default function BookDetailPage() {
                     </span>
                   ))}
                 </p>
+                </div>
               ) : null}
+              <div className="rise" style={{ "--i": 3 } as React.CSSProperties}>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <StarRating value={shown.rating_avg} count={shown.review_count} />
                 {book?.series ? (
@@ -599,6 +608,7 @@ export default function BookDetailPage() {
                     {book.series.name}
                   </Link>
                 ) : null}
+              </div>
               </div>
             </header>
 
@@ -621,7 +631,7 @@ export default function BookDetailPage() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="description">
-            <div className="max-w-prose whitespace-pre-line text-[17px] leading-8 text-foreground">{book.description || b.noDescription}</div>
+            <div className={cn("max-w-[65ch] whitespace-pre-line text-[17px] leading-8 text-foreground", book.description && "drop-cap")}>{book.description || b.noDescription}</div>
           </TabsContent>
           <TabsContent value="details">
             <dl className="max-w-2xl text-[15px]">
