@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useReducedMotion } from "motion/react";
-import { ArrowLeft, ArrowRight, ShoppingBag } from "lucide-react";
+import { ArrowLeft, ArrowRight, Flame, ShoppingBag, Trophy } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { catalogApi } from "@/api/endpoints/catalog";
 import type { BookCard } from "@/api/types";
@@ -13,8 +13,8 @@ import { useT } from "@/i18n";
 
 /*
  * Home "shelf" section (below the hero; design-system/bookly/pages/home.md): an endless row of real-looking books
- * standing on an oak shelf. Each book is a closed 3D box (spine, front cover, back cover) with its own height and
- * thickness, a spine in its cover's colour, the full title and the author's surname. The book in the middle is pulled
+ * standing on an oak shelf. Each book is a closed 3D box (spine, front cover, back cover), all the same height with a
+ * slightly different thickness, a spine in its cover's colour, the full title and the author's surname. The book in the middle is pulled
  * out and turned so its cover faces you, tilted a little and leaning towards the cursor.
  * Change book: click a spine, the arrows, a row tab, drag, or ←/→ while the shelf has focus; it also drifts on by itself
  * every few seconds until someone interacts. Click the cover to open the book; Add to cart flies the cover to the cart.
@@ -34,8 +34,8 @@ const ROW_LINK: Record<RowId, string> = {
 const CLOTH = ["#14207A", "#7A2E2A", "#2F5D4A", "#C9A24B", "#4C5378", "#8A5A3B", "#1E4E5C", "#5B2A4E", "#E9E1CF", "#A0522D"];
 const AUTOPLAY_MS = 3200;
 /** The shelf is a framed row (about 13 spines beside the open book), not an edge-to-edge wall. */
-const SHELF_MAX = 1180;
-const SPINES = 13;
+const SHELF_MAX = 1320;
+const SPINES = 15;
 
 /** light: dark ink on the spine. gold: the gold surname still reaches 4.5:1 on this colour (else cream). */
 type Tone = { bg: string; light: boolean; gold: boolean };
@@ -46,7 +46,7 @@ type ShelfItem = {
   title: string;
   by: string;
   surname: string;
-  /** Height and thickness relative to the tallest / thickest book (from the id, so they never change). */
+  /** Height (all 1: one shelf, one edition size) and thickness relative to the thickest book (from the id, so they never change). */
   tall: number;
   thick: number;
 };
@@ -153,8 +153,8 @@ export function ShelfHero() {
       title: book?.title ?? "Bookly",
       by: names.join(", "),
       surname: names[0]?.split(" ").filter(Boolean).pop() ?? "Bookly",
-      tall: 0.86 + seed * 0.14,
-      thick: 0.84 + hash01(`${id}t`) * 0.16,
+      tall: 1,
+      thick: 0.88 + seed * 0.12,
     };
   });
 
@@ -170,7 +170,7 @@ export function ShelfHero() {
       </div>
 
       {/* Row tabs (blue pill behind the active one) and, on the right, a link to the whole list. */}
-      <div className="relative z-10 mx-auto mt-4 flex max-w-[1180px] flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 md:justify-between">
+      <div className="relative z-10 mx-auto mt-4 flex max-w-[1320px] flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 md:justify-between">
         <span className="hidden w-44 md:block" aria-hidden="true" />
         {available.length > 1 ? (
           <nav aria-label={h.browse}>
@@ -230,7 +230,7 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
   // Book size from the screen, so heading + tabs + shelf + caption fit one laptop screen under the header.
   useLayoutEffect(() => {
     const measure = () => {
-      const H = Math.round(Math.max(190, Math.min((window.innerHeight - 405) / 1.12, window.innerWidth * 0.55, 380)));
+      const H = Math.round(Math.max(190, Math.min((window.innerHeight - 440) / 1.12, window.innerWidth * 0.55, 380)));
       setDims({ H, ws: H * 0.17, d: H * (2 / 3), gap: H * 0.03, W: window.innerWidth });
     };
     measure();
@@ -523,26 +523,50 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
         </div>
       </div>
 
-      {/* Caption: one compact row — arrows, title and author, rating and price, Add to cart and View book. */}
-      <div className="relative z-10 mx-auto mt-1 w-full max-w-[1000px] px-4 pb-8" aria-live="polite">
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 rounded-2xl border border-border bg-card/80 p-2.5 shadow-[0_18px_40px_-30px_rgb(20_32_122/0.45)] backdrop-blur-sm md:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] md:gap-x-5 md:p-3 md:pl-3">
-          <button type="button" onClick={() => go(-1)} aria-label={h.prevBook} className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-background text-foreground transition-[background-color,transform] hover:bg-muted active:scale-95">
+      {/* Caption card: arrows at the ends; the book (thumb, title, author) with its selling points — rank in this
+          row, copies sold, "Only N left" — then the price, Add to cart and View book. */}
+      <div className="relative z-10 mx-auto mt-1 w-full max-w-[1100px] px-4 pb-8" aria-live="polite">
+        <div className="shelf-caption relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 rounded-[1.4rem] border border-border bg-card p-3 md:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] md:gap-x-5">
+          <button type="button" onClick={() => go(-1)} aria-label={h.prevBook} className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-background text-foreground transition-[background-color,transform,border-color] hover:border-input hover:bg-muted active:scale-95">
             <ArrowLeft className="size-[18px]" aria-hidden="true" />
           </button>
-          <div className="min-w-0 overflow-hidden text-center md:text-left">
-            <p key={`t-${shown?.id}`} className={cn("shelf-roll truncate font-display text-[clamp(1.15rem,1.7vw,1.45rem)] leading-tight text-foreground", dir < 0 && "shelf-roll-down")}>
-              {shown?.book ? shown.title : dict.splash.tagline}
-            </p>
-            <p key={`a-${shown?.id}`} className={cn("shelf-roll mt-0.5 truncate text-[13px] font-medium uppercase tracking-[0.12em] text-primary [animation-delay:60ms]", dir < 0 && "shelf-roll-down")}>
-              {shown?.book ? (shown.by ? h.by(shown.by) : h.unknownAuthor) : dict.shopExtras.rows[current]}
-            </p>
+          <div className="flex min-w-0 items-center gap-4">
+            {book?.cover_image_url ? (
+              <img key={`c-${shown?.id}`} src={book.cover_image_url} alt="" aria-hidden="true" className="shelf-roll hidden aspect-[2/3] w-11 shrink-0 rounded-[3px] object-cover shadow-[0_10px_18px_-10px_rgb(20_16_10/0.6)] md:block" />
+            ) : null}
+            <div className="min-w-0 overflow-hidden">
+              <p key={`t-${shown?.id}`} className={cn("shelf-roll truncate font-display text-[clamp(1.15rem,1.6vw,1.4rem)] leading-tight text-foreground", dir < 0 && "shelf-roll-down")}>
+                {shown?.book ? shown.title : dict.splash.tagline}
+              </p>
+              <p key={`a-${shown?.id}`} className={cn("shelf-roll mt-0.5 truncate text-[13px] text-muted-foreground [animation-delay:60ms]", dir < 0 && "shelf-roll-down")}>
+                {shown?.book ? (shown.by ? h.by(shown.by) : h.unknownAuthor) : dict.shopExtras.rows[current]}
+              </p>
+              {book ? (
+                <p key={`b-${shown?.id}`} className="shelf-roll mt-1.5 flex flex-wrap items-center gap-1.5 [animation-delay:120ms]">
+                  <span className="inline-flex h-6 items-center gap-1 rounded-full bg-lapis-tint px-2.5 text-xs font-semibold text-primary">
+                    <Trophy className="size-3.5" aria-hidden="true" /> {h.rankIn(active + 1, dict.shopExtras.rows[current])}
+                  </span>
+                  {book.sold_count ? (
+                    <span className="inline-flex h-6 items-center gap-1 rounded-full bg-muted px-2.5 text-xs font-semibold text-foreground">
+                      <Flame className="size-3.5 text-accent-text" aria-hidden="true" /> {h.soldShort(book.sold_count)}
+                    </span>
+                  ) : null}
+                  {book.low_stock_remaining ? (
+                    <span className="inline-flex h-6 items-center gap-1.5 rounded-full bg-accent/10 px-2.5 text-xs font-semibold text-accent-text ring-1 ring-inset ring-accent/30">
+                      <span className="size-1.5 animate-pulse rounded-full bg-accent motion-reduce:animate-none" aria-hidden="true" />
+                      {dict.cards.onlyLeft(book.low_stock_remaining)}
+                    </span>
+                  ) : null}
+                </p>
+              ) : null}
+            </div>
           </div>
-          <button type="button" onClick={() => go(1)} aria-label={h.nextBook} className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-background text-foreground transition-[background-color,transform] hover:bg-muted active:scale-95 md:order-last">
+          <button type="button" onClick={() => go(1)} aria-label={h.nextBook} className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-background text-foreground transition-[background-color,transform,border-color] hover:border-input hover:bg-muted active:scale-95 md:order-last">
             <ArrowRight className="size-[18px]" aria-hidden="true" />
           </button>
-          <div className="col-span-3 flex items-center justify-center gap-3 md:col-span-1 md:justify-end">
-            {book ? <ReaderScore book={book} className="hidden text-[13px] sm:inline-flex" /> : null}
-            {price ? <span className="whitespace-nowrap text-lg font-semibold tabular-nums">{price}</span> : null}
+          <div className="col-span-3 flex flex-col items-center gap-0.5 md:col-span-1 md:items-end">
+            {price ? <span className="whitespace-nowrap font-display text-[1.6rem] leading-none tabular-nums">{price}</span> : null}
+            {book ? <ReaderScore book={book} className="text-[13px]" /> : null}
           </div>
           <div className="col-span-3 flex items-center justify-center gap-2 md:col-span-1">
             {book && book.in_stock !== false ? (
@@ -553,7 +577,7 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
                   cart.add(book, undefined, undefined, { from: img ?? null });
                 }}
                 disabled={cart.pendingBookId === book.id}
-                className="inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.97] disabled:opacity-70"
+                className="inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[0_10px_22px_-12px_rgb(20_32_122/0.7)] transition-[filter,transform] hover:brightness-110 active:scale-[0.97] disabled:opacity-70"
               >
                 <ShoppingBag className="size-4" aria-hidden="true" /> {h.addToCart}
               </button>

@@ -56,7 +56,7 @@ export function CategoryChips({ filters, onChange, counts }: { filters: BookFilt
             </button>
           </li>
           {children.map((child) => (
-            <li key={child.id}>
+            <li key={child.id ?? child.name}>
               <button type="button" aria-pressed={selected === child.id} onClick={() => pick(child.id)} className={cn(chip(false, true), selected === child.id && "border-primary bg-lapis-tint text-primary")}>
                 {child.name}
                 <span className="text-xs tabular-nums text-muted-foreground">{child.total_books}</span>

@@ -1,42 +1,44 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Crown, ShoppingBag } from "lucide-react";
-import { m } from "motion/react";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import type { BookCard } from "@/api/types";
+import CircularCarousel from "@/components/CircularCarousel";
 import { BookCover } from "@/components/catalog/BookCover";
 import { authorNames, hasScore } from "@/components/catalog/bookMeta";
 import { useAddToCart } from "@/components/catalog/useCatalogActions";
 import { ReaderScore } from "@/components/ReaderScore";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { toNumber } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { useT } from "@/i18n";
 
 /*
- * Home "Top rated" (pages/home.md): a ranked chart, not another row of cards.
- * No. 1 is a feature panel: a large cover standing on a glossy floor (mirror image), a gold crown, the score
- * in big type beside the stars, price and Add to cart. Nos. 2–5 are a 2×2 grid of rank cards: a large outlined
- * numeral behind the cover, title, author, and a footer line with the stars and the price.
- * Only books with a rating (customer reviews, or the shop's Reader rating) appear; with none, the section hides.
+ * Home "Top rated" (pages/home.md): the top 10 by rating. Left, a showcase panel: the ten covers on a slowly turning
+ * cylinder (CircularCarousel) over a soft wash of the front book's colours, with its rank, score, price and Add to
+ * cart underneath. Right, the ranked list (the accessible version of the same ten): rank, cover, title, author,
+ * stars, price and "Only N left" when stock is low. Hovering or focusing a row spins the carousel to that book; the
+ * row of the book in front is highlighted. Only books with a rating (reviews or the shop's Reader rating) appear.
  */
 
-/** The big score on No. 1: customer reviews first, else the shop's Reader rating. */
 const scoreOf = (b: BookCard) => (toNumber(b.review_count) > 0 && toNumber(b.rating_avg) > 0 ? toNumber(b.rating_avg) : toNumber(b.reader_rating));
-
-const ease = [0.2, 0.8, 0.2, 1] as const;
 
 export function TopRated() {
   const { dict } = useT();
   const h = dict.homePage;
   const currency = useCurrency();
   const cart = useAddToCart();
-  const query = useQuery(catalogQueries.books({ sort: "rating", per_page: 10 }));
-  const books = (query.data?.data ?? []).filter(hasScore).slice(0, 5);
+  const navigate = useNavigate();
+  const query = useQuery(catalogQueries.books({ sort: "rating", per_page: 20 }));
+  const books = (query.data?.data ?? []).filter(hasScore).slice(0, 10);
+  const [front, setFront] = useState(0);
+  const [pick, setPick] = useState<number | undefined>(undefined);
 
   if (query.isError || (!query.isPending && books.length === 0)) return null;
   const price = (b: BookCard) => formatMoney(b.price_from_usd, b.price_from_khr, currency);
-  const [first, ...rest] = books;
+  const lead = books[front] ?? books[0];
 
   return (
     <section aria-labelledby="top-rated-title" className="grid gap-6">
@@ -46,7 +48,7 @@ export function TopRated() {
             <span className="h-px w-12 bg-current" aria-hidden="true" />
             {h.topRatedEyebrow}
           </p>
-          <h2 id="top-rated-title" className="mt-2 font-display text-[1.953rem] leading-tight">{h.topRatedTitle}</h2>
+          <h2 id="top-rated-title" className="mt-2 font-display text-[1.953rem] leading-tight">{h.topTen}</h2>
         </div>
         <Link to="/books?sort=rating" className="inline-flex h-11 items-center gap-1.5 rounded-md px-2 text-[15px] font-semibold text-primary underline-offset-4 hover:underline">
           {dict.cards.seeAll} <ArrowRight className="size-4" aria-hidden="true" />
@@ -54,101 +56,93 @@ export function TopRated() {
       </div>
 
       {query.isPending ? (
-        <SkeletonGroup label={h.topRatedTitle} className="grid gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-          <Skeleton className="h-80 rounded-3xl" />
-          <div className="grid gap-4 sm:grid-cols-2">
-            {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-36 rounded-2xl" />)}
+        <SkeletonGroup label={h.topRatedTitle} className="grid gap-5 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)]">
+          <Skeleton className="h-[36rem] rounded-3xl" />
+          <div className="grid gap-2">
+            {Array.from({ length: 10 }, (_, i) => <Skeleton key={i} className="h-14 rounded-xl" />)}
           </div>
         </SkeletonGroup>
       ) : (
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-          {/* No. 1 */}
-          <m.article
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.7, ease }}
-            className="group relative isolate grid content-center overflow-hidden rounded-3xl border border-border bg-card sm:grid-cols-[auto_1fr]"
-          >
-            {first.cover_image_url ? <img src={first.cover_image_url} alt="" aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 size-full scale-125 object-cover opacity-20 blur-3xl saturate-150" /> : null}
-            <span className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,transparent,var(--card)_78%)]" aria-hidden="true" />
-
-            {/* cover on a glossy floor */}
-            <div className="relative grid place-items-center px-8 pb-0 pt-14 sm:pr-0">
-              <span className="absolute left-5 top-5 inline-flex items-center gap-1.5 rounded-full bg-[#1B1A2E] px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-gold shadow-sm">
-                <Crown className="size-3.5" aria-hidden="true" /> {h.rank(1)}
-              </span>
-              <Link to={`/books/${first.id}`} tabIndex={-1} aria-hidden="true" className="top-cover relative block w-36 sm:w-40">
-                <span data-fly-cover="" className="relative block overflow-hidden rounded-md shadow-[0_30px_50px_-24px_rgb(20_16_10/0.65)]">
-                  <BookCover src={first.cover_image_url} title={first.title} eager />
-                  <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgb(0_0_0/0.22)_0_2%,rgb(255_255_255/0.16)_3%,transparent_8%),linear-gradient(120deg,rgb(255_255_255/0.14),transparent_45%)]" />
-                </span>
-                {first.cover_image_url ? (
-                  <span className="mirror-floor pointer-events-none absolute inset-x-0 top-full mt-[3px] block aspect-[2/3] overflow-hidden rounded-md" aria-hidden="true">
-                    <img src={first.cover_image_url} alt="" aria-hidden="true" className="size-full -scale-y-100 object-cover" />
-                  </span>
-                ) : null}
-              </Link>
-              <span className="block h-10" aria-hidden="true" />
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)]">
+          {/* Showcase */}
+          <div className="relative isolate flex min-h-[36rem] flex-col overflow-hidden rounded-3xl border border-border bg-card">
+            {lead?.cover_image_url ? (
+              <img key={`wash-${lead.id}`} src={lead.cover_image_url} alt="" aria-hidden="true" className="hero-wash pointer-events-none absolute inset-0 -z-10 size-full scale-125 object-cover opacity-25 blur-3xl saturate-150" />
+            ) : null}
+            <span className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,transparent_30%,var(--card)_88%)]" aria-hidden="true" />
+            <span className="absolute left-5 top-5 z-10 inline-flex items-center gap-1.5 rounded-full bg-[#1B1A2E] px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-gold shadow-sm">
+              <Crown className="size-3.5" aria-hidden="true" /> {h.rank(front + 1)}
+            </span>
+            <div className="relative mt-8 h-[25rem] flex-none">
+              <span className="pointer-events-none absolute bottom-6 left-1/2 h-12 w-3/5 -translate-x-1/2 rounded-[50%] bg-[radial-gradient(closest-side,rgb(20_16_10/0.22),transparent)]" aria-hidden="true" />
+              <CircularCarousel
+                items={books.map((b, i) => ({ src: b.cover_image_url, alt: b.title, title: b.title, subtitle: h.rank(i + 1) }))}
+                cardWidth={172}
+                aspectRatio={2 / 3}
+                speed={12}
+                intro="rise"
+                active={pick}
+                onActiveChange={setFront}
+                onSelect={(i) => books[i]?.id && navigate(`/books/${books[i].id}`)}
+              />
             </div>
-
-            <div className="flex min-w-0 flex-col justify-center p-6 pt-2 sm:pl-2 sm:pt-6">
-              <h3 className="font-display text-2xl leading-tight">
-                <Link to={`/books/${first.id}`} className="line-clamp-2 underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">{first.title}</Link>
-              </h3>
-              <p className="mt-1 truncate text-sm text-muted-foreground">{h.by(authorNames(first.authors) || h.unknownAuthor)}</p>
-              <div className="mt-4 flex items-end gap-3">
-                <span className="font-display text-5xl leading-none tabular-nums">{scoreOf(first).toFixed(1)}</span>
-                <ReaderScore book={first} className="pb-1.5 text-[13px]" />
+            {lead ? (
+              <div key={`cap-${lead.id}`} className="hero-caption mt-auto flex flex-wrap items-end justify-between gap-4 px-6 pb-6">
+                <div className="min-w-0">
+                  <p className="truncate font-display text-[1.7rem] leading-tight">
+                    <Link to={`/books/${lead.id}`} className="underline-offset-4 hover:underline">{lead.title}</Link>
+                  </p>
+                  <p className="mt-0.5 truncate text-sm text-muted-foreground">{h.by(authorNames(lead.authors) || h.unknownAuthor)}</p>
+                  <div className="mt-3 flex items-center gap-3">
+                    <span className="font-display text-4xl leading-none tabular-nums">{scoreOf(lead).toFixed(1)}</span>
+                    <ReaderScore book={lead} className="text-[13px]" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xl font-semibold tabular-nums">{price(lead)}</span>
+                  {lead.in_stock === false ? null : (
+                    <button
+                      type="button"
+                      onClick={(e) => cart.add(lead, undefined, undefined, { from: e.currentTarget.closest("section")?.querySelector(".circular-card[data-front] img") ?? null })}
+                      disabled={cart.pendingBookId === lead.id}
+                      className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[0_10px_22px_-12px_rgb(20_32_122/0.7)] transition-[filter,transform] hover:brightness-110 active:scale-[0.97] disabled:opacity-70"
+                    >
+                      <ShoppingBag className="size-4" aria-hidden="true" /> {h.addToCart}
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="mt-5 flex flex-wrap items-center gap-3">
-                <span className="text-xl font-semibold tabular-nums">{price(first)}</span>
-                {first.in_stock === false ? null : (
-                  <button
-                    type="button"
-                    onClick={() => cart.add(first)}
-                    disabled={cart.pendingBookId === first.id}
-                    className="ml-auto inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.97] disabled:opacity-70"
-                  >
-                    <ShoppingBag className="size-4" aria-hidden="true" /> {h.addToCart}
-                  </button>
-                )}
-              </div>
-            </div>
-          </m.article>
+            ) : null}
+          </div>
 
-          {/* Nos. 2–5 */}
-          <ol start={2} className="grid gap-4 sm:grid-cols-2">
-            {rest.map((book, i) => (
-              <m.li
-                key={book.id}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.6, ease, delay: 0.08 * (i + 1) }}
-              >
+          {/* The ranked list */}
+          <ol className="grid content-start gap-1" onMouseLeave={() => setPick(undefined)}>
+            {books.map((book, i) => (
+              <li key={book.id}>
                 <Link
                   to={`/books/${book.id}`}
-                  className="group relative isolate flex h-full gap-4 overflow-hidden rounded-2xl border border-border bg-card p-4 outline-none transition-[translate,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:border-input hover:shadow-[0_22px_36px_-26px_rgb(20_32_122/0.5)] focus-visible:ring-2 focus-visible:ring-ring motion-reduce:hover:translate-y-0"
+                  onMouseEnter={() => setPick(i)}
+                  onFocus={() => setPick(i)}
+                  aria-current={i === front || undefined}
+                  className={cn(
+                    "group relative flex items-center gap-3.5 rounded-xl border px-3 py-1.5 outline-none transition-[background-color,border-color,box-shadow] duration-300 focus-visible:ring-2 focus-visible:ring-ring",
+                    i === front ? "border-input bg-card shadow-[0_14px_28px_-22px_rgb(20_32_122/0.55)]" : "border-transparent hover:bg-card/70",
+                  )}
                 >
-                  {/* the rank, large and outlined, behind everything */}
-                  <span className="rank-numeral pointer-events-none absolute -right-1 -top-2 -z-10 font-display text-[5.5rem] leading-none transition-colors duration-300" aria-hidden="true">
-                    {i + 2}
+                  <span className={cn("absolute inset-y-2 left-0 w-[3px] rounded-full bg-primary transition-opacity duration-300", i === front ? "opacity-100" : "opacity-0")} aria-hidden="true" />
+                  <span className={cn("w-8 shrink-0 text-center font-display text-[1.6rem] leading-none tabular-nums", i < 3 ? "text-[#946C1F]" : "rank-numeral-sm")}>{i + 1}</span>
+                  <span className="w-8 shrink-0"><BookCover src={book.cover_image_url} title={book.title} className="rounded-[3px] shadow-[0_6px_12px_-8px_rgb(20_16_10/0.6)]" /></span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-display text-[15.5px] leading-snug">{book.title}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{authorNames(book.authors) || h.unknownAuthor}</span>
                   </span>
-                  <span className="w-[4.5rem] shrink-0 self-start transition-transform duration-300 group-hover:-rotate-2 group-hover:scale-[1.03] motion-reduce:group-hover:transform-none">
-                    <BookCover src={book.cover_image_url} title={book.title} className="rounded-[4px] shadow-[0_14px_22px_-12px_rgb(20_16_10/0.6)]" />
-                  </span>
-                  <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{h.rank(i + 2)}</span>
-                    <span className="mt-1 line-clamp-2 font-display text-[17px] leading-snug">{book.title}</span>
-                    <span className="mt-0.5 truncate text-[13px] text-muted-foreground">{authorNames(book.authors) || h.unknownAuthor}</span>
-                    <span className="mt-auto flex items-center justify-between gap-2 border-t border-border/70 pt-3">
-                      <ReaderScore book={book} className="text-[13px]" />
-                      <span className="text-[15px] font-semibold tabular-nums">{price(book)}</span>
-                    </span>
-                  </span>
+                  {book.low_stock_remaining ? (
+                    <span className="hidden shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-semibold text-accent-text xl:inline">{dict.cards.onlyLeft(book.low_stock_remaining)}</span>
+                  ) : null}
+                  <ReaderScore book={book} className="hidden shrink-0 text-xs sm:inline-flex" />
+                  <span className="w-14 shrink-0 text-right text-sm font-semibold tabular-nums">{price(book)}</span>
                 </Link>
-              </m.li>
+              </li>
             ))}
           </ol>
         </div>
