@@ -818,3 +818,12 @@ Account frame and every account page, plus the ebook reader; decisions in `desig
   addresses, profile, security, support, KHQR pay, reader at 1366×768, 1440×900, 1440 dark, 1440 Khmer, 390×844:
   axe 0, no sideways scroll, no console errors (two errors seen first came from wrong mock shapes). Not exercised:
   editing forms end to end (profile, addresses, password), real reader pages, gift cards/referrals (feature flags off).
+
+## Redesign phase 4 — content and small pages (2026-11-10, branch `design/content-pages`, stacked on `design/account-pages`)
+About, Contact, FAQ, Shipping, Returns policy, Privacy, Terms, 404, newsletter confirm/unsubscribe, stop cart
+reminders; decisions appended to `design-system/bookly/pages/content.md`. Behaviour, routes and copy unchanged.
+- Two-column bookplate (shorter), article on a sheet, warm paper on all storefront pages (not home, not auth), and a
+  shared StatusPanel for the email-link pages (fixes faux-bold Gloock titles).
+- Checks (mocked API): lint 0 errors (existing warning), typecheck, tests, build. Browser + axe on all 10 routes at
+  1366×768, 1440×900, 1920×930, 1440 dark, 1440 Khmer, 390×844: axe 0, no sideways scroll, no console errors; /login
+  checked unchanged. Not exercised: the contact form's real send, error paths of the email-link pages with the live API.
