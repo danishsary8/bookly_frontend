@@ -762,3 +762,4 @@ Hero dock (cover thumbs with the slide timer) replaces View book / Add to cart; 
 
 ## Hero v3 (2026-11-10, main)
 Hero rebuilt as headline + search on the left and a book card on the right (cover deck beside title, author, description, price chip, View book and the slide controls). Placeholder descriptions hidden, quieter category links, one CTA, calmer background, shorter hero so the shelf heading peeks. Checked at 1440×900, 1920×965 and 390×844 against the mocked API; axe clean.
+Hero v4 (2026-11-10, main): back to the centred cover stack the owner preferred, larger cover, price chip, fixed description slot with fact chips (formats, year, pages; new EN/KM string `pageCount`) for books without a description, timer on the View book button. Checked at 1366×768, 1440×900, 1920×928 and 390×844.

@@ -12,14 +12,14 @@ import { LiveSearch } from "@/components/shell/LiveSearch";
 import { CtaGlare } from "@/components/CtaGlare";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney, useCurrency } from "@/stores/currency";
-import { useT } from "@/i18n";
+import { formatName, useT } from "@/i18n";
 
 /*
  * Home hero (MASTER §2.1a, §5; pages/home.md): an inset lapis card. Left: eyebrow, BlurText headline, search, three
- * popular categories as quiet links and the page's one vermilion CTA. Right: a "book card" — a deck of covers
- * (current in front on a glossy floor with a mirror image, the next two fanned out behind) beside the book's details:
- * "n of N", title, author, a short description, a gold price chip and View book, with the slide controls underneath.
- * Autoplay (4 s) stops for the pause button, hover, keyboard focus, reduced motion and when off screen; ←/→ keys.
+ * popular categories as quiet links and the page's one vermilion CTA. Right: a centred cover stack (current cover in
+ * front on a glossy floor, neighbours peeking out on each side), then "n of N", title, author with a gold price chip,
+ * a short description (or a line of facts when the book has none) and the controls: prev, View book (the slide timer
+ * runs along its bottom edge), next, pause. Autoplay (4 s) stops for pause, hover, focus, reduced motion, off screen.
  */
 
 const SLIDE_MS = 4000;
@@ -43,6 +43,13 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
   // Short description of the current book: cards don't carry one, so read the book (cached per book).
   const detail = useQuery({ ...catalogQueries.book(current?.id ?? 0), enabled: Boolean(current?.id), staleTime: 10 * 60_000 });
   const blurb = usefulBlurb(shortBlurb(detail.data?.description), current);
+  // Without a description: up to three facts instead (formats, year, pages), so the slot never looks empty.
+  const year = (detail.data?.publish_date ?? current?.publish_date ?? "").slice(0, 4);
+  const facts = [
+    (detail.data?.formats ?? current?.formats ?? []).slice(0, 2).map((f) => formatName(dict, f)).join(" · "),
+    /^\d{4}$/.test(year) ? year : "",
+    detail.data?.page_count ? h.pageCount(detail.data.page_count) : "",
+  ].filter(Boolean);
   // The slideshow only runs while the hero is on screen: no slide changes (or image loads) once scrolled past.
   const sectionRef = useRef<HTMLElement>(null);
   const [onScreen, setOnScreen] = useState(true);
@@ -91,8 +98,8 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
       ) : null}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(100deg,rgb(20_32_122/0.9)_0%,rgb(20_32_122/0.7)_45%,rgb(24_38_130/0.55)_100%)]" aria-hidden="true" />
 
-      <div className="grid grid-cols-1 items-center gap-12 px-6 py-12 sm:px-10 lg:h-[clamp(540px,calc(84svh-var(--header-h)),740px)] lg:grid-cols-12 lg:gap-x-8 lg:px-14 lg:py-10">
-        <div className="lg:col-span-5">
+      <div className="grid grid-cols-1 items-center gap-12 px-6 py-12 sm:px-10 lg:h-[clamp(580px,calc(100svh-var(--header-h)-2.5rem),860px)] lg:grid-cols-12 lg:gap-x-8 lg:px-14 lg:py-10">
+        <div className="lg:col-span-6">
           <p className="eyebrow">{h.heroEyebrow}</p>
           <h1 id="home-hero-title" className="mt-4 font-display text-[clamp(2.4rem,3.9vw,3.4rem)] leading-[1.03] tracking-[-0.02em] text-on-lapis [@media(max-height:820px)]:text-[clamp(2.2rem,3.8vw,3.4rem)]">
             <BlurText
@@ -142,17 +149,14 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
           </div>
         </div>
 
-        <div className="lg:col-span-7">
+        <div className="lg:col-span-6">
           {books.length === 0 ? (
-            <div className="grid items-center gap-8 sm:grid-cols-[auto_1fr]" aria-hidden="true">
-              <Skeleton className="mx-auto aspect-[2/3] w-[min(260px,60vw)] bg-on-lapis/10 sm:mx-0" />
-              <div className="grid gap-3">
-                <Skeleton className="h-3 w-1/3 bg-on-lapis/10" />
-                <Skeleton className="h-8 w-4/5 bg-on-lapis/10" />
-                <Skeleton className="h-4 w-1/2 bg-on-lapis/10" />
-                <Skeleton className="mt-2 h-16 w-full bg-on-lapis/10" />
-                <Skeleton className="mt-2 h-9 w-2/5 rounded-full bg-on-lapis/10" />
-              </div>
+            <div className="mx-auto grid w-full max-w-[440px] justify-items-center gap-4" aria-hidden="true">
+              <Skeleton className="aspect-[2/3] w-[min(290px,64%)] bg-on-lapis/10" />
+              <Skeleton className="mt-6 h-3 w-1/3 bg-on-lapis/10" />
+              <Skeleton className="h-8 w-3/5 bg-on-lapis/10" />
+              <Skeleton className="h-4 w-2/5 bg-on-lapis/10" />
+              <Skeleton className="h-12 w-4/5 bg-on-lapis/10" />
             </div>
           ) : (
             <div
@@ -165,17 +169,17 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
               onMouseLeave={() => setHovered(false)}
               onFocus={() => setFocused(true)}
               onBlur={onBlur}
-              className="grid items-center gap-x-10 gap-y-6 rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-8 focus-visible:ring-offset-transparent sm:grid-cols-[auto_minmax(0,1fr)]"
+              className="mx-auto w-full max-w-[520px] rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-8 focus-visible:ring-offset-transparent"
             >
-              {/* The deck: the current cover in front, the next two fanned out behind it to the right. The cover leaving
-                  slides away to the left. The front cover stands on a glossy floor with a soft mirror image. */}
-              <div className="relative mx-auto w-[min(250px,52vw,calc((84svh-var(--header-h)-13rem)*0.6))] sm:mx-0 sm:mr-20">
-                <span className="pointer-events-none absolute left-1/2 top-[42%] -z-10 size-[190%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(130_160_255/0.3),transparent)]" aria-hidden="true" />
-                <div className="relative aspect-[2/3]">
+              {/* The stack: the current cover in front, its neighbours peeking out behind on each side; every cover stands
+                  on a glossy floor with a soft mirror image. Click a neighbour to bring it forward. */}
+              <div className="relative mx-auto w-[min(300px,58%,calc((100svh-var(--header-h)-23rem)*0.56))]">
+                <span className="pointer-events-none absolute left-1/2 top-[42%] -z-10 size-[210%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(130_160_255/0.3),transparent)]" aria-hidden="true" />
+                <div className="relative aspect-[2/3] [perspective:1400px]">
                   {books.map((book, i) => {
                     const n = books.length;
                     const off = ((i - index + n) % n + n) % n;
-                    const pos = off === 0 ? "front" : off === 1 ? "next" : off === 2 ? "far-next" : off === n - 1 ? "prev" : "hidden";
+                    const pos = off === 0 ? "front" : off === 1 ? "next" : off === n - 1 ? "prev" : off === 2 ? "far-next" : off === n - 2 ? "far-prev" : "hidden";
                     if (pos === "hidden") return null;
                     const front = pos === "front";
                     return (
@@ -199,54 +203,61 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                     );
                   })}
                 </div>
-                <span className="pointer-events-none absolute -left-1/4 -right-1/2 top-[86.2%] block h-px bg-[linear-gradient(90deg,transparent,rgb(255_255_255/0.22)_40%,transparent)]" aria-hidden="true" />
-                <div className="aspect-[25/6]" aria-hidden="true" />
+                <span className="pointer-events-none absolute left-1/2 top-[88.2%] block h-px w-[200%] -translate-x-1/2 bg-[linear-gradient(90deg,transparent,rgb(255_255_255/0.22),transparent)]" aria-hidden="true" />
+                <div className="aspect-[5/1]" aria-hidden="true" />
               </div>
 
-              {/* The book's details, left-aligned beside the cover, with the slide controls at the bottom. */}
               {current ? (
-                <div className="flex min-w-0 flex-col sm:pb-10">
+                <div className="text-center">
                   <div aria-live={autoplaying ? "off" : "polite"} aria-atomic="true">
-                    <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-on-lapis-muted">
-                      <span className="h-px w-6 bg-gold/70" aria-hidden="true" />
-                      {label ?? h.topRated} <span className="tabular-nums opacity-80">{h.nOfM(index + 1, books.length)}</span>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-on-lapis-muted">
+                      {label ?? h.topRated} <span className="ml-1.5 tabular-nums opacity-80">{h.nOfM(index + 1, books.length)}</span>
                     </p>
                     <div key={current.id} className="hero-caption">
-                      <p className="mt-3 line-clamp-2 font-display text-[clamp(1.6rem,2.2vw,2.1rem)] leading-[1.1] text-on-lapis">
+                      <p className="mt-2 truncate font-display text-[clamp(1.6rem,2.1vw,2rem)] leading-tight text-on-lapis">
                         <Link to={`/books/${current.id}`} className="underline-offset-4 hover:underline">
                           {current.title}
                         </Link>
                       </p>
-                      <p className="mt-1.5 truncate text-[15px] text-on-lapis-muted">{h.by(authorNames(current.authors) || h.unknownAuthor)}</p>
-                      <div className="mt-4 empty:hidden sm:min-h-[4.9rem] sm:empty:block">
+                      <p className="mt-1.5 flex items-center justify-center gap-2.5 text-[15px] text-on-lapis-muted">
+                        <span className="truncate">{h.by(authorNames(current.authors) || h.unknownAuthor)}</span>
+                        <span className="inline-flex h-7 shrink-0 items-center rounded-full bg-gold/15 px-3 text-sm font-semibold tabular-nums text-gold ring-1 ring-inset ring-gold/35">
+                          {h.from(formatMoney(current.price_from_usd, current.price_from_khr, currency))}
+                        </span>
+                      </p>
+                      {/* A short description, or (when the book has none) a line of facts. The slot keeps one height and
+                          centres what it holds, so the controls never jump and there is no empty gap. */}
+                      <div className="mx-auto mt-3 flex min-h-[4.6rem] max-w-md items-center justify-center">
                         {blurb ? (
-                          <p className="line-clamp-3 text-[15px] leading-relaxed text-on-lapis/85">{blurb}</p>
+                          <p className="line-clamp-3 text-[15px] leading-relaxed text-on-lapis/80">{blurb}</p>
                         ) : detail.isPending && current.id ? (
-                          <span className="grid gap-2 pt-1" aria-hidden="true">
+                          <span className="grid w-full justify-items-center gap-2" aria-hidden="true">
                             <Skeleton className="h-3 w-11/12 bg-on-lapis/10" />
                             <Skeleton className="h-3 w-4/5 bg-on-lapis/10" />
                             <Skeleton className="h-3 w-3/5 bg-on-lapis/10" />
                           </span>
+                        ) : facts.length ? (
+                          <ul className="flex flex-wrap items-center justify-center gap-2">
+                            {facts.map((fact) => (
+                              <li key={fact} className="rounded-full bg-on-lapis/[0.08] px-3 py-1 text-[13px] font-medium text-on-lapis/85 ring-1 ring-inset ring-on-lapis/15">{fact}</li>
+                            ))}
+                          </ul>
                         ) : null}
-                      </div>
-                      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
-                        <span className="inline-flex h-9 items-center rounded-full bg-gold/15 px-4 text-[15px] font-semibold tabular-nums text-gold ring-1 ring-inset ring-gold/35">
-                          {h.from(formatMoney(current.price_from_usd, current.price_from_khr, currency))}
-                        </span>
-                        <Link to={`/books/${current.id}`} className="group/vb inline-flex min-h-11 items-center gap-1.5 text-[15px] font-semibold text-on-lapis underline-offset-[6px] hover:underline">
-                          {h.viewBook} <ArrowRight className="size-4 transition-transform duration-200 group-hover/vb:translate-x-0.5" aria-hidden="true" />
-                        </Link>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-7 flex items-center gap-3">
+                  <div className="mt-4 flex items-center justify-center gap-3">
                     <button type="button" onClick={() => step(-1)} className={iconButton} aria-label={h.prevBook}>
                       <ChevronLeft className="size-4" aria-hidden="true" />
                     </button>
-                    <span className="block h-0.5 min-w-16 max-w-40 flex-1 overflow-hidden rounded-full bg-on-lapis-muted/25" aria-hidden="true">
-                      <span key={`${index}-${autoplaying}`} className="hero-timer block h-full origin-left bg-gold" style={autoplaying ? { animationDuration: `${SLIDE_MS}ms` } : { animation: "none", transform: "scaleX(1)" }} />
-                    </span>
+                    <Link to={`/books/${current.id}`} className="group/vb relative inline-flex h-10 items-center gap-1.5 overflow-hidden rounded-full border border-on-lapis-muted/45 px-5 text-sm font-semibold text-on-lapis transition-colors hover:bg-on-lapis/10">
+                      {h.viewBook} <ArrowRight className="size-4 transition-transform duration-200 group-hover/vb:translate-x-0.5" aria-hidden="true" />
+                      {/* the slide timer runs along the bottom edge of the button */}
+                      <span className="absolute inset-x-4 bottom-0 h-0.5 overflow-hidden rounded-full" aria-hidden="true">
+                        <span key={`${index}-${autoplaying}`} className="hero-timer block h-full origin-left bg-gold" style={autoplaying ? { animationDuration: `${SLIDE_MS}ms` } : { animation: "none", transform: "scaleX(0)" }} />
+                      </span>
+                    </Link>
                     <button type="button" onClick={() => step(1)} className={iconButton} aria-label={h.nextBook}>
                       <ChevronRight className="size-4" aria-hidden="true" />
                     </button>

@@ -1228,13 +1228,13 @@
 @media (prefers-reduced-motion: reduce) { .coming-ghost { animation: none; } }
 
 /* Home hero cover stack: the front cover with its neighbours peeking out behind. */
-.hero-card { transition: transform 750ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 500ms ease, filter 600ms ease; will-change: transform; transform-origin: 50% 100%; }
+.hero-card { transition: transform 750ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 500ms ease, filter 600ms ease; will-change: transform; }
 .hero-card[data-pos="front"] { z-index: 3; }
-.hero-card[data-pos="next"] { z-index: 2; transform: translate(11%, -3%) rotate(4deg) scale(0.93); filter: brightness(0.62) saturate(0.8); }
-.hero-card[data-pos="far-next"] { z-index: 1; transform: translate(20%, -5%) rotate(8deg) scale(0.86); filter: brightness(0.45) saturate(0.7); }
-.hero-card[data-pos="prev"] { z-index: 4; transform: translate(-55%, 4%) rotate(-10deg) scale(0.92); opacity: 0; pointer-events: none; }
-.hero-card[data-pos="next"]:hover { filter: brightness(0.8) saturate(0.9); }
-.hero-card:not([data-pos="front"]) .hero-reflect { opacity: 0; }
+.hero-card[data-pos="next"] { z-index: 2; transform: translateX(44%) scale(0.8) rotateY(-12deg); opacity: 0.75; filter: saturate(0.75) brightness(0.62); }
+.hero-card[data-pos="prev"] { z-index: 2; transform: translateX(-44%) scale(0.8) rotateY(12deg); opacity: 0.75; filter: saturate(0.75) brightness(0.62); }
+.hero-card[data-pos="far-next"] { z-index: 1; transform: translateX(78%) scale(0.62); opacity: 0; }
+.hero-card[data-pos="far-prev"] { z-index: 1; transform: translateX(-78%) scale(0.62); opacity: 0; }
+.hero-card[data-pos="next"]:hover, .hero-card[data-pos="prev"]:hover { opacity: 1; filter: saturate(0.9) brightness(0.8); }
 .hero-reflect { transition: opacity 500ms ease; }
 @media (prefers-reduced-motion: reduce) { .hero-card { transition: none; } }
 /* Home shelf: the row of spines fades into the paper at both ends. */

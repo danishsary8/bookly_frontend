@@ -1353,6 +1353,7 @@ export const km: Translations = {
     nextBook: "សៀវភៅបន្ទាប់",
     playSlides: "ចាក់ស្លាយ",
     pauseSlides: "ផ្អាកស្លាយ",
+    pageCount: (n: number) => `${n} ទំព័រ`,
     showBook: (title: string) => `បង្ហាញ ${title}`,
     inDays: (n: number) => (n <= 0 ? "ចេញថ្ងៃនេះ" : n === 1 ? "ថ្ងៃស្អែក" : `ក្នុងរយៈពេល ${n} ថ្ងៃទៀត`),
     releaseTimeline: "កាលវិភាគចេញផ្សាយ",

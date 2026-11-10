@@ -46,3 +46,9 @@ On `/` the header search hides (fade) while the hero search is on screen, and re
 - Descriptions that only repeat the title and author (fewer than about eight other words) are hidden.
 - Calmer surface: even left-to-right lapis overlay instead of the dark corner vignette, spine texture at 3%.
 - Height: 84% of the screen under the header (540–740px), so the next section's heading shows below on a typical laptop.
+
+## Hero v4 (2026-11-10, owner preferred the centred layout)
+- Right side back to the centred stack: current cover in front on a glossy floor, neighbours peeking at ±44% (scale 0.8, turned 12° away, dimmed); up to 300px wide, sized from the screen height so the hero fits under the header.
+- Caption centred: "Popular books · n of N", title, author with a gold price chip, then one fixed-height slot (vertically centred): the short description, or — when the book has none or it only repeats title and author — up to three fact chips (formats, year, pages). The controls never move between slides.
+- Controls: prev, View book (outlined; the gold slide timer runs along its bottom edge), next, pause.
+- Left side keeps the v3 changes (one CTA, three quiet category links, calmer background); the two columns are now equal.

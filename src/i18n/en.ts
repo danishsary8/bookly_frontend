@@ -1347,6 +1347,7 @@ export const en = {
     nextBook: "Next book",
     playSlides: "Play slideshow",
     pauseSlides: "Pause slideshow",
+    pageCount: (n: number) => `${n} pages`,
     showBook: (title: string) => `Show ${title}`,
     inDays: (n: number) => (n <= 0 ? "Out today" : n === 1 ? "Tomorrow" : `In ${n} days`),
     releaseTimeline: "Release timeline",
