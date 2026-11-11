@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, RotateCcw, Truck, Wallet } from "lucide-react";
+import { ArrowRight, QrCode, RotateCcw, Truck, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { BookShelf } from "@/components/catalog/BookShelf";
@@ -16,6 +16,7 @@ import AnimatedContent from "@/components/AnimatedContent";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useRecentlyViewed } from "@/stores/recentlyViewed";
+import { cn } from "@/lib/utils";
 import { useT } from "@/i18n";
 
 /*
@@ -43,6 +44,7 @@ function SectionHeading({ id, eyebrow, title, action }: { id: string; eyebrow: s
 
 const promises = [
   { Icon: Wallet, title: "cod", text: "codText" },
+  { Icon: QrCode, title: "khqr", text: "khqrText" },
   { Icon: Truck, title: "delivery", text: "deliveryText" },
   { Icon: RotateCcw, title: "returns", text: "returnsText" },
 ] as const;
@@ -139,20 +141,34 @@ featured={popular.isPending && picks.isPending ? undefined : featured}
             />
           );
         })}
-        {/* Why shop here: one calm band, three promises divided by hairlines. */}
-        <ul aria-label={h.why} className="grid overflow-hidden rounded-2xl border border-border bg-card sm:grid-cols-3">
-          {promises.map(({ Icon, title, text }) => (
-            <li key={title} className="group flex items-start gap-4 border-border p-6 [&:not(:first-child)]:border-t sm:[&:not(:first-child)]:border-l sm:[&:not(:first-child)]:border-t-0">
-              <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-lapis-tint text-primary transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105 motion-reduce:group-hover:transform-none">
-                <Icon className="size-[22px]" aria-hidden="true" />
-              </span>
-              <span>
-                <span className="block font-display text-lg leading-tight">{h[title]}</span>
-                <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">{h[text]}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
+        {/* Why shop here (home refresh 2026-11-11): a lapis band in the hero's and bookplate's language — a fine gold frame,
+            the label in gold, four promises with gold-ringed icons, divided by gold hairlines. Facts only. */}
+        <section aria-labelledby="promises-title" className="hero-lapis promise-band relative overflow-hidden rounded-3xl p-2 sm:p-3">
+          <div className="promise-frame relative grid gap-6 rounded-[1.1rem] px-6 py-8 sm:px-10 lg:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] lg:items-center lg:gap-10 lg:py-10">
+            <div>
+              <p className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.24em] text-gold">
+                <span className="h-px w-8 bg-current opacity-70" aria-hidden="true" />
+                Bookly
+              </p>
+              <h2 id="promises-title" className="mt-3 font-display text-[1.9rem] leading-[1.1] text-on-lapis">
+                {h.why}
+              </h2>
+            </div>
+            <ul className="grid gap-x-8 gap-y-6 sm:grid-cols-2 xl:grid-cols-4">
+              {promises.map(({ Icon, title, text }, i) => (
+                <li key={title} className={cn("group grid content-start gap-3", i > 0 && "xl:border-l xl:border-gold/25 xl:pl-8")}>
+                  <span className="grid size-12 place-items-center rounded-full text-gold ring-1 ring-gold/50 transition-[transform,background-color] duration-300 group-hover:-translate-y-0.5 group-hover:bg-gold/10 motion-reduce:transform-none">
+                    <Icon className="size-[22px]" strokeWidth={1.75} aria-hidden="true" />
+                  </span>
+                  <span>
+                    <span className="block font-display text-[1.2rem] leading-tight text-on-lapis">{h[title]}</span>
+                    <span className="mt-1 block text-sm leading-relaxed text-on-lapis-muted">{h[text]}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
       </div>
     </div>
   );
