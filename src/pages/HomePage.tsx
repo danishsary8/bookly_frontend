@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, QrCode, RotateCcw, Truck, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
@@ -6,6 +7,7 @@ import { BookShelf } from "@/components/catalog/BookShelf";
 import { collectionQueries, collectionText } from "@/api/endpoints/collections";
 import { CategoryTiles } from "@/components/home/CategoryTiles";
 import { HomeHero } from "@/components/home/HomeHero";
+import { HomePageSkeleton } from "@/components/home/HomePageSkeleton";
 import { ContinueStrip } from "@/components/home/ContinueStrip";
 import { TopRated } from "@/components/home/TopRated";
 import { ComingSoon } from "@/components/home/ComingSoon";
@@ -19,6 +21,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useRecentlyViewed } from "@/stores/recentlyViewed";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n";
+import { ErrorState } from "@/components/ui/error-state";
 
 /*
  * Home (pages/home.md): search-first hero → 3D shelf → continue strip → categories → staff picks →
@@ -50,23 +53,57 @@ const promises = [
   { Icon: RotateCcw, title: "returns", text: "returnsText" },
 ] as const;
 
+// Owner's hero selections: Atomic Habits, then The 48 Laws of Power.
+const HERO_SPOTLIGHT_IDS = [408, 409];
+
 export default function HomePage() {
   useDocumentTitle("Bookly");
   const { dict, lang } = useT();
   const h = dict.homePage;
+  const queryClient = useQueryClient();
   // Seasonal collections (owner 2026-11-01): up to 2 live ones, above New arrivals. None, or an older API: no row.
   const collections = useQuery(collectionQueries.live());
   // Hero carousel (owner 2026-11-11): 20 books dealt in turns from staff picks + the most popular books, and from the
   // best sellers of each big category (self-help, comics, kids …), so the slides mix genres.
   const picks = useQuery({ queryKey: ["reading-lists", "picks"], queryFn: readingListsApi.picks });
   const popular = useQuery(catalogQueries.books({ sort: "best_selling", per_page: 15 }));
+  const spotlight = useQuery(catalogQueries.books({ ids: HERO_SPOTLIGHT_IDS.join(","), per_page: HERO_SPOTLIGHT_IDS.length }));
   const picked = (picks.data ?? []).flatMap((list) => list.books.flatMap((entry) => (entry.book ? [entry.book] : [])));
   const mixed = useCategoryLanes();
   const newest = useQuery(catalogQueries.books({ sort: "newest", per_page: 12 }));
-  const featured = interleave([[...picked, ...(popular.data?.data ?? [])], ...mixed.lanes], 20);
-  const heroLoading = (popular.isPending && picks.isPending) || mixed.pending;
+  const spotlightBooks = HERO_SPOTLIGHT_IDS.flatMap((id) => spotlight.data?.data.find((book) => book.id === id) ?? []);
+  const featured = [...spotlightBooks, ...interleave([[...picked, ...(popular.data?.data ?? [])], ...mixed.lanes], 20)]
+    .filter((book, index, books) => books.findIndex((other) => other.id === book.id) === index)
+    .slice(0, 20);
+  const heroLoading = (popular.isPending && picks.isPending) || mixed.pending || spotlight.isPending;
   const categories = useQuery(catalogQueries.categories());
   const recent = useRecentlyViewed();
+  const [homeReady, setHomeReady] = useState(false);
+  const initialDataPending = heroLoading || newest.isPending || categories.isPending;
+  const initialError = !initialDataPending && featured.length === 0 && popular.isError ? popular.error : null;
+  const firstCoverUrls = featured.slice(0, 3).flatMap((book) => book.cover_image_url ? [book.cover_image_url] : []).join("\n");
+
+  useEffect(() => {
+    if (homeReady || initialDataPending) return;
+    let cancelled = false;
+    const images: HTMLImageElement[] = [];
+    const reveal = () => { if (!cancelled) setHomeReady(true); };
+    // A stalled image host must not trap visitors behind a page skeleton forever.
+    const timeout = window.setTimeout(reveal, 8000);
+    const urls = firstCoverUrls ? firstCoverUrls.split("\n") : [];
+    Promise.all(urls.map((url) => new Promise<void>((resolve) => {
+      const image = new Image();
+      images.push(image);
+      image.onload = image.onerror = () => resolve();
+      image.src = url;
+      if (image.complete) resolve();
+    }))).then(reveal);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+      images.forEach((image) => { image.onload = image.onerror = null; });
+    };
+  }, [homeReady, initialDataPending, firstCoverUrls]);
 
   const websiteJsonLd = {
     "@context": "https://schema.org",
@@ -86,7 +123,11 @@ export default function HomePage() {
   };
 
   return (
-    <div className="home-paper overflow-x-clip pb-16">
+    <>
+    {!homeReady ? <HomePageSkeleton /> : null}
+    {homeReady && initialError ? <div className="container-shell py-12"><ErrorState error={initialError} showHomeLink={false} onRetry={() => { setHomeReady(false); void queryClient.invalidateQueries({ queryKey: ["catalog"] }); }} /></div> : null}
+    {/* Keep section queries mounted in parallel, while the initial page is visually and accessibly hidden. */}
+    <div hidden={!homeReady || Boolean(initialError)} className={cn("home-paper overflow-x-clip pb-16", (!homeReady || initialError) && "hidden")}>
       <JsonLd data={websiteJsonLd} />
       <HomeHero featured={heroLoading ? undefined : featured} label={dict.home.popularBooks} />
       {/* The 3D shelf sits on the same page colour as everything else (one calm background, no band). */}
@@ -172,5 +213,6 @@ export default function HomePage() {
         </section>
       </div>
     </div>
+    </>
   );
 }

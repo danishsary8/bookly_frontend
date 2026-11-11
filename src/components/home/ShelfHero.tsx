@@ -1,12 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useReducedMotion } from "motion/react";
-import { ArrowLeft, ArrowRight, ShoppingBag } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { catalogApi } from "@/api/endpoints/catalog";
+import { catalogApi, catalogQueries } from "@/api/endpoints/catalog";
 import type { BookCard } from "@/api/types";
-import { useAddToCart } from "@/components/catalog/useCatalogActions";
-import { interleave, useCategoryLanes } from "@/components/home/useMixedPicks";
 import { ReaderScore } from "@/components/ReaderScore";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
@@ -18,16 +16,14 @@ import { useT } from "@/i18n";
  * slightly different thickness, a spine in its cover's colour, the full title and the author's surname. The book in the middle is pulled
  * out and turned so its cover faces you, tilted a little and leaning towards the cursor.
  * Change book: click a spine, the arrows, a row tab, drag, or ←/→ while the shelf has focus; it also drifts on by itself
- * every few seconds until someone interacts. Click the cover to open the book; Add to cart flies the cover to the cart.
+ * every few seconds until someone interacts. Click the cover or View book to open the book.
  * The whole section is sized to fit one laptop screen. One rAF loop drives every book (pure CSS 3D, no WebGL), and it
  * stops while the shelf is off screen. Reduced motion: books snap, no autoplay, no tilt, no entrance slide.
  */
 
-/** "mixed" (the first tab, owner 2026-11-11): best sellers from every big category, dealt in turns. */
-type RowId = "mixed" | "best_sellers" | "new_arrivals" | "coming_soon" | "ebook_deals";
-const ROWS: RowId[] = ["mixed", "best_sellers", "new_arrivals", "coming_soon", "ebook_deals"];
+type RowId = "best_sellers" | "new_arrivals" | "coming_soon" | "ebook_deals";
+const ROWS: RowId[] = ["best_sellers", "new_arrivals", "coming_soon", "ebook_deals"];
 const ROW_LINK: Record<RowId, string> = {
-  mixed: "/books",
   best_sellers: "/books?sort=best_selling",
   new_arrivals: "/books?sort=newest",
   coming_soon: "/books?coming_soon=1&sort=release_soon",
@@ -36,9 +32,9 @@ const ROW_LINK: Record<RowId, string> = {
 /** Book-cloth colours for spines until (or unless) a cover's own colour can be read. */
 const CLOTH = ["#14207A", "#7A2E2A", "#2F5D4A", "#C9A24B", "#4C5378", "#8A5A3B", "#1E4E5C", "#5B2A4E", "#E9E1CF", "#A0522D"];
 const AUTOPLAY_MS = 3200;
-/** The shelf is a framed row (about 13 spines beside the open book), not an edge-to-edge wall. */
-const SHELF_MAX = 1320;
-const SPINES = 15;
+/** A slightly wider shelf with slimmer cloth spines around the open book. */
+const SHELF_MAX = 1440;
+const SPINES = 20;
 
 /** light: dark ink on the spine. gold: the gold surname still reaches 4.5:1 on this colour (else cream). */
 type Tone = { bg: string; light: boolean; gold: boolean };
@@ -132,13 +128,15 @@ export function ShelfHero() {
   const { dict } = useT();
   const h = dict.homePage;
   const rows = useQuery({ queryKey: ["catalog", "rows", null], queryFn: () => catalogApi.rows(), staleTime: 15 * 60 * 1000 });
-  const mixed = useCategoryLanes();
-  const [row, setRow] = useState<RowId>("mixed");
+  // The compact /catalog/rows preview is too short for this endless shelf.
+  const bestSellers = useQuery(catalogQueries.books({ sort: "best_selling", per_page: 24 }));
+  const [row, setRow] = useState<RowId>("best_sellers");
 
-  const booksOf = (id: RowId) => (id === "mixed" ? interleave(mixed.lanes, 16) : (rows.data?.find((r) => r.id === id)?.books ?? []).slice(0, 12));
+  const booksOf = (id: RowId) => id === "best_sellers"
+    ? (bestSellers.data?.data ?? (bestSellers.isError ? rows.data?.find((r) => r.id === id)?.books : undefined) ?? [])
+    : (rows.data?.find((r) => r.id === id)?.books ?? []).slice(0, 12);
   const available = ROWS.filter((id) => booksOf(id).length >= 3);
-  // Wait for the mixed row before choosing, so the shelf doesn't open on Best sellers and then jump.
-  const current = available.includes(row) ? row : mixed.pending ? row : (available[0] ?? "best_sellers");
+  const current = available.includes(row) ? row : bestSellers.isPending || rows.isPending ? row : (available[0] ?? "best_sellers");
   const books = booksOf(current);
   const tones = useCoverTones(books.flatMap((b) => (b.cover_image_url ? [b.cover_image_url] : [])));
   const list = books.length >= 3 ? books : Array.from({ length: 9 }, () => null);
@@ -169,7 +167,7 @@ export function ShelfHero() {
       </div>
 
       {/* Row tabs (blue pill behind the active one) and, on the right, a link to the whole list. */}
-      <div className="relative z-10 mx-auto mt-4 flex max-w-[1320px] flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 md:justify-between">
+      <div className="relative z-10 mx-auto mt-4 flex max-w-[1440px] flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 md:justify-between">
         <span className="hidden w-44 md:block" aria-hidden="true" />
         {available.length > 1 ? (
           <nav aria-label={h.browse}>
@@ -194,7 +192,7 @@ export function ShelfHero() {
           </nav>
         ) : <span />}
         <Link to={ROW_LINK[current]} className="group/all inline-flex min-h-11 w-44 items-center justify-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline md:justify-end">
-          {current === "mixed" ? h.allBooks : h.seeAllRow(dict.shopExtras.rows[current])} <ArrowRight className="size-4 transition-transform duration-200 group-hover/all:translate-x-0.5" aria-hidden="true" />
+          {h.seeAllRow(dict.shopExtras.rows[current])} <ArrowRight className="size-4 transition-transform duration-200 group-hover/all:translate-x-0.5" aria-hidden="true" />
         </Link>
       </div>
 
@@ -209,7 +207,6 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
   const h = dict.homePage;
   const currency = useCurrency();
   const navigate = useNavigate();
-  const cart = useAddToCart();
   const reduce = useReducedMotion() ?? false;
   const n = items.length;
   const [dims, setDims] = useState({ H: 340, ws: 58, d: 227, gap: 9, W: 1440 });
@@ -230,7 +227,7 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
   useLayoutEffect(() => {
     const measure = () => {
       const H = Math.round(Math.max(190, Math.min((window.innerHeight - 440) / 1.12, window.innerWidth * 0.55, 380)));
-      setDims({ H, ws: H * 0.17, d: H * (2 / 3), gap: H * 0.03, W: window.innerWidth });
+      setDims({ H, ws: H * 0.14, d: H * (2 / 3), gap: H * 0.025, W: window.innerWidth });
     };
     measure();
     window.addEventListener("resize", measure);
@@ -433,7 +430,7 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
         onPointerCancel={endDrag}
         onPointerLeave={onLeave}
         className="shelf-stage shelf-enter relative mx-auto mt-3 cursor-grab select-none overflow-hidden peer outline-none [perspective:2200px] [touch-action:pan-y] active:cursor-grabbing"
-        style={{ height: stageH, maxWidth: width } as CSSProperties}
+        style={{ height: stageH, width: "calc(100% - 2rem)", maxWidth: width } as CSSProperties}
       >
         {/* the board's front lip: always the nearest thing, so it is drawn flat on top at its projected place */}
         <div className="shelf-lip pointer-events-none absolute left-1/2 z-[200] -translate-x-1/2" style={{ top: lipTop, width: width * 1.4, height: Math.max(9, H * 0.05 * lipScale) }} aria-hidden="true" />
@@ -447,7 +444,9 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
             const bw = ws * item.thick;
             const bd = bh * (2 / 3);
             const top = H / 2 - bh;
-            const long = item.title.length > 16;
+            // Keep subtitles on the paper label; the narrow spine carries the main title.
+            const spineTitle = item.title.split(/:\s+/)[0];
+            const long = spineTitle.length > 24;
             return (
               <div
                 key={`${item.id}-${v}`}
@@ -476,23 +475,24 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
                 {/* spine (front of the box) */}
                 <div
                   className={cn("shelf-face shelf-spine absolute flex flex-col items-center justify-between overflow-hidden rounded-[3px] py-3", item.tone.light ? "text-[#1B1A2E]" : "text-[#F6EFDF]")}
-                  style={{ width: bw, height: bh, left: -bw / 2, top, background: item.tone.bg, transform: `translateZ(${bd / 2}px)`, "--shade": "calc(var(--o, 0) * 0.55)" } as CSSProperties}
+                  style={{ width: bw, height: bh, left: -bw / 2, top, backgroundColor: item.tone.bg, transform: `translateZ(${bd / 2}px)`, "--shade": "calc(var(--o, 0) * 0.55)" } as CSSProperties}
                 >
-                  <span className={cn("h-px w-3/5", item.tone.light ? "bg-[#1B1A2E]/45" : "bg-[#E8C766]/70")} />
+                  <span aria-hidden="true" className={cn("h-1 w-3/5 border-y", item.tone.light ? "border-[#1B1A2E]/40" : "border-[#E8C766]/65")} />
                   <span
-                    className="shelf-title max-h-[64%] overflow-hidden text-center font-display leading-[1.08] [text-orientation:mixed] [writing-mode:vertical-rl]"
-                    style={{ fontSize: Math.max(10, bw * (long ? 0.25 : 0.31)), maxWidth: bw * 0.84 }}
+                    className="shelf-title max-h-[63%] overflow-hidden text-center font-display leading-[1.25] tracking-[0.015em] [text-orientation:mixed] [writing-mode:vertical-rl]"
+                    style={{ fontSize: Math.max(10, Math.min(17, bw * (long ? 0.25 : 0.32))), maxWidth: bw * 0.72 }}
                   >
-                    {item.title}
+                    {spineTitle}
                   </span>
                   <span className="grid justify-items-center gap-1.5">
                     <span className={cn("h-px w-3/5", item.tone.light ? "bg-[#1B1A2E]/45" : "bg-[#E8C766]/70")} />
                     <span
                       className={cn("max-h-[5.5em] overflow-hidden whitespace-nowrap font-semibold uppercase tracking-[0.12em] [writing-mode:vertical-rl]", item.tone.light ? "text-[#1B1A2E]" : item.tone.gold ? "text-[#E8C766]" : "text-[#F6EFDF]")}
-                      style={{ fontSize: Math.max(8, bw * 0.17) }}
+                      style={{ fontSize: Math.max(8, Math.min(10, bw * 0.18)) }}
                     >
                       {item.surname}
                     </span>
+                    <span aria-hidden="true" className={cn("size-1 rotate-45 border", item.tone.light ? "border-[#1B1A2E]/45" : "border-[#E8C766]/70")} />
                   </span>
                 </div>
                 {/* front cover (right side of the box) */}
@@ -527,51 +527,44 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
       {/* The shelf's front rail (owner 2026-11-11): an oak plank hung under the board, in the board's own wood. Brass
           knobs at the ends turn the shelf; in the middle a brass label holder carries the book's paper label (cover,
           title, author and how many copies are left), then the price and the actions straight on the wood. */}
-      <div className="relative z-10 mx-auto -mt-1 w-full max-w-[1180px] px-4 pb-8" aria-live="polite">
-        <div className="shelf-rail grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 rounded-b-[1.4rem] rounded-t-[3px] px-3 py-3 md:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] md:gap-x-5 md:px-4">
+      <div className="relative z-10 mx-auto -mt-1 pb-8" style={{ width: "calc(100% - 2rem)", maxWidth: width }} aria-live="polite">
+        <div className="shelf-rail grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 rounded-b-[1.4rem] rounded-t-[3px] px-3 py-3 lg:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] lg:gap-x-4 lg:px-4">
           <button type="button" onClick={() => go(-1)} aria-label={h.prevBook} className="shelf-knob">
             <ArrowLeft className="size-[18px]" aria-hidden="true" />
           </button>
           <div className="shelf-holder min-w-0 rounded-[9px] p-[5px]">
-            <div className="shelf-card flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1.5 rounded-[5px] px-3 py-2 md:flex-nowrap md:px-4">
+            <div className="shelf-card flex min-h-20 min-w-0 flex-wrap items-center gap-x-3 gap-y-2 overflow-hidden rounded-[5px] px-3 py-2 lg:flex-nowrap">
               {book?.cover_image_url ? (
-                <img key={`c-${shown?.id}`} src={book.cover_image_url} alt="" aria-hidden="true" className="shelf-roll hidden aspect-[2/3] w-11 shrink-0 rounded-[2px] object-cover shadow-[0_8px_14px_-8px_rgb(60_40_20/0.7)] md:block" />
+                <img key={`c-${shown?.id}`} src={book.cover_image_url} alt="" aria-hidden="true" className="hidden h-15 w-10 shrink-0 rounded-[2px] object-cover shadow-[0_8px_14px_-8px_rgb(60_40_20/0.7)] sm:block" />
               ) : null}
-              <div className="min-w-[9rem] flex-1 overflow-hidden">
-                <p key={`t-${shown?.id}`} className={cn("shelf-roll truncate font-display text-[clamp(1.1rem,1.5vw,1.32rem)] leading-tight text-[#1B1A2E]", dir < 0 && "shelf-roll-down")}>
+              <div className="min-w-0 flex-1">
+                <div className="overflow-hidden">
+                <p key={`t-${shown?.id}`} className={cn("shelf-roll line-clamp-2 font-display text-[clamp(1rem,1.4vw,1.25rem)] leading-snug text-[#1B1A2E]", dir < 0 && "shelf-roll-down")}>
                   {shown?.book ? shown.title : dict.splash.tagline}
                 </p>
+                </div>
+                <div className="overflow-hidden">
                 <p key={`a-${shown?.id}`} className={cn("shelf-roll mt-0.5 truncate text-[13px] text-[#5C5547] [animation-delay:60ms]", dir < 0 && "shelf-roll-down")}>
                   {shown?.book ? (shown.by ? h.by(shown.by) : h.unknownAuthor) : dict.shopExtras.rows[current]}
                 </p>
+                </div>
               </div>
-              {book ? <StockNote key={`s-${shown?.id}`} book={book} /> : null}
+              {book ? <div className="w-full lg:w-auto"><StockNote key={`s-${shown?.id}`} book={book} /></div> : null}
             </div>
           </div>
-          <button type="button" onClick={() => go(1)} aria-label={h.nextBook} className="shelf-knob md:order-last">
+          <button type="button" onClick={() => go(1)} aria-label={h.nextBook} className="shelf-knob lg:order-last">
             <ArrowRight className="size-[18px]" aria-hidden="true" />
           </button>
-          <div className="col-span-3 flex flex-col items-center gap-0.5 md:col-span-1 md:items-end">
+          <div className="col-span-3 flex items-center justify-between gap-4 px-2 lg:contents">
+          <div className="flex flex-col items-start gap-1 lg:items-end">
             {price ? <span className="whitespace-nowrap font-display text-[1.6rem] leading-none tabular-nums text-[#FBF6EC]">{price}</span> : null}
-            {book ? <ReaderScore book={book} className="text-[13px] text-[#F1DCBC] [&_.text-foreground]:text-[#FBF6EC]" /> : null}
+            {book ? <ReaderScore book={book} showCount={false} className="text-[13px] text-[#F1DCBC] [&_.text-foreground]:text-[#FBF6EC]" /> : null}
           </div>
-          <div className="col-span-3 flex items-center justify-center gap-2 md:col-span-1">
-            {book && book.in_stock !== false ? (
-              <button
-                type="button"
-                onClick={() => {
-                  const img = centre.current >= 0 ? tapes.current[centre.current]?.querySelector<HTMLImageElement>(".shelf-cover img") : null;
-                  cart.add(book, undefined, undefined, { from: img ?? null });
-                }}
-                disabled={cart.pendingBookId === book.id}
-                className="inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[0_10px_22px_-12px_rgb(0_0_0/0.7)] ring-1 ring-inset ring-white/10 transition-[filter,transform] hover:brightness-110 active:scale-[0.97] disabled:opacity-70"
-              >
-                <ShoppingBag className="size-4" aria-hidden="true" /> {h.addToCart}
-              </button>
-            ) : null}
+          <div className="flex items-center justify-center">
             <Link to={href} className="inline-flex h-11 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#F1DCBC]/45 px-4 text-sm font-semibold text-[#FBF6EC] transition-colors hover:bg-white/10">
               {book ? h.viewBook : dict.shopExtras.viewAll}
             </Link>
+          </div>
           </div>
         </div>
         {/* For screen readers always; shown on screen only while the shelf has keyboard focus. */}

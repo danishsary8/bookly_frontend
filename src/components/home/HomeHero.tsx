@@ -9,7 +9,6 @@ import { authorNames } from "@/components/catalog/bookMeta";
 import { useQuery } from "@tanstack/react-query";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { LiveSearch } from "@/components/shell/LiveSearch";
-import { CtaGlare } from "@/components/CtaGlare";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { useT } from "@/i18n";
@@ -88,10 +87,10 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
       ) : null}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(100deg,rgb(20_32_122/0.9)_0%,rgb(20_32_122/0.7)_45%,rgb(24_38_130/0.55)_100%)]" aria-hidden="true" />
 
-      <div className="grid grid-cols-1 items-center gap-12 px-6 py-12 sm:px-10 lg:h-[clamp(540px,calc(100svh-var(--header-h)-7rem),830px)] lg:grid-cols-12 lg:gap-x-8 lg:px-14 lg:py-6">
+      <div className="grid grid-cols-1 items-center gap-12 px-6 py-12 sm:px-10 [--hero-panel-height:min(920px,calc(100svh-var(--header-h)-4rem))] lg:h-[var(--hero-panel-height)] lg:grid-cols-12 lg:gap-x-8 lg:px-14 lg:py-6 short:py-5">
         <div className="relative z-10 lg:col-span-6">
           <p className="eyebrow">{h.heroEyebrow}</p>
-          <h1 id="home-hero-title" className="mt-4 font-display text-[clamp(2.4rem,3.9vw,3.4rem)] leading-[1.03] tracking-[-0.02em] text-on-lapis [@media(max-height:820px)]:text-[clamp(2.2rem,3.8vw,3.4rem)]">
+          <h1 id="home-hero-title" className="mt-4 font-display text-[clamp(2.4rem,3.9vw,3.4rem)] leading-[1.03] tracking-[-0.02em] text-on-lapis short:mt-3 short:text-[clamp(2rem,3.4vw,3rem)]">
             <BlurText
               key={lang}
               as="span"
@@ -104,17 +103,17 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
               easing={[0.16, 1, 0.3, 1]}
             />
           </h1>
-          <p className="mt-4 max-w-xl text-[17px] leading-[1.6] text-on-lapis-muted">{dict.home.heroSubtitle}</p>
+          <p className="mt-4 max-w-xl text-[17px] leading-[1.6] text-on-lapis-muted short:mt-3 short:text-base">{dict.home.heroSubtitle}</p>
 
 
           {/* Search first: most visitors arrive knowing roughly what they want. */}
           <LiveSearch
             id="hero-search"
-            className="mt-8 max-w-xl [&>svg:first-of-type]:left-5 [&>svg:first-of-type]:size-5"
+            className="mt-8 max-w-xl short:mt-5 [&>svg:first-of-type]:left-5 [&>svg:first-of-type]:size-5"
             inputClassName="h-14 rounded-full border-transparent bg-card pl-14 pr-12 text-[17px] shadow-[0_18px_40px_-20px_rgb(0_0_0/0.6)] focus-visible:ring-gold focus-visible:ring-offset-transparent"
           />
           {topCategories.length ? (
-            <nav aria-label={h.popularCategories} className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+            <nav aria-label={h.popularCategories} className="mt-4 flex flex-wrap items-center gap-2 text-sm short:mt-3">
               <span className="mr-1 text-[13px] text-on-lapis-muted">{h.popularCategories}</span>
               {topCategories.map((c) => (
                 <Link
@@ -128,18 +127,16 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
             </nav>
           ) : null}
           {/* One calm call to action (cream on lapis, the arrow in its own lapis disc) and the shop's two promises. */}
-          <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
-            <CtaGlare>
+          <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4 short:mt-5">
               <Link
                 to="/books"
-                className="group/cta inline-flex h-[3.25rem] items-center gap-3 rounded-full bg-[#FBF6EC] py-1.5 pl-6 pr-1.5 text-[15px] font-semibold text-primary shadow-[0_18px_36px_-18px_rgb(0_0_0/0.6)] transition-[box-shadow,scale] duration-200 hover:shadow-[0_22px_40px_-16px_rgb(0_0_0/0.65)] active:scale-[0.98] motion-reduce:active:scale-100"
+                className="hero-catalogue-cta relative isolate inline-flex h-[3.25rem] shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap rounded-full bg-[#FBF6EC] py-1.5 pl-6 pr-1.5 text-[15px] font-semibold leading-none text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
               >
-                {dict.home.browseCatalogue}
-                <span className="grid size-10 place-items-center rounded-full bg-primary text-primary-foreground transition-transform duration-300 group-hover/cta:translate-x-0.5 group-hover/cta:-rotate-45 motion-reduce:transform-none">
+                <span className="relative">{dict.home.browseCatalogue}</span>
+                <span className="relative grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </span>
               </Link>
-            </CtaGlare>
             <ul className="grid gap-1.5 text-[13px] text-on-lapis-muted">
               <li className="inline-flex items-center gap-2"><Wallet className="size-4 text-gold" aria-hidden="true" /> {h.cod}</li>
               <li className="inline-flex items-center gap-2"><QrCode className="size-4 text-gold" aria-hidden="true" /> {h.khqr}</li>
@@ -167,7 +164,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
               onMouseLeave={() => setHovered(false)}
               onFocus={() => setFocused(true)}
               onBlur={onBlur}
-              className="mx-auto w-full max-w-[520px] rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-8 focus-visible:ring-offset-transparent"
+              className="mx-auto w-full max-w-[520px] rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-8 focus-visible:ring-offset-transparent lg:translate-y-2"
             >
               {/* The stack: the current cover in front, its neighbours peeking out behind on each side; every cover stands
                   on a glossy floor with a soft mirror image. Click a neighbour to bring it forward. */}
@@ -182,7 +179,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                   e.currentTarget.style.setProperty("--tilt-y", "0deg");
                   e.currentTarget.style.setProperty("--tilt-x", "0deg");
                 }}
-                className="hero-stack relative mx-auto w-[min(360px,64%,calc((100svh-var(--header-h)-22.5rem)*0.6))]"
+                className="hero-stack relative mx-auto w-[min(300px,60%)] lg:w-[min(340px,60%,calc((var(--hero-panel-height)-14rem)*0.6))]"
               >
                 <span className="pointer-events-none absolute left-1/2 top-[42%] -z-10 size-[210%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(130_160_255/0.3),transparent)]" aria-hidden="true" />
                 <div className="relative aspect-[2/3] [perspective:1400px]">
@@ -224,13 +221,13 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                       {label ?? h.topRated} <span className="ml-1.5 tabular-nums opacity-80">{h.nOfM(index + 1, books.length)}</span>
                     </p>
                     <div key={current.id} className="hero-caption">
-                      <p className="mx-auto mt-2 line-clamp-2 max-w-[30ch] text-balance font-display text-[clamp(1.6rem,2.1vw,2rem)] leading-tight text-on-lapis">
+                      <p className="mx-auto mt-2 line-clamp-2 max-w-[30ch] text-balance font-display text-[clamp(1.25rem,1.5vw,1.5rem)] leading-[1.2] text-on-lapis">
                         <Link to={`/books/${current.id}`} className="underline-offset-4 hover:underline">
                           {current.title}
                         </Link>
                       </p>
-                      <p className="mt-1.5 flex items-center justify-center gap-2.5 text-[15px] text-on-lapis-muted">
-                        <span className="truncate">{h.by(authorNames(current.authors) || h.unknownAuthor)}</span>
+                      <p className="mt-2 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1.5 text-sm text-on-lapis-muted">
+                        <span className="min-w-0 max-w-full truncate">{h.by(authorNames(current.authors) || h.unknownAuthor)}</span>
                         <span className="inline-flex h-7 shrink-0 items-center rounded-full bg-gold/15 px-3 text-sm font-semibold tabular-nums text-gold ring-1 ring-inset ring-gold/35">
                           {h.from(formatMoney(current.price_from_usd, current.price_from_khr, currency))}
                         </span>

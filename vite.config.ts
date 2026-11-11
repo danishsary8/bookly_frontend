@@ -36,6 +36,15 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
+    server: {
+      // Forward local API requests server-side when the live API does not allow localhost via CORS.
+      proxy: env.VITE_DEV_API_TARGET ? {
+        "/api": {
+          target: env.VITE_DEV_API_TARGET,
+          changeOrigin: true,
+        },
+      } : undefined,
+    },
     build: {
       sourcemap: uploadSourceMaps ? "hidden" : false,
       // Never inline font files into the CSS: every page would download all of them, even subsets it never shows.

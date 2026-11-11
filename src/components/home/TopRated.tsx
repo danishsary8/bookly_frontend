@@ -5,6 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import type { BookCard } from "@/api/types";
 import CircularCarousel from "@/components/CircularCarousel";
+import { CoverColorWash } from "@/components/home/CoverColorWash";
 import { BookCover } from "@/components/catalog/BookCover";
 import { authorNames, hasScore } from "@/components/catalog/bookMeta";
 import { useAddToCart } from "@/components/catalog/useCatalogActions";
@@ -15,6 +16,7 @@ import { toNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { useT } from "@/i18n";
+import demoReviews from "@/data/topRatedDemo.json";
 
 /*
  * Home "Top rated" (pages/home.md): the top 10 by rating. Left, a showcase panel: the ten covers on a slowly turning
@@ -26,6 +28,7 @@ import { useT } from "@/i18n";
  */
 
 const scoreOf = (b: BookCard) => (toNumber(b.review_count) > 0 && toNumber(b.rating_avg) > 0 ? toNumber(b.rating_avg) : toNumber(b.reader_rating));
+const demoEnabled = import.meta.env.DEV && import.meta.env.VITE_DEMO_REVIEWS === "true";
 
 export function TopRated() {
   const { dict } = useT();
@@ -34,11 +37,14 @@ export function TopRated() {
   const cart = useAddToCart();
   const navigate = useNavigate();
   const query = useQuery(catalogQueries.books({ sort: "rating", per_page: 20 }));
-  // Ten rows: the rated books first (the API's rating order), then — only when fewer than ten have a rating — the next
-  // books from the same list, marked "Not rated yet". The heading says "Top 10 rated" only when all ten are rated.
-  const all = query.data?.data ?? [];
-  const scored = all.filter(hasScore);
-  const books = [...scored, ...all.filter((b) => !hasScore(b))].slice(0, 10);
+  // Local fixtures preview a complete Top 10 without changing the connected production catalog.
+  const all = (query.data?.data ?? []).map((book) => {
+    const demo = demoEnabled ? demoReviews.find((entry) => entry.title === book.title) : undefined;
+    return demo ? { ...book, review_count: demo.ratings.length, rating_avg: demo.ratings.reduce((sum, score) => sum + score, 0) / demo.ratings.length } : book;
+  });
+  // Only eligible scores belong in Top rated; never inflate low or missing real ratings.
+  const scored = all.filter((book) => hasScore(book) && scoreOf(book) >= 3.5).sort((a, b) => scoreOf(b) - scoreOf(a));
+  const books = scored.slice(0, 10);
   const [front, setFront] = useState(0);
   const [pick, setPick] = useState<number | undefined>(undefined);
 
@@ -54,7 +60,8 @@ export function TopRated() {
             <span className="h-px w-12 bg-current" aria-hidden="true" />
             {h.topRatedEyebrow}
           </p>
-          <h2 id="top-rated-title" className="mt-2 font-display text-[1.953rem] leading-tight">{scored.length >= 10 || query.isPending ? h.topTen : h.topTenBooks}</h2>
+          <h2 id="top-rated-title" className="mt-2 font-display text-[1.953rem] leading-tight">{scored.length >= 10 || query.isPending ? h.topTen : h.topRatedTitle}</h2>
+          {demoEnabled ? <p className="mt-2 text-xs text-muted-foreground">Demo ratings · sample reviews for local preview</p> : null}
         </div>
         <Link to="/books?sort=rating" className="inline-flex h-11 items-center gap-1.5 rounded-md px-2 text-[15px] font-semibold text-primary underline-offset-4 hover:underline">
           {dict.cards.seeAll} <ArrowRight className="size-4" aria-hidden="true" />
@@ -72,10 +79,8 @@ export function TopRated() {
         <div className="grid gap-5 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)]">
           {/* Showcase */}
           <div className="relative isolate flex flex-col overflow-hidden rounded-3xl border border-border bg-card">
-            {lead?.cover_image_url ? (
-              <img key={`wash-${lead.id}`} src={lead.cover_image_url} alt="" aria-hidden="true" className="hero-wash pointer-events-none absolute inset-0 -z-10 size-full scale-125 object-cover opacity-25 blur-3xl saturate-150" />
-            ) : null}
-            <span className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,transparent_30%,var(--card)_88%)]" aria-hidden="true" />
+            <CoverColorWash src={lead?.cover_image_url} sources={books.flatMap((book) => book.cover_image_url ? [book.cover_image_url] : [])} />
+            <span className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,transparent_45%,var(--card)_95%)]" aria-hidden="true" />
             <span className="absolute left-5 top-5 z-10 inline-flex items-center gap-1.5 rounded-full bg-[#1B1A2E] px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-gold shadow-sm">
               <Crown className="size-3.5" aria-hidden="true" /> {h.rank(front + 1)}
             </span>
@@ -127,16 +132,16 @@ export function TopRated() {
           </div>
 
           {/* The ranked list */}
-          <ol className="grid content-start gap-1" onMouseLeave={() => setPick(undefined)}>
+          <ol className="grid min-w-0 content-start gap-1" onMouseLeave={() => setPick(undefined)}>
             {books.map((book, i) => (
-              <li key={book.id}>
+              <li key={book.id} className="min-w-0">
                 <Link
                   to={`/books/${book.id}`}
                   onMouseEnter={() => setPick(i)}
                   onFocus={() => setPick(i)}
                   aria-current={i === front || undefined}
                   className={cn(
-                    "group relative flex items-center gap-3.5 rounded-xl border px-3 py-1 outline-none transition-[background-color,border-color,box-shadow] duration-300 focus-visible:ring-2 focus-visible:ring-ring",
+                    "group relative flex min-w-0 items-center gap-3.5 rounded-xl border px-3 py-1 outline-none transition-[background-color,border-color,box-shadow] duration-300 focus-visible:ring-2 focus-visible:ring-ring",
                     i === front ? "border-input bg-card shadow-[0_14px_28px_-22px_rgb(20_32_122/0.55)]" : "border-transparent hover:bg-card/70",
                   )}
                 >

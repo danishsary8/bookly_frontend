@@ -102,3 +102,29 @@ On `/` the header search hides (fade) while the hero search is on screen, and re
 - Coming soon: an endless marquee of premiere tickets (stub with the cover on its own colours, a perforation with notches,
   body with Pre-order/Announced, date, title, author, day countdown). Pauses on hover, focus and with a pause button;
   repeats and the second loop are `aria-hidden` and out of the tab order; reduced motion: no movement, scroll by hand.
+
+## Hero cover balance (2026-11-11)
+- Prioritize the cover over the book caption: desktop cover width is capped at 340px and 60% of its column, with height based on the actual hero panel rather than the viewport alone. On mobile it uses 60% of the column, up to 300px, without a viewport-height constraint.
+- Book titles use balanced wrapping at 20–24px, up to two lines. Author and price use a compact, wrapping row below. Keep room for the reflected cover and carousel controls.
+- Desktop panel height is `min(920px, 100svh - header - 4rem)`, leaving a modest bottom gutter. The cover sizing reserves 14rem for its caption, reflection, controls and breathing room; the carousel sits 8px lower to balance it against the left copy. Short screens tighten the left headline and vertical gaps so the full hero remains visible. Mobile keeps its natural stacked height.
+- Hero starts with Atomic Habits (catalog ID 408) and The 48 Laws of Power (409), then the genre mix, deduplicated and capped at 20 books. Use live catalog metadata and covers; unavailable selections simply fall back to the remaining mix.
+
+## Shelf alignment (2026-11-11)
+- The book stage and wooden information rail share the same calculated width, capped at 1440px with 16px side gutters. Their left and right edges align at every screen size.
+- The cream label holds a fixed thumbnail, two-line title, author and stock. Clip each rolling text line inside its own wrapper so caption changes stay inside the label.
+- Remove the rail's Add to cart action. Keep the price, View book link and brass previous/next controls. On smaller screens, stock sits below the title and price/View book share one row.
+- Shelf tabs start with Best sellers; remove Every genre from this section. Best sellers loads 24 distinct catalog entries rather than the compact rows preview. Other rows keep their existing previews.
+- Slimmer spines make room for more books across the wider shelf. Use subtle cloth grain and hinge shading, double head rules and a small foot ornament. Spine lettering uses the main title without its subtitle, with more line spacing; the cream label retains the full title.
+
+## Category card colors (2026-11-11)
+- Give cards soft cloth-inspired accents (burgundy, lapis, gold, forest, plum, teal), mixed into the theme's card surface. Keep existing foreground colors for readable titles and metadata in both themes.
+- Hover deepens the tint and border, adds a colored shadow and lifts the card 4px; covers fan out and the arrow moves forward. Keyboard focus has the matching tint, cover movement and a visible ring. Reduced motion disables movement; touch links work without hover.
+
+## Initial loading (2026-11-11)
+- Show a complete structural skeleton on the first visit: lapis hero with text/search/cover-stack shapes, shelf spines and information rail, six category tiles, new arrivals, Top 10 and lower sections. Reuse existing surface tokens and shimmer with static placeholders under reduced motion.
+- Keep real home sections mounted but hidden so their requests run in parallel without exposing partial content or focusable controls. Reveal after initial catalog queries settle and the first three hero covers load or fail; allow at most 8 seconds of additional image waiting.
+- Once revealed, background refetches never replace the whole page with a skeleton. Catalog failure without available books shows a retry state; explicit retry returns to initial loading.
+- Each BookCover independently keeps a shimmer until its image loads, fades the cover in, and falls back to its title on image failure. Reserve the 2:3 media ratio in all states.
+
+## Top rated background transitions (2026-11-11)
+- Keep cover-color wash images mounted and crossfade their opacity over 800ms. Decode the next selected cover before changing the visible wash; retain the previous color on loading failure and ignore stale loads after rapid selection changes. Reduced motion switches colors immediately. Do not reuse the hero wash entrance animation, which resets opacity to zero on every book change.

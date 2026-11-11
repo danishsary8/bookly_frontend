@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, type CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -17,6 +17,8 @@ import { useT } from "@/i18n";
  * fallback while the tree loads or if it fails.
  */
 const KEEP = 6;
+// Cloth-inspired accents keep the category cards related to the bookshelf.
+const CATEGORY_ACCENTS = ["#7A2E2A", "#14207A", "#C9A24B", "#2F5D4A", "#5B2A4E", "#1E4E5C"];
 type Top = { id?: number; slug?: string; name?: string; count: number; children: string[] };
 
 function Fan({ categoryId }: { categoryId?: number }) {
@@ -32,9 +34,9 @@ function Fan({ categoryId }: { categoryId?: number }) {
             key={i}
             className={cn(
               "absolute bottom-0 left-1/2 w-[4.2rem] origin-bottom transition-transform duration-500 ease-[cubic-bezier(.2,.8,.2,1)]",
-              i === 0 && "z-0 -translate-x-[105%] -rotate-[9deg] group-hover:-translate-x-[125%] group-hover:-rotate-[14deg]",
-              i === 1 && "z-10 -translate-x-1/2 -translate-y-1.5 group-hover:-translate-y-3",
-              i === 2 && "z-0 translate-x-[5%] rotate-[9deg] group-hover:translate-x-[25%] group-hover:rotate-[14deg]",
+              i === 0 && "z-0 -translate-x-[105%] -rotate-[9deg] motion-safe:group-hover:-translate-x-[125%] motion-safe:group-hover:-rotate-[14deg] motion-safe:group-focus-visible:-translate-x-[125%] motion-safe:group-focus-visible:-rotate-[14deg]",
+              i === 1 && "z-10 -translate-x-1/2 -translate-y-1.5 motion-safe:group-hover:-translate-y-3 motion-safe:group-focus-visible:-translate-y-3",
+              i === 2 && "z-0 translate-x-[5%] rotate-[9deg] motion-safe:group-hover:translate-x-[25%] motion-safe:group-hover:rotate-[14deg] motion-safe:group-focus-visible:translate-x-[25%] motion-safe:group-focus-visible:rotate-[14deg]",
               "motion-reduce:transition-none",
             )}
           >
@@ -74,17 +76,18 @@ export function CategoryTiles({ categories, loading }: { categories: Category[] 
   const many = sorted.length > KEEP;
   const arrow = "grid size-10 place-items-center rounded-full border border-border bg-card text-foreground transition-[background-color,border-color] hover:border-input hover:bg-muted";
 
-  const tile = (category: Top) => (
+  const tile = (category: Top, index: number) => (
     <Link
       to={`/categories/${category.slug}`}
-      className="group flex h-44 items-end justify-between gap-3 overflow-hidden rounded-2xl border border-border bg-card p-5 outline-none transition-[border-color,box-shadow,translate] duration-300 hover:-translate-y-1 hover:border-input hover:shadow-[0_22px_36px_-24px_rgb(20_32_122/0.45)] focus-visible:ring-2 focus-visible:ring-ring motion-reduce:hover:translate-y-0"
+      className="category-tile group flex h-44 items-end justify-between gap-3 overflow-hidden rounded-2xl border p-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      style={{ "--category-accent": CATEGORY_ACCENTS[index % CATEGORY_ACCENTS.length] } as CSSProperties}
     >
       <span className="flex h-full min-w-0 flex-1 flex-col pr-1">
         <span className="line-clamp-2 text-balance font-display text-[1.3rem] leading-tight text-foreground transition-colors duration-200 group-hover:text-primary">{category.name}</span>
         {category.children.length ? <span className="mt-1 line-clamp-2 text-[13px] leading-snug text-muted-foreground">{category.children.slice(0, 4).join(" · ")}</span> : null}
         <span className="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
           {dict.pages.bookCount(category.count)}
-          <ArrowRight className="size-4 text-primary transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+          <ArrowRight className="size-4 text-primary transition-transform duration-300 motion-safe:group-hover:translate-x-1 motion-safe:group-focus-visible:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
         </span>
       </span>
       <Fan categoryId={category.id} />
@@ -96,7 +99,7 @@ export function CategoryTiles({ categories, loading }: { categories: Category[] 
       <Stagger as="ul" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {sorted.map((category, index) => (
           <StaggerItem as="li" key={category.id} index={index}>
-            {tile(category)}
+            {tile(category, index)}
           </StaggerItem>
         ))}
       </Stagger>
@@ -118,9 +121,9 @@ export function CategoryTiles({ categories, loading }: { categories: Category[] 
         ref={track}
         className="shelf-row-more no-scrollbar -mx-2 grid snap-x grid-flow-col grid-rows-2 gap-4 overflow-x-auto px-2 pb-3 pt-1 [grid-auto-columns:calc((100%-2rem)/3)]"
       >
-        {sorted.map((category) => (
+        {sorted.map((category, index) => (
           <li key={category.id} className="snap-start">
-            {tile(category)}
+            {tile(category, index)}
           </li>
         ))}
       </ul>
