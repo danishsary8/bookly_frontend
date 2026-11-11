@@ -839,3 +839,12 @@ Behaviour, routes, permissions and API calls unchanged. Print pages unchanged.
   390×844, plus staff login, two-factor and reset: axe 0, no sideways scroll, no console errors once the mock had the
   right shapes. Known mock gaps (same before and after the redesign, not app errors): the staff order page and the
   reports tabs need richer payloads than the mock serves, so they were not reviewed with data.
+
+## Home refresh (2026-11-11, branch `design/home-refresh`, stacked on `design/admin-panel`)
+Owner's list: bigger hero cover; shelf right side; caption fitting the shelf; Top 10 with ten books and a curved,
+real-book carousel; premium promises band; Bakong KHQR instead of "Delivery across Cambodia" in the hero. Details in
+`design-system/bookly/pages/home.md` (Home refresh). New EN/KM strings: homePage.khqr, khqrText, topTenBooks, notRated.
+- Checks (mocked API): lint 0 errors (existing warning), typecheck, tests, build. Whole home page scrolled (all reveals
+  run) then axe at 1366×768, 1440×900, 1920×930, 1440 dark, 1440 Khmer, 390×844: axe 0, no sideways scroll, no console
+  errors. Exercised: shelf autoplay frames at 1366/1440/1920, carousel steps and list highlight. Not exercised: real
+  covers with CORS spine colours, the live API's real rating mix (the "Not rated yet" fill was not hit by the mock).
