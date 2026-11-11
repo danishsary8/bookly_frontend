@@ -45,6 +45,8 @@ export default function CollectionPage() {
         eyebrow={collection.data ? c.pageEyebrow(collection.data.books_count) : c.eyebrow}
         title={text?.title ?? <span aria-hidden="true" className="skeleton inline-block h-12 w-72 max-w-full rounded-sm align-middle" />}
         lead={[text?.description, ends ? c.endsOn(orderDate(ends, locale)) : null].filter(Boolean).join(" · ") || undefined}
+        variant="panel"
+        covers={books.filter((b) => b.cover_image_url).slice(0, 5).map((b) => ({ src: b.cover_image_url, title: b.title }))}
       />
 
       {collection.isPending ? (

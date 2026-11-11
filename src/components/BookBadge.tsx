@@ -31,7 +31,7 @@ export const NewBadge = ({ className }: { className?: string }) => (
 );
 
 export const LowStockBadge = ({ remaining, className }: { remaining: number; className?: string }) => (
-  <span className={cn(base, "rounded-md bg-warning/12 text-warning", className)}>
+  <span className={cn(base, "rounded-md bg-warning-tint text-warning", className)}>
     <span className="inline-flex gap-0.5" aria-hidden="true">
       <i className="block h-2.5 w-1 rounded-[1px] bg-current" />
       <i className="block h-2.5 w-1 rounded-[1px] bg-current opacity-30" />

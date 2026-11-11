@@ -193,33 +193,14 @@ function Purchase({ book }: { book: BookDetail }) {
           {!variant ? b.notAvailable : !buyable ? dict.bookDetail.outOfStock : digital ? b.download : dict.bookDetail.inStock}
         </p>
         {buyable ? <BookOfferLine offer={book.offer} className="mt-1" /> : null}
-        {variant?.low_stock_remaining ? <LowStockBadge remaining={variant.low_stock_remaining} className="mt-2" /> : null}
-        {book.sold_count ? <p className="mt-2 text-sm text-muted-foreground">{dict.shopExtras.sold(book.sold_count)}</p> : null}
-        <p className="mt-2 text-sm text-muted-foreground">{dict.shopExtras.trust}</p>
-        <AddToReadingList bookId={book.id!} />
-      </div>
-
-      {readerInfo.data?.owned ? (
-        <div className="rounded-xl border border-primary/30 bg-primary/10 p-3.5 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <BookOpen className="size-5 text-primary shrink-0" aria-hidden="true" />
-            <span className="text-sm font-semibold">{dict.ebook.readNow}</span>
+        {variant?.low_stock_remaining || book.sold_count ? (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {variant?.low_stock_remaining ? <LowStockBadge remaining={variant.low_stock_remaining} /> : null}
+            {book.sold_count ? <p className="rounded-full bg-lapis-tint px-2.5 py-0.5 text-sm font-medium text-primary">{dict.shopExtras.sold(book.sold_count)}</p> : null}
           </div>
-          <Link to={`/read/${book.id}`} className={cn(buttonVariants({ variant: "cta", size: "sm" }), "gap-1.5")}>
-            <BookOpen className="size-4" aria-hidden="true" /> {dict.ebook.readNow}
-          </Link>
-        </div>
-      ) : previewInfo.data ? (
-        <div className="flex items-center gap-2">
-          <Link
-            to={`/read/${book.id}/preview`}
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5 text-xs font-semibold")}
-          >
-            <Eye className="size-3.5" aria-hidden="true" /> {dict.ebook.readPreview}
-          </Link>
-        </div>
-      ) : null}
-
+        ) : null}
+        <p className="mt-2 text-sm text-muted-foreground">{dict.shopExtras.trust}</p>
+      </div>
 
       {variant?.is_preorder ? (
         <p className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">
@@ -237,7 +218,7 @@ function Purchase({ book }: { book: BookDetail }) {
         {!digital && buyable ? <QuantityStepper value={quantity} onChange={setQuantity} max={MAX_QTY} label={b.quantityFor(book.title ?? "")} /> : null}
         {!digital && !buyable ? (
           activeAlert ? (
-            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface-1 px-4 py-2.5">
+            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface-2/60 px-4 py-2.5">
               <span className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <Bell className="size-4 text-primary" aria-hidden="true" />
                 {b.weWillEmailYou}
@@ -288,7 +269,30 @@ function Purchase({ book }: { book: BookDetail }) {
         </Button>
       </div>
 
-      <ul className="grid gap-3 rounded-xl border border-border bg-card p-4 text-sm sm:grid-cols-3">
+      {readerInfo.data?.owned ? (
+        <div className="rounded-xl border border-primary/30 bg-primary/10 p-3.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <BookOpen className="size-5 text-primary shrink-0" aria-hidden="true" />
+            <span className="text-sm font-semibold">{dict.ebook.readNow}</span>
+          </div>
+          <Link to={`/read/${book.id}`} className={cn(buttonVariants({ variant: "cta", size: "sm" }), "gap-1.5")}>
+            <BookOpen className="size-4" aria-hidden="true" /> {dict.ebook.readNow}
+          </Link>
+        </div>
+      ) : previewInfo.data ? (
+        <div className="flex items-center gap-2">
+          <Link
+            to={`/read/${book.id}/preview`}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5 text-xs font-semibold")}
+          >
+            <Eye className="size-3.5" aria-hidden="true" /> {dict.ebook.readPreview}
+          </Link>
+        </div>
+      ) : null}
+
+      <AddToReadingList bookId={book.id!} />
+
+      <ul className="grid gap-3 border-t border-dashed border-border pt-5 text-sm sm:grid-cols-3">
         <li className="flex items-start gap-2.5">
           <Wallet className="mt-0.5 size-[18px] shrink-0 text-primary" aria-hidden="true" />
           <span>
@@ -612,7 +616,15 @@ export default function BookDetailPage() {
               </div>
             </header>
 
-            {book ? <Purchase key={book.id} book={book} /> : <Skeleton className="h-56 w-full rounded-xl" aria-hidden="true" />}
+            {/* The buy box (pages/catalogue.md): formats, price, stock and selling facts, the one vermilion CTA and the
+                promises, on one card on the paper. */}
+            {book ? (
+              <div className="shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
+                <Purchase key={book.id} book={book} />
+              </div>
+            ) : (
+              <Skeleton className="h-56 w-full rounded-2xl" aria-hidden="true" />
+            )}
           </div>
         </article>
       )}

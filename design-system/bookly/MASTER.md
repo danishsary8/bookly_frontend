@@ -54,6 +54,8 @@ Implemented as CSS variables in `src/index.css`, mapped onto the existing shadcn
 | `--input` | input | `#7A82A6` | Form control borders (≥ 3:1) |
 | `--ring` | ring | `#14207A` | Focus ring on paper |
 
+`surface-1` (half-way between `--surface-2` and `--card`) and `surface-3` (`--surface-2` toward `--border`) are derived utility colours (added 2026-11-10: several components already used them while they were undefined). No new hex values.
+
 Tints for badges and toasts on light: success `#E1F1E9`, warning `#FBEFD9`, destructive `#F6E3E8`, info = `--lapis-tint`.
 
 **Lapis surfaces in Daylight** (hero panel, active pills): text `#F6F7FB`, muted `#B9C0EA`, gold `#F2C84B`, vermilion-as-text `#FFB09A`, focus ring gold `#F2C84B`.
@@ -337,4 +339,5 @@ Full-bleed lapis everywhere in Daylight · more than one vermilion CTA per view 
 - `pages/content.md`: help and legal pages and the 404 (the bookplate, its frame, the hero surface on content pages, 17px article text).
 - `pages/print.md`: printable invoice and packing slip (paper colours in both themes, A4, stamps in words).
 - `pages/shopping.md`: cart, cart drawer, checkout, order confirmation and KHQR payment (the home page's warm paper, `.shop-card` sheets, the checkout progress rail, cover fans, the free-delivery bar).
+- `pages/catalogue.md`: catalogue and book pages (cover-fan page headers and panels, filters on a card, series spines, the book page's buy box).
 - `pages/admin.md`: the staff area (no page transitions or showpieces, sidebar frame, dense tables, the dashboard chart, staff sign-in).

@@ -17,6 +17,8 @@ import { rangeText, useT } from "@/i18n";
 
 const PER_PAGE = 24;
 
+/* /authors (pages/catalogue.md): search by name, then author cards (portrait or initials, book count) that lift on hover. */
+
 export default function AuthorsPage() {
   const { dict } = useT();
   const p = dict.pages;
@@ -57,7 +59,7 @@ export default function AuthorsPage() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder={p.searchByName}
-              className="h-11 w-full rounded-md border border-input bg-card pl-10 pr-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-11 w-full rounded-full border border-input bg-card pl-10 pr-4 text-base shadow-[0_10px_24px_-20px_rgb(20_32_122/0.5)] outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
           <Button type="submit" variant="outline">
@@ -87,12 +89,12 @@ export default function AuthorsPage() {
             <StaggerItem as="li" key={author.id} index={index}>
               <Link
                 to={`/authors/${author.id}`}
-                className="group flex h-full items-center gap-4 rounded-xl border border-border bg-card p-4 transition-[border-color,box-shadow] duration-150 hover:border-input hover:shadow-lift outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="shop-card group flex h-full items-center gap-4 rounded-2xl border border-border bg-card p-4 pr-5 outline-none transition-[border-color,translate] duration-300 hover:-translate-y-1 hover:border-input focus-visible:ring-2 focus-visible:ring-ring motion-reduce:hover:translate-y-0"
               >
-                <AuthorAvatar name={author.name ?? ""} photoUrl={author.photo_url} className="size-16 text-xl" />
+                <AuthorAvatar name={author.name ?? ""} photoUrl={author.photo_url} className="size-16 text-xl ring-4 ring-lapis-tint transition-transform duration-300 group-hover:scale-105 motion-reduce:transform-none" />
                 <span className="min-w-0">
                   <span className="block font-display text-xl leading-tight underline-offset-4 group-hover:underline">{author.name}</span>
-                  <span className="mt-1 block text-sm text-muted-foreground">
+                  <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                     {p.bookCount(author.books_count ?? 0)}
                   </span>
                 </span>

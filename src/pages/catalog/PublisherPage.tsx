@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { CatalogBrowser } from "@/components/catalog/CatalogBrowser";
+import { coversOf, useCatalogListing } from "@/components/catalog/catalogListing";
 import { NotFoundState } from "@/components/catalog/NotFoundState";
 import { PageHeader } from "@/components/catalog/PageHeader";
 import { ErrorState } from "@/components/ui/error-state";
@@ -15,6 +16,7 @@ export default function PublisherPage() {
   const publisher = publishers.data?.data.find((item) => item.id === id);
   const { dict } = useT();
   const p = dict.pages;
+  const listing = useCatalogListing({ publisher_id: publisher?.id }, Boolean(publisher?.id));
   useDocumentTitle(publisher?.name, { description: publisher ? p.publisherMeta(publisher.name ?? "") : null });
 
   if (publishers.isError) return <div className="container-shell py-16"><ErrorState error={publishers.error} onRetry={() => publishers.refetch()} headingLevel="h1" /></div>;
@@ -27,6 +29,8 @@ export default function PublisherPage() {
         eyebrow={p.publisher}
         title={publisher?.name ?? <span aria-hidden="true" className="skeleton inline-block h-12 w-64 max-w-full rounded-sm align-middle" />}
         lead={publisher ? p.publisherLead(publisher.books_count ?? 0, publisher.name ?? "") : undefined}
+        variant="panel"
+        covers={publisher?.id ? coversOf(listing.data?.data) : undefined}
       />
       {publisher?.id ? <CatalogBrowser locked={{ publisher_id: publisher.id }} /> : null}
     </div>

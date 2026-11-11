@@ -60,7 +60,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const shopPaper = /^\/(cart|checkout)(\/|$)/.test(pathname);
+  // The storefront's browsing and buying pages share the home page's warm paper (pages/shopping.md, pages/catalogue.md).
+  const shopPaper = /^\/(cart|checkout|books|search|categories|authors|publishers|series|collections|lists)(\/|$)/.test(pathname);
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
