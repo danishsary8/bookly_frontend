@@ -149,7 +149,7 @@ export default function ReturnRequestPage() {
             const line = lineFor(item.order_item_id);
             const checkboxId = `return-item-${item.order_item_id}`;
             return (
-              <div key={item.order_item_id} className="grid gap-4 rounded-xl border border-border bg-card p-4 has-[button[data-state=checked]]:border-primary sm:p-5">
+              <div key={item.order_item_id} className="grid gap-4 shop-card rounded-2xl border border-border bg-card p-4 has-[button[data-state=checked]]:border-primary sm:p-5">
                 <label htmlFor={checkboxId} className="flex min-h-11 cursor-pointer items-start gap-3">
                   <Checkbox
                     id={checkboxId}

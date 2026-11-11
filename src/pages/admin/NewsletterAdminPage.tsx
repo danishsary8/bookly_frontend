@@ -125,7 +125,7 @@ export default function NewsletterAdminPage() {
     >
       {/* 1. Summary Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
+        <div className="desk-card rounded-xl border border-border bg-card p-5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-muted-foreground">
               Confirmed subscribers
@@ -140,7 +140,7 @@ export default function NewsletterAdminPage() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
+        <div className="desk-card rounded-xl border border-border bg-card p-5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-muted-foreground">
               Pending confirmation
@@ -155,7 +155,7 @@ export default function NewsletterAdminPage() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
+        <div className="desk-card rounded-xl border border-border bg-card p-5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-muted-foreground">
               Unsubscribed
@@ -170,7 +170,7 @@ export default function NewsletterAdminPage() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
+        <div className="desk-card rounded-xl border border-border bg-card p-5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-muted-foreground">
               Total subscribers
@@ -199,12 +199,12 @@ export default function NewsletterAdminPage() {
         </div>
 
         {isCampaignsLoading ? (
-          <div className="flex items-center justify-center rounded-xl border border-border bg-card p-12 text-sm text-muted-foreground">
+          <div className="flex items-center justify-center desk-card rounded-xl border border-border bg-card p-12 text-sm text-muted-foreground">
             <Loader2 className="mr-2 size-4 animate-spin" />
             Loading campaigns…
           </div>
         ) : !campaignsData?.data?.length ? (
-          <div className="rounded-xl border border-border bg-card p-12 text-center text-sm text-muted-foreground">
+          <div className="desk-card rounded-xl border border-border bg-card p-12 text-center text-sm text-muted-foreground">
             No newsletter campaigns created yet. Click &ldquo;New
             campaign&rdquo; to draft one.
           </div>

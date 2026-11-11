@@ -302,15 +302,22 @@ export default function ReaderPage() {
 
   // Theme style classes
   const themeClasses = {
-    dark: "bg-zinc-950 text-zinc-100 selection:bg-zinc-800",
+    dark: "bg-[#070B22] text-[#F1F2FA] selection:bg-[#172050]",
     light: "bg-zinc-100 text-zinc-900 selection:bg-zinc-200",
     sepia: "bg-[#f4ecd8] text-[#5b4636] selection:bg-[#e6d8b8]",
   }[theme];
 
   const barClasses = {
-    dark: "bg-zinc-900/95 border-zinc-800 text-zinc-200",
+    dark: "bg-[#0E1433]/95 border-[#252D63] text-[#F1F2FA]",
     light: "bg-white/95 border-zinc-200 text-zinc-800 shadow-sm",
     sepia: "bg-[#ebdcb9]/95 border-[#dbc69d] text-[#4d3b2b]",
+  }[theme];
+
+  // Ghost controls take the bar's own ink (the site's lapis text vanished on the dark bar). pages/account.md, reader.
+  const ghostTone = {
+    dark: "text-[#F1F2FA] hover:bg-[#172050] hover:text-white focus-visible:ring-[#F2C84B]",
+    light: "text-zinc-800 hover:bg-zinc-200 hover:text-zinc-950",
+    sepia: "text-[#4d3b2b] hover:bg-[#dbc79f] hover:text-[#2f2419]",
   }[theme];
 
   // -------------------------------------------------------------
@@ -434,7 +441,7 @@ export default function ReaderPage() {
           <Link
             to={`/books/${bookId}`}
             aria-label={e.closeReader}
-            className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-9 rounded-full")}
+            className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-9 rounded-full", ghostTone)}
           >
             <ArrowLeft className="size-5" />
           </Link>
@@ -459,7 +466,7 @@ export default function ReaderPage() {
               aria-label={e.zoomOut}
               onClick={handleZoomOut}
               disabled={fitWidth && zoomLevel <= 100}
-              className="size-8 rounded-md"
+              className={cn("size-8 rounded-md", ghostTone)}
             >
               <ZoomOut className="size-4" />
             </Button>
@@ -473,7 +480,7 @@ export default function ReaderPage() {
               aria-label={e.zoomIn}
               onClick={handleZoomIn}
               disabled={zoomLevel >= 200}
-              className="size-8 rounded-md"
+              className={cn("size-8 rounded-md", ghostTone)}
             >
               <ZoomIn className="size-4" />
             </Button>
@@ -483,7 +490,7 @@ export default function ReaderPage() {
               size="icon"
               aria-label={e.fitWidth}
               onClick={toggleFitWidth}
-              className="size-8 rounded-md"
+              className={cn("size-8 rounded-md", !fitWidth && ghostTone)}
             >
               {fitWidth ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
             </Button>
@@ -495,7 +502,7 @@ export default function ReaderPage() {
               type="button"
               aria-label={e.themeDark}
               onClick={() => changeTheme("dark")}
-              className={cn("size-7 rounded-md grid place-items-center transition-colors", theme === "dark" ? "bg-zinc-800 text-white" : "opacity-60 hover:opacity-100")}
+              className={cn("size-7 rounded-md grid place-items-center transition-colors", theme === "dark" ? "bg-[#172050] text-white" : "opacity-60 hover:opacity-100")}
             >
               <Moon className="size-3.5" />
             </button>
@@ -606,7 +613,8 @@ export default function ReaderPage() {
           size="sm"
           onClick={prevPage}
           disabled={currentPage <= 1}
-          className="gap-1 min-w-[70px]"
+          aria-label={e.prevPage}
+          className={cn("gap-1 min-w-[70px]", ghostTone)}
         >
           <ChevronLeft className="size-4" />
           <span className="hidden sm:inline">{e.prevPage}</span>
@@ -648,7 +656,8 @@ export default function ReaderPage() {
           size="sm"
           onClick={nextPage}
           disabled={currentPage >= totalPages}
-          className="gap-1 min-w-[70px]"
+          aria-label={e.nextPage}
+          className={cn("gap-1 min-w-[70px]", ghostTone)}
         >
           <span className="hidden sm:inline">{e.nextPage}</span>
           <ChevronRight className="size-4" />

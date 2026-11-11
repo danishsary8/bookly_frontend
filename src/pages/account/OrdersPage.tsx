@@ -22,6 +22,9 @@ const PER_PAGE = 10;
 const STATUSES: OrderStatus[] = ["pending", "processing", "shipped", "delivered", "cancelled", "returned"];
 const isStatus = (value: string | null): value is OrderStatus => STATUSES.some((s) => s === value);
 
+/* Where an order is on its way (MASTER §6.3a timeline steps), as a quiet five-segment meter; the badge says it in words. */
+const STEPS = ["pending", "paid", "processing", "shipped", "delivered"] as const;
+
 function OrderRow({ order }: { order: Order }) {
   const currency = useCurrency();
   const { dict, locale } = useT();
@@ -31,7 +34,7 @@ function OrderRow({ order }: { order: Order }) {
     <li>
       <Link
         to={`/account/orders/${order.id}`}
-        className="group grid gap-3 rounded-xl border border-border bg-card p-4 outline-none transition-colors duration-150 hover:border-primary/50 focus-visible:ring-2 focus-visible:ring-ring sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5"
+        className="group grid gap-3 shop-card rounded-2xl border border-border bg-card p-4 outline-none transition-[border-color,translate] duration-300 hover:-translate-y-0.5 hover:border-primary/50 motion-reduce:hover:translate-y-0 focus-visible:ring-2 focus-visible:ring-ring sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5"
       >
         <span className="grid min-w-0 gap-1">
           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -46,6 +49,13 @@ function OrderRow({ order }: { order: Order }) {
             {orderDate(order.placed_at, locale)}
             {order.item_count ? ` · ${dict.orders.items(order.item_count)}` : null}
           </span>
+          {STEPS.includes(order.status as (typeof STEPS)[number]) ? (
+            <span className="mt-1 flex w-40 gap-1" aria-hidden="true">
+              {STEPS.map((step, i) => (
+                <span key={step} className={cn("h-1 flex-1 rounded-full", i <= STEPS.indexOf(order.status as (typeof STEPS)[number]) ? (order.status === "delivered" ? "bg-success" : "bg-primary") : "bg-surface-2")} />
+              ))}
+            </span>
+          ) : null}
           {order.payment_due_at ? (
             <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-lapis-tint px-2.5 py-0.5 text-sm font-semibold text-primary">
               <QrCode className="size-4" aria-hidden="true" /> {dict.orders.payNow} · {dict.orders.payBy(new Date(order.payment_due_at).toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" }))}

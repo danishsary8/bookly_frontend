@@ -35,7 +35,7 @@ function ReviewRow({ review }: { review: StaffReview }) {
     onError: (error) => toast.error({ title: "Couldn't change the review", description: ApiError.from(error).message }),
   });
   return (
-    <li className={cn("grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:p-5", !review.is_visible && "bg-surface-2/60")}>
+    <li className={cn("grid gap-3 desk-card rounded-xl border border-border bg-card p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:p-5", !review.is_visible && "bg-surface-2/60")}>
       <div className="grid min-w-0 gap-1.5">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <StarRating value={review.rating} summary={false} />

@@ -1302,6 +1302,8 @@ export const km: Translations = {
   homePage: {
     cod: "ទូទាត់ពេលទទួលទំនិញ",
     codText: "បង់ប្រាក់ពេលសៀវភៅរបស់អ្នកមកដល់។",
+    khqr: "Bakong KHQR",
+    khqrText: "ស្កេន និង បង់ជាមួយកម្មវិធីធនាគារណាមួយនៅកម្ពុជា។",
     delivery: "ដឹកជញ្ជូនទូទាំងប្រទេសកម្ពុជា",
     deliveryText: "ភ្នំពេញ និងគ្រប់ខេត្ត។",
     returns: "ប្តូរត្រឡប់ងាយស្រួល",
@@ -1359,6 +1361,8 @@ export const km: Translations = {
     soldShort: (n: number) => `លក់បាន ${n}`,
     continueCta: "បន្ត",
     topTen: "កំពូលទាំង ១០",
+    topTenBooks: "សៀវភៅកំពូលទាំង ១០",
+    notRated: "មិនទាន់មានការវាយតម្លៃ",
     daysToGo: (): string => "ថ្ងៃទៀត",
     announcedShort: "បានប្រកាស",
     categoryCount: (n: number) => `${n} ប្រភេទ`,

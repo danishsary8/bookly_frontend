@@ -51,7 +51,7 @@ export function Change({ percent, previous, versus, moreIsBetter = true }: { per
 
 export function Tile({ label, value, khr, detail, change }: { label: string; value: string | number; khr?: string | null; detail?: string; change?: ReactNode }) {
   return (
-    <div className="grid content-start gap-1 rounded-xl border border-border bg-card p-4">
+    <div className="grid content-start gap-1 desk-card rounded-xl border border-border bg-card p-4">
       <p className="text-sm text-muted-foreground">{label}</p>
       <p className="text-[1.75rem] font-semibold leading-tight tabular-nums">{value}</p>
       <Khr value={khr} />
@@ -63,7 +63,7 @@ export function Tile({ label, value, khr, detail, change }: { label: string; val
 
 export function Panel({ id, title, action, children, className }: { id: string; title: string; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section aria-labelledby={id} className={cn("grid grid-cols-1 content-start gap-4 rounded-xl border border-border bg-card p-5", className)}>
+    <section aria-labelledby={id} className={cn("grid grid-cols-1 content-start gap-4 desk-card rounded-xl border border-border bg-card p-5", className)}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id={id} className="font-sans text-[1.0625rem] font-semibold tracking-normal">
           {title}

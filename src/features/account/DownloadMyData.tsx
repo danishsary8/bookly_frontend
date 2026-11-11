@@ -35,7 +35,7 @@ export function DownloadMyData() {
   };
 
   return (
-    <section aria-labelledby="download-data" className="grid max-w-xl gap-3 rounded-xl border border-border bg-card p-5 sm:p-6">
+    <section aria-labelledby="download-data" className="grid max-w-xl gap-3 shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
       <h2 id="download-data" className="font-display text-[1.563rem] leading-tight">
         {t.title}
       </h2>

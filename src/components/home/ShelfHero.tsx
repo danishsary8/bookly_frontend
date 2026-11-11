@@ -53,12 +53,6 @@ type ShelfItem = {
 
 const smooth = (x: number) => x * x * (3 - 2 * x);
 const bump = (r: number) => (Math.abs(r) < 1 ? (r + Math.sin(Math.PI * r) / Math.PI) / 2 : Math.sign(r) * 0.5);
-/** A stable 0–1 number per book. */
-const hash01 = (key: string) => {
-  let h = 2166136261;
-  for (let i = 0; i < key.length; i++) h = Math.imul(h ^ key.charCodeAt(i), 16777619);
-  return ((h >>> 0) % 1000) / 1000;
-};
 const luminance = (r: number, g: number, b: number) => {
   const c = [r, g, b].map((v) => {
     const s = v / 255;
@@ -145,7 +139,6 @@ export function ShelfHero() {
   const items: ShelfItem[] = list.map((book, i) => {
     const id = book ? String(book.id) : `board-${i}`;
     const names = (book?.authors ?? []).map((a) => a.name).filter(Boolean) as string[];
-    const seed = hash01(id);
     return {
       id,
       book,
@@ -154,7 +147,7 @@ export function ShelfHero() {
       by: names.join(", "),
       surname: names[0]?.split(" ").filter(Boolean).pop() ?? "Bookly",
       tall: 1,
-      thick: 0.88 + seed * 0.12,
+      thick: 1,
     };
   });
 
@@ -284,7 +277,8 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
         if (r > total / 2) r -= total;
         if (Math.abs(r) < 0.5) centre.current = v;
         const x = r * (ws + gap) + (d - ws + 1.6 * gap) * bump(r);
-        if (Math.abs(x) > half + d * 1.5) {
+        // Books past the stage's faded ends are not drawn at all (no stray faces at the edges).
+        if (Math.abs(x) > half + d * 0.6) {
           el.style.visibility = "hidden";
           continue;
         }
@@ -294,8 +288,9 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
         const o = smooth(Math.max(0, 1 - Math.abs(r)));
         const y = -o * 0.02 * H - m.lift[v] * 0.07 * H;
         // spines further from the middle sit further back, so the shelf curves away like a bookcase seen up close
-        const depth = -Math.pow(Math.min(Math.abs(r), 12), 1.35) * 0.11 * H;
-        el.style.transform = `translate3d(${x}px, ${y}px, ${o * 0.16 * H + depth}px) rotateZ(${-3 * o}deg) rotateX(${m.ty * 6 * o}deg) rotateY(${-90 * o + m.tx * 9 * o}deg)`;
+        // A straight, even row (owner 2026-11-11): every spine on one line, no curve back.
+        const depth = 0;
+        el.style.transform = `translate3d(${x}px, ${y}px, ${o * 0.16 * H + depth}px) rotateZ(0deg) rotateX(${m.ty * 6 * o}deg) rotateY(${-90 * o + m.tx * 9 * o}deg)`;
         el.style.zIndex = String(Math.round(100 - Math.abs(r) * 4));
         el.style.setProperty("--o", o.toFixed(3));
       }
@@ -515,7 +510,7 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
                 {/* the page block on top, so a book seen from slightly above is closed */}
                 <div
                   className="shelf-pages absolute"
-                  style={{ width: bw * 0.9, height: bd * 0.97, left: -bw * 0.45, top: top - (bd * 0.97) / 2, transform: "rotateX(90deg)" }}
+                  style={{ width: bw * 0.9, height: bd * 0.97, left: -bw * 0.45, top: top - (bd * 0.97) / 2, transform: "rotateX(90deg)", opacity: "calc(1 - var(--o, 0) * 1.6)" }}
                 />
               </div>
             );
@@ -525,14 +520,17 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
 
       {/* Caption card: arrows at the ends; the book (thumb, title, author) with its selling points — rank in this
           row, copies sold, "Only N left" — then the price, Add to cart and View book. */}
-      <div className="relative z-10 mx-auto mt-1 w-full max-w-[1100px] px-4 pb-8" aria-live="polite">
-        <div className="shelf-caption relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 rounded-[1.4rem] border border-border bg-card p-3 md:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] md:gap-x-5">
-          <button type="button" onClick={() => go(-1)} aria-label={h.prevBook} className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-background text-foreground transition-[background-color,transform,border-color] hover:border-input hover:bg-muted active:scale-95">
+      {/* The caption hangs from the board like a paper shelf label: cream stock, two brass pins, tucked under the lip. */}
+      <div className="relative z-10 mx-auto -mt-1 w-full max-w-[1100px] px-4 pb-8" aria-live="polite">
+        <div className="shelf-label relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 rounded-b-[1.25rem] rounded-t-md px-3 pb-3 pt-4 md:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] md:gap-x-5 md:px-4">
+          <span className="shelf-pin left-6" aria-hidden="true" />
+          <span className="shelf-pin right-6" aria-hidden="true" />
+          <button type="button" onClick={() => go(-1)} aria-label={h.prevBook} className="grid size-11 shrink-0 place-items-center rounded-full border border-[#D9CCB2] bg-[#FFFCF6] text-foreground transition-[background-color,transform,border-color] hover:border-[#8C8170] hover:bg-[#F3EADA] active:scale-95 dark:border-border dark:bg-background dark:hover:bg-muted">
             <ArrowLeft className="size-[18px]" aria-hidden="true" />
           </button>
           <div className="flex min-w-0 items-center gap-4">
             {book?.cover_image_url ? (
-              <img key={`c-${shown?.id}`} src={book.cover_image_url} alt="" aria-hidden="true" className="shelf-roll hidden aspect-[2/3] w-11 shrink-0 rounded-[3px] object-cover shadow-[0_10px_18px_-10px_rgb(20_16_10/0.6)] md:block" />
+              <img key={`c-${shown?.id}`} src={book.cover_image_url} alt="" aria-hidden="true" className="shelf-roll hidden aspect-[2/3] w-12 shrink-0 -rotate-2 rounded-[3px] object-cover shadow-[0_12px_20px_-10px_rgb(60_40_20/0.65)] md:block" />
             ) : null}
             <div className="min-w-0 overflow-hidden">
               <p key={`t-${shown?.id}`} className={cn("shelf-roll truncate font-display text-[clamp(1.15rem,1.6vw,1.4rem)] leading-tight text-foreground", dir < 0 && "shelf-roll-down")}>
@@ -561,7 +559,7 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
               ) : null}
             </div>
           </div>
-          <button type="button" onClick={() => go(1)} aria-label={h.nextBook} className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-background text-foreground transition-[background-color,transform,border-color] hover:border-input hover:bg-muted active:scale-95 md:order-last">
+          <button type="button" onClick={() => go(1)} aria-label={h.nextBook} className="grid size-11 shrink-0 place-items-center rounded-full border border-[#D9CCB2] bg-[#FFFCF6] text-foreground transition-[background-color,transform,border-color] hover:border-[#8C8170] hover:bg-[#F3EADA] active:scale-95 md:order-last dark:border-border dark:bg-background dark:hover:bg-muted">
             <ArrowRight className="size-[18px]" aria-hidden="true" />
           </button>
           <div className="col-span-3 flex flex-col items-center gap-0.5 md:col-span-1 md:items-end">
@@ -582,7 +580,7 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
                 <ShoppingBag className="size-4" aria-hidden="true" /> {h.addToCart}
               </button>
             ) : null}
-            <Link to={href} className="inline-flex h-11 items-center gap-1.5 whitespace-nowrap rounded-full border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+            <Link to={href} className="inline-flex h-11 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#8C8170]/50 px-4 text-sm font-semibold text-foreground transition-colors hover:bg-[#F3EADA] dark:border-border dark:hover:bg-muted">
               {book ? h.viewBook : dict.shopExtras.viewAll}
             </Link>
           </div>

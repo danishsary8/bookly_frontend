@@ -1296,6 +1296,8 @@ export const en = {
   homePage: {
     cod: "Cash on delivery",
     codText: "Pay when your books arrive.",
+    khqr: "Bakong KHQR",
+    khqrText: "Scan and pay with any Cambodian bank app.",
     delivery: "Delivery across Cambodia",
     deliveryText: "Phnom Penh and every province.",
     returns: "Easy returns",
@@ -1353,6 +1355,8 @@ export const en = {
     soldShort: (n: number) => `${n} sold`,
     continueCta: "Continue",
     topTen: "Top 10 rated",
+    topTenBooks: "Top 10 books",
+    notRated: "Not rated yet",
     daysToGo: (n: number): string => (n === 1 ? "day to go" : "days to go"),
     announcedShort: "Announced",
     categoryCount: (n: number) => `${n} categories`,

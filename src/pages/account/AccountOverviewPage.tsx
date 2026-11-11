@@ -26,7 +26,7 @@ function RecentOrder({ order }: { order: Order }) {
     <li className="border-t border-border first:border-t-0">
       <Link
         to={`/account/orders/${order.id}`}
-        className="-mx-2 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 rounded-md px-2 py-4 outline-none transition-colors duration-150 hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring"
+        className="group -mx-2 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 rounded-xl px-3 py-4 outline-none transition-colors duration-150 hover:bg-surface-2/70 focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span className="grid gap-0.5">
           <span className="font-semibold tabular-nums">{order.order_number}</span>
@@ -38,6 +38,7 @@ function RecentOrder({ order }: { order: Order }) {
         <span className="flex items-center gap-4">
           <OrderStatusBadge status={order.status} />
           <span className="min-w-20 text-right font-semibold tabular-nums">{formatMoney(order.total_usd, order.total_khr, currency)}</span>
+          <ArrowRight className="size-4 text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
         </span>
       </Link>
     </li>
@@ -78,12 +79,36 @@ export default function AccountOverviewPage() {
         </p>
       }
     >
+      {/* Real figures only: each one appears once its request has answered. */}
+      <div className="shop-card relative isolate overflow-hidden rounded-2xl border border-border bg-card">
+      <span className="pointer-events-none absolute -right-10 -top-16 -z-10 size-48 rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--primary)_10%,transparent),transparent)]" aria-hidden="true" />
+      <dl className="grid sm:grid-cols-3">
+        {[
+          { label: a.recentOrders, value: orders.data ? (orders.data.meta?.total ?? orders.data.data.length) : null, to: "/account/orders", Icon: Package },
+          { label: a.wishlist, value: wishlist.data ? (wishlist.data.meta?.total ?? 0) : null, to: "/account/wishlist", Icon: Heart },
+          { label: a.addresses, value: addresses.data ? addresses.data.length : null, to: "/account/addresses", Icon: MapPin },
+        ].map(({ label, value, to, Icon }) => (
+          <div key={to} className="relative grid content-center gap-0.5 border-border py-5 pl-[4.75rem] pr-5 [&:not(:first-child)]:border-t sm:[&:not(:first-child)]:border-l sm:[&:not(:first-child)]:border-t-0">
+            <dt className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              <span className="absolute left-5 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-lapis-tint text-primary">
+                <Icon className="size-5" aria-hidden="true" />
+              </span>
+              {label}
+            </dt>
+            <dd className="font-display text-[2rem] leading-none tabular-nums">
+              {value === null ? <span className="skeleton inline-block h-7 w-10 rounded-sm align-middle" aria-hidden="true" /> : <Link to={to} className="underline-offset-4 hover:underline">{value}</Link>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      </div>
+
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {tiles.map(({ to, label, Icon, detail }) => (
           <li key={to}>
             <Link
               to={to}
-              className="group flex h-full items-center gap-4 rounded-xl border border-border bg-card p-4 transition-[border-color,box-shadow] duration-150 hover:border-input hover:shadow-lift outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group flex h-full items-center gap-4 shop-card rounded-2xl border border-border bg-card p-4 transition-[border-color,box-shadow] duration-150 hover:border-input hover:shadow-lift outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span className="grid size-11 shrink-0 place-items-center rounded-full bg-lapis-tint text-primary">
                 <Icon className="size-5" aria-hidden="true" />
@@ -102,7 +127,7 @@ export default function AccountOverviewPage() {
 
       <StockAlertsCard />
 
-      <section aria-labelledby="recent-orders" className="rounded-xl border border-border bg-card p-5 sm:p-6">
+      <section aria-labelledby="recent-orders" className="shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h2 id="recent-orders" className="font-display text-[1.563rem] leading-tight">
             {a.recentOrders}

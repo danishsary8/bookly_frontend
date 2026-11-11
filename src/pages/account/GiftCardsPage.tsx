@@ -48,7 +48,7 @@ function GiftCardsContent({ customerId }: { customerId: number | undefined }) {
   return <div className="grid gap-8">
     <h1 className="font-display text-3xl">{t.gifts}</h1>
     {purchases.data ? <p className="text-lg">{t.balance}: <strong>{formatUsd(purchases.data.balance_usd)}</strong></p> : null}
-    <section className="grid gap-4 rounded-xl border border-border bg-card p-5" aria-labelledby="redeem-title">
+    <section className="grid gap-4 shop-card rounded-2xl border border-border bg-card p-5" aria-labelledby="redeem-title">
       <h2 id="redeem-title" className="font-display text-2xl">{t.redeem}</h2>
       <form className="grid gap-3" onSubmit={(e) => { e.preventDefault(); redeem.mutate(); }}>
         <TextField label={t.code} required maxLength={64} autoComplete="off" spellCheck={false} value={code} onChange={(e) => { setCode(e.target.value); redeem.reset(); }} />
@@ -57,7 +57,7 @@ function GiftCardsContent({ customerId }: { customerId: number | undefined }) {
         {redeem.isSuccess ? <p role="status">{t.redeemed}</p> : null}
       </form>
     </section>
-    <section className="grid gap-4 rounded-xl border border-border bg-card p-5" aria-labelledby="buy-title">
+    <section className="grid gap-4 shop-card rounded-2xl border border-border bg-card p-5" aria-labelledby="buy-title">
       <h2 id="buy-title" className="font-display text-2xl">{t.buy}</h2><p className="text-sm text-muted-foreground">{t.rules}</p>
       <form onSubmit={submit} className="grid gap-4">
         <fieldset disabled={buy.isPending} className="grid gap-4">
@@ -74,14 +74,14 @@ function GiftCardsContent({ customerId }: { customerId: number | undefined }) {
       </form>
     </section>
     {paymentId ? <GiftCardPayment id={paymentId} onPaid={refresh} /> : null}
-    {shown ? <div role="status" className="grid gap-2 rounded-xl border border-border bg-card p-5"><p>{t.revealHint}</p><code className="break-all text-xl font-bold">{shown}</code></div> : null}
+    {shown ? <div role="status" className="grid gap-2 shop-card rounded-2xl border border-border bg-card p-5"><p>{t.revealHint}</p><code className="break-all text-xl font-bold">{shown}</code></div> : null}
     {reveal.isError ? <p role="alert" className="text-destructive">{ApiError.from(reveal.error).message}</p> : null}
     <section aria-labelledby="purchases-title" className="grid gap-4">
       <h2 id="purchases-title" className="font-display text-2xl">{t.purchases}</h2>
       {purchases.isError ? <ErrorState error={purchases.error} onRetry={() => purchases.refetch()} /> : null}
       {purchases.isPending ? <p role="status">{t.loading}</p> : null}
       {purchases.data?.data.length === 0 ? <p>{t.empty}</p> : null}
-      <ul className="grid gap-3">{purchases.data?.data.map((card) => <li key={card.id} className="grid gap-2 rounded-xl border border-border bg-card p-4">
+      <ul className="grid gap-3">{purchases.data?.data.map((card) => <li key={card.id} className="grid gap-2 shop-card rounded-2xl border border-border bg-card p-4">
         <p className="break-words font-semibold">{card.recipient_name} · {formatUsd(card.amount_usd)} · ••••{card.last_four}</p>
         <p>{t.status[card.status]}</p><p>{t.sendOn}: {card.send_on}</p>
         {card.email_sent_at ? <p>{t.emailSent}</p> : null}{card.email_failed_at ? <p>{t.emailFailed}</p> : null}

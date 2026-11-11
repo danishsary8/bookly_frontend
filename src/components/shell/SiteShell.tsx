@@ -60,7 +60,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const shopPaper = /^\/(cart|checkout)(\/|$)/.test(pathname);
+  // Every storefront page shares the home page's warm paper (pages/shopping.md; home paints its own).
+  const shopPaper = pathname !== "/";
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">

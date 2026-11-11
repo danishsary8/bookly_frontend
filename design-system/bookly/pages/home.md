@@ -67,3 +67,21 @@ On `/` the header search hides (fade) while the hero search is on screen, and re
 - Top 10 rated: left a showcase with `CircularCarousel` (src/components/CircularCarousel.tsx: covers on a turning cylinder, rise intro, drag to spin, front card clickable) over the front book's colour wash, its rank, score, price and Add to cart; right the ranked list 1–10 (gold numerals for 1–3, "Only N left"). Hover/focus a row and the cylinder spins to that book. The React Bits registry could not be fetched from the build machine, so the component was written to the same brief.
 - Coming soon: sideways-scrolling "premiere posters" (dark lapis stage lit by the cover, Pre-order / Announced tag, big "N days to go" countdown with the date, light sweep on hover), arrows; the timeline is gone.
 - Shop by category: tile design unchanged. With more than six categories every one shows: two rows of the same tiles scroll sideways (arrows in the heading row) instead of "View all categories".
+
+## Home refresh (2026-11-11, branch `design/home-refresh`)
+- Hero: front cover larger (up to 370px, `(100svh − header − 23rem) × 0.64`); the slide title wraps to two balanced lines
+  (`line-clamp-2`, max 30ch) instead of being cut; the second promise beside the CTA is Bakong KHQR (QR icon, gold).
+- Shelf: books are culled before the stage's faded ends (no stray faces at the edges); the pulled-out book's page block
+  fades with `--o` so no beige top floats above its neighbours. The caption is a paper shelf label (`.shelf-label`):
+  cream stock with grain, tucked under the board's lip (inset top shadow), two brass pins, warm hairline; arrows and
+  View book in the same warm tones; card colours in dark mode.
+- Top 10: always ten rows. Rated books first in the API's rating order; when fewer than ten have a rating, the next books
+  from the same list fill the rows, marked "Not rated yet", and the heading becomes "Top 10 books" (EN/KM `topTenBooks`,
+  `notRated`). The showcase's big score shows only for rated books.
+- CircularCarousel rebuilt as a curved gallery (React Bits "Circular Gallery" spirit, CSS 3D): books along an arc
+  (radius 7.2 × card width, 1.12 × width apart), tilted along the curve and turned ±16° per step, side books smaller and
+  dimmer; each book has a cloth spine and a cream page block as real 3D sides, and a contact shadow. Steps one book at a
+  time (pause, glide, settle centred); drag to move; click a side book to bring it to the middle. Same props.
+- Promises: a lapis band (`.hero-lapis` + `.promise-frame`, the bookplate's double gold hairline without corners): gold
+  label, "Why shop with Bookly" in display type, four promises (cash on delivery, Bakong KHQR, delivery across Cambodia,
+  easy returns) with gold-ringed icons and gold hairline dividers.

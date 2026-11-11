@@ -165,7 +165,7 @@ export default function StockAdminPage() {
             }
           />
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-border bg-card">
+          <div className="overflow-x-auto desk-card rounded-xl border border-border bg-card">
             <table className="w-full text-left text-[15px]">
               <thead className="border-b border-border bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <tr>

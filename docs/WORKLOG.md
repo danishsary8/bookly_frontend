@@ -791,3 +791,60 @@ unchanged.
 - Open (needs owner OK, backend): order lines have no cover, so the confirmation's covers come from the checkout and
   disappear after a reload. Proposal: add `cover_image_url` to `Order.items[]` (nullable string, the variant's book
   cover) in OrderResource + `public/openapi.yaml`.
+
+## Redesign phase 2 — catalogue pages (2026-11-10, branch `design/catalogue-pages`, stacked on `design/shopping-pages`)
+All books, search, category, publisher, author, authors, series list, series, collection, shared reading list and the
+book page; decisions in `design-system/bookly/pages/catalogue.md` (listed in MASTER §9). Behaviour, routes, filters,
+URL state and API calls unchanged (header covers reuse the grid's own query).
+- Shared: PageHeader `covers` / `panel` / `media` / `meta`; `useCatalogListing` + `coversOf`; filters on a card; warm
+  paper on catalogue routes. MASTER §2: `surface-1` and `surface-3` defined (were used, never defined). LowStockBadge
+  solid tint (was unreadable on dark covers).
+- Checks (mocked API shaped from `public/openapi.yaml`): lint 0 errors (existing warning), typecheck, tests, build.
+  Browser + axe on the 10 routes above at 1366×768, 1440×900, 1920×930, 1440 dark, 1440 Khmer, 390×844: axe 0, no
+  console errors; fixed before commit: a phone-width overflow in the series and reading-list grids, Add to cart below
+  the fold on the book page, "0 books" (mock field name). Not exercised: real search ranking/typo tolerance, facets
+  with real counts, reader pages.
+
+## Redesign phase 3 — account pages and reader (2026-11-10, branch `design/account-pages`, stacked on `design/catalogue-pages`)
+Account frame and every account page, plus the ebook reader; decisions in `design-system/bookly/pages/account.md`
+(listed in MASTER §9). Behaviour, routes, guards and API calls unchanged. Invoice print page unchanged (print.md).
+- Frame: warm paper, sidebar card with a lapis library-card header. All account cards as `.shop-card` sheets.
+- Overview figures strip; orders progress meter; reader night colours.
+- Bugs fixed on the way: wishlist cards were near-black with unreadable titles (SpotlightCard template colours);
+  reader toolbar/page buttons were lapis on the dark bar; reader page buttons had no name on phones; the sidebar
+  header used `bg-primary`, which turns periwinkle at night (gold label failed contrast) → fixed lapis tokens.
+- Checks (mocked API shaped from `public/openapi.yaml`): lint 0 errors (existing warning), typecheck, tests, build.
+  Browser + axe on /account, orders, order, return request, return detail, wishlist, lists, reviews, ebooks,
+  addresses, profile, security, support, KHQR pay, reader at 1366×768, 1440×900, 1440 dark, 1440 Khmer, 390×844:
+  axe 0, no sideways scroll, no console errors (two errors seen first came from wrong mock shapes). Not exercised:
+  editing forms end to end (profile, addresses, password), real reader pages, gift cards/referrals (feature flags off).
+
+## Redesign phase 4 — content and small pages (2026-11-10, branch `design/content-pages`, stacked on `design/account-pages`)
+About, Contact, FAQ, Shipping, Returns policy, Privacy, Terms, 404, newsletter confirm/unsubscribe, stop cart
+reminders; decisions appended to `design-system/bookly/pages/content.md`. Behaviour, routes and copy unchanged.
+- Two-column bookplate (shorter), article on a sheet, warm paper on all storefront pages (not home, not auth), and a
+  shared StatusPanel for the email-link pages (fixes faux-bold Gloock titles).
+- Checks (mocked API): lint 0 errors (existing warning), typecheck, tests, build. Browser + axe on all 10 routes at
+  1366×768, 1440×900, 1920×930, 1440 dark, 1440 Khmer, 390×844: axe 0, no sideways scroll, no console errors; /login
+  checked unchanged. Not exercised: the contact form's real send, error paths of the email-link pages with the live API.
+
+## Redesign phase 5 — staff/admin panel (2026-11-11, branch `design/admin-panel`, stacked on `design/content-pages`)
+Staff frame, staff sign-in pages and every staff screen; decisions appended to `design-system/bookly/pages/admin.md`.
+Behaviour, routes, permissions and API calls unchanged. Print pages unchanged.
+- `.desk-card` sheets for panels, tables and cards; lapis Staff tag; active menu rule; hairline under page titles;
+  lapis band on the staff sign-in card.
+- Checks (mocked API): lint 0 errors (existing warning), typecheck, `npm test`, build. Browser + axe on /admin and 19
+  staff screens (books, stock, orders, returns, reviews, customers, coupons, offers, collections, members, audit log,
+  security, support, authors, exchange rates, trash, gifts, ratings, newsletter) at 1440×900, 1366×768, 1440 dark and
+  390×844, plus staff login, two-factor and reset: axe 0, no sideways scroll, no console errors once the mock had the
+  right shapes. Known mock gaps (same before and after the redesign, not app errors): the staff order page and the
+  reports tabs need richer payloads than the mock serves, so they were not reviewed with data.
+
+## Home refresh (2026-11-11, branch `design/home-refresh`, stacked on `design/admin-panel`)
+Owner's list: bigger hero cover; shelf right side; caption fitting the shelf; Top 10 with ten books and a curved,
+real-book carousel; premium promises band; Bakong KHQR instead of "Delivery across Cambodia" in the hero. Details in
+`design-system/bookly/pages/home.md` (Home refresh). New EN/KM strings: homePage.khqr, khqrText, topTenBooks, notRated.
+- Checks (mocked API): lint 0 errors (existing warning), typecheck, tests, build. Whole home page scrolled (all reveals
+  run) then axe at 1366×768, 1440×900, 1920×930, 1440 dark, 1440 Khmer, 390×844: axe 0, no sideways scroll, no console
+  errors. Exercised: shelf autoplay frames at 1366/1440/1920, carousel steps and list highlight. Not exercised: real
+  covers with CORS spine colours, the live API's real rating mix (the "Not rated yet" fill was not hit by the mock).

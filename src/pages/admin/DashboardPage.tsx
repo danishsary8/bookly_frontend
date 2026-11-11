@@ -38,7 +38,7 @@ function Kpi({ id, label, value, khr, detail, change, trend, view, hero }: {
   hero?: boolean;
 }) {
   return (
-    <section aria-labelledby={id} className="grid content-start gap-2 rounded-xl border border-border bg-card p-5">
+    <section aria-labelledby={id} className="grid content-start gap-2 desk-card rounded-xl border border-border bg-card p-5">
       <h2 id={id} className="font-sans text-sm font-normal tracking-normal text-muted-foreground">
         {label}
       </h2>

@@ -66,3 +66,18 @@ breadcrumb
 - One vermilion CTA at most per page (About: "Browse the shelves"). Others use lapis.
 - Motion: only the standard page transition; the contents' current-section marker
   changes colour instantly. No reveals on policy text.
+
+
+## Redesign 2026-11-10 (phase 4, branch `design/content-pages`)
+- Paper: every storefront page except home (which paints its own) sits on the warm paper; SiteShell drops the footer
+  gap. Auth pages are outside SiteShell and unchanged.
+- Bookplate with facts: two columns on laptops (eyebrow line, title and lead left-aligned on the left; the facts stacked
+  on the right between gold hairlines, each value in Gloock gold above its label, a gold rule on the column's left).
+  Padding 40px instead of 48px. About 400px tall at 1440 instead of 475, so the article starts on the first screen.
+  Without facts (404) it stays centred. The frame, corners and colours are unchanged; the `<dl>` keeps dt before dd.
+- The article is a paper sheet (`.shop-card`, radius 2xl, 48–56px padding) beside the contents rail; the mobile
+  "On this page" button is a sheet too.
+- Small email-link pages (newsletter confirm / unsubscribe, stop cart reminders): `src/components/StatusPanel.tsx`,
+  one centred sheet (radius 3xl, a faint lapis glow at the top): spinner while loading, the Seal (shopping.md) on
+  success, a destructive-tint disc on error, a Gloock 2rem title (it was faux-bold Gloock before), one sentence and
+  the actions.

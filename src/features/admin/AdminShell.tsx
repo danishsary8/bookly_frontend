@@ -25,7 +25,7 @@ function Wordmark() {
   return (
     <Link to="/admin" className="flex items-center gap-2.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring">
       <span className="font-display text-[1.6rem] leading-none text-primary">Bookly</span>
-      <span className="rounded-[4px] border max-sm:sr-only border-border px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Staff</span>
+      <span className="rounded-[4px] bg-lapis px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-on-lapis max-sm:sr-only">Staff</span>
     </Link>
   );
 }
@@ -34,10 +34,13 @@ function Nav({ onNavigate }: { onNavigate?: () => void }) {
   const session = useStaff();
   const counts = useMenuCounts(Boolean(session)).data;
   return (
-    <nav aria-label="Admin" className="grid gap-6">
+    <nav aria-label="Admin" className="grid gap-5">
       {navFor(session?.user.role).map((group) => (
         <div key={group.label} className="grid gap-1">
-          <p className="px-3 pb-1 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{group.label}</p>
+          <p className="flex items-center gap-2 px-3 pb-1 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+            <span className="h-px w-4 bg-current opacity-60" aria-hidden="true" />
+            {group.label}
+          </p>
           {group.items.map(({ to, label, Icon, end }) => (
             <NavLink
               key={to}
@@ -46,8 +49,10 @@ function Nav({ onNavigate }: { onNavigate?: () => void }) {
               onClick={onNavigate}
               className={({ isActive }) =>
                 cn(
-                  "flex min-h-10 items-center gap-3 rounded-md px-3 text-[15px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring",
-                  isActive ? "bg-lapis-tint text-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                  "relative flex min-h-10 items-center gap-3 rounded-md px-3 text-[15px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring",
+                  isActive
+                    ? "bg-lapis-tint font-semibold text-primary before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-primary"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                 )
               }
             >

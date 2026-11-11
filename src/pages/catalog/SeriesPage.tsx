@@ -21,7 +21,8 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
 import { useT } from "@/i18n";
 
-/* A series in reading order: each card is labelled "Book 1", "Book 2", … */
+/* A series in reading order (pages/catalogue.md): a header panel with the volumes' covers and "Complete the set",
+   then each card labelled with a numbered disc, "Book 1", "Book 2", … */
 export default function SeriesPage() {
   const id = Number(useParams().id);
   const valid = Number.isInteger(id) && id > 0;
@@ -66,28 +67,20 @@ export default function SeriesPage() {
         eyebrow={series.data ? p.seriesEyebrow(books.length) : p.series}
         title={series.data?.name ?? <span aria-hidden="true" className="skeleton inline-block h-12 w-72 max-w-full rounded-sm align-middle" />}
         lead={series.data?.description ?? undefined}
+        variant="panel"
+        covers={books.filter((b) => b.cover_image_url).slice(0, 5).map((b) => ({ src: b.cover_image_url, title: b.title }))}
+        meta={
+          books.length > 0 && !series.isPending ? (
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-dashed border-border pt-4">
+              <Button onClick={() => completeSetMutation.mutate()} disabled={completeSetMutation.isPending} className="gap-1.5">
+                {completeSetMutation.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Sparkles className="size-4" aria-hidden="true" />}
+                <span>{vDict.completeSet}</span>
+              </Button>
+              <span className="max-w-sm text-sm text-muted-foreground">{vDict.completeSetDesc}</span>
+            </div>
+          ) : undefined
+        }
       />
-
-      {books.length > 0 && !series.isPending ? (
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5">
-          <div className="grid gap-0.5">
-            <span className="font-semibold text-foreground">{vDict.completeSet}</span>
-            <span className="text-sm text-muted-foreground">{vDict.completeSetDesc}</span>
-          </div>
-          <Button
-            onClick={() => completeSetMutation.mutate()}
-            disabled={completeSetMutation.isPending}
-            className="self-start sm:self-auto shrink-0 gap-1.5"
-          >
-            {completeSetMutation.isPending ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Sparkles className="size-4" aria-hidden="true" />
-            )}
-            <span>{vDict.completeSet}</span>
-          </Button>
-        </div>
-      ) : null}
 
       {series.isPending ? (
         showSkeleton ? (
@@ -102,8 +95,11 @@ export default function SeriesPage() {
       ) : (
         <Stagger as="ol" className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
           {books.map((book, index) => (
-            <StaggerItem as="li" key={book.id} index={index} className="grid gap-2">
-              <p className="text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground">{p.bookN(index + 1)}</p>
+            <StaggerItem as="li" key={book.id} index={index} className="grid min-w-0 content-start gap-3 [&>*]:min-w-0">
+              <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                <span className="grid size-7 place-items-center rounded-full bg-primary font-sans text-[13px] tracking-normal text-primary-foreground" aria-hidden="true">{index + 1}</span>
+                {p.bookN(index + 1)}
+              </p>
               <BookCard
                 book={book}
                 instanceKey={`series-${book.id}`}

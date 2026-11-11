@@ -111,7 +111,7 @@ export function EbookPanel({ book }: { book: StaffBook }) {
   };
 
   return (
-    <section aria-labelledby="ebook-panel" className="grid grid-cols-1 content-start gap-4 rounded-xl border border-border bg-card p-5">
+    <section aria-labelledby="ebook-panel" className="grid grid-cols-1 content-start gap-4 desk-card rounded-xl border border-border bg-card p-5">
       <div className="flex items-center justify-between">
         <h2 id="ebook-panel" className="font-sans text-[1.0625rem] font-semibold tracking-normal flex items-center gap-2">
           <BookOpen className="size-5 text-primary" aria-hidden="true" />

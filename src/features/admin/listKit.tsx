@@ -113,7 +113,7 @@ export function ListTabs<T extends string>({
 export function TableCard({ children, stale, minWidth = 720, label }: { children: ReactNode; stale?: boolean; minWidth?: number; label?: string }) {
   return (
     <div
-      className={cn("relative overflow-x-auto rounded-xl border border-border bg-card outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background", stale && "opacity-60 transition-opacity")}
+      className={cn("relative overflow-x-auto desk-card rounded-xl border border-border bg-card outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background", stale && "opacity-60 transition-opacity")}
       {...(label ? { role: "region", "aria-label": label, tabIndex: 0 } : {})}
     >
       <table className="w-full text-left text-[15px]" style={{ minWidth }}>

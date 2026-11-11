@@ -207,7 +207,7 @@ export default function ReturnAdminPage() {
       })}
     >
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <section aria-labelledby="return-books" className="grid grid-cols-1 content-start gap-4 rounded-xl border border-border bg-card p-5">
+        <section aria-labelledby="return-books" className="grid grid-cols-1 content-start gap-4 desk-card rounded-xl border border-border bg-card p-5">
           <h2 id="return-books" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
             Books to return
           </h2>
@@ -275,7 +275,7 @@ export default function ReturnAdminPage() {
             </div>
           </dl>
         </section>
-        <section aria-labelledby="return-customer" className="grid content-start gap-2 rounded-xl border border-border bg-card p-5">
+        <section aria-labelledby="return-customer" className="grid content-start gap-2 desk-card rounded-xl border border-border bg-card p-5">
           <h2 id="return-customer" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
             Customer
           </h2>

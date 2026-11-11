@@ -19,7 +19,7 @@ export function GiftCardPayment({ id, onPaid }: { id: number; onPaid: () => void
   }, [qr]);
   const status = state.data?.data.status;
   useEffect(() => { if (status === "active") onPaid(); }, [status, onPaid]);
-  return <div className="grid gap-3 rounded-xl border border-border bg-card p-5" aria-live="polite">
+  return <div className="grid gap-3 shop-card rounded-2xl border border-border bg-card p-5" aria-live="polite">
     {state.isPending ? <p>{t.loading}</p> : null}
     {state.isError ? <ErrorState error={state.error} onRetry={() => state.refetch()} /> : null}
     {status ? <p className="font-semibold">{t.status[status]}</p> : null}

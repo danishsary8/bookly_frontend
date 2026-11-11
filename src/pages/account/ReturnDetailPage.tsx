@@ -105,7 +105,7 @@ export default function ReturnDetailPage() {
         </section>
       ) : null}
 
-      <section aria-labelledby="return-items" className="rounded-xl border border-border bg-card p-5 sm:p-6">
+      <section aria-labelledby="return-items" className="shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
         <h2 id="return-items" className="font-display text-[1.563rem] leading-tight">
           {t.booksToReturn}
         </h2>
