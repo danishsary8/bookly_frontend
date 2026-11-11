@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play, Truck, Wallet } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play, QrCode, Wallet } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 import { Link } from "react-router-dom";
 import type { BookCard } from "@/api/types";
@@ -145,7 +145,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
             </CtaGlare>
             <ul className="grid gap-1.5 text-[13px] text-on-lapis-muted">
               <li className="inline-flex items-center gap-2"><Wallet className="size-4 text-gold" aria-hidden="true" /> {h.cod}</li>
-              <li className="inline-flex items-center gap-2"><Truck className="size-4 text-gold" aria-hidden="true" /> {h.delivery}</li>
+              <li className="inline-flex items-center gap-2"><QrCode className="size-4 text-gold" aria-hidden="true" /> {h.khqr}</li>
             </ul>
           </div>
         </div>
@@ -185,7 +185,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                   e.currentTarget.style.setProperty("--tilt-y", "0deg");
                   e.currentTarget.style.setProperty("--tilt-x", "0deg");
                 }}
-                className="hero-stack relative mx-auto w-[min(330px,64%,calc((100svh-var(--header-h)-25rem)*0.6))]"
+                className="hero-stack relative mx-auto w-[min(370px,70%,calc((100svh-var(--header-h)-23rem)*0.64))]"
               >
                 <span className="pointer-events-none absolute left-1/2 top-[42%] -z-10 size-[210%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(130_160_255/0.3),transparent)]" aria-hidden="true" />
                 <div className="relative aspect-[2/3] [perspective:1400px]">
@@ -227,7 +227,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                       {label ?? h.topRated} <span className="ml-1.5 tabular-nums opacity-80">{h.nOfM(index + 1, books.length)}</span>
                     </p>
                     <div key={current.id} className="hero-caption">
-                      <p className="mt-2 truncate font-display text-[clamp(1.6rem,2.1vw,2rem)] leading-tight text-on-lapis">
+                      <p className="mx-auto mt-2 line-clamp-2 max-w-[30ch] text-balance font-display text-[clamp(1.6rem,2.1vw,2rem)] leading-tight text-on-lapis">
                         <Link to={`/books/${current.id}`} className="underline-offset-4 hover:underline">
                           {current.title}
                         </Link>

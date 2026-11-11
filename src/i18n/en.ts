@@ -1296,6 +1296,8 @@ export const en = {
   homePage: {
     cod: "Cash on delivery",
     codText: "Pay when your books arrive.",
+    khqr: "Bakong KHQR",
+    khqrText: "Scan and pay with any Cambodian bank app.",
     delivery: "Delivery across Cambodia",
     deliveryText: "Phnom Penh and every province.",
     returns: "Easy returns",
