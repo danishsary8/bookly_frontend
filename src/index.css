@@ -1294,8 +1294,23 @@
 .hero-card[data-pos="next"]:hover, .hero-card[data-pos="prev"]:hover { opacity: 1; filter: saturate(0.9) brightness(0.8); }
 .hero-reflect { transition: opacity 500ms ease; }
 @media (prefers-reduced-motion: reduce) { .hero-card { transition: none; } }
-/* Home shelf: the row of spines fades into the paper at both ends. */
-.shelf-stage { mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent); }
+/* Home shelf: a wooden bookcase (pages/home.md). Back panel of dark planks, shaded under the top board and beside the
+   uprights; top board and uprights in the rail's oak; the uprights cast a soft shade onto the books next to them. */
+.shelf-stage { --case-a: #5a3c24; --case-b: #7a5535; --case-c: #553821; --case-back: #3b2817; }
+.shelf-back {
+  background:
+    repeating-linear-gradient(90deg, rgb(0 0 0 / 0.2) 0 1px, rgb(255 230 190 / 0.03) 1px 2px, transparent 2px 92px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--case-back) 70%, #000) 0, var(--case-back) 45%, color-mix(in srgb, var(--case-back) 85%, #a47b52) 100%);
+  box-shadow: inset 0 46px 44px -22px rgb(0 0 0 / 0.6);
+}
+.shelf-top {
+  background: repeating-linear-gradient(90deg, rgb(255 236 200 / 0.04) 0 1px, transparent 1px 9px, rgb(40 22 8 / 0.06) 9px 11px, transparent 11px 27px), linear-gradient(to bottom, var(--case-b), var(--case-a) 70%, var(--case-c));
+  box-shadow: inset 0 1px 0 rgb(255 225 180 / 0.3), inset 0 -1px 0 rgb(30 16 6 / 0.5), 0 12px 18px -6px rgb(0 0 0 / 0.55);
+}
+.shelf-post { background: linear-gradient(90deg, var(--case-c), var(--case-b) 45%, var(--case-a)); box-shadow: inset -1px 0 0 rgb(30 16 6 / 0.5), inset 1px 0 0 rgb(255 225 180 / 0.18); }
+.shelf-post::after { content: ""; position: absolute; top: 0; bottom: 0; left: 100%; width: 64px; background: linear-gradient(to right, rgb(20 10 4 / 0.5), transparent); }
+.shelf-post-right { transform: scaleX(-1); }
+.dark .shelf-stage { --case-a: #2c2017; --case-b: #3f2e20; --case-c: #2a1e15; --case-back: #1a120b; }
 
 /* Home hero v2 (pages/home.md, 2026-11-10): covers stand on a glossy floor with a fading mirror image; the dock of
    thumbs replaces the View book / Add to cart buttons. */
@@ -1314,13 +1329,11 @@
    other browsers simply show no reflection). */
 /* Shelf v2: books stand on an oak board, each with a soft contact shadow (no mirror images any more). */
 .shelf-floor {
-  background: linear-gradient(to top, #d9b98f 0%, #e6cfae 14%, rgb(236 222 200 / 0.75) 42%, rgb(236 222 200 / 0) 100%);
-  mask-image: linear-gradient(to right, transparent, #000 22%, #000 78%, transparent);
+  background: linear-gradient(to top, #d9b98f 0%, #cfae84 14%, rgb(170 130 90 / 0.8) 42%, rgb(90 62 38 / 0) 100%);
 }
 .shelf-lip {
   background: linear-gradient(to bottom, #f1dcbc 0, #c9a274 2px, #a47b52 60%, #8d6844 100%);
   box-shadow: 0 14px 22px -10px rgb(60 40 20 / 0.45);
-  mask-image: linear-gradient(to right, transparent, #000 22%, #000 78%, transparent);
 }
 .shelf-contact { background: radial-gradient(closest-side, rgb(50 32 14 / 0.42), rgb(50 32 14 / 0.12) 60%, transparent); }
 .shelf-pages { background: repeating-linear-gradient(90deg, #f4ecdc 0 2px, #e6dcc6 2px 3px); border-radius: 2px; }

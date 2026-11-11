@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Crown, ShoppingBag } from "lucide-react";
+import { ArrowRight, Crown, ShoppingBag, Star } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import type { BookCard } from "@/api/types";
@@ -133,35 +133,46 @@ export function TopRated() {
             ) : null}
           </div>
 
-          {/* The ranked list */}
-          <ol className="grid min-w-0 content-start gap-1">
-            {books.map((book, i) => (
-              <li key={book.id} className="min-w-0">
-                {/* Click a row to bring its book to the front; click the front book's row again to open it. */}
-                <button
-                  type="button"
-                  onClick={() => (i === front ? navigate(`/books/${book.id}`) : setPick((p) => ({ index: i, n: (p?.n ?? 0) + 1 })))}
-                  aria-current={i === front || undefined}
-                  className={cn(
-                    "group relative flex w-full min-w-0 items-center gap-3.5 rounded-xl border px-3 py-1 text-left outline-none transition-[background-color,border-color,box-shadow] duration-300 focus-visible:ring-2 focus-visible:ring-ring",
-                    i === front ? "border-input bg-card shadow-[0_14px_28px_-22px_rgb(20_32_122/0.55)]" : "border-transparent hover:bg-card/70",
-                  )}
-                >
-                  <span className={cn("absolute inset-y-2 left-0 w-[3px] rounded-full bg-primary transition-opacity duration-300", i === front ? "opacity-100" : "opacity-0")} aria-hidden="true" />
-                  <span className={cn("w-8 shrink-0 text-center font-display text-[1.6rem] leading-none tabular-nums", i < 3 ? "text-[#946C1F]" : "rank-numeral-sm")}>{i + 1}</span>
-                  <span className="w-7 shrink-0"><BookCover src={book.cover_image_url} title={book.title} className="rounded-[3px] shadow-[0_6px_12px_-8px_rgb(20_16_10/0.6)]" /></span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-display text-[15.5px] leading-snug">{book.title}</span>
-                    <span className="block truncate text-xs text-muted-foreground">{authorNames(book.authors) || h.unknownAuthor}</span>
-                  </span>
-                  {book.low_stock_remaining ? (
-                    <span className="hidden shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-semibold text-accent-text xl:inline">{dict.cards.onlyLeft(book.low_stock_remaining)}</span>
-                  ) : null}
-                  {hasScore(book) ? <ReaderScore book={book} showCount={false} className="hidden shrink-0 text-xs sm:inline-flex" /> : <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">{h.notRated}</span>}
-                  <span className="w-14 shrink-0 text-right text-sm font-semibold tabular-nums">{price(book)}</span>
-                </button>
-              </li>
-            ))}
+          {/* The ranked list (owner 2026-11-12): one calm sheet beside the showcase. Hairlines between rows; each row is
+              rank, cover, title and author, then one gold star with the score, and the price (no row of five stars). The front book's row is
+              tinted with a lapis rule. */}
+          <ol className="flex min-w-0 flex-col divide-y divide-border/70 overflow-hidden rounded-3xl border border-border bg-card px-2 py-1.5">
+            {books.map((book, i) => {
+              const score = scoreOf(book).toFixed(1);
+              const source = toNumber(book.review_count) > 0 ? null : book.reader_rating_source;
+              return (
+                <li key={book.id} className="flex min-w-0 flex-1">
+                  {/* Click a row to bring its book to the front; click the front book's row again to open it. */}
+                  <button
+                    type="button"
+                    onClick={() => (i === front ? navigate(`/books/${book.id}`) : setPick((p) => ({ index: i, n: (p?.n ?? 0) + 1 })))}
+                    aria-current={i === front || undefined}
+                    className={cn(
+                      "group relative my-0.5 flex w-full min-w-0 items-center gap-4 rounded-xl px-3 py-1.5 text-left outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-ring",
+                      i === front ? "bg-lapis-tint" : "hover:bg-muted/60",
+                    )}
+                  >
+                    <span className={cn("absolute inset-y-2.5 left-0 w-[3px] rounded-full bg-primary transition-opacity duration-300", i === front ? "opacity-100" : "opacity-0")} aria-hidden="true" />
+                    <span className={cn("w-7 shrink-0 text-center font-display text-[1.45rem] leading-none tabular-nums", i < 3 ? "text-[#946C1F]" : "text-muted-foreground/70")}>{i + 1}</span>
+                    <span className="w-7 shrink-0"><BookCover src={book.cover_image_url} title={book.title} className="rounded-[3px] shadow-[0_6px_12px_-8px_rgb(20_16_10/0.6)]" /></span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-display text-[15.5px] leading-snug">{book.title}</span>
+                      <span className="block truncate text-xs text-muted-foreground">{authorNames(book.authors) || h.unknownAuthor}</span>
+                    </span>
+                    {book.low_stock_remaining ? (
+                      <span className="hidden shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-semibold text-accent-text xl:inline">{dict.cards.onlyLeft(book.low_stock_remaining)}</span>
+                    ) : null}
+                    <span className="hidden shrink-0 items-center gap-1 text-[13px] sm:inline-flex">
+                      <Star className="size-3.5 fill-star text-star" aria-hidden="true" />
+                      {/* a Reader rating's source is read out here and shown in the showcase when the row is in front */}
+                      <span className="sr-only">{source ? h.readerRatingLabel(score, source) : dict.ui.ratedOutOf5(score)}</span>
+                      <span className="font-semibold tabular-nums" aria-hidden="true">{score}</span>
+                    </span>
+                    <span className="w-14 shrink-0 text-right text-sm font-semibold tabular-nums">{price(book)}</span>
+                  </button>
+                </li>
+              );
+            })}
           </ol>
         </div>
       )}

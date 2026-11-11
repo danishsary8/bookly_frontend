@@ -16,7 +16,8 @@ import { useT } from "@/i18n";
  * slightly different thickness, a spine in its cover's colour, the full title and the author's surname. The book in the middle is pulled
  * out and turned so its cover faces you, tilted a little and leaning towards the cursor.
  * Change book: click a spine, the arrows, a row tab, drag, or ←/→ while the shelf has focus; it also drifts on by itself
- * every few seconds until someone interacts. Click the cover or View book to open the book.
+ * every few seconds until someone interacts. The row stands in a wooden bookcase: back panel, uprights, top board, and
+ * the rail below as its base. Click the cover or View book to open the book.
  * The whole section is sized to fit one laptop screen. One rAF loop drives every book (pure CSS 3D, no WebGL), and it
  * stops while the shelf is off screen. Reduced motion: books snap, no autoplay, no tilt, no entrance slide.
  */
@@ -35,6 +36,9 @@ const AUTOPLAY_MS = 3200;
 /** A slightly wider shelf with slimmer cloth spines around the open book. */
 const SHELF_MAX = 1440;
 const SPINES = 20;
+/** The bookcase frame: thickness of the top board and of each upright, in px. */
+const CASE_TOP = 18;
+const CASE_POST = 16;
 
 /** light: dark ink on the spine. gold: the gold surname still reaches 4.5:1 on this colour (else cream). */
 type Tone = { bg: string; light: boolean; gold: boolean };
@@ -399,9 +403,14 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
   const front = d / 2 + H * 0.05;
   const width = Math.min(SHELF_MAX, SPINES * (ws + dims.gap) + d * 1.4);
   // Where the lip lands on screen: perspective 2200px from the stage centre, at depth `front`.
-  const originY = H * 0.58 + 12;
+  // The bookcase (owner 2026-11-12): a top board and two uprights frame the row; the case ends at the shelf's lip, and
+  // the rail below is its base. The eye stays where it was (viewY), so the books look the same as before.
+  const viewY = stageH / 2 + CASE_TOP;
+  const originY = H * 0.58 + 12 + CASE_TOP;
   const lipScale = 2200 / (2200 - front);
-  const lipTop = stageH / 2 + (originY + H / 2 - stageH / 2) * lipScale;
+  const lipTop = viewY + (originY + H / 2 - viewY) * lipScale;
+  const lipH = Math.max(9, H * 0.05 * lipScale);
+  const caseH = Math.ceil(lipTop + lipH);
 
   return (
     <>
@@ -429,11 +438,16 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         onPointerLeave={onLeave}
-        className="shelf-stage shelf-enter relative mx-auto mt-3 cursor-grab select-none overflow-hidden peer outline-none [perspective:2200px] [touch-action:pan-y] active:cursor-grabbing"
-        style={{ height: stageH, width: "calc(100% - 2rem)", maxWidth: width } as CSSProperties}
+        className="shelf-stage shelf-enter relative mx-auto mt-3 cursor-grab select-none overflow-hidden rounded-t-lg peer outline-none [perspective:2200px] [touch-action:pan-y] active:cursor-grabbing"
+        style={{ height: caseH, width: "calc(100% - 2rem)", maxWidth: width, perspectiveOrigin: `50% ${viewY}px` } as CSSProperties}
       >
         {/* the board's front lip: always the nearest thing, so it is drawn flat on top at its projected place */}
-        <div className="shelf-lip pointer-events-none absolute left-1/2 z-[200] -translate-x-1/2" style={{ top: lipTop, width: width * 1.4, height: Math.max(9, H * 0.05 * lipScale) }} aria-hidden="true" />
+        {/* the case: back panel behind the books; top board and uprights (with the shade they cast) in front */}
+        <div className="shelf-back pointer-events-none absolute inset-0" aria-hidden="true" />
+        <div className="shelf-post pointer-events-none absolute inset-y-0 left-0 z-[205]" style={{ width: CASE_POST }} aria-hidden="true" />
+        <div className="shelf-post shelf-post-right pointer-events-none absolute inset-y-0 right-0 z-[205]" style={{ width: CASE_POST }} aria-hidden="true" />
+        <div className="shelf-top pointer-events-none absolute inset-x-0 top-0 z-[210]" style={{ height: CASE_TOP }} aria-hidden="true" />
+        <div className="shelf-lip pointer-events-none absolute inset-x-0 z-[200]" style={{ top: lipTop, height: lipH }} aria-hidden="true" />
         <div className="absolute left-1/2 [transform-style:preserve-3d]" style={{ top: originY }} aria-hidden="true">
           {/* the oak shelf: a floor that runs back from the front edge, and the board's front lip */}
           <div className="shelf-floor absolute" style={{ width: width * 1.6, height: H * 2.6, left: -width * 0.8, top: H / 2 - H * 2.6, transformOrigin: "50% 100%", transform: `translateZ(${front}px) rotateX(90deg)` }} />

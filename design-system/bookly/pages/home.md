@@ -128,3 +128,13 @@ On `/` the header search hides (fade) while the hero search is on screen, and re
 
 ## Top rated background transitions (2026-11-11)
 - Keep cover-color wash images mounted and crossfade their opacity over 800ms. Decode the next selected cover before changing the visible wash; retain the previous color on loading failure and ignore stale loads after rapid selection changes. Reduced motion switches colors immediately. Do not reuse the hero wash entrance animation, which resets opacity to zero on every book change.
+
+## Bookcase + Top 10 list (2026-11-12, on `main`)
+- Shelf: the row stands in a wooden bookcase. `.shelf-back` (dark planks, shaded under the top), `.shelf-top` (18px
+  board) and two `.shelf-post` uprights (16px, each casting a 64px shade onto the books) in the rail's oak, set by
+  `--case-*` on `.shelf-stage` (dark values under `.dark`). The row no longer fades at the ends: books run behind the
+  uprights. The case ends at the shelf lip (`caseH`), so the rail sits directly under it as the base; the eye point is
+  fixed with `perspective-origin` so the books are drawn as before.
+- Top 10 list: one card sheet next to the showcase (same radius and border), hairlines between rows, rows share the
+  height evenly. Each row: rank, cover, title/author, optional "Only N left", one gold star + score, price. The front
+  row is tinted `bg-lapis-tint` with the lapis rule. No five-star strip in rows.
