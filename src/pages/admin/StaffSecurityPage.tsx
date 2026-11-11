@@ -135,7 +135,7 @@ export default function StaffSecurityPage() {
     >
       <div className="grid grid-cols-1 gap-8">
         {/* Account Overview & 2FA Status */}
-        <section className="rounded-xl border border-border bg-card p-5">
+        <section className="desk-card rounded-xl border border-border bg-card p-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="grid size-10 place-items-center rounded-full bg-lapis-tint text-primary">

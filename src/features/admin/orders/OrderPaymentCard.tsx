@@ -90,7 +90,7 @@ export function OrderPaymentCard({ order, isAdmin }: { order: StaffOrder; isAdmi
   const waiting = khqr && order.status === "pending";
 
   return (
-    <section aria-labelledby="order-payment" className="grid gap-2 rounded-xl border border-border bg-card p-5">
+    <section aria-labelledby="order-payment" className="grid gap-2 desk-card rounded-xl border border-border bg-card p-5">
       <h2 id="order-payment" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
         Payment
       </h2>

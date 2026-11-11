@@ -64,7 +64,7 @@ function Entry({ entry }: { entry: AuditEntry }) {
   const rows = diffRows(entry);
   const sides = entry.before && entry.after ? "both" : entry.after ? "after" : "before";
   return (
-    <li className="grid min-w-0 gap-1 rounded-xl border border-border bg-card p-4">
+    <li className="grid min-w-0 gap-1 desk-card rounded-xl border border-border bg-card p-4">
       <p className="text-[15px]">
         <span className="font-semibold">{entry.staff?.name ?? "Deleted staff member"}</span> {verb(entry.action)}{" "}
         {meta?.href && entry.entity_id ? (
@@ -137,7 +137,7 @@ export default function AuditLogPage() {
       title="Audit log"
       lead={meta && meta.total ? rangeSummary(from1, from1 + list.length - 1, meta.total, meta.total === 1 ? "change" : "changes") : "Every change made in the admin, by whom and when."}
     >
-      <div className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 desk-card rounded-xl border border-border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4">
         <SelectField label="Staff member" value={staffId ? String(staffId) : ""} onChange={(e) => set({ staff: e.target.value || undefined })}>
           <option value="">Everyone</option>
           {(members.data?.data ?? []).map((m) => (

@@ -78,7 +78,7 @@ function Panel({
   return (
     <section
       aria-labelledby={id}
-      className="grid grid-cols-1 content-start gap-4 rounded-xl border border-border bg-card p-5"
+      className="grid grid-cols-1 content-start gap-4 desk-card rounded-xl border border-border bg-card p-5"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2
@@ -172,7 +172,7 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
     <form
       onSubmit={(event) => void handleSubmit(submit)(event)}
       noValidate
-      className="grid content-start gap-5 rounded-xl border border-border bg-card p-5"
+      className="grid content-start gap-5 desk-card rounded-xl border border-border bg-card p-5"
     >
       <h2 className="font-sans text-[1.0625rem] font-semibold tracking-normal">
         Details

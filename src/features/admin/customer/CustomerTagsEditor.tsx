@@ -80,7 +80,7 @@ export function CustomerTagsEditor({ customerId, initialTags = [] }: CustomerTag
   );
 
   return (
-    <section aria-labelledby="customer-tags-heading" className="grid gap-3 rounded-xl border border-border bg-card p-5">
+    <section aria-labelledby="customer-tags-heading" className="grid gap-3 desk-card rounded-xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="customer-tags-heading" className="font-sans text-[1.0625rem] font-semibold tracking-normal flex items-center gap-2">
           <Tag className="size-4 text-muted-foreground" aria-hidden="true" />

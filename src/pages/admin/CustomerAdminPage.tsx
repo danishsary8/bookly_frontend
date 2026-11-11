@@ -452,7 +452,7 @@ export default function CustomerAdminPage() {
                 return statCards.map((t) => (
                   <div
                     key={t.label}
-                    className="grid content-start gap-1 rounded-xl border border-border bg-card p-4"
+                    className="grid content-start gap-1 desk-card rounded-xl border border-border bg-card p-4"
                   >
                     <p className="text-sm text-muted-foreground">{t.label}</p>
                     <p className="text-[1.5rem] font-semibold leading-tight tabular-nums">
@@ -468,7 +468,7 @@ export default function CustomerAdminPage() {
           ) : null}
           <section
             aria-labelledby="customer-orders"
-            className="grid gap-3 rounded-xl border border-border bg-card p-5"
+            className="grid gap-3 desk-card rounded-xl border border-border bg-card p-5"
           >
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h2
@@ -551,7 +551,7 @@ export default function CustomerAdminPage() {
         </div>
         <section
           aria-labelledby="customer-contact"
-          className="grid content-start gap-2 rounded-xl border border-border bg-card p-5"
+          className="grid content-start gap-2 desk-card rounded-xl border border-border bg-card p-5"
         >
           <h2
             id="customer-contact"

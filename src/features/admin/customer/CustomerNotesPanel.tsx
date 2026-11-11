@@ -63,7 +63,7 @@ export function CustomerNotesPanel({ customerId }: CustomerNotesPanelProps) {
   };
 
   return (
-    <section aria-labelledby="customer-notes-heading" className="grid gap-4 rounded-xl border border-border bg-card p-5">
+    <section aria-labelledby="customer-notes-heading" className="grid gap-4 desk-card rounded-xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="customer-notes-heading" className="font-sans text-[1.0625rem] font-semibold tracking-normal flex items-center gap-2">
           <FileText className="size-4 text-muted-foreground" aria-hidden="true" />

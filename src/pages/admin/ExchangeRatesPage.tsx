@@ -54,7 +54,7 @@ function AddRateForm({ current }: { current: string | null }) {
   };
   const change = current && !rateError(rate) ? ((Number(rate.replace(/,/g, "")) - Number(current)) / Number(current)) * 100 : null;
   return (
-    <form onSubmit={submit} noValidate aria-labelledby="add-rate" className="grid grid-cols-1 content-start gap-4 rounded-xl border border-border bg-card p-5">
+    <form onSubmit={submit} noValidate aria-labelledby="add-rate" className="grid grid-cols-1 content-start gap-4 desk-card rounded-xl border border-border bg-card p-5">
       <h2 id="add-rate" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
         Set a new rate
       </h2>

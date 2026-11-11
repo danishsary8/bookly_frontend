@@ -119,7 +119,7 @@ function StaffNoteCard({ order }: { order: StaffOrder }) {
   };
 
   return (
-    <section aria-labelledby="staff-note-heading" className="grid gap-3 rounded-xl border border-border bg-card p-5">
+    <section aria-labelledby="staff-note-heading" className="grid gap-3 desk-card rounded-xl border border-border bg-card p-5">
       <div className="flex items-center justify-between gap-2">
         <h2 id="staff-note-heading" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
           Staff note
@@ -243,7 +243,7 @@ export default function OrderAdminPage() {
         </div>
         <div className="grid content-start gap-6">
           {o.customer ? (
-            <section aria-labelledby="order-customer" className="grid gap-2 rounded-xl border border-border bg-card p-5">
+            <section aria-labelledby="order-customer" className="grid gap-2 desk-card rounded-xl border border-border bg-card p-5">
               <h2 id="order-customer" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
                 Customer
               </h2>
@@ -261,7 +261,7 @@ export default function OrderAdminPage() {
             </section>
           ) : null}
           {o.delivery_note ? (
-            <section aria-labelledby="delivery-note" className="grid gap-1 rounded-xl border border-border bg-card p-5">
+            <section aria-labelledby="delivery-note" className="grid gap-1 desk-card rounded-xl border border-border bg-card p-5">
               <h2 id="delivery-note" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
                 Customer note
               </h2>
