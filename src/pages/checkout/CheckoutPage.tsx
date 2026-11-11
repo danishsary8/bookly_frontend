@@ -342,7 +342,7 @@ export default function CheckoutPage() {
               <PromoReminder />
 
               {data && shipsSomething ? (
-                <FreeShippingBar subtotalUsd={Number(data.subtotal?.usd || 0) - Number(data.discount?.usd || 0)} thresholdUsd={data.free_shipping_threshold?.usd} />
+                <FreeShippingBar subtotalUsd={Number(data.subtotal?.usd || 0) - Number(data.discount?.usd || 0)} thresholdUsd={data.free_shipping_threshold?.usd} free={data.is_free_shipping} />
               ) : null}
 
               {data?.shipping_notice ? (

@@ -42,8 +42,8 @@ export function CartDeliveryEstimate({ version, coupon }: { version: string; cou
                 {data.shipping_notice ? <p className="text-muted-foreground">{data.shipping_notice}</p> : null}
               </div>
             </div>
-            {data.requires_shipping && data.free_shipping_threshold?.usd ? (
-              <FreeShippingBar subtotalUsd={String(Math.max(0, Number(data.subtotal?.usd) - Number(data.discount?.usd)))} thresholdUsd={data.free_shipping_threshold.usd} />
+            {data.requires_shipping && (data.free_shipping_threshold?.usd || data.is_free_shipping) ? (
+              <FreeShippingBar subtotalUsd={String(Math.max(0, Number(data.subtotal?.usd) - Number(data.discount?.usd)))} thresholdUsd={data.free_shipping_threshold?.usd} free={data.is_free_shipping} />
             ) : null}
           </>
         ) : null}

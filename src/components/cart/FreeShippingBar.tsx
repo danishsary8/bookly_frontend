@@ -13,20 +13,22 @@ import { useT } from "@/i18n";
 interface Props {
   subtotalUsd?: string | number | null;
   thresholdUsd?: string | number | null;
+  /** The API says delivery is already free (an offer with free delivery): show the reached state at any amount. */
+  free?: boolean;
   className?: string;
 }
 
-export function FreeShippingBar({ subtotalUsd, thresholdUsd, className }: Props) {
+export function FreeShippingBar({ subtotalUsd, thresholdUsd, free = false, className }: Props) {
   const currency = useCurrency();
   const { dict } = useT();
   const f = dict.freeShipping;
 
   const subtotal = Number(subtotalUsd || 0);
   const threshold = Number(thresholdUsd || policy.freeShippingThresholdUsd || 50);
-  if (threshold <= 0) return null;
+  if (threshold <= 0 && !free) return null;
 
-  const diff = Math.max(0, threshold - subtotal);
-  const ratio = Math.min(1, subtotal / threshold);
+  const diff = free ? 0 : Math.max(0, threshold - subtotal);
+  const ratio = free ? 1 : Math.min(1, subtotal / threshold);
   const unlocked = diff <= 0;
 
   return (

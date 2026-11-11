@@ -80,7 +80,7 @@ function CartSummary() {
   return (
     <DrawerFooter className="grid gap-4">
       {totals.freeShipping === null ? null : (
-        <FreeShippingBar subtotalUsd={totals.totalBeforeShipping.usd} thresholdUsd={totals.freeShipping?.threshold_usd} />
+        <FreeShippingBar subtotalUsd={totals.totalBeforeShipping.usd} thresholdUsd={totals.freeShipping?.threshold_usd} free={totals.freeShipping?.is_free} />
       )}
       {totals.discount?.kind === "offer" ? (
         <div className="flex items-baseline justify-between gap-3 text-sm text-success">
