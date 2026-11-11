@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, BookCopy, BookPlus, Download, FileUp, Layers, Search, Sliders, X } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, BookCopy, BookPlus, Download, FileUp, Layers, Search, Sliders, X } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
-import { staffApi, staffQueries, type BookStatus, type StaffBook } from "@/api/endpoints/staff";
+import { staffApi, staffQueries, type BookListSort, type BookStatus, type StaffBook } from "@/api/endpoints/staff";
 import { CoverThumb } from "@/components/CoverThumb";
 import { EmptyState } from "@/components/EmptyState";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -64,7 +64,11 @@ export default function BooksPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
 
-  const books = useQuery(staffQueries.books({ q: q || undefined, status: statusParam, trashed, page, per_page: PER_PAGE }));
+  // Sales next to stock (owner 2026-11-12): the Sold column's header switches newest → most sold → least sold.
+  const sortParam = params.get("sort");
+  const sort: BookListSort = sortParam === "most_sold" || sortParam === "least_sold" ? sortParam : "newest";
+  const nextSort: BookListSort = sort === "newest" ? "most_sold" : sort === "most_sold" ? "least_sold" : "newest";
+  const books = useQuery(staffQueries.books({ q: q || undefined, status: statusParam, trashed, sort: sort === "newest" ? undefined : sort, page, per_page: PER_PAGE }));
   const meta = books.data?.meta;
   const list = books.data?.data ?? [];
 
@@ -266,6 +270,17 @@ export default function BooksPage() {
                 </th>
                 <th scope="col" className="px-4 py-3 font-semibold">Book</th>
                 <th scope="col" className="px-4 py-3 font-semibold">Formats and stock</th>
+                <th scope="col" className="px-4 py-3 text-right font-semibold" aria-sort={sort === "most_sold" ? "descending" : sort === "least_sold" ? "ascending" : "none"}>
+                  <button
+                    type="button"
+                    onClick={() => go({ sort: nextSort === "newest" ? undefined : nextSort, page: undefined })}
+                    title={sort === "newest" ? "Sort by most sold" : sort === "most_sold" ? "Sort by least sold" : "Back to newest first"}
+                    className="inline-flex min-h-9 items-center gap-1 rounded-md px-1 font-semibold underline-offset-4 hover:underline"
+                  >
+                    Sold (90 days)
+                    {sort === "most_sold" ? <ArrowDown className="size-3.5" aria-hidden="true" /> : sort === "least_sold" ? <ArrowUp className="size-3.5" aria-hidden="true" /> : <ArrowUpDown className="size-3.5 text-muted-foreground" aria-hidden="true" />}
+                  </button>
+                </th>
                 <th scope="col" className="px-4 py-3 font-semibold">Status</th>
                 <th scope="col" className="px-4 py-3 font-semibold">Updated</th>
               </tr>
@@ -296,6 +311,7 @@ export default function BooksPage() {
                     <td className="px-4 py-3 text-sm">
                       <FormatsCell book={book} />
                     </td>
+                    <td className={cn("px-4 py-3 text-right tabular-nums", book.sold_recent ? "font-semibold" : "text-muted-foreground")}>{book.sold_recent ?? "—"}</td>
                     <td className="px-4 py-3">
                       <BookState book={book} />
                     </td>

@@ -883,3 +883,9 @@ real-book carousel; premium promises band; Bakong KHQR instead of "Delivery acro
 - Checks: lint, typecheck, tests (+2), build; in the browser with a mocked promotion: pop-up at 1440, 390 Khmer and
   1366 dark (axe 0, console clean), tick box then reload shows nothing, second page in the same visit shows nothing;
   cart, checkout and the admin list load clean (axe 0). Not exercised: saving the admin form against a real API.
+
+## Sold column on the staff Books list (2026-11-12, on `main`) — promotions step 3 of 3
+- Admin → Books: a "Sold (90 days)" column from `sold_recent`; its header switches newest → most sold → least sold
+  (`?sort=` in the URL). Slow sellers stay in Reports ("worst sellers"); promotion results are on Admin → Promotions.
+- Checks: lint, typecheck, tests, build; the Books page in the browser with mocked numbers (axe 0). The order itself is
+  the API's (covered by the backend's StaffBooksSoldTest), not checked against a real API from here.

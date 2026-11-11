@@ -7449,7 +7449,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** All books incl. hidden/deleted (q, status, trashed) */
+        /** All books incl. hidden/deleted (q, status, trashed, sort newest|most_sold|least_sold). Each row has sold_recent: copies ordered in the last 90 days (cancelled orders left out) */
         get: {
             parameters: {
                 query?: never;
