@@ -6,6 +6,7 @@ import { catalogQueries } from "@/api/endpoints/catalog";
 import { cartApi, cartKeys } from "@/api/endpoints/cart";
 import type { SeriesBook, SeriesDetail } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
+import { SetOfferBanner } from "@/features/offers/SetOfferBanner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "@/stores/toast";
@@ -31,7 +32,8 @@ export function VolumePicker({ currentBookId, series, className }: VolumePickerP
   // Complete the set mutation
   const [isAddingSet, setIsAddingSet] = useState(false);
   const completeSetMutation = useMutation({
-    mutationFn: () => cartApi.addSeries(seriesId),
+    // With a set offer every volume goes in (also ones already owned): the offer needs the whole set in one order.
+    mutationFn: () => cartApi.addSeries(seriesId, Boolean(series.set_offer)),
     onMutate: () => setIsAddingSet(true),
     onSettled: () => setIsAddingSet(false),
     onSuccess: (data) => {
@@ -82,6 +84,8 @@ export function VolumePicker({ currentBookId, series, className }: VolumePickerP
           <span>{vDict.completeSet}</span>
         </Button>
       </div>
+
+      <SetOfferBanner offer={series.set_offer} onAdd={() => completeSetMutation.mutate()} pending={isAddingSet || completeSetMutation.isPending} className="mt-4" />
 
       {/* Horizontal scrollable volume picker */}
       <div className="mt-4 flex gap-3.5 overflow-x-auto pb-3 pt-1 scroll-smooth snap-x">

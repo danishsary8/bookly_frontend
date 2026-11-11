@@ -14,12 +14,13 @@ import { useT } from "@/i18n";
  */
 
 type BookOffer = NonNullable<BookCard["offer"]>;
-
 /** Book card badge: "Buy 2, save 15%". */
 export function OfferBadge({ offer, className }: { offer: BookOffer | null | undefined; className?: string }) {
   const { dict } = useT();
   if (!offer?.min_quantity || !offer.percent_off) return null;
-  return <SaleBadge label={`${offer.ends_at ? `${dict.shopExtras.limited} · ` : ""}${dict.offers.badge(offer.min_quantity, percentLabel(offer.percent_off))}`} className={className} />;
+  const pct = percentLabel(offer.percent_off);
+  const text = offer.whole_series ? dict.offers.setBadge(pct) : dict.offers.badge(offer.min_quantity, pct);
+  return <SaleBadge label={`${offer.ends_at ? `${dict.shopExtras.limited} · ` : ""}${text}`} className={className} />;
 }
 
 /** Book page line under the price: "Buy 2 from Sherlock Holmes, save 15%. Ends 15 Nov 2026." */
@@ -31,14 +32,15 @@ export function BookOfferLine({ offer, className }: { offer: BookOffer | null | 
     <p className={cn("flex items-start gap-2 text-[15px] font-medium text-accent-text", className)}>
       <Tag className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
       <span>
-        {o.bookLine(offer.min_quantity, percentLabel(offer.percent_off), offer.target_label ?? null)}
+        {(offer.whole_series ? o.setBookLine : o.bookLine)(offer.min_quantity, percentLabel(offer.percent_off), offer.target_label ?? null)}
+        {offer.free_delivery ? ` ${o.plusFreeDelivery}.` : null}
         {offer.ends_at ? ` ${o.ends(orderDate(offer.ends_at, locale))}` : null}
       </span>
     </p>
   );
 }
 
-type Nudge = { add_quantity?: number; percent_off?: string; target_label?: string | null } | null | undefined;
+type Nudge = { add_quantity?: number; percent_off?: string; target_label?: string | null; whole_series?: boolean; free_delivery?: boolean } | null | undefined;
 
 /** Cart nudge: "Add 1 more book from Sherlock Holmes to save 15%" + a link to those books. */
 export function OfferNudge({ nudge, onNavigate, className }: { nudge: Nudge; onNavigate?: () => void; className?: string }) {
@@ -50,7 +52,8 @@ export function OfferNudge({ nudge, onNavigate, className }: { nudge: Nudge; onN
     <p className={cn("flex items-start gap-2 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-sm text-foreground", className)}>
       <Tag className="mt-0.5 size-4 shrink-0 text-accent-text" aria-hidden="true" />
       <span>
-        {o.nudge(nudge.add_quantity, percentLabel(nudge.percent_off), label)}{" "}
+        {(nudge.whole_series ? o.setNudge : o.nudge)(nudge.add_quantity, percentLabel(nudge.percent_off), label)}
+        {nudge.free_delivery ? ` ${o.plusFreeDelivery}` : null}{" "}
         <Link
           to={label ? `/books?q=${encodeURIComponent(label)}` : "/books"}
           onClick={onNavigate}

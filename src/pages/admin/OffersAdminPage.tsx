@@ -150,6 +150,8 @@ type Values = {
   gift_id: string;
   gift_quantity: string;
   min_subtotal: string;
+  whole_series: boolean;
+  free_delivery: boolean;
   name: string;
   applies_to: "all" | "selected";
   min_quantity: string;
@@ -171,6 +173,8 @@ function OfferDialog({ offer, onClose }: { offer: Offer | null; onClose: () => v
     gift_id: String(offer?.gift_id ?? ""),
     gift_quantity: String(offer?.gift_quantity ?? 1),
     min_subtotal: offer?.min_subtotal ?? "",
+    whole_series: offer?.whole_series ?? false,
+    free_delivery: offer?.free_delivery ?? false,
     name: offer?.name ?? "",
     applies_to: offer?.applies_to ?? "selected",
     min_quantity: String(offer?.min_quantity ?? 2),
@@ -195,7 +199,7 @@ function OfferDialog({ offer, onClose }: { offer: Offer | null; onClose: () => v
     onError: (err) => {
       const apiError = ApiError.from(err);
       const next: Errors = {};
-      for (const f of ["name", "applies_to", "min_quantity", "percent_off", "starts_at", "ends_at", "max_orders", "targets", "gift_id", "gift_quantity", "min_subtotal", "type"] as const) {
+      for (const f of ["name", "applies_to", "min_quantity", "percent_off", "starts_at", "ends_at", "max_orders", "targets", "gift_id", "gift_quantity", "min_subtotal", "type", "whole_series"] as const) {
         const m = apiError.field(f);
         if (m) next[f] = m;
       }
@@ -207,18 +211,20 @@ function OfferDialog({ offer, onClose }: { offer: Offer | null; onClose: () => v
   const n = Number(v.min_quantity);
   const percentOk = /^\d+(\.\d{1,2})?$/.test(v.percent_off.trim()) && Number(v.percent_off) > 0 && Number(v.percent_off) <= 50;
   const single = v.targets.length === 1 && v.targets[0].type !== "book" ? v.targets[0].label : null;
-  const previewOk = v.type !== "gift" && Number.isInteger(n) && n >= 2 && n <= 20 && percentOk;
+  const set_ = v.type !== "gift" && v.whole_series; // a set offer: every volume of the chosen series
+  const previewOk = v.type !== "gift" && (set_ || (Number.isInteger(n) && n >= 2 && n <= 20)) && percentOk;
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const e: Errors = {};
     if (!v.name.trim()) e.name = "Give the offer a name (only staff see it).";
-    if (!(Number.isInteger(n) && n >= (v.type === "gift" ? 1 : 2) && n <= 20)) e.min_quantity = v.type === "gift" ? t.quantityRange : "Enter a whole number from 2 to 20.";
+    if (!set_ && !(Number.isInteger(n) && n >= (v.type === "gift" ? 1 : 2) && n <= 20)) e.min_quantity = v.type === "gift" ? t.quantityRange : "Enter a whole number from 2 to 20.";
     if (v.type !== "gift" && !percentOk) e.percent_off = "Enter a percent above 0 and at most 50, like 10 or 12.5.";
     if (v.type === "gift" && !v.gift_id) e.gift_id = t.giftType;
     if (v.max_orders.trim() && !(/^\d+$/.test(v.max_orders.trim()) && Number(v.max_orders) >= 1)) e.max_orders = "Enter a whole number, 1 or more.";
     if (v.starts_at && v.ends_at && v.ends_at <= v.starts_at) e.ends_at = "The end must be after the start.";
     if (v.applies_to === "selected" && v.targets.length === 0) e.targets = "Choose at least one book, category or series.";
+    if (set_ && (v.applies_to !== "selected" || v.targets.some((target) => target.type !== "series"))) e.whole_series = "A full-set offer is for chosen series only: remove single books and categories.";
     setErrors(e);
     if (Object.keys(e).length) return;
     save.mutate({
@@ -226,7 +232,8 @@ function OfferDialog({ offer, onClose }: { offer: Offer | null; onClose: () => v
       ...(v.type === "gift" ? { gift_id: Number(v.gift_id), gift_quantity: Number(v.gift_quantity), min_subtotal: v.min_subtotal || null } : {}),
       name: v.name.trim(),
       applies_to: v.applies_to,
-      min_quantity: n,
+      ...(set_ ? {} : { min_quantity: n }),
+      ...(v.type !== "gift" ? { whole_series: v.whole_series, free_delivery: v.free_delivery } : {}),
       percent_off: v.type === "gift" ? "0.00" : v.percent_off.trim(),
       starts_at: v.starts_at ? new Date(v.starts_at).toISOString() : null,
       ends_at: v.ends_at ? new Date(v.ends_at).toISOString() : null,
@@ -249,9 +256,29 @@ function OfferDialog({ offer, onClose }: { offer: Offer | null; onClose: () => v
           {errors.form ? <FormAlert title={errors.form} /> : null}
           <TextField label="Name" hint="Only staff see it (lists and reports)." value={v.name} onChange={(e) => set({ name: e.target.value })} error={errors.name} maxLength={100} />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <TextField label="Buy at least (books)" inputMode="numeric" value={v.min_quantity} onChange={(e) => set({ min_quantity: e.target.value })} error={errors.min_quantity} hint="2 to 20" />
+            {set_ ? null : <TextField label="Buy at least (books)" inputMode="numeric" value={v.min_quantity} onChange={(e) => set({ min_quantity: e.target.value })} error={errors.min_quantity} hint="2 to 20" />}
             {v.type !== "gift" ? <TextField label="Percent off each book" inputMode="decimal" value={v.percent_off} onChange={(e) => set({ percent_off: e.target.value })} error={errors.percent_off} hint="Up to 50" /> : null}
           </div>
+          {v.type !== "gift" ? (
+            <fieldset className="grid gap-2">
+              <legend className="mb-1 text-sm font-semibold">Set and delivery</legend>
+              <label className="flex min-h-11 items-start gap-3 text-[15px]">
+                <input type="checkbox" className="mt-1 size-4" checked={v.whole_series} onChange={(e) => set({ whole_series: e.target.checked, ...(e.target.checked ? { applies_to: "selected" as const } : {}) })} />
+                <span>
+                  Full set offer
+                  <span className="block text-sm text-muted-foreground">The discount applies only when every volume of a chosen series is in one order. Choose series below.</span>
+                </span>
+              </label>
+              {errors.whole_series ? <p className="text-sm text-destructive">{errors.whole_series}</p> : null}
+              <label className="flex min-h-11 items-start gap-3 text-[15px]">
+                <input type="checkbox" className="mt-1 size-4" checked={v.free_delivery} onChange={(e) => set({ free_delivery: e.target.checked })} />
+                <span>
+                  Free delivery
+                  <span className="block text-sm text-muted-foreground">Orders that get this offer pay no delivery fee.</span>
+                </span>
+              </label>
+            </fieldset>
+          ) : null}
           <SelectField label={t.offerType} value={v.type} onChange={(e) => set({ type: e.target.value as Values["type"] })}>
             <option value="buy_n_percent">{t.percentType}</option><option value="gift">{t.giftType}</option>
           </SelectField>
@@ -288,11 +315,14 @@ function OfferDialog({ offer, onClose }: { offer: Offer | null; onClose: () => v
             {previewOk ? (
               <>
                 <div>
-                  <SaleBadge label={`Buy ${n}, save ${pct(v.percent_off)}%`} />
+                  <SaleBadge label={set_ ? `Full set: save ${pct(v.percent_off)}%` : `Buy ${n}, save ${pct(v.percent_off)}%`} />
                 </div>
                 <p className="flex items-start gap-2 text-[15px] font-medium text-accent-text">
                   <Tag className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                  {customerSentence(n, pct(v.percent_off), v.applies_to === "selected" ? single : null, v.ends_at ? new Date(v.ends_at).toISOString() : null)}
+                  {set_
+                    ? `Buy all volumes of ${single ?? "the series"} together, save ${pct(v.percent_off)}%.`
+                    : customerSentence(n, pct(v.percent_off), v.applies_to === "selected" ? single : null, v.ends_at ? new Date(v.ends_at).toISOString() : null)}
+                  {v.free_delivery ? " + free delivery." : null}
                 </p>
               </>
             ) : (
@@ -420,7 +450,8 @@ export default function OffersAdminPage() {
                       <th scope="row" className={`${td} font-semibold`}>
                         {o.name}
                         <span className="mt-0.5 block text-sm font-normal text-muted-foreground">
-                          {o.type === "gift" ? dict.shopExtras.giftType : `Buy ${o.min_quantity}, save ${pct(o.percent_off)}%`}
+                          {o.type === "gift" ? dict.shopExtras.giftType : o.whole_series ? `Full set, save ${pct(o.percent_off)}%` : `Buy ${o.min_quantity}, save ${pct(o.percent_off)}%`}
+                          {o.free_delivery ? " + free delivery" : null}
                         </span>
                       </th>
                       <td className={cn(td, "max-w-[18rem] text-sm")}>{coverage(o)}</td>

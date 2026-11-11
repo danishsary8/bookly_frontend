@@ -22,7 +22,7 @@ import { setCoupon, useCoupon } from "@/features/cart/couponStore";
 import { useCartMutations, useUsableCart } from "@/features/cart/useCart";
 import { cartTotals } from "@/features/offers/cartTotals";
 import { CouponNotUsedNote, OfferNudge } from "@/features/offers/offerText";
-import { percentLabel } from "@/features/offers/percent";
+import { offerLineText } from "@/features/offers/offerLineText";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
@@ -78,7 +78,7 @@ function Summary() {
           <div className="flex justify-between gap-4 text-success">
             <dt>
               {discount.kind === "offer"
-                ? dict.offers.offerLine(discount.offer.min_quantity ?? 0, percentLabel(discount.offer.percent_off))
+                ? offerLineText(dict, discount.offer)
                 : c.discountCode(discount.code)}
             </dt>
             <dd className="tabular-nums">−{formatMoney(discount.amount.usd, discount.amount.khr, currency)}</dd>

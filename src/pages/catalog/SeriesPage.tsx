@@ -19,6 +19,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { SkeletonGroup } from "@/components/ui/skeleton";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
+import { SetOfferBanner } from "@/features/offers/SetOfferBanner";
 import { useT } from "@/i18n";
 
 /* A series in reading order (pages/catalogue.md): a header panel with the volumes' covers and "Complete the set",
@@ -36,7 +37,7 @@ export default function SeriesPage() {
   const queryClient = useQueryClient();
 
   const completeSetMutation = useMutation({
-    mutationFn: () => cartApi.addSeries(id),
+    mutationFn: () => cartApi.addSeries(id, Boolean(series.data?.set_offer)),
     onSuccess: (data) => {
       void queryClient.invalidateQueries({ queryKey: cartKeys.cart() });
       void queryClient.invalidateQueries({ queryKey: catalogKeys.series(id) });
@@ -70,7 +71,9 @@ export default function SeriesPage() {
         variant="panel"
         covers={books.filter((b) => b.cover_image_url).slice(0, 5).map((b) => ({ src: b.cover_image_url, title: b.title }))}
         meta={
-          books.length > 0 && !series.isPending ? (
+          books.length > 0 && !series.isPending && series.data?.set_offer ? (
+            <SetOfferBanner offer={series.data.set_offer} onAdd={() => completeSetMutation.mutate()} pending={completeSetMutation.isPending} />
+          ) : books.length > 0 && !series.isPending ? (
             <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-dashed border-border pt-4">
               <Button onClick={() => completeSetMutation.mutate()} disabled={completeSetMutation.isPending} className="gap-1.5">
                 {completeSetMutation.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Sparkles className="size-4" aria-hidden="true" />}

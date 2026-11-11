@@ -1545,6 +1545,20 @@ export const km: Translations = {
     seeBooks: "មើលសៀវភៅ",
     couponNotUsed: (code: string) => `គូប៉ុង ${code} មិនត្រូវបានប្រើទេ៖ ការផ្តល់ជូនសន្សំបានច្រើនជាង។ គូប៉ុងនៅតែប្រើបានលើកក្រោយ។`,
     offerEnded: "ការផ្តល់ជូននេះទើបតែបញ្ចប់។ សូមពិនិត្យតម្លៃសរុបថ្មី រួចបញ្ជាទិញ។",
+    setBadge: (pct: string) => `ទិញមួយឈុត សន្សំ ${pct}%`,
+    setBookLine: (n: number, pct: string, label: string | null) =>
+      label ? `ទិញទាំង ${n} ភាគនៃ ${label} ក្នុងពេលតែមួយ សន្សំ ${pct}%។` : `ទិញទាំង ${n} ភាគនៃកម្រងនេះក្នុងពេលតែមួយ សន្សំ ${pct}%។`,
+    setOfferLine: (pct: string) => `ការផ្តល់ជូនមួយឈុត៖ សន្សំ ${pct}%`,
+    setNudge: (add: number, pct: string, label: string | null) =>
+      `បន្ថែម ${add} ភាគទៀត${label ? `នៃ ${label}` : ""} ដើម្បីគ្រប់ឈុត និងសន្សំ ${pct}%`,
+    freeDelivery: "ដឹកជញ្ជូនឥតគិតថ្លៃ",
+    plusFreeDelivery: "+ ដឹកជញ្ជូនឥតគិតថ្លៃ",
+    setTitle: (pct: string) => `ទិញមួយឈុត សន្សំ ${pct}%`,
+    setLead: (n: number) => `ទាំង ${n} ភាគក្នុងការបញ្ជាទិញតែមួយ។`,
+    setPrice: "តម្លៃមួយឈុត",
+    youSave: (amount: string) => `អ្នកសន្សំបាន ${amount}`,
+    getSet: "បន្ថែមមួយឈុតពេញ",
+    endsIn: (days: number) => (days <= 0 ? "ផុតកំណត់ថ្ងៃនេះ" : days === 1 ? "ផុតកំណត់ថ្ងៃស្អែក" : `ផុតកំណត់ក្នុង ${days} ថ្ងៃ`),
   },
   freeShipping: {
     region: "ការរីកចម្រើនឆ្ពោះទៅការដឹកជញ្ជូនឥតគិតថ្លៃ",

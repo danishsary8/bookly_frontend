@@ -31,7 +31,7 @@ import { toast } from "@/stores/toast";
 import { formatName, getDict, useT } from "@/i18n";
 import { FreeGiftLine } from "@/features/offers/FreeGiftLine";
 import { CouponNotUsedNote } from "@/features/offers/offerText";
-import { percentLabel } from "@/features/offers/percent";
+import { offerLineText } from "@/features/offers/offerLineText";
 import { shopFeaturesQuery } from "@/api/endpoints/credit";
 
 /*
@@ -362,7 +362,7 @@ export default function CheckoutPage() {
                   <Row label={<span className="text-muted-foreground">{k.subtotal}</span>} amount={data.subtotal} />
                   {Number(data.discount?.usd) > 0 ? (
                     <Row
-                      label={data.applied === "offer" && data.offer ? dict.offers.offerLine(data.offer.min_quantity ?? 0, percentLabel(data.offer.percent_off)) : k.discount}
+                      label={data.applied === "offer" && data.offer ? offerLineText(dict, data.offer) : k.discount}
                       amount={data.discount}
                       negative
                       className="text-success"

@@ -108,7 +108,7 @@ describe("Series Volumes & Volume Picker", () => {
     expect(completeBtn).toBeInTheDocument();
     await user.click(completeBtn);
 
-    expect(addSeriesSpy).toHaveBeenCalledWith(10);
+    expect(addSeriesSpy).toHaveBeenCalledWith(10, false);
   });
 
   it("renders Complete the set on SeriesPage and adds missing volumes", async () => {
@@ -135,6 +135,6 @@ describe("Series Volumes & Volume Picker", () => {
     expect(completeBtn).toBeInTheDocument();
     await user.click(completeBtn);
 
-    expect(addSeriesSpy).toHaveBeenCalledWith(10);
+    expect(addSeriesSpy).toHaveBeenCalledWith(10, false);
   });
 });

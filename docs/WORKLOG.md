@@ -858,3 +858,14 @@ real-book carousel; premium promises band; Bakong KHQR instead of "Delivery acro
 - Coming soon: marquee of premiere tickets with pause button.
 - Checks: lint, typecheck, 648 tests, build; browser + axe 0 at 1440×900, 1366×768 dark, Khmer, 390, reduced motion (mock API).
 - Backend: `DemoReviewsSeeder` (bookly_backend_v2) fills reviews for unrated books, see that repo's WORKLOG.
+
+## Set offers in the shop and admin (2026-11-12, on `main`) — promotions step 1 of 3
+- API types regenerated from the backend's OpenAPI (`whole_series`, `free_delivery`, series `set_offer`).
+- `SetOfferBanner` (features/offers): "Buy the full set, save X%", set price vs full price, saving, free delivery, end
+  date / days left, "Add the full set". Shown in the book page's volume box and on the series page. With a set offer
+  "Complete the set" sends `whole_set: true`, so volumes already owned are added too (the offer needs the whole set).
+- Offer texts: set badge, book line, cart nudge ("Add 1 more volume … to complete the set"), discount row label in the
+  cart, drawer and checkout (`offerLineText`). EN + KM.
+- Admin → Offers: "Full set offer" and "Free delivery" switches in the form, preview and list label.
+- Checks: lint, typecheck, tests, build; series page in the browser with a mocked set offer (1440, 390, dark; axe 0).
+  Not exercised in a browser: the admin form and a real cart with a set offer (backend tests cover the pricing).

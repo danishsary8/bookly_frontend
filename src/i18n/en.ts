@@ -1540,6 +1540,21 @@ export const en = {
     seeBooks: "See the books",
     couponNotUsed: (code: string) => `Your coupon ${code} wasn't used: the offer saves you more. It stays valid for next time.`,
     offerEnded: "This offer has just ended. Check your new total, then place the order.",
+    // Set offers: every volume of a series in one order.
+    setBadge: (pct: string) => `Full set: save ${pct}%`,
+    setBookLine: (n: number, pct: string, label: string | null) =>
+      label ? `Buy all ${n} volumes of ${label} together, save ${pct}%.` : `Buy all ${n} volumes of the series together, save ${pct}%.`,
+    setOfferLine: (pct: string) => `Full set offer: save ${pct}%`,
+    setNudge: (add: number, pct: string, label: string | null) =>
+      `Add ${add} more ${add === 1 ? "volume" : "volumes"}${label ? ` of ${label}` : ""} to complete the set and save ${pct}%`,
+    freeDelivery: "Free delivery",
+    plusFreeDelivery: "+ free delivery",
+    setTitle: (pct: string) => `Buy the full set, save ${pct}%`,
+    setLead: (n: number) => `All ${n} volumes in one order.`,
+    setPrice: "Set price",
+    youSave: (amount: string) => `You save ${amount}`,
+    getSet: "Add the full set",
+    endsIn: (days: number) => (days <= 0 ? "Ends today" : days === 1 ? "Ends tomorrow" : `Ends in ${days} days`),
   },
   freeShipping: {
     region: "Free delivery progress",

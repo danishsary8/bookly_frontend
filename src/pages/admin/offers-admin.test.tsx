@@ -107,7 +107,7 @@ describe("offers admin", () => {
     await user.click(within(dialog).getByRole("button", { name: "Create offer" }));
     await waitFor(() => expect(create).toHaveBeenCalled());
     expect(create.mock.calls[0][0]).toEqual({
-      name: "Buy 2 Holmes", applies_to: "selected", min_quantity: 2, percent_off: "15", starts_at: null, ends_at: null,
+      name: "Buy 2 Holmes", applies_to: "selected", min_quantity: 2, whole_series: false, free_delivery: false, percent_off: "15", starts_at: null, ends_at: null,
       max_orders: null, is_active: false, targets: [{ type: "series", id: 1 }],
     });
   });

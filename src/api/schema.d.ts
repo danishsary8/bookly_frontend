@@ -3192,6 +3192,52 @@ export interface paths {
         };
         trace?: never;
     };
+    "/catalog/upcoming": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Coming soon books (pre-orders and scheduled books), soonest first */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Up to 12 books. Pre-orders are visible books with an active format releasing later; announced books are scheduled to publish later and have no public detail page yet. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: (components["schemas"]["BookCard"] & {
+                                /**
+                                 * Format: date
+                                 * @description The earlier of the first future release date and the publish date
+                                 */
+                                coming_on: string | null;
+                                /** @description True for a scheduled book that is not public yet (no detail page, not buyable) */
+                                announced: boolean;
+                            })[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/catalog/rows": {
         parameters: {
             query?: never;
@@ -5806,7 +5852,7 @@ export interface paths {
         put?: never;
         /**
          * Add missing series volumes to cart ("Complete the set")
-         * @description Adds cheapest in-stock physical variant for every volume in the series that the customer does not own and is not already in cart.
+         * @description Adds cheapest in-stock physical variant for every volume in the series that the customer does not own and is not already in cart. With body `whole_set: true` (set offers) the volumes the customer already owns are added too, so the cart holds the full set.
          */
         post: {
             parameters: {
@@ -5817,7 +5863,13 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        whole_set?: boolean;
+                    };
+                };
+            };
             responses: {
                 /** @description Missing volumes added */
                 200: {
@@ -8702,7 +8754,7 @@ export interface paths {
         put?: never;
         /**
          * (admin) Create automatic offer
-         * @description name, type buy_n_percent (default) or gift, applies_to all|selected, min_quantity 2-20 (gift 1-20, default 1), percent_off 0.01-50 (gift 0), gift_id required for gift, gift_quantity 1-100 default 1, min_subtotal optional positive matching subtotal instead of min_quantity for gifts, starts_at?, ends_at? after starts_at, max_orders?, is_active?, targets [{type book|category|series, id}] 1-200 for selected, refused for all. Gift and monetary winners are independent; one gift plus one monetary discount. Audited.
+         * @description name, type buy_n_percent (default) or gift, applies_to all|selected, min_quantity 2-20 (gift 1-20, default 1), percent_off 0.01-50 (gift 0), gift_id required for gift, gift_quantity 1-100 default 1, min_subtotal optional positive matching subtotal instead of min_quantity for gifts, starts_at?, ends_at? after starts_at, max_orders?, is_active?, targets [{type book|category|series, id}] 1-200 for selected, refused for all. whole_series? (set offer: every volume of the target series in one order; series targets only; min_quantity optional), free_delivery? (the order gets free delivery when the offer applies). Gift and monetary winners are independent; one gift plus one monetary discount. Audited.
          */
         post: {
             parameters: {
@@ -12384,6 +12436,22 @@ export interface components {
             total_volumes?: number | null;
             owned_count?: number | null;
             in_cart_count?: number | null;
+            /** @description The live set offer for this series (buy every volume in one order), or null. Prices use each volume's lowest price. */
+            set_offer?: {
+                id?: number;
+                /** @example 20.00 */
+                percent_off?: string;
+                free_delivery?: boolean;
+                /** Format: date-time */
+                ends_at?: string | null;
+                volumes?: number;
+                full_price_usd?: components["schemas"]["Money"];
+                full_price_khr?: components["schemas"]["Riel"];
+                set_price_usd?: components["schemas"]["Money"];
+                set_price_khr?: components["schemas"]["Riel"];
+                saving_usd?: components["schemas"]["Money"];
+                saving_khr?: components["schemas"]["Riel"];
+            } | null;
             books?: components["schemas"]["BookCard"][];
         };
         RatingSummary: {
@@ -12576,6 +12644,10 @@ export interface components {
             ends_at?: string | null;
             /** @description Series or category name when the offer has exactly one such target; else null. */
             target_label?: string | null;
+            /** @description A set offer: applies only when every volume of the target series is in the cart; min_quantity is then the number of volumes. */
+            whole_series?: boolean;
+            /** @description The order this offer applies to gets free delivery. */
+            free_delivery?: boolean;
             discount_usd?: components["schemas"]["Money"];
             discount_khr?: components["schemas"]["Riel"];
         } | null;
@@ -12668,6 +12740,10 @@ export interface components {
             in_stock?: boolean;
             rating_avg?: number | null;
             review_count?: number;
+            /** @description A public score staff entered for the book (one decimal), shown with its source until customers review it. */
+            reader_rating?: number | null;
+            /** @description Where reader_rating comes from, e.g. Goodreads. Null when reader_rating is null. */
+            reader_rating_source?: string | null;
             /** @description Copies ordered in the last 90 days excluding cancelled and deleted orders; cached hourly. Null below 5. */
             sold_count?: number | null;
             /** @description Remaining copies of the cheapest active format when physical, released and between 1 and shop.low_stock_badge; otherwise null. */
@@ -12716,6 +12792,10 @@ export interface components {
             ends_at?: string | null;
             /** @description Series or category name when the offer has exactly one such target; else null. */
             target_label?: string | null;
+            /** @description A set offer: applies only when every volume of the target series is in the cart; min_quantity is then the number of volumes. */
+            whole_series?: boolean;
+            /** @description The order this offer applies to gets free delivery. */
+            free_delivery?: boolean;
         } | null;
         Variant: {
             id?: number;
@@ -12845,6 +12925,9 @@ export interface components {
                 /** @example 15.00 */
                 percent_off?: string;
                 target_label?: string | null;
+                /** @description Set offer: add_quantity is the number of volumes still missing from the series. */
+                whole_series?: boolean;
+                free_delivery?: boolean;
             } | null;
             free_shipping?: components["schemas"]["CartFreeShipping"];
         };

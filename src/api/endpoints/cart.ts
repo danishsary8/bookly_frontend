@@ -47,7 +47,8 @@ export const cartApi = {
   setQuantity: (itemId: number, quantity: number) => api.patch<Resource<Cart>>(`/cart/items/${itemId}`, { quantity }).then(cartData),
   removeItem: (itemId: number) => api.delete<Resource<Cart>>(`/cart/items/${itemId}`).then(cartData),
   clear: () => api.delete<Resource<Cart>>("/cart").then(cartData),
-  addSeries: (seriesId: number) => api.post<Resource<AddSeriesResult>>(`/cart/series/${seriesId}`).then((r) => r.data),
+  /** `wholeSet`: also add volumes the customer already owns (a set offer needs every volume in the cart). */
+  addSeries: (seriesId: number, wholeSet = false) => api.post<Resource<AddSeriesResult>>(`/cart/series/${seriesId}`, wholeSet ? { whole_set: true } : undefined).then((r) => r.data),
 
   checkCoupon: (code: string) => api.post<Resource<CouponCheck>>("/cart/coupon/check", { code }).then((r) => r.data),
   /** Totals for the cart; delivery is priced for `addressId` (else the default address). */

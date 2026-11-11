@@ -5,7 +5,7 @@ import { CartGate } from "@/features/cart/CartGate";
 import { CartLineItem } from "@/features/cart/CartLineItem";
 import { FreeShippingBar } from "@/components/cart/FreeShippingBar";
 import { cartTotals } from "@/features/offers/cartTotals";
-import { percentLabel } from "@/features/offers/percent";
+import { offerLineText } from "@/features/offers/offerLineText";
 import { useCartMutations, useUsableCart } from "@/features/cart/useCart";
 import { buttonVariants } from "@/components/ui/button";
 import { Drawer, DrawerBody, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -84,7 +84,7 @@ function CartSummary() {
       )}
       {totals.discount?.kind === "offer" ? (
         <div className="flex items-baseline justify-between gap-3 text-sm text-success">
-          <span>{dict.offers.offerLine(totals.discount.offer.min_quantity ?? 0, percentLabel(totals.discount.offer.percent_off))}</span>
+          <span>{offerLineText(dict, totals.discount.offer)}</span>
           <span className="tabular-nums">−{formatMoney(totals.discount.amount.usd, totals.discount.amount.khr, currency)}</span>
         </div>
       ) : null}
