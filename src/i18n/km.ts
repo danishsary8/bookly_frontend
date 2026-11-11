@@ -1123,6 +1123,8 @@ export const km: Translations = {
     quantityFor: (title: string) => `ចំនួនសម្រាប់ ${title}`,
     adding: "កំពុងដាក់…",
     saveToWishlist: (title: string) => `រក្សាទុក ${title} ក្នុងបញ្ជីប្រាថ្នា`,
+    addToFavourites: "បន្ថែមទៅចំណូលចិត្ត",
+    inFavourites: "បានរក្សាទុកក្នុងចំណូលចិត្ត",
     cod: "ទូទាត់ពេលទទួលទំនិញ",
     codLead: "បង់ប្រាក់ពេលវាមកដល់",
     delivery: "ដឹកជញ្ជូនក្នុងប្រទេសកម្ពុជា",

@@ -8,7 +8,6 @@ import { BookCover } from "@/components/catalog/BookCover";
 import { authorNames } from "@/components/catalog/bookMeta";
 import { useQuery } from "@tanstack/react-query";
 import { catalogQueries } from "@/api/endpoints/catalog";
-import { LiveSearch } from "@/components/shell/LiveSearch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { useT } from "@/i18n";
@@ -106,14 +105,8 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
           <p className="mt-4 max-w-xl text-[17px] leading-[1.6] text-on-lapis-muted short:mt-3 short:text-base">{dict.home.heroSubtitle}</p>
 
 
-          {/* Search first: most visitors arrive knowing roughly what they want. */}
-          <LiveSearch
-            id="hero-search"
-            className="mt-8 max-w-xl short:mt-5 [&>svg:first-of-type]:left-5 [&>svg:first-of-type]:size-5"
-            inputClassName="h-14 rounded-full border-transparent bg-card pl-14 pr-12 text-[17px] shadow-[0_18px_40px_-20px_rgb(0_0_0/0.6)] focus-visible:ring-gold focus-visible:ring-offset-transparent"
-          />
           {topCategories.length ? (
-            <nav aria-label={h.popularCategories} className="mt-4 flex flex-wrap items-center gap-2 text-sm short:mt-3">
+            <nav aria-label={h.popularCategories} className="mt-7 flex flex-wrap items-center gap-2 text-sm short:mt-5">
               <span className="mr-1 text-[13px] text-on-lapis-muted">{h.popularCategories}</span>
               {topCategories.map((c) => (
                 <Link

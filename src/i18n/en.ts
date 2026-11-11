@@ -1117,6 +1117,8 @@ export const en = {
     quantityFor: (title: string) => `Quantity for ${title}`,
     adding: "Adding…",
     saveToWishlist: (title: string) => `Save ${title} to your wishlist`,
+    addToFavourites: "Add to favourites",
+    inFavourites: "Saved to favourites",
     cod: "Cash on delivery",
     codLead: "Pay when it arrives",
     delivery: "Delivery in Cambodia",

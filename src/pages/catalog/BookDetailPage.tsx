@@ -39,7 +39,7 @@ import { toast } from "@/stores/toast";
 import { formatName, useT } from "@/i18n";
 import { BookOfferLine } from "@/features/offers/offerText";
 import { LowStockBadge } from "@/components/BookBadge";
-import { AddToReadingList } from "@/features/account/AddToReadingList";
+import "./book-detail.css";
 
 /*
  * /books/:id. Layout (MASTER 5/7 split): cover panel | title, authors, rating,
@@ -53,18 +53,26 @@ import { AddToReadingList } from "@/features/account/AddToReadingList";
 const MAX_QTY = 10;
 const DIGITAL = new Set(["ebook", "audiobook"]);
 
+function displayLanguage(value: string | null | undefined, locale: string | string[]) {
+  if (!value) return "—";
+  if (!/^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i.test(value)) return value;
+  try { return new Intl.DisplayNames(locale, { type: "language" }).of(value) ?? value; }
+  catch { return value; }
+}
+
 function DetailSkeleton() {
   const { dict } = useT();
   return (
-    <SkeletonGroup label={dict.book.loading} className="grid gap-10 lg:grid-cols-12 lg:gap-16">
-      <div className="rounded-xl bg-surface-2 p-8 lg:col-span-5">
-        <Skeleton className="mx-auto aspect-[2/3] w-full max-w-[300px]" />
+    <SkeletonGroup label={dict.book.loading} className="grid gap-8 lg:grid-cols-12 lg:gap-12">
+      <div className="relative grid min-h-[27rem] place-items-center p-8 lg:col-span-5 lg:min-h-[37rem]">
+        <Skeleton className="absolute! right-2 top-2 size-12 rounded-full" />
+        <Skeleton className="mx-auto aspect-[2/3] w-full max-w-[300px] rounded-[3px] shadow-xl" />
       </div>
       <div className="grid content-start gap-4 lg:col-span-7">
         <Skeleton className="h-3 w-1/5" />
         <Skeleton className="h-12 w-4/5" />
         <Skeleton className="h-5 w-1/3" />
-        <Skeleton className="mt-4 h-40 w-full rounded-xl" />
+        <div className="mt-4 grid gap-5 border-t border-border pt-6"><Skeleton className="h-12 w-32" /><Skeleton className="h-3 w-52 rounded-full" /><div className="flex gap-3"><Skeleton className="h-20 w-full rounded-xl" /></div><Skeleton className="h-12 w-full rounded-xl" /><Skeleton className="h-16 w-full rounded-xl" /></div>
       </div>
     </SkeletonGroup>
   );
@@ -73,11 +81,19 @@ function DetailSkeleton() {
 function Detail({ label, children }: { label: string; children: React.ReactNode }) {
   if (children === null || children === undefined || children === "") return null;
   return (
-    <div className="grid grid-cols-[9rem_1fr] gap-4 border-t border-border py-3 first:border-t-0">
+    <div className="detail-spec-row grid grid-cols-[minmax(6rem,0.4fr)_minmax(0,1fr)] gap-4 border-t border-border py-4 first:border-t-0">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="text-foreground">{children}</dd>
     </div>
   );
+}
+
+function BookFavorite({ book }: { book: BookCard }) {
+  const wishlist = useWishlist();
+  const { dict } = useT();
+  const saved = wishlist.isSaved(book.id);
+  const label = saved ? dict.book.inFavourites : dict.book.addToFavourites;
+  return <Button variant="outline" size="lg" onClick={() => wishlist.toggle(book)} aria-pressed={saved} aria-label={`${label}: ${book.title ?? ""}`} className="detail-cover-favorite"><Heart className={cn("size-[18px]", saved && "fill-current")} aria-hidden="true" /><span>{label}</span></Button>;
 }
 
 function Purchase({ book }: { book: BookDetail }) {
@@ -85,7 +101,6 @@ function Purchase({ book }: { book: BookDetail }) {
   const { dict } = useT();
   const b = dict.book;
   const cart = useAddToCart();
-  const wishlist = useWishlist();
   const session = useSession<Customer>("customer");
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -98,7 +113,6 @@ function Purchase({ book }: { book: BookDetail }) {
   const variant = variants.find((v) => v.id === variantId);
   const digital = DIGITAL.has(variant?.format ?? "");
   const buyable = Boolean(variant && (variant.in_stock !== false || variant.is_preorder || variant.is_backorder));
-  const saved = wishlist.isSaved(book.id);
   const adding = cart.pendingBookId === book.id;
 
   const alerts = useQuery({
@@ -182,16 +196,16 @@ function Purchase({ book }: { book: BookDetail }) {
   const add = () => variant?.id && cart.add(book, variant.id, digital ? 1 : quantity);
 
   return (
-    <div className="grid gap-6">
-      {variants.length > 0 ? <FormatPicker variants={variants} value={variantId} onChange={setVariantId} name={`format-${book.id}`} /> : null}
-
-      <div className="grid gap-1">
+    <div className="book-purchase grid gap-6">
+      <div className="detail-price-block grid gap-2">
+        <div className="detail-price-heading">
         <p className="font-display text-[2.441rem] leading-none tabular-nums text-foreground">
           {variant ? formatMoney(variant.price_usd, variant.price_khr, currency) : formatMoney(book.price_from_usd, book.price_from_khr, currency)}
         </p>
         <p className={cn("text-sm", buyable ? "text-success" : "text-destructive")}>
           {!variant ? b.notAvailable : !buyable ? dict.bookDetail.outOfStock : digital ? b.download : dict.bookDetail.inStock}
         </p>
+        </div>
         {buyable ? <BookOfferLine offer={book.offer} className="mt-1" /> : null}
         {variant?.low_stock_remaining || book.sold_count ? (
           <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -199,8 +213,9 @@ function Purchase({ book }: { book: BookDetail }) {
             {book.sold_count ? <p className="rounded-full bg-lapis-tint px-2.5 py-0.5 text-sm font-medium text-primary">{dict.shopExtras.sold(book.sold_count)}</p> : null}
           </div>
         ) : null}
-        <p className="mt-2 text-sm text-muted-foreground">{dict.shopExtras.trust}</p>
       </div>
+
+      {variants.length > 0 ? <FormatPicker variants={variants} value={variantId} onChange={setVariantId} name={`format-${book.id}`} /> : null}
 
       {variant?.is_preorder ? (
         <p className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">
@@ -214,7 +229,7 @@ function Purchase({ book }: { book: BookDetail }) {
         </p>
       ) : null}
 
-      <div ref={mainButton} className="flex flex-wrap items-center gap-3">
+      <div ref={mainButton} className="detail-purchase-actions flex flex-wrap items-center gap-3">
         {!digital && buyable ? <QuantityStepper value={quantity} onChange={setQuantity} max={MAX_QTY} label={b.quantityFor(book.title ?? "")} /> : null}
         {!digital && !buyable ? (
           activeAlert ? (
@@ -248,8 +263,8 @@ function Purchase({ book }: { book: BookDetail }) {
             </Button>
           )
         ) : (
-          <CtaGlare className="min-w-[12rem] flex-1 sm:flex-none">
-            <Button variant="cta" size="lg" className="w-full" onClick={add} disabled={!buyable} loading={adding}>
+          <CtaGlare className="detail-cart-glare min-w-[12rem] flex-1">
+            <Button variant="cta" size="lg" className="detail-add-button w-full" onClick={add} disabled={!buyable} loading={adding}>
               {!adding ? <ShoppingBag aria-hidden="true" /> : null}
               {adding
                 ? b.adding
@@ -261,10 +276,7 @@ function Purchase({ book }: { book: BookDetail }) {
             </Button>
           </CtaGlare>
         )}
-        <Button variant="outline" size="icon-lg" onClick={() => wishlist.toggle(book)} aria-pressed={saved} aria-label={b.saveToWishlist(book.title ?? "")} className={cn(saved && "text-accent-text")}>
-          <Heart className={cn(saved && "fill-current")} aria-hidden="true" />
-        </Button>
-        <Button variant="outline" size="icon-lg" onClick={() => setShareOpen(true)} aria-label={b.shareBook} title={b.shareBook}>
+        <Button variant="outline" size="icon-lg" className="detail-share-button" onClick={() => setShareOpen(true)} aria-label={b.shareBook} title={b.shareBook}>
           <Share2 className="size-5" aria-hidden="true" />
         </Button>
       </div>
@@ -290,9 +302,7 @@ function Purchase({ book }: { book: BookDetail }) {
         </div>
       ) : null}
 
-      <AddToReadingList bookId={book.id!} />
-
-      <ul className="grid gap-3 border-t border-dashed border-border pt-5 text-sm sm:grid-cols-3">
+      <ul className="detail-promises grid gap-4 border-t border-border pt-5 text-sm sm:grid-cols-3">
         <li className="flex items-start gap-2.5">
           <Wallet className="mt-0.5 size-[18px] shrink-0 text-primary" aria-hidden="true" />
           <span>
@@ -528,7 +538,7 @@ export default function BookDetailPage() {
   const otherInSeries = (series.data?.books ?? []).filter((b) => b.id !== bookId);
 
   return (
-    <div className="container-shell pb-24 pt-6 sm:pt-8">
+    <div className="book-detail-page container-shell pb-24 pt-5 sm:pt-7">
       <Breadcrumb
         items={[
           { label: b.home, to: "/" },
@@ -547,25 +557,27 @@ export default function BookDetailPage() {
           </div>
         ) : null
       ) : (
-        <article className="mt-6 grid gap-10 lg:grid-cols-12 lg:gap-16" aria-labelledby="book-title">
-          <div className="lg:col-span-5">
-            <BookStage cover={shown.cover_image_url} className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
-              <MorphCover layoutId={coverLayoutId(bookId)} className="w-full overflow-hidden rounded-[4px] shadow-[0_30px_50px_-24px_rgb(20_16_10/0.6)]">
+        <article className="detail-product-grid mt-6 grid gap-8 lg:grid-cols-12 lg:gap-12" aria-labelledby="book-title">
+          <div className="detail-stage-cell lg:col-span-5">
+            <BookStage cover={shown.cover_image_url} action={<BookFavorite book={shown} />}>
+              <MorphCover layoutId={coverLayoutId(bookId)} className="detail-book-front relative w-full overflow-hidden rounded-[4px] shadow-[0_30px_50px_-24px_rgb(20_16_10/0.6)]">
                 <BookCover src={shown.cover_image_url} title={shown.title} alt={b.cover(shown.title ?? "")} eager />
                 <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgb(0_0_0/0.22)_0_2%,rgb(255_255_255/0.18)_3%,transparent_8%),linear-gradient(120deg,rgb(255_255_255/0.14),transparent_45%)]" aria-hidden="true" />
               </MorphCover>
             </BookStage>
           </div>
 
-          <div className="grid content-start gap-6 lg:col-span-7">
-            <header className="grid gap-3">
+          <div className="detail-product-info grid min-w-0 content-start gap-6 lg:col-span-7">
+            <header className="detail-title-block grid gap-4">
+              <div className="detail-book-context flex flex-wrap items-center gap-x-4 gap-y-2">
+              {book?.series ? <Link to={`/series/${book.series.id}`} className="detail-series-link w-fit text-xs font-medium text-muted-foreground transition-colors hover:text-primary">{book.series.order ? b.bookInSeries(book.series.order) : b.partOf}{" "}{book.series.name}</Link> : null}
               {book?.categories?.length ? (
                 <div className="rise" style={{ "--i": 0 } as React.CSSProperties}>
-                <p className="flex flex-wrap gap-x-3 text-xs font-bold uppercase tracking-[0.16em] text-accent-text">
-                  {book.categories.map((c) => {
+                <p className="detail-category-tags flex flex-wrap gap-2 text-xs font-semibold text-primary">
+                  {book.categories.filter((c) => !c.id || !book.categories!.some((child) => child.id !== c.id && getCategoryHierarchy(child).parent?.id === c.id)).map((c) => {
                     const { parent } = getCategoryHierarchy(c);
                     return (
-                      <span key={c.id ?? c.slug}>
+                      <span key={c.id ?? c.slug} className="inline-flex items-center rounded-full border border-border bg-card/70 px-3 py-1.5">
                         {parent ? (
                           <>
                             <Link to={`/categories/${parent.slug}`} className="underline-offset-4 hover:underline">
@@ -583,14 +595,15 @@ export default function BookDetailPage() {
                 </p>
                 </div>
               ) : null}
+              </div>
               <div className="rise pb-1" style={{ "--i": 1 } as React.CSSProperties}>
-                <h1 id="book-title" className="text-balance font-display text-[2.441rem] leading-[1.08] sm:text-[3.052rem]">
+                <h1 id="book-title" className="text-balance font-display text-[clamp(2rem,3.4vw,3.35rem)] leading-[1.09] tracking-[-0.035em]">
                   {shown.title}
                 </h1>
               </div>
               {authors.length ? (
                 <div className="rise" style={{ "--i": 2 } as React.CSSProperties}>
-                <p className="text-lg text-muted-foreground">
+                <p className="text-base leading-relaxed text-muted-foreground">
                   {b.by}{" "}
                   {authors.map((a, i) => (
                     <span key={a.id}>
@@ -606,12 +619,6 @@ export default function BookDetailPage() {
               <div className="rise" style={{ "--i": 3 } as React.CSSProperties}>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <StarRating value={shown.rating_avg} count={shown.review_count} />
-                {book?.series ? (
-                  <Link to={`/series/${book.series.id}`} className="text-sm font-semibold text-primary underline-offset-4 hover:underline">
-                    {book.series.order ? b.bookInSeries(book.series.order) : b.partOf}
-                    {book.series.name}
-                  </Link>
-                ) : null}
               </div>
               </div>
             </header>
@@ -619,7 +626,7 @@ export default function BookDetailPage() {
             {/* The buy box (pages/catalogue.md): formats, price, stock and selling facts, the one vermilion CTA and the
                 promises, on one card on the paper. */}
             {book ? (
-              <div className="shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
+              <div className="detail-buy-card">
                 <Purchase key={book.id} book={book} />
               </div>
             ) : (
@@ -630,23 +637,26 @@ export default function BookDetailPage() {
       )}
 
       {book && series.data && series.data.books && series.data.books.length > 0 ? (
-        <VolumePicker currentBookId={book.id ?? 0} series={series.data} className="mt-12" />
+        <VolumePicker currentBookId={book.id ?? 0} series={series.data} className="detail-volume-picker mt-12" />
       ) : null}
 
       {book ? (
-        <Tabs defaultValue={hash === "#your-review" || hash === "#reviews" ? "reviews" : "description"} className="mt-16">
+        <Tabs defaultValue={hash === "#your-review" || hash === "#reviews" ? "reviews" : "description"} className="detail-content-tabs mt-12 sm:mt-16">
           <TabsList aria-label={b.about}>
             <TabsTrigger value="description">{dict.bookDetail.description}</TabsTrigger>
             <TabsTrigger value="details">{dict.bookDetail.details}</TabsTrigger>
             <TabsTrigger value="reviews">
-              {dict.bookDetail.reviews} ({book.review_count ?? 0})
+              {dict.bookDetail.reviews}{book.review_count ? <span className="rounded-full bg-lapis-tint px-2 py-0.5 text-xs tabular-nums text-primary">{book.review_count}</span> : null}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="description">
-            <div className={cn("max-w-[65ch] whitespace-pre-line text-[17px] leading-8 text-foreground", book.description && "drop-cap")}>{book.description || b.noDescription}</div>
+            <div className="detail-story grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+              <div><p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{dict.bookDetail.description}</p><h2 className="font-display text-[clamp(1.6rem,2.5vw,2.2rem)] leading-tight tracking-tight">{b.about}</h2></div>
+              <div><div className="max-w-[65ch] whitespace-pre-line text-[17px] leading-[1.9] text-foreground">{book.description || b.noDescription}</div><dl className="detail-story-facts mt-8 grid gap-5 border-t border-border pt-6 sm:grid-cols-3"><div><dt>{b.language}</dt><dd>{displayLanguage(book.language, locale)}</dd></div>{book.page_count ? <div><dt>{b.pages}</dt><dd>{book.page_count}</dd></div> : null}{book.publisher ? <div><dt>{b.publisher}</dt><dd>{book.publisher.name}</dd></div> : null}</dl></div>
+            </div>
           </TabsContent>
           <TabsContent value="details">
-            <dl className="max-w-2xl text-[15px]">
+            <dl className="detail-specifications text-[15px]">
               <Detail label={b.authors}>{authors.map((a) => a.name).join(", ")}</Detail>
               <Detail label={b.publisher}>
                 {book.publisher ? (
@@ -701,7 +711,7 @@ export default function BookDetailPage() {
                 ) : null}
               </Detail>
               <Detail label={b.published}>{book.publish_date ? new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(new Date(book.publish_date)) : null}</Detail>
-              <Detail label={b.language}>{book.language}</Detail>
+              <Detail label={b.language}>{displayLanguage(book.language, locale)}</Detail>
               <Detail label={b.pages}>{book.page_count ? book.page_count.toLocaleString("en-US") : null}</Detail>
               <Detail label={b.formats}>{(book.variants ?? []).map((v) => formatName(dict, v.format)).join(", ")}</Detail>
               <Detail label={b.isbn}>
@@ -728,7 +738,7 @@ export default function BookDetailPage() {
 
       {/* The shelves below stay mounted (their lists load alongside the book) but hidden until the book is shown:
           otherwise their skeletons sit at the top of the empty page and jump down when the book arrives. */}
-      <div className="mt-20 grid gap-16" hidden={!book}>
+      <div className="detail-related-shelves mt-16 grid gap-14" hidden={!book}>
         {book?.series && otherInSeries.length ? (
           <BookShelf id="series" eyebrow={b.theSeries} title={book.series.name ?? b.inThisSeries} books={otherInSeries} seeAllHref={`/series/${book.series.id}`} seeAllLabel={b.wholeSeries} />
         ) : null}

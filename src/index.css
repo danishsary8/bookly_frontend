@@ -24,7 +24,7 @@
     --dur-toggle: 220ms;
     --dur-overlay: 320ms;
     --dur-reveal: 700ms;
-    --header-h: 4rem;
+    --header-h: 7.5rem;
     --z-header: 40;
     --z-popover: 50;
     --z-drawer: 60;
@@ -1258,8 +1258,11 @@
 }
 .hero-catalogue-cta {
   box-shadow: 0 18px 36px -18px rgb(0 0 0 / 0.6);
-  transition: transform 250ms var(--ease-out-expo), box-shadow 250ms ease;
+  transition: background-color 250ms ease, color 250ms ease, transform 250ms var(--ease-out-expo), box-shadow 250ms ease;
 }
+.hero-catalogue-cta > span:last-child { transition: background-color 250ms ease, color 250ms ease; }
+.hero-catalogue-cta:focus-visible { background-color: var(--gold); }
+.hero-catalogue-cta:focus-visible > span:last-child { background-color: var(--card); color: var(--primary); }
 .hero-catalogue-cta::before {
   content: "";
   position: absolute;
@@ -1273,15 +1276,17 @@
 .hero-catalogue-cta svg { transition: transform 250ms var(--ease-out-expo); }
 @media (hover: hover) and (pointer: fine) {
   .hero-catalogue-cta:hover {
+    background-color: var(--gold);
     transform: translateY(-2px);
     box-shadow: 0 22px 40px -16px rgb(0 0 0 / 0.65);
   }
   .hero-catalogue-cta:hover::before { transform: translateX(110%); }
+  .hero-catalogue-cta:hover > span:last-child { background-color: var(--card); color: var(--primary); }
   .hero-catalogue-cta:hover svg { transform: translateX(3px); }
 }
 .hero-catalogue-cta:active { transform: translateY(0) scale(0.98); }
 @media (prefers-reduced-motion: reduce) {
-  .hero-catalogue-cta, .hero-catalogue-cta svg { transition: none; }
+  .hero-catalogue-cta, .hero-catalogue-cta svg, .hero-catalogue-cta > span:last-child { transition: none; }
   .hero-catalogue-cta:hover, .hero-catalogue-cta:active, .hero-catalogue-cta:hover svg { transform: none; }
   .hero-catalogue-cta::before { display: none; }
 }

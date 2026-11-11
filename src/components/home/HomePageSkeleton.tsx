@@ -33,7 +33,6 @@ export function HomePageSkeleton() {
                   <Skeleton className="h-3.5 w-full rounded-full" />
                   <Skeleton className="h-3.5 w-4/5 rounded-full" />
                 </div>
-                <Skeleton className="mt-1 h-14 w-full rounded-full" />
                 <div className="flex gap-2">
                   {["w-28", "w-20", "w-16"].map((width) => <Skeleton key={width} className={`h-9 rounded-full ${width}`} />)}
                 </div>

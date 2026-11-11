@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { m } from "motion/react";
-import { Heart, Menu, Search, ShoppingBag } from "lucide-react";
+import { Heart, Menu, ShoppingBag } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CountBadge } from "@/components/ui/badge";
@@ -18,9 +18,8 @@ import { useT } from "@/i18n";
 
 /*
  * Storefront header (pages/header.md). ≥ 900px: wordmark · Browse ▾ · New arrivals · Authors · search ·
- * 🌐 EN·$ (language, currency, theme) · wishlist (signed in) · cart · account. Below: wordmark · cart · menu.
- * Motion (all off with reduced motion): the active link's underline slides between links; the header tucks
- * away while scrolling down and returns on scroll up, with a soft shadow once the page has scrolled.
+ * Language/currency/theme · wishlist · cart · account. Mobile adds a full-width search row.
+ * The header stays visible while scrolling; its shadow strengthens once the page has scrolled.
  */
 
 export function Wordmark({ className }: { className?: string }) {
@@ -36,36 +35,24 @@ export function Wordmark({ className }: { className?: string }) {
   );
 }
 
-/** Scroll state for the header: whether the page has scrolled, and whether to tuck the header away. */
-function useHeaderScroll(locked: boolean) {
-  const [state, setState] = useState({ scrolled: false, hidden: false });
+/** Add depth to the persistent header after scrolling. */
+function useHeaderScroll() {
+  const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    let last = window.scrollY;
     let frame = 0;
     const onScroll = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        const y = window.scrollY;
-        const down = y > last + 4;
-        const up = y < last - 4;
-        setState((prev) => ({
-          scrolled: y > 8,
-          hidden: locked ? false : down && y > 160 ? true : up || y < 160 ? false : prev.hidden,
-        }));
-        last = y;
+        setScrolled(window.scrollY > 8);
       });
     };
-    // Something wants the cart button on screen for a moment (the add-to-cart flight): bring the header back.
-    const onPeek = () => setState((prev) => (prev.hidden ? { ...prev, hidden: false } : prev));
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("bookly:header-peek", onPeek);
     return () => {
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("bookly:header-peek", onPeek);
       cancelAnimationFrame(frame);
     };
-  }, [locked]);
-  return state;
+  }, []);
+  return scrolled;
 }
 
 const links = [
@@ -74,60 +61,25 @@ const links = [
   { label: "authors", to: "/authors", sort: null },
 ] as const;
 
-/** On the home page the hero has its own big search; the header one waits until the hero's has scrolled away. */
-function useHeroSearchInView(pathname: string) {
-  const [inView, setInView] = useState(false);
-  useEffect(() => {
-    if (pathname !== "/") return;
-    let frame = 0;
-    const check = () => {
-      const el = document.getElementById("hero-search");
-      setInView(el ? el.getBoundingClientRect().bottom > 80 : false);
-    };
-    const onScroll = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(check);
-    };
-    check();
-    // The home page is loaded after the header: keep checking briefly until the hero's search exists.
-    let tries = 0;
-    const late = window.setInterval(() => {
-      check();
-      if (++tries > 15 || document.getElementById("hero-search")) window.clearInterval(late);
-    }, 200);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      cancelAnimationFrame(frame);
-      window.clearInterval(late);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, [pathname]);
-  return pathname === "/" && inView;
-}
-
 export function SiteHeader() {
   const location = useLocation();
   const panel = useShellPanel();
   const count = useCartCount();
   const signedIn = Boolean(useSession("customer"));
   const { dict } = useT();
-  const { scrolled, hidden } = useHeaderScroll(panel !== null);
-  const heroSearch = useHeroSearchInView(location.pathname);
+  // Search remains available while scrolling, including on the home page.
+  const scrolled = useHeaderScroll();
   const sort = location.pathname === "/books" ? new URLSearchParams(location.search).get("sort") : null;
   const activeLink = links.find((item) => (item.sort ? item.sort === sort : isActivePath(location.pathname, item.to)))?.to;
 
   return (
     <header
-      data-hidden={hidden || undefined}
       className={cn(
         "site-header sticky top-0 z-(--z-header) h-(--header-h) border-b bg-card/90 backdrop-blur-md transition-[transform,box-shadow,border-color] duration-300 ease-out supports-[backdrop-filter]:bg-card/80 dark:bg-background/85",
         scrolled ? "border-transparent shadow-[0_8px_24px_-16px_rgb(20_32_122/0.35)]" : "border-border",
-        hidden && "-translate-y-full",
       )}
     >
-      <div className="container-shell flex h-full items-center gap-4 lg:gap-6">
+      <div className="container-shell flex h-full flex-wrap items-center gap-x-3 gap-y-2 py-3 min-[900px]:flex-nowrap min-[900px]:gap-4 min-[900px]:py-0 lg:gap-6">
         <Wordmark />
 
         <nav aria-label={dict.navLinks.main} className="hidden min-[900px]:block">
@@ -162,26 +114,11 @@ export function SiteHeader() {
         <LiveSearch
           id="header-search"
           shortcut
-          className={cn(
-            "ml-auto hidden w-full max-w-sm transition-[opacity,translate] duration-300 min-[900px]:block xl:max-w-md",
-            heroSearch && "pointer-events-none invisible -translate-y-1 opacity-0",
-          )}
+          className="order-last w-full min-w-0 basis-full min-[900px]:order-none min-[900px]:ml-auto min-[900px]:max-w-sm min-[900px]:basis-auto xl:max-w-md"
         />
 
         <div className="ml-auto flex items-center gap-1 min-[900px]:ml-0">
           <PreferencesMenu className="mr-1 hidden min-[900px]:inline-flex" />
-          {/* On the home page, while the hero's big search is on screen, a small button jumps to it. */}
-          {heroSearch ? (
-            <button
-              type="button"
-              onClick={() => document.getElementById("hero-search")?.focus()}
-              aria-label={dict.homePage.searchOpen}
-              title={dict.homePage.searchOpen}
-              className="hidden size-11 place-items-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-[900px]:grid"
-            >
-              <Search className="size-5" aria-hidden="true" />
-            </button>
-          ) : null}
           <Link
             to={signedIn ? "/account/wishlist" : "/login?next=%2Faccount%2Fwishlist"}
             aria-label={dict.navLinks.wishlist}

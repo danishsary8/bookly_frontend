@@ -24,8 +24,9 @@ const PAGE = 5;
 function ReviewItem({ review }: { review: Review }) {
   const { dict, locale } = useT();
   return (
-    <li className="grid gap-2 border-t border-border py-6 first:border-t-0 first:pt-0">
+    <li className="detail-review-item grid gap-3 border-t border-border py-6 first:border-t-0 first:pt-0">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span aria-hidden="true" className="detail-review-avatar grid size-9 shrink-0 place-items-center rounded-full bg-lapis-tint text-sm font-semibold text-primary">{(review.reviewer_name ?? dict.reviews.aReader).trim().charAt(0).toUpperCase()}</span>
         <StarRating value={review.rating} summary={false} />
         <span className="font-semibold">{review.reviewer_name ?? dict.reviews.aReader}</span>
         {review.verified_purchase ? (
@@ -33,7 +34,7 @@ function ReviewItem({ review }: { review: Review }) {
             <BadgeCheck className="size-4" aria-hidden="true" /> {dict.reviews.verifiedPurchase}
           </span>
         ) : null}
-        {review.created_at ? <time dateTime={review.created_at} className="text-sm text-muted-foreground">{orderDate(review.created_at, locale)}</time> : null}
+        {review.created_at ? <time dateTime={review.created_at} className="text-xs text-muted-foreground sm:ml-auto">{orderDate(review.created_at, locale)}</time> : null}
       </div>
       {review.comment ? <p className="max-w-prose whitespace-pre-line leading-7 text-foreground">{review.comment}</p> : null}
     </li>
@@ -74,7 +75,7 @@ export function ReviewsSection({ bookId }: { bookId: number }) {
   const list = reviews.data?.data ?? [];
   return (
     <div className="grid gap-10 lg:grid-cols-[18rem_1fr]">
-      <div className="grid content-start gap-4">
+      <div className="detail-review-summary grid content-start gap-4">
         <p className="flex items-baseline gap-2">
           <span className="font-display text-5xl tabular-nums">{(summary?.average ?? 0).toFixed(1)}</span>
           <span className="text-muted-foreground">{t.outOf5}</span>

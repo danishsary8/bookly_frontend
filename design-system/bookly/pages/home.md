@@ -129,6 +129,11 @@ On `/` the header search hides (fade) while the hero search is on screen, and re
 ## Top rated background transitions (2026-11-11)
 - Keep cover-color wash images mounted and crossfade their opacity over 800ms. Decode the next selected cover before changing the visible wash; retain the previous color on loading failure and ignore stale loads after rapid selection changes. Reduced motion switches colors immediately. Do not reuse the hero wash entrance animation, which resets opacity to zero on every book change.
 
+## Persistent navigation search (2026-11-11)
+- Remove the hero search and its skeleton placeholder. Keep search visible in the sticky navbar at all scroll positions, with a full-width second row below 900px. Mobile header height is 120px; desktop remains 72px.
+- Remove the hero visibility observer and search jump button. Popular category links sit below the hero subtitle with 28px spacing (20px on short screens).
+- Browse catalogue transitions from cream to gold on hover/focus; the lapis arrow disc changes to the theme card color with lapis ink. Preserve the gentle lift and arrow movement, disabled under reduced motion.
+
 ## Bookcase + Top 10 list (2026-11-12, on `main`)
 - Shelf: the row stands in a wooden bookcase. `.shelf-back` (dark planks, shaded under the top), `.shelf-top` (18px
   board) and two `.shelf-post` uprights (16px, each casting a 64px shade onto the books) in the rail's oak, set by
