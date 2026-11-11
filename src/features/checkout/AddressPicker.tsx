@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { MapPin, Plus } from "lucide-react";
 import { accountKeys } from "@/api/endpoints/account";
 import { useSession } from "@/api/session";
 import type { Address, Customer } from "@/api/types";
@@ -32,7 +32,7 @@ export function AddressPicker({ addresses, value, onChange }: { addresses: Addre
 
   if (addresses.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-card p-5 sm:p-6">
+      <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
         <p className="mb-4 text-muted-foreground">{k.addFirst}</p>
         <AddressForm defaults={defaults} hideDefaultToggle onSaved={(a) => void saved(a)} submitLabel={k.useThis} />
       </div>
@@ -49,15 +49,16 @@ export function AddressPicker({ addresses, value, onChange }: { addresses: Addre
             <label
               key={address.id}
               className={cn(
-                "relative flex cursor-pointer gap-3 rounded-xl border bg-card p-4 transition-colors duration-150 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-background",
-                checked ? "border-primary bg-lapis-tint" : "border-border hover:border-input",
+                "group relative flex cursor-pointer gap-3 rounded-2xl border bg-card p-4 pr-5 transition-[border-color,background-color,box-shadow] duration-200 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-background",
+                checked ? "border-primary bg-lapis-tint/70 shadow-[0_18px_32px_-26px_rgb(20_32_122/0.6)]" : "border-border hover:border-input",
               )}
             >
               <input type="radio" name="address" value={address.id} checked={checked} onChange={() => address.id && onChange(address.id)} className="mt-1 size-[18px] shrink-0 accent-primary" />
-              <span className="grid gap-0.5 text-[15px] leading-6">
-                <span className="font-semibold">
+              <span className="grid min-w-0 gap-0.5 text-[15px] leading-6">
+                <span className="flex flex-wrap items-center gap-2 font-semibold">
+                  <MapPin className={cn("size-4", checked ? "text-primary" : "text-muted-foreground")} aria-hidden="true" />
                   {address.label || address.recipient_name}
-                  {address.is_default ? <span className="ml-2 text-xs font-bold uppercase tracking-[0.12em] text-primary">{k.default}</span> : null}
+                  {address.is_default ? <span className="rounded bg-card px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-primary shadow-[inset_0_0_0_1px_var(--border)]">{k.default}</span> : null}
                 </span>
                 <span>{address.recipient_name}</span>
                 {formatAddressLines(address).map((line) => (

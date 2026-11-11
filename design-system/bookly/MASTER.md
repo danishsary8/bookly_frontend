@@ -336,4 +336,5 @@ Full-bleed lapis everywhere in Daylight · more than one vermilion CTA per view 
 - `pages/header.md`: storefront header (44px search field, no elevation on scroll).
 - `pages/content.md`: help and legal pages and the 404 (the bookplate, its frame, the hero surface on content pages, 17px article text).
 - `pages/print.md`: printable invoice and packing slip (paper colours in both themes, A4, stamps in words).
+- `pages/shopping.md`: cart, cart drawer, checkout, order confirmation and KHQR payment (the home page's warm paper, `.shop-card` sheets, the checkout progress rail, cover fans, the free-delivery bar).
 - `pages/admin.md`: the staff area (no page transitions or showpieces, sidebar frame, dense tables, the dashboard chart, staff sign-in).

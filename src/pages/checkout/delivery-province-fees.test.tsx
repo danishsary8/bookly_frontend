@@ -61,7 +61,7 @@ describe("Delivery provinces and helpers", () => {
 
     // Meeting threshold ($50 / $50)
     rerender(<FreeShippingBar subtotalUsd="50.00" thresholdUsd="50.00" />);
-    expect(screen.getByText(/You've unlocked FREE delivery!/)).toBeInTheDocument();
+    expect(screen.getByText(/You've unlocked free delivery/)).toBeInTheDocument();
   });
 });
 
@@ -112,7 +112,7 @@ describe("CheckoutPage with free delivery and estimated dates", () => {
     expect(within(summary).getByText("$0.00")).toBeInTheDocument();
     expect(within(summary).getByText("Free")).toBeInTheDocument();
 
-    expect(await screen.findByText(/Phnom Penh · 1 working day \(Sat, 17 Oct – Mon, 19 Oct\)/)).toBeInTheDocument();
+    expect(await screen.findByText("Delivering to Phnom Penh")).toBeInTheDocument();
     expect(within(summary).getByText(/Est\. delivery: 1 working day \(Sat, 17 Oct – Mon, 19 Oct\)/)).toBeInTheDocument();
   });
 });

@@ -765,3 +765,29 @@ Hero rebuilt as headline + search on the left and a book card on the right (cove
 Hero v4 (2026-11-10, main): back to the centred cover stack the owner preferred, larger cover, price chip, fixed description slot with fact chips (formats, year, pages; new EN/KM string `pageCount`) for books without a description, timer on the View book button. Checked at 1366×768, 1440×900, 1920×928 and 390×844.
 Hero v5 + shelf v2 (2026-11-10, main): see pages/home.md. New EN/KM string `seeAllRow`; `useAddToCart().add` takes an optional `{ from }` cover for the flight. Checked at 1366×768 (section 693px of 696), 1440×900, 1920×928, 390×844 and dark mode; shelf Add to cart flight and tab switch exercised; axe clean.
 Home v6 (2026-11-10, main): see pages/home.md. New EN/KM strings rankIn, soldShort, continueCta, topTen, daysToGo, announcedShort, categoryCount, prevCategories, nextCategories. Fixed a duplicate React key in Top rated and made CategoryChips keys safe. Checked at 1440×900 (plus shelf at 1366×768 and 1920×928) against the mocked API: axe clean, no console warnings on /, /books, /books/1.
+
+## Redesign phase 1 — shopping pages (2026-11-10, branch `design/shopping-pages`)
+Cart (page + drawer), checkout, order confirmation and KHQR payment brought up to the home page's craft; decisions in
+`design-system/bookly/pages/shopping.md` (MASTER §9 now lists it). Behaviour, routes, API calls, validation and guards
+unchanged.
+- Shared: `src/components/shopping/` CheckoutProgress (Cart → Delivery & payment → Pay → Done), CoverStack, TrustRow,
+  Seal; FreeShippingBar restyled (same props; emoji dropped from the EN/KM copy, tests updated); CartLineItem with
+  larger real covers and display prices; `className` on OrderItemsCard / DeliveryAddressCard. SiteShell puts the warm
+  paper on `<main>` for `/cart` and `/checkout/*` and removes the footer gap there (header and footer untouched).
+- Pages: cart (lines card + sticky summary, empty cart with popular covers), checkout (vertical step rail, address
+  and payment tiles, delivery date card), confirmation (thank-you panel, next steps line), KHQR (card on a lit stage,
+  countdown ring, one panel for paid/expired/cancelled). New EN/KM group `shopping`.
+- Small fixes on the way: `bg-surface-1`/`bg-surface-3` in FreeShippingBar did not exist (no background); the checkout
+  "Free delivery" chip was hard-coded English; the note under Place order said "you pay when the books arrive" for KHQR
+  orders too (now follows the payment choice); the KHQR "How to pay" heading was Gloock under 20px.
+- Checks (against a mocked API shaped from `public/openapi.yaml`; the live API is not reachable from the build machine):
+  lint 0 errors (existing fast-refresh warning), typecheck, `npm test`, build. Browser (headless Chromium + axe
+  wcag2a/aa/21a/aa): /cart, /checkout, /checkout/success/:id, /account/orders/:id/pay (waiting and expired) at
+  1366×768, 1440×900, 1920×930, 1440 dark, 1440 Khmer and 390×844: axe 0, no sideways scroll, no console errors or
+  React warnings. Exercised: quantity +, coupon WELCOME10, remove a line, drawer open/Esc (focus returns to the cart
+  button), address switch (delivery fee follows the province), KHQR choice → Place order and pay → KHQR page → riel QR
+  → Simulate → paid panel; COD → confirmation; expired payment panel. Not exercised: real Bakong payment, Facebook/
+  Google sessions, an empty cart with the live recommendations endpoint, mobile polish (later pass).
+- Open (needs owner OK, backend): order lines have no cover, so the confirmation's covers come from the checkout and
+  disappear after a reload. Proposal: add `cover_image_url` to `Order.items[]` (nullable string, the variant's book
+  cover) in OrderResource + `public/openapi.yaml`.

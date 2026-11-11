@@ -17,7 +17,7 @@ import { closeShellPanel, openShellPanel, useShellPanel } from "@/stores/shell";
 import { useT } from "@/i18n";
 
 /*
- * MASTER §6.19 cart drawer: every state (signed out, unverified, loading, error,
+ * MASTER §6.19 cart drawer (lines and totals restyled with the cart page, pages/shopping.md): every state (signed out, unverified, loading, error,
  * empty) and editable lines (quantity, remove with undo, the API's issues), then
  * the footer with subtotal, View cart and Checkout (disabled while an issue
  * blocks it). Coupons are applied on the cart page and at checkout.
@@ -60,7 +60,7 @@ function CartBody() {
   }
 
   return (
-    <ul className="grid gap-6" aria-label={t.cartItems}>
+    <ul className="grid [&>li]:py-5 [&>li:first-child]:pt-1 [&>li+li]:border-t [&>li+li]:border-border" aria-label={t.cartItems}>
       {items.map((line) => (
         <CartLineItem key={line.id} line={line} compact busy={mutations.busyLineId === line.id} onQuantity={mutations.setQuantity} onRemove={mutations.remove} onNavigate={closeShellPanel} />
       ))}
@@ -90,7 +90,7 @@ function CartSummary() {
       ) : null}
       <div className="flex items-baseline justify-between">
         <span className="font-semibold">{totals.discount ? dict.cartPage.totalBeforeShipping : t.subtotal}</span>
-        <span className="text-lg font-semibold tabular-nums">{formatMoney(totals.totalBeforeShipping.usd, totals.totalBeforeShipping.khr, currency)}</span>
+        <span className="font-display text-[1.75rem] leading-none tabular-nums">{formatMoney(totals.totalBeforeShipping.usd, totals.totalBeforeShipping.khr, currency)}</span>
       </div>
       <p className="-mt-2 text-sm text-muted-foreground">
         {cart.data.can_checkout === false ? t.fixItems : t.worksOutAtCheckout}

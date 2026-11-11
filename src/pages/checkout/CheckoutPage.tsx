@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CalendarClock, Lock, TicketPercent, Truck } from "lucide-react";
+import { AlertTriangle, CalendarClock, Check, Lock, QrCode, TicketPercent, Truck } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { accountQueries } from "@/api/endpoints/account";
 import { cartApi, cartKeys, cartQueries } from "@/api/endpoints/cart";
@@ -11,6 +11,8 @@ import type { Amount, Order } from "@/api/types";
 import { PageHeader } from "@/components/catalog/PageHeader";
 import { FreeShippingBar } from "@/components/cart/FreeShippingBar";
 import { CoverThumb } from "@/components/CoverThumb";
+import { CheckoutProgress } from "@/components/shopping/CheckoutProgress";
+import { CoverStack } from "@/components/shopping/CoverStack";
 import { CtaGlare } from "@/components/CtaGlare";
 import { FormAlert } from "@/components/form/FormAlert";
 import { TextAreaField } from "@/components/form/Field";
@@ -23,6 +25,7 @@ import { AddressPicker } from "@/features/checkout/AddressPicker";
 import { GiftOption } from "@/features/checkout/GiftOption";
 import { PaymentOptions, type PaymentChoice } from "@/features/checkout/PaymentOptions";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { toast } from "@/stores/toast";
 import { formatName, getDict, useT } from "@/i18n";
@@ -32,28 +35,43 @@ import { percentLabel } from "@/features/offers/percent";
 import { shopFeaturesQuery } from "@/api/endpoints/credit";
 
 /*
- * /checkout (verified customers): 1) delivery address, 2) payment (cash on
- * delivery), 3) review; a sticky summary with the API's preview (subtotal,
- * discount, shipping, total) and "Place order".
+ * /checkout (verified customers, pages/shopping.md): on the warm paper with the checkout rail beside the title.
+ * Three steps on a vertical rail (numbered discs that turn into checks once settled): 1) delivery address (tiles)
+ * with the delivery date, note and gift option, 2) payment (cash on delivery; Bakong KHQR when the API lists it),
+ * 3) review; a sticky summary with the order's covers, the API's preview (subtotal, discount, shipping, total in
+ * display type) and "Place order".
  *
  * Placing an order is safe to retry: one Idempotency-Key is kept for this
  * checkout, so if the response is lost (timeout, network) and the customer tries
  * again, the API returns the order it already created instead of a second one.
  */
 
-function Step({ n, title, children, aside }: { n: number; title: string; children: ReactNode; aside?: ReactNode }) {
+function Step({ n, title, children, aside, done, last }: { n: number; title: string; children: ReactNode; aside?: ReactNode; done?: boolean; last?: boolean }) {
+  const { dict } = useT();
   return (
-    <section aria-labelledby={`step-${n}`} className="grid gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <h2 id={`step-${n}`} className="flex items-center gap-3 font-display text-[1.563rem] leading-tight">
-          <span className="grid size-8 place-items-center rounded-full bg-primary font-sans text-sm font-bold text-primary-foreground" aria-hidden="true">
-            {n}
-          </span>
-          {title}
-        </h2>
-        {aside}
+    <section aria-labelledby={`step-${n}`} className="relative grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-4 sm:gap-x-5">
+      {/* The rail: a numbered disc (a check once the step is settled) and a hairline down to the next step. */}
+      <span className="relative flex justify-center" aria-hidden="true">
+        <span
+          className={cn(
+            "z-[1] grid size-9 place-items-center rounded-full font-sans text-sm font-bold transition-colors duration-300",
+            done ? "bg-primary text-primary-foreground" : "bg-card text-primary shadow-[inset_0_0_0_2px_var(--primary)]",
+          )}
+        >
+          {done ? <Check className="size-4" strokeWidth={3} /> : n}
+        </span>
+        {last ? null : <span className="absolute bottom-[-2.5rem] top-10 w-px bg-[linear-gradient(to_bottom,var(--border)_50%,transparent_0)] bg-[length:1px_8px]" />}
+      </span>
+      <div className="grid min-w-0 gap-4">
+        <div className="flex min-h-9 items-center justify-between gap-3">
+          <h2 id={`step-${n}`} className="font-display text-[1.563rem] leading-tight">
+            {title}
+            {done ? <span className="sr-only"> ({dict.shopping.stepDoneSr})</span> : null}
+          </h2>
+          {aside}
+        </div>
+        {children}
       </div>
-      {children}
     </section>
   );
 }
@@ -138,7 +156,8 @@ export default function CheckoutPage() {
       queryClient.removeQueries({ queryKey: ["orders"] });
       // A KHQR order waits for payment: straight to its QR page.
       if (order.payment_method === "khqr" && order.status === "pending") navigate(`/account/orders/${order.id}/pay`, { replace: true });
-      else navigate(`/checkout/success/${order.id}`, { replace: true, state: { order } });
+      // The order's lines carry no covers, so the cart's go along for the thank-you page (display only).
+      else navigate(`/checkout/success/${order.id}`, { replace: true, state: { order, covers: (cart.data?.items ?? []).map((l) => ({ src: l.cover_image_url, title: l.book?.title })) } });
     },
     onError: (error) => {
       const apiError = ApiError.from(error);
@@ -184,214 +203,230 @@ export default function CheckoutPage() {
   const ready = Boolean(addressId) && (unconfirmed || (Boolean(data) && !blocked && !preview.isFetching));
   const shipsSomething = data?.requires_shipping !== false;
 
-  return (
-    <div className="container-shell pb-16">
-      <PageHeader crumbs={[{ label: k.home, to: "/" }, { label: dict.nav.cart, to: "/cart" }, { label: dict.checkout.title }]} title={dict.checkout.title} />
+  const covers = items.map((line) => ({ src: line.cover_image_url, title: line.book?.title }));
 
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-12 lg:gap-12">
-        <div className="grid content-start gap-10 lg:col-span-8">
-          <Step n={1} title={shipsSomething ? dict.checkout.deliveryAddress : k.contactAddress}>
-            {!shipsSomething ? <p className="-mt-2 text-sm text-muted-foreground">{k.digitalOnly}</p> : null}
-            {addresses.isError ? <ErrorState error={addresses.error} onRetry={() => addresses.refetch()} headingLevel="h3" showHomeLink={false} /> : <AddressPicker addresses={list} value={addressId} onChange={setChosenAddress} />}
-            {shipsSomething && data?.estimated_delivery ? (
-              <div className="mt-3 flex items-center gap-2.5 rounded-lg border border-border bg-surface-1 px-3 py-2 text-sm text-foreground">
-                <Truck className="size-4 shrink-0 text-primary" aria-hidden="true" />
-                <div>
-                  <span className="font-semibold">
-                    {data.province_name ? `${data.province_name} · ` : ""}
-                    {data.estimated_delivery.formatted}
+  return (
+    <div className="overflow-x-clip pb-20">
+      <div className="container-shell">
+        <PageHeader
+          crumbs={[{ label: k.home, to: "/" }, { label: dict.nav.cart, to: "/cart" }, { label: dict.checkout.title }]}
+          title={dict.checkout.title}
+          aside={<CheckoutProgress current="details" withPay={paymentMethod === "khqr"} />}
+          className="pb-6 sm:pt-6 short:gap-2 short:pb-4 short:pt-3 short:[&_h1]:text-[2.6rem]"
+        />
+
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-12 lg:gap-10">
+          <div className="grid content-start gap-10 lg:col-span-7 xl:col-span-8">
+            <Step n={1} title={shipsSomething ? dict.checkout.deliveryAddress : k.contactAddress} done={Boolean(addressId)}>
+              {!shipsSomething ? <p className="-mt-2 text-sm text-muted-foreground">{k.digitalOnly}</p> : null}
+              {addresses.isError ? <ErrorState error={addresses.error} onRetry={() => addresses.refetch()} headingLevel="h3" showHomeLink={false} /> : <AddressPicker addresses={list} value={addressId} onChange={setChosenAddress} />}
+              {shipsSomething && data?.estimated_delivery ? (
+                <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
+                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-lapis-tint text-primary">
+                    <Truck className="size-[18px]" aria-hidden="true" />
                   </span>
+                  <div className="grid min-w-0 gap-0.5">
+                    <p className="text-sm font-semibold leading-snug text-foreground">
+                      {data.province_name ? dict.shopping.deliveringTo(data.province_name) : k.delivery}
+                    </p>
+                    <p className="text-sm leading-snug text-muted-foreground">{k.estDelivery(data.estimated_delivery.formatted)}</p>
+                  </div>
                   {data.is_free_shipping ? (
-                    <span className="ml-2 inline-flex items-center rounded bg-success-tint px-1.5 py-0.5 text-xs font-semibold uppercase text-success">
-                      Free delivery
+                    <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded bg-success-tint px-2 py-1 text-xs font-bold uppercase tracking-[0.08em] text-success">
+                      <Check className="size-3.5" aria-hidden="true" /> {dict.shopping.freeDelivery}
                     </span>
                   ) : null}
                 </div>
-              </div>
-            ) : null}
-            <TextAreaField
-              label={k.deliveryNote}
-              optional
-              hint={
-                <span className="flex items-center justify-between gap-2">
-                  <span>{k.deliveryNoteHint}</span>
-                  <span className="tabular-nums">{deliveryNote.length}/300</span>
-                </span>
-              }
-              maxLength={300}
-              rows={3}
-              value={deliveryNote}
-              onChange={(e) => setDeliveryNote(e.target.value)}
-              containerClassName="mt-4"
-            />
-            <GiftOption
-              isGift={isGift}
-              onIsGiftChange={setIsGift}
-              message={giftMessage}
-              onMessageChange={setGiftMessage}
-              cashOnDelivery={paymentMethod === "cod"}
-              khqrAvailable={Boolean(khqr)}
-            />
-          </Step>
-
-          <Step n={2} title={dict.checkout.paymentMethod}>
-            {(features.data?.gift_cards || features.data?.referrals) && Number(preview.data?.credit_balance?.usd) > 0 ? <label className="flex min-h-11 items-center gap-3"><input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} disabled={place.isPending || unconfirmed} />{dict.credit.use} ({formatMoney(preview.data?.credit_balance?.usd, preview.data?.credit_balance?.khr, currency)})</label> : null}
-            <PaymentOptions value={paymentMethod} onChange={setChosenMethod} khqr={khqr} />
-          </Step>
-
-          <Step
-            n={3}
-            title={k.review}
-            aside={
-              <Link to="/cart" className="inline-flex min-h-11 items-center text-[15px] font-semibold text-primary underline-offset-4 hover:underline">
-                {k.editCart}
-              </Link>
-            }
-          >
-            <ul className="grid gap-4 rounded-xl border border-border bg-card p-5" aria-label={k.itemsInOrder}>
-              {items.map((line) => (
-                <li key={line.id} className="flex items-center gap-4">
-                  <CoverThumb src={line.cover_image_url} className="h-[72px] w-12" />
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-1 font-semibold">{line.book?.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {k.line(formatName(dict, line.format), line.quantity ?? 0)}
-                    </p>
-                    {line.issues?.length ? <p className="text-sm text-destructive">{line.issues[0].message}</p> : null}
-                  </div>
-                  <p className="font-semibold tabular-nums">{formatMoney(line.line_total_usd, line.line_total_khr, currency)}</p>
-                </li>
-              ))}
-            </ul>
-          </Step>
-        </div>
-
-        <aside aria-labelledby="checkout-summary" className="lg:col-span-4">
-          <FreeGiftLine gift={data?.free_gift} />
-          <div className="grid gap-5 rounded-xl border border-border bg-card p-5 sm:p-6 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
-            <h2 id="checkout-summary" className="font-display text-[1.563rem] leading-tight">
-              {k.orderTotal}
-            </h2>
-
-            {formError ? <FormAlert ref={alertRef} title={unconfirmed ? k.unconfirmed : k.notPlaced}>{formError}</FormAlert> : null}
-
-            {data?.coupon_code ? (
-              <p className="flex items-center justify-between gap-2 rounded-lg bg-success-tint px-3 py-2 text-sm text-success">
-                <span className="flex items-center gap-2">
-                  <TicketPercent className="size-4" aria-hidden="true" />
-                  <span className="font-bold uppercase tracking-wide">{data.coupon_code}</span> {k.applied}
-                </span>
-                <button type="button" onClick={() => setCoupon(null)} className="font-semibold underline-offset-4 hover:underline">
-                  {k.remove}
-                </button>
-              </p>
-            ) : data?.coupon_not_used?.code ? (
-              <CouponNotUsedNote code={data.coupon_not_used.code} />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                {k.haveCoupon}{" "}
-                <Link to="/cart" className="font-semibold text-primary underline-offset-4 hover:underline">
-                  {k.addInCart}
-                </Link>
-              </p>
-            )}
-
-            {data ? (
-              <FreeShippingBar
-                subtotalUsd={Number(data.subtotal?.usd || 0) - Number(data.discount?.usd || 0)}
-                thresholdUsd={data.free_shipping_threshold?.usd}
+              ) : null}
+              <TextAreaField
+                label={k.deliveryNote}
+                optional
+                hint={
+                  <span className="flex items-center justify-between gap-2">
+                    <span>{k.deliveryNoteHint}</span>
+                    <span className="tabular-nums">{deliveryNote.length}/300</span>
+                  </span>
+                }
+                maxLength={300}
+                rows={3}
+                value={deliveryNote}
+                onChange={(e) => setDeliveryNote(e.target.value)}
+                containerClassName="mt-2"
               />
-            ) : null}
+              <GiftOption
+                isGift={isGift}
+                onIsGiftChange={setIsGift}
+                message={giftMessage}
+                onMessageChange={setGiftMessage}
+                cashOnDelivery={paymentMethod === "cod"}
+                khqrAvailable={Boolean(khqr)}
+              />
+            </Step>
 
-            {data?.shipping_notice ? (
-              <div className="flex items-start gap-2.5 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-foreground">
-                <CalendarClock className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-                <span>{data.shipping_notice}</span>
-              </div>
-            ) : null}
+            <Step n={2} title={dict.checkout.paymentMethod} done>
+              {(features.data?.gift_cards || features.data?.referrals) && Number(preview.data?.credit_balance?.usd) > 0 ? (
+                <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 has-[:checked]:border-primary has-[:checked]:bg-lapis-tint">
+                  <input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} disabled={place.isPending || unconfirmed} className="size-[18px] accent-primary" />
+                  {dict.credit.use} ({formatMoney(preview.data?.credit_balance?.usd, preview.data?.credit_balance?.khr, currency)})
+                </label>
+              ) : null}
+              <PaymentOptions value={paymentMethod} onChange={setChosenMethod} khqr={khqr} />
+            </Step>
 
-            {preview.isPending || (preview.isFetching && !data) ? (
-              <SkeletonGroup label={k.workingOut} className="grid gap-2">
-                <Skeleton className="h-5" />
-                <Skeleton className="h-5" />
-                <Skeleton className="h-8" />
-              </SkeletonGroup>
-            ) : preview.isError && !couponError ? (
-              <ErrorState error={preview.error} onRetry={() => preview.refetch()} headingLevel="h3" showHomeLink={false} />
-            ) : data ? (
-              <>
-              <dl className="grid gap-2 text-[15px]" aria-busy={preview.isFetching || undefined}>
-                <Row label={<span className="text-muted-foreground">{k.subtotal}</span>} amount={data.subtotal} />
-                {Number(data.discount?.usd) > 0 ? (
-                  <Row
-                    label={
-                      data.applied === "offer" && data.offer
-                        ? dict.offers.offerLine(data.offer.min_quantity ?? 0, percentLabel(data.offer.percent_off))
-                        : k.discount
-                    }
-                    amount={data.discount}
-                    negative
-                    className="text-success"
-                  />
-                ) : null}
-                {shipsSomething ? <Row
-                    label={
-                      <span className="text-muted-foreground">
-                        {k.delivery}{data.delivery_area ? ` (${data.delivery_area === "phnom_penh" ? k.phnomPenh : k.provinces})` : ""}
-                        {data.is_free_shipping ? (
-                          <span className="ml-2 inline-flex items-center rounded bg-success-tint px-1.5 py-0.5 text-xs font-semibold uppercase text-success">
-                            {k.freeBadge}
-                          </span>
-                        ) : null}
-                      </span>
-                    }
-                    amount={data.shipping_fee}
-                  /> : null}
-                {Number(data.tax?.usd) > 0 ? <Row label={<span className="text-muted-foreground">{k.tax}</span>} amount={data.tax} /> : null}
-                {Number(data.referral_discount?.usd) > 0 ? <div className="flex justify-between gap-3 text-sm text-success"><dt>{dict.credit.referralDiscount}</dt><dd>{formatMoney(data.referral_discount?.usd, data.referral_discount?.khr, currency)}</dd></div> : null}
-                {Number(data.credit_used?.usd) > 0 ? <><Row label={dict.credit.used} amount={data.credit_used} negative /><Row label={dict.credit.due} amount={data.payment_due} /></> : null}
-                <div className="mt-2 flex items-baseline justify-between gap-4 border-t border-border pt-3">
-                  <dt className="font-semibold">{k.total}</dt>
-                  <dd className="text-2xl font-semibold tabular-nums">{formatMoney(data.total?.usd, data.total?.khr, currency)}</dd>
+            <Step
+              n={3}
+              title={k.review}
+              last
+              aside={
+                <Link to="/cart" className="inline-flex min-h-11 items-center text-[15px] font-semibold text-primary underline-offset-4 hover:underline">
+                  {k.editCart}
+                </Link>
+              }
+            >
+              <ul className="shop-card grid rounded-2xl border border-border bg-card px-5 [&>li]:py-4 [&>li+li]:border-t [&>li+li]:border-border" aria-label={k.itemsInOrder}>
+                {items.map((line) => (
+                  <li key={line.id} className="flex items-center gap-4">
+                    <span className="relative shrink-0 overflow-hidden rounded-[3px] shadow-[0_1px_2px_rgb(20_16_10/0.1),0_12px_20px_-12px_rgb(20_16_10/0.55)]">
+                      <CoverThumb src={line.cover_image_url} className="h-[84px] w-14" />
+                      <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgb(0_0_0/0.2)_0_3%,rgb(255_255_255/0.16)_4%,transparent_10%)]" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-1 font-display text-[1.15rem] leading-snug">{line.book?.title}</p>
+                      <p className="text-sm text-muted-foreground">{k.line(formatName(dict, line.format), line.quantity ?? 0)}</p>
+                      {line.issues?.length ? <p className="text-sm text-destructive">{line.issues[0].message}</p> : null}
+                    </div>
+                    <p className="font-semibold tabular-nums">{formatMoney(line.line_total_usd, line.line_total_khr, currency)}</p>
+                  </li>
+                ))}
+              </ul>
+            </Step>
+          </div>
+
+          <aside aria-labelledby="checkout-summary" className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:col-span-5 xl:col-span-4">
+            <FreeGiftLine gift={data?.free_gift} />
+            <div className="shop-card grid gap-4 rounded-2xl border border-border bg-card p-5 short:gap-3 short:py-4 sm:px-6">
+              <div className="group flex items-end justify-between gap-4">
+                <div>
+                  <h2 id="checkout-summary" className="font-display text-[1.563rem] leading-tight">
+                    {k.orderTotal}
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{dict.cartPage.items(cart.data.item_count ?? 0)}</p>
                 </div>
-              </dl>
-              {data.estimated_delivery?.formatted ? (
-                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Truck className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
+                <CoverStack items={covers} size="sm" />
+              </div>
+
+              {formError ? <FormAlert ref={alertRef} title={unconfirmed ? k.unconfirmed : k.notPlaced}>{formError}</FormAlert> : null}
+
+              {data?.coupon_code ? (
+                <p className="flex items-center justify-between gap-2 rounded-lg bg-success-tint px-3 py-2 text-sm text-success">
+                  <span className="flex items-center gap-2">
+                    <TicketPercent className="size-4" aria-hidden="true" />
+                    <span className="font-bold uppercase tracking-wide">{data.coupon_code}</span> {k.applied}
+                  </span>
+                  <button type="button" onClick={() => setCoupon(null)} className="min-h-11 font-semibold underline-offset-4 hover:underline">
+                    {k.remove}
+                  </button>
+                </p>
+              ) : data?.coupon_not_used?.code ? (
+                <CouponNotUsedNote code={data.coupon_not_used.code} />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {k.haveCoupon}{" "}
+                  <Link to="/cart" className="font-semibold text-primary underline-offset-4 hover:underline">
+                    {k.addInCart}
+                  </Link>
+                </p>
+              )}
+
+              {data && shipsSomething ? (
+                <FreeShippingBar subtotalUsd={Number(data.subtotal?.usd || 0) - Number(data.discount?.usd || 0)} thresholdUsd={data.free_shipping_threshold?.usd} />
+              ) : null}
+
+              {data?.shipping_notice ? (
+                <div className="flex items-start gap-2.5 rounded-lg border border-primary/20 bg-lapis-tint p-3">
+                  <CalendarClock className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+                  <p className="text-sm text-foreground">{data.shipping_notice}</p>
+                </div>
+              ) : null}
+
+              {preview.isPending || (preview.isFetching && !data) ? (
+                <SkeletonGroup label={k.workingOut} className="grid gap-2">
+                  <Skeleton className="h-5" />
+                  <Skeleton className="h-5" />
+                  <Skeleton className="h-8" />
+                </SkeletonGroup>
+              ) : preview.isError && !couponError ? (
+                <ErrorState error={preview.error} onRetry={() => preview.refetch()} headingLevel="h3" showHomeLink={false} />
+              ) : data ? (
+                <dl className="grid gap-1.5 border-t border-border pt-3 text-[15px]" aria-busy={preview.isFetching || undefined}>
+                  <Row label={<span className="text-muted-foreground">{k.subtotal}</span>} amount={data.subtotal} />
+                  {Number(data.discount?.usd) > 0 ? (
+                    <Row
+                      label={data.applied === "offer" && data.offer ? dict.offers.offerLine(data.offer.min_quantity ?? 0, percentLabel(data.offer.percent_off)) : k.discount}
+                      amount={data.discount}
+                      negative
+                      className="text-success"
+                    />
+                  ) : null}
+                  {shipsSomething ? (
+                    <Row
+                      label={
+                        <span className="text-muted-foreground">
+                          {k.delivery}{data.delivery_area ? ` (${data.delivery_area === "phnom_penh" ? k.phnomPenh : k.provinces})` : ""}
+                          {data.is_free_shipping ? (
+                            <span className="ml-2 inline-flex items-center rounded bg-success-tint px-1.5 py-0.5 text-xs font-semibold uppercase text-success">{k.freeBadge}</span>
+                          ) : null}
+                        </span>
+                      }
+                      amount={data.shipping_fee}
+                    />
+                  ) : null}
+                  {Number(data.tax?.usd) > 0 ? <Row label={<span className="text-muted-foreground">{k.tax}</span>} amount={data.tax} /> : null}
+                  {Number(data.referral_discount?.usd) > 0 ? <div className="flex justify-between gap-3 text-sm text-success"><dt>{dict.credit.referralDiscount}</dt><dd>{formatMoney(data.referral_discount?.usd, data.referral_discount?.khr, currency)}</dd></div> : null}
+                  {Number(data.credit_used?.usd) > 0 ? <><Row label={dict.credit.used} amount={data.credit_used} negative /><Row label={dict.credit.due} amount={data.payment_due} /></> : null}
+                  <div className="mt-1.5 flex items-baseline justify-between gap-4 border-t border-border pt-3">
+                    <dt className="font-semibold">{k.total}</dt>
+                    <dd className="font-display text-[2rem] leading-none tabular-nums">{formatMoney(data.total?.usd, data.total?.khr, currency)}</dd>
+                  </div>
+                </dl>
+              ) : null}
+              {data?.estimated_delivery?.formatted && shipsSomething ? (
+                <p className="-mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Truck className="size-4 shrink-0 text-primary" aria-hidden="true" />
                   <span>{k.estDelivery(data.estimated_delivery.formatted)}</span>
                 </p>
               ) : null}
-              <p className="text-sm text-muted-foreground">{k.payCourier}</p>
-              </>
-            ) : null}
 
-            {blocked ? (
-              <p className="flex items-start gap-2 rounded-md bg-destructive-tint px-3 py-2 text-sm text-destructive" role="alert">
-                <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                <span>
-                  {k.cantOrder}{" "}
-                  <Link to="/cart" className="font-semibold underline underline-offset-4">
-                    {k.reviewCart}
-                  </Link>
-                </span>
+              {blocked ? (
+                <p className="flex items-start gap-2 rounded-md bg-destructive-tint px-3 py-2 text-sm text-destructive" role="alert">
+                  <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                  <span>
+                    {k.cantOrder}{" "}
+                    <Link to="/cart" className="font-semibold underline underline-offset-4">
+                      {k.reviewCart}
+                    </Link>
+                  </span>
+                </p>
+              ) : !addressId ? (
+                <p className="text-sm text-muted-foreground">{k.addAddress}</p>
+              ) : null}
+
+              <CtaGlare block>
+                <Button variant="cta" size="lg" className="w-full" onClick={() => { setFormError(null); place.mutate(); }} disabled={!ready} loading={place.isPending}>
+                  {place.isPending ? dict.checkout.placingOrder : paymentMethod === "khqr" ? k.placeAndPay : dict.checkout.placeOrder}
+                </Button>
+              </CtaGlare>
+              {/* What happens to the money, for the chosen way to pay. */}
+              <p className="flex items-start gap-2 text-sm text-muted-foreground">
+                {paymentMethod === "khqr" ? <QrCode className="mt-0.5 size-4 shrink-0" aria-hidden="true" /> : <Lock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />}
+                {paymentMethod === "khqr" ? k.khqrReady(khqr?.pay_minutes ?? 15) : k.nothingCharged}
               </p>
-            ) : !addressId ? (
-              <p className="text-sm text-muted-foreground">{k.addAddress}</p>
-            ) : null}
-
-            <CtaGlare block>
-              <Button variant="cta" size="lg" className="w-full" onClick={() => { setFormError(null); place.mutate(); }} disabled={!ready} loading={place.isPending}>
-                {place.isPending ? dict.checkout.placingOrder : paymentMethod === "khqr" ? k.placeAndPay : dict.checkout.placeOrder}
-              </Button>
-            </CtaGlare>
-            <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Lock className="size-4 shrink-0" aria-hidden="true" /> {k.nothingCharged}
-            </p>
-            <Link to="/cart" className={buttonVariants({ variant: "link", className: "justify-self-center" })}>
-              {k.backToCart}
-            </Link>
-          </div>
-        </aside>
+              <Link to="/cart" className={buttonVariants({ variant: "link", className: "justify-self-center" })}>
+                {k.backToCart}
+              </Link>
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   );

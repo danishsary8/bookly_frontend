@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { RouteErrorBoundary } from "@/components/ErrorBoundary";
@@ -59,6 +60,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const shopPaper = /^\/(cart|checkout)(\/|$)/.test(pathname);
+
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <a
@@ -71,15 +74,16 @@ export function SiteShell({ children }: { children: ReactNode }) {
       <SiteHeader />
       <OfflineBanner />
       {/* At least a screen tall: the footer stays below the fold while a page or its data loads, so it never jumps (layout shift). */}
-      <main id="content" tabIndex={-1} className="relative min-h-dvh flex-1 outline-none">
+      <main id="content" tabIndex={-1} className={cn("relative min-h-dvh flex-1 outline-none", shopPaper && "home-paper")}>
         <PageTransition>
           <RouteErrorBoundary>
             <Suspense fallback={<PageFallback />}>{children}</Suspense>
           </RouteErrorBoundary>
         </PageTransition>
       </main>
-      {/* Home runs its warm paper right down to the footer (its own bottom padding replaces the footer gap). */}
-      <SiteFooter className={pathname === "/" ? "mt-0" : undefined} />
+      {/* Home and the shopping pages (cart, checkout, confirmation) run their warm paper right down to the footer
+          (their own bottom padding replaces the footer gap). pages/shopping.md. */}
+      <SiteFooter className={pathname === "/" || shopPaper ? "mt-0" : undefined} />
       {/* The floating Support button is switched off for now (owner, 2026-11); features/support stays for later. */}
       <Suspense fallback={null}>
         {cartOpened ? <CartDrawer /> : null}

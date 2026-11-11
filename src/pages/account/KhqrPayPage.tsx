@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock, Download, FlaskConical, Loader2, QrCode, XCircle } from "lucide-react";
+import { Clock, Download, FlaskConical, Loader2, QrCode, ShieldCheck, XCircle } from "lucide-react";
 import QRCode from "qrcode";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { orderKeys, orderQueries } from "@/api/endpoints/orders";
@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Seal } from "@/components/shopping/Seal";
 import { BuyAgainButton } from "@/features/orders/BuyAgainButton";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,8 @@ import { useT } from "@/i18n";
  * /account/orders/:id/pay: pay a KHQR order (KHQR payments design 2026-11-02, part 1). A real, scannable KHQR in USD
  * or KHR, the time left, and the API asked every 3 seconds (it checks Bakong in bakong mode). Test mode adds a clearly
  * marked "Simulate payment" button. Paid -> a green screen, then the order page; time over -> the order was cancelled.
+ * Layout (pages/shopping.md): the official KHQR card on a lit lapis stage; beside it the amount, USD/KHR switch, a
+ * countdown ring, the three steps and the actions. Paid / expired / cancelled: one centred panel.
  */
 
 const qrLib = (QRCode as unknown as { default?: typeof QRCode })?.default || QRCode;
@@ -70,6 +73,9 @@ export default function KhqrPayPage() {
   const payment = useQuery({ ...paymentQueries.khqr(orderId), enabled: valid });
   const data = payment.data;
   const secondsLeft = useSecondsLeft(data, payment.dataUpdatedAt);
+  // The time that was left when the page opened: the countdown ring's full circle.
+  const [startLeft, setStartLeft] = useState(0);
+  if (data?.status === "awaiting_payment" && startLeft === 0) setStartLeft(Math.max(1, data.seconds_left ?? 0));
   const [currency, setCurrency] = useState<KhqrCurrency>("USD");
   const qr = data?.qrs?.find((q) => q.currency === currency);
   const order = useQuery({ ...orderQueries.order(orderId), enabled: valid && (data?.status === "expired" || data?.status === "cancelled") });
@@ -145,111 +151,167 @@ export default function KhqrPayPage() {
   const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
   const ss = String(secondsLeft % 60).padStart(2, "0");
   const amount = qr ? money(qr.currency ?? currency, qr.amount ?? "0", locale) : "";
+  const s = dict.shopping;
 
-  return (
-    // grid-cols-1: long (Khmer) labels wrap instead of making the column wider than a phone.
-    <div className="mx-auto grid w-full max-w-md grid-cols-1 gap-6">
-      <div className="grid gap-1 text-center">
-        <h1 className="font-display text-[1.953rem] leading-tight">{t.title}</h1>
-        <p className="text-muted-foreground">
+  if (data.status === "paid" || data.status === "expired" || data.status === "cancelled") {
+    const paidNow = data.status === "paid";
+    return (
+      <div role="status" ref={(el) => el?.scrollIntoView?.({ block: "nearest" })} className="shop-card mx-auto grid w-full max-w-xl justify-items-center gap-4 rounded-3xl border border-border bg-card px-6 py-12 text-center sm:px-12">
+        {paidNow ? (
+          <Seal className="size-20" />
+        ) : (
+          <span className="grid size-20 place-items-center rounded-full bg-surface-2 text-muted-foreground">
+            <XCircle className="size-10" strokeWidth={1.5} aria-hidden="true" />
+          </span>
+        )}
+        <h1 className="font-display text-[2.2rem] leading-tight">{paidNow ? t.paid : data.status === "expired" ? t.expired : t.cancelled}</h1>
+        <p className="text-sm text-muted-foreground">
           {t.order} <span className="tabular-nums">{data.order_number}</span>
         </p>
-      </div>
-
-      {data.status === "awaiting_payment" ? (
-        <>
-          {data.mode === "test" ? (
-            <p className="flex items-start gap-2 rounded-lg border border-dashed border-border bg-surface-1 p-3 text-sm">
-              <FlaskConical className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-              {t.testBanner}
-            </p>
-          ) : null}
-
-          <div role="tablist" aria-label={t.currency} className="mx-auto inline-flex rounded-full border border-border bg-card p-1">
-            {(["USD", "KHR"] as const).map((c) => (
-              <button
-                key={c}
-                type="button"
-                role="tab"
-                aria-selected={currency === c}
-                onClick={() => {
-                  setCurrency(c);
-                  if (!data.qrs?.some((q) => q.currency === c)) askQr.mutate(c);
-                }}
-                className={cn(
-                  "min-h-11 rounded-full px-6 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
-                  currency === c ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {c === "USD" ? t.usd : t.khr}
-              </button>
-            ))}
-          </div>
-
-          {/* The KHQR card keeps its official look (white with the red header) in light and dark mode. */}
-          <div role="tabpanel" aria-label={currency === "USD" ? t.usd : t.khr} className="mx-auto w-full max-w-[20rem] overflow-hidden rounded-2xl bg-white text-[#0E1335] shadow-overlay ring-1 ring-black/5">
-            <div className="flex h-12 items-center justify-center bg-[#E1232E] text-lg font-bold tracking-[0.2em] text-white">KHQR</div>
-            <div className="grid gap-1 px-6 pb-3 pt-4">
-              <p className="text-sm">Bookly</p>
-              <p className="text-[1.75rem] font-bold leading-tight tabular-nums">{amount || "…"}</p>
-            </div>
-            <div className="mx-6 border-t border-dashed border-black/20" />
-            <div className="p-6">
-              {qr?.qr && !askQr.isPending ? <QrImage qr={qr.qr} label={t.qrAlt(amount, data.order_number ?? "")} /> : <Skeleton className="aspect-square w-full bg-black/5" />}
-            </div>
-          </div>
-
-          <div className="grid justify-items-center gap-1 text-center">
-            <p role="timer" aria-live="off" aria-label={t.timeLeftLabel(Math.ceil(secondsLeft / 60))} className={cn("flex items-center gap-2 text-2xl font-semibold tabular-nums", secondsLeft < 60 && "text-destructive")}>
-              <Clock className="size-5" aria-hidden="true" /> {mm}:{ss}
-            </p>
-            <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" /> {t.waiting}
-            </p>
-          </div>
-
-          <ol className="grid gap-1 rounded-xl border border-border bg-card p-4 text-[15px]">
-            <li>1. {t.step1}</li>
-            <li>2. {t.step2}</li>
-            <li>3. {t.step3}</li>
-          </ol>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Button variant="outline" onClick={() => void download()} disabled={!qr?.qr}>
-              <Download aria-hidden="true" /> {t.download}
-            </Button>
-            <Link to={`/account/orders/${orderId}`} className={buttonVariants({ variant: "ghost" })}>
-              {t.viewOrder}
-            </Link>
-          </div>
-          {data.mode === "test" ? (
-            <Button onClick={() => simulate.mutate()} loading={simulate.isPending} className="h-auto min-h-11 w-full whitespace-normal py-2.5 text-center">
-              <FlaskConical aria-hidden="true" /> {t.simulate}
-            </Button>
-          ) : null}
-        </>
-      ) : data.status === "paid" ? (
-        <div role="status" className="grid justify-items-center gap-3 rounded-2xl border border-border bg-card p-8 text-center">
-          <CheckCircle2 className="size-14 text-success" aria-hidden="true" />
-          <p className="font-display text-2xl">{t.paid}</p>
-          <p className="text-muted-foreground">{data.paid ? t.paidLead(money(data.paid.currency ?? "USD", data.paid.amount ?? "0", locale)) : null}</p>
-          <Link to={`/account/orders/${orderId}`} className={buttonVariants()}>
+        <p className="max-w-md text-muted-foreground">
+          {paidNow ? (data.paid ? t.paidLead(money(data.paid.currency ?? "USD", data.paid.amount ?? "0", locale)) : null) : data.status === "expired" ? t.expiredLead : t.cancelledLead}
+        </p>
+        <div className="mt-2 flex flex-wrap justify-center gap-3">
+          {!paidNow && order.data ? <BuyAgainButton order={order.data} /> : null}
+          <Link to={`/account/orders/${orderId}`} className={buttonVariants({ variant: paidNow ? "default" : "ghost" })}>
             {t.viewOrder}
           </Link>
         </div>
-      ) : (
-        <div role="status" className="grid justify-items-center gap-3 rounded-2xl border border-border bg-card p-8 text-center">
-          <XCircle className="size-14 text-muted-foreground" aria-hidden="true" />
-          <p className="font-display text-2xl">{data.status === "expired" ? t.expired : t.cancelled}</p>
-          <p className="text-muted-foreground">{data.status === "expired" ? t.expiredLead : t.cancelledLead}</p>
-          <div className="flex flex-wrap justify-center gap-3">
-            {order.data ? <BuyAgainButton order={order.data} /> : null}
-            <Link to={`/account/orders/${orderId}`} className={buttonVariants({ variant: "ghost" })}>
-              {t.viewOrder}
-            </Link>
+      </div>
+    );
+  }
+
+  // Countdown ring: the share of the time that was left when this page opened.
+  const ringC = 2 * Math.PI * 26;
+  const share = startLeft > 0 ? secondsLeft / startLeft : 0;
+
+  return (
+    // grid-cols-1 below lg: long (Khmer) labels wrap instead of making the column wider than a phone.
+    <div className="grid w-full grid-cols-1 items-start gap-8 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] xl:gap-10">
+      {/* The stage: the KHQR card keeps its official look (white with the red header) in light and dark mode,
+          lit on a deep lapis panel like the home page's posters. */}
+      <div className="premiere-stage relative isolate grid justify-items-center gap-5 overflow-hidden rounded-3xl px-6 py-8 sm:px-10">
+        <span className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(70%_55%_at_50%_45%,rgb(154_166_255/0.35),transparent)]" aria-hidden="true" />
+        <div role="tabpanel" aria-label={currency === "USD" ? t.usd : t.khr} className="w-full max-w-[19rem] overflow-hidden rounded-2xl bg-white text-[#0E1335] shadow-[0_30px_60px_-28px_rgb(0_0_0/0.75)] ring-1 ring-black/5">
+          <div className="flex h-12 items-center justify-center bg-[#E1232E] text-lg font-bold tracking-[0.2em] text-white">KHQR</div>
+          <div className="grid gap-1 px-6 pb-3 pt-4">
+            <p className="text-sm">Bookly</p>
+            <p className="text-[1.75rem] font-bold leading-tight tabular-nums">{amount || "…"}</p>
+          </div>
+          <div className="mx-6 border-t border-dashed border-black/20" />
+          <div className="p-6">
+            {qr?.qr && !askQr.isPending ? <QrImage qr={qr.qr} label={t.qrAlt(amount, data.order_number ?? "")} /> : <Skeleton className="aspect-square w-full bg-black/5" />}
           </div>
         </div>
-      )}
+        <p className="flex items-center gap-2 text-center text-sm text-[#DDE2FB]">
+          <ShieldCheck className="size-4 shrink-0 text-gold" aria-hidden="true" /> {s.secured}
+        </p>
+      </div>
+
+      <div className="grid min-w-0 gap-6">
+        <div className="grid gap-2">
+          <p className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+            <span className="h-px w-12 bg-current" aria-hidden="true" />
+            {s.paymentLabel}
+          </p>
+          <h1 className="font-display text-[2.441rem] leading-[1.08]">{t.title}</h1>
+          <p className="text-muted-foreground">
+            {t.order} <span className="tabular-nums">{data.order_number}</span>
+          </p>
+        </div>
+
+        {data.mode === "test" ? (
+          <p className="flex items-start gap-2 rounded-xl border border-dashed border-input bg-card p-3 text-sm">
+            <FlaskConical className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+            {t.testBanner}
+          </p>
+        ) : null}
+
+        {/* Currency and the time left, side by side (the amount is on the KHQR card). */}
+        <div className="shop-card grid gap-5 rounded-2xl border border-border bg-card p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+          <div className="grid gap-2">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">{t.currency}</p>
+            <div role="tablist" aria-label={t.currency} className="inline-flex justify-self-start rounded-full border border-border bg-surface-2/60 p-1">
+              {(["USD", "KHR"] as const).map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  role="tab"
+                  aria-selected={currency === c}
+                  onClick={() => {
+                    setCurrency(c);
+                    if (!data.qrs?.some((q) => q.currency === c)) askQr.mutate(c);
+                  }}
+                  className={cn(
+                    "min-h-11 rounded-full px-5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                    currency === c ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {c === "USD" ? t.usd : t.khr}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-4 sm:flex-col sm:gap-2 sm:text-center">
+            <span className="relative grid size-[4.5rem] place-items-center">
+              <svg viewBox="0 0 60 60" className="absolute inset-0 size-full -rotate-90" aria-hidden="true">
+                <circle cx="30" cy="30" r="26" fill="none" strokeWidth="4" className="stroke-surface-2" />
+                <circle
+                  cx="30"
+                  cy="30"
+                  r="26"
+                  fill="none"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeDasharray={ringC}
+                  strokeDashoffset={ringC * (1 - share)}
+                  className={cn("transition-[stroke-dashoffset] duration-1000 ease-linear motion-reduce:transition-none", secondsLeft < 60 ? "stroke-destructive" : "stroke-primary")}
+                />
+              </svg>
+              <Clock className={cn("size-5", secondsLeft < 60 ? "text-destructive" : "text-primary")} aria-hidden="true" />
+            </span>
+            <div className="grid">
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">{s.timeLeft}</span>
+              <p role="timer" aria-live="off" aria-label={t.timeLeftLabel(Math.ceil(secondsLeft / 60))} className={cn("text-2xl font-semibold tabular-nums", secondsLeft < 60 && "text-destructive")}>
+                {mm}:{ss}
+              </p>
+            </div>
+          </div>
+          <p role="status" className="flex items-center gap-2 border-t border-border pt-4 text-sm text-muted-foreground sm:col-span-2">
+            <Loader2 className="size-4 animate-spin text-primary motion-reduce:animate-none" aria-hidden="true" /> {t.waiting}
+          </p>
+        </div>
+
+        <section aria-labelledby="how-to-pay" className="grid gap-3">
+          <h2 id="how-to-pay" className="font-sans text-lg font-semibold">
+            {s.howToPay}
+          </h2>
+          <ol className="grid gap-3">
+            {[t.step1, t.step2, t.step3].map((step, i) => (
+              <li key={i} className="flex items-start gap-3 text-[15px]">
+                <span className="grid size-7 shrink-0 place-items-center rounded-full bg-lapis-tint text-sm font-bold text-primary" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <span className="pt-0.5">{step}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Button variant="outline" onClick={() => void download()} disabled={!qr?.qr}>
+            <Download aria-hidden="true" /> {t.download}
+          </Button>
+          <Link to={`/account/orders/${orderId}`} className={buttonVariants({ variant: "ghost" })}>
+            {t.viewOrder}
+          </Link>
+        </div>
+        {data.mode === "test" ? (
+          <Button onClick={() => simulate.mutate()} loading={simulate.isPending} className="h-auto min-h-11 w-full whitespace-normal py-2.5 text-center">
+            <FlaskConical aria-hidden="true" /> {t.simulate}
+          </Button>
+        ) : null}
+      </div>
     </div>
   );
 }
