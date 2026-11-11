@@ -5,6 +5,8 @@ import { Link } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import type { Category } from "@/api/types";
 import { BookCover } from "@/components/catalog/BookCover";
+import { ScrollProgress } from "@/components/ScrollProgress";
+import { useScrollProgress } from "@/hooks/useScrollProgress";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -57,6 +59,7 @@ export function CategoryTiles({ categories, loading }: { categories: Category[] 
   const h = dict.homePage;
   const tree = useQuery(catalogQueries.categoryTree());
   const track = useRef<HTMLUListElement>(null);
+  const bar = useScrollProgress(track, [tree.data?.length, categories?.length, loading]);
 
   if ((loading || tree.isPending) && !tree.data) {
     return (
@@ -127,6 +130,7 @@ export function CategoryTiles({ categories, loading }: { categories: Category[] 
           </li>
         ))}
       </ul>
+      <ScrollProgress bar={bar} />
     </div>
   );
 }

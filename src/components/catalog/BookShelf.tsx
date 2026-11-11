@@ -9,6 +9,7 @@ import { SkeletonGroup } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { BookCard } from "./BookCard";
 import { useAddToCart, useWishlist } from "./useCatalogActions";
+import { ScrollProgress } from "@/components/ScrollProgress";
 import { useT } from "@/i18n";
 
 /*
@@ -152,11 +153,7 @@ export function BookShelf({ id, title, eyebrow, books, loading, error, onRetry, 
             ))}
           </ul>
           {/* Where you are in the row: a thin track whose thumb follows the scroll. */}
-          {scrollable ? (
-            <div className="mx-auto h-1 w-40 overflow-hidden rounded-full bg-border" aria-hidden="true">
-              <span className="block h-full rounded-full bg-primary transition-transform duration-150 ease-out" style={{ width: `${bar.size * 100}%`, transform: `translateX(${(bar.at * (1 - bar.size) * 100) / bar.size}%)` }} />
-            </div>
-          ) : null}
+<ScrollProgress bar={bar} />
         </div>
       )}
     </section>

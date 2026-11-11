@@ -3,6 +3,8 @@ import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { BookCard } from "@/api/types";
 import { authorNames } from "@/components/catalog/bookMeta";
+import { ScrollProgress } from "@/components/ScrollProgress";
+import { useScrollProgress } from "@/hooks/useScrollProgress";
 import { formatMoney, useCurrency } from "@/stores/currency";
 import { clearRecentlyViewed } from "@/stores/recentlyViewed";
 import { useT } from "@/i18n";
@@ -31,6 +33,7 @@ export function ContinueStrip({ books }: { books: BookCard[] }) {
   const h = dict.homePage;
   const currency = useCurrency();
   const track = useRef<HTMLUListElement>(null);
+  const bar = useScrollProgress(track, [books.length]);
   if (books.length === 0) return null;
   const scroll = (dir: number) => track.current?.scrollBy({ left: dir * track.current.clientWidth * 0.8, behavior: "smooth" });
   const arrow = "grid size-10 place-items-center rounded-full border border-border bg-card text-foreground transition-[background-color,border-color] hover:border-input hover:bg-muted";
@@ -91,6 +94,7 @@ export function ContinueStrip({ books }: { books: BookCard[] }) {
           </li>
         ))}
       </ul>
+      <ScrollProgress bar={bar} />
     </section>
   );
 }
