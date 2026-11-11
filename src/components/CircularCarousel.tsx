@@ -30,6 +30,8 @@ type Props = {
   captions?: boolean;
   intro?: "rise" | "none";
   active?: number;
+  /** Changes on every pick, so picking the same `active` again still glides to it. */
+  activeKey?: number;
   onActiveChange?: (index: number) => void;
   onSelect?: (index: number) => void;
   className?: string;
@@ -37,7 +39,7 @@ type Props = {
 
 const CLOTH = ["#14207A", "#7A2E2A", "#2F5D4A", "#8A5A3B", "#4C5378", "#1E4E5C"];
 
-export default function CircularCarousel({ items, cardWidth = 180, aspectRatio = 2 / 3, speed = 14, captions = false, intro = "rise", active, onActiveChange, onSelect, className }: Props) {
+export default function CircularCarousel({ items, cardWidth = 180, aspectRatio = 2 / 3, speed = 14, captions = false, intro = "rise", active, activeKey, onActiveChange, onSelect, className }: Props) {
   const reduce = useReducedMotion() ?? false;
   const n = Math.max(items.length, 1);
   const cardHeight = cardWidth / aspectRatio;
@@ -55,18 +57,18 @@ export default function CircularCarousel({ items, cardWidth = 180, aspectRatio =
     report.current = onActiveChange;
   }, [onActiveChange]);
 
-  // Controlled: glide the shortest way to `active`.
+  // Controlled: glide the shortest way to `active` (again whenever `activeKey` changes).
   useEffect(() => {
     if (active === undefined || active < 0) return;
     const m = st.current;
-    if (active === m.front && m.target === null) return;
     const base = ((m.pos % n) + n) % n;
     let delta = active - base;
     if (delta > n / 2) delta -= n;
     if (delta < -n / 2) delta += n;
     m.target = m.pos + delta;
-    m.holdUntil = performance.now() + 2500;
-  }, [active, n]);
+    // stay on the picked book for one full step before moving on
+    m.holdUntil = performance.now() + dwell;
+  }, [active, activeKey, n, dwell]);
 
   useEffect(() => {
     let frame = 0;
