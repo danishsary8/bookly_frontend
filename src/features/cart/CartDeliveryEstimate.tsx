@@ -6,20 +6,21 @@ import { FreeShippingBar } from "@/components/cart/FreeShippingBar";
 import { SelectField } from "@/components/form/Field";
 import { InlineError } from "@/components/ui/error-state";
 import { useT } from "@/i18n";
+import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
 
 /*
  * Cart summary: the delivery fee and date from the checkout preview (with an area choice when there is no saved
  * address yet), then the free-delivery progress. pages/shopping.md.
  */
-export function CartDeliveryEstimate({ version, coupon }: { version: string; coupon: string | null }) {
+export function CartDeliveryEstimate({ version, coupon, className, barClassName }: { version: string; coupon: string | null; className?: string; barClassName?: string }) {
   const { dict } = useT();
   const currency = useCurrency();
   const [area, setArea] = useState<"phnom_penh" | "provinces">("phnom_penh");
   const preview = useQuery({ queryKey: ["cart", "preview", "estimate", version, coupon, area], queryFn: () => cartApi.preview(coupon, null, area) });
   const data = preview.data;
   return (
-    <section aria-label={dict.shopExtras.deliveryEstimate} className="grid gap-3">
+    <section aria-label={dict.shopExtras.deliveryEstimate} className={cn("grid gap-3", className)}>
       {data?.has_delivery_address === false ? (
         <SelectField label={dict.shopExtras.deliveryArea} value={area} onChange={(e) => setArea(e.target.value as typeof area)}>
           <option value="phnom_penh">{dict.checkoutPage.phnomPenh}</option>
@@ -27,7 +28,7 @@ export function CartDeliveryEstimate({ version, coupon }: { version: string; cou
         </SelectField>
       ) : null}
       {preview.isError ? <InlineError error={preview.error} onRetry={() => preview.refetch()} /> : null}
-      <div aria-live="polite" aria-busy={preview.isFetching} className="grid gap-3">
+      <div aria-live="polite" aria-busy={preview.isFetching} className={cn("grid gap-3", className)}>
         {data ? (
           <>
             <div className="flex items-start gap-3">
@@ -43,7 +44,7 @@ export function CartDeliveryEstimate({ version, coupon }: { version: string; cou
               </div>
             </div>
             {data.requires_shipping && (data.free_shipping_threshold?.usd || data.is_free_shipping) ? (
-              <FreeShippingBar subtotalUsd={String(Math.max(0, Number(data.subtotal?.usd) - Number(data.discount?.usd)))} thresholdUsd={data.free_shipping_threshold?.usd} free={data.is_free_shipping} />
+              <FreeShippingBar subtotalUsd={String(Math.max(0, Number(data.subtotal?.usd) - Number(data.discount?.usd)))} thresholdUsd={data.free_shipping_threshold?.usd} free={data.is_free_shipping} className={barClassName} />
             ) : null}
           </>
         ) : null}

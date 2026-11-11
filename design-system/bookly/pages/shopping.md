@@ -44,6 +44,30 @@ allowed here because the cards need to read as sheets on the paper; radius 2xl (
   and summary on laptops under 820px tall).
 - Drawer: same lines in compact form divided by hairlines, the total in Gloock 1.75rem.
 
+## 3b. Cart v2 (2026-11-12)
+Replaces the summary and drawer parts of §3; the lines themselves are unchanged.
+- **Summary as a receipt**: one `.shop-card`, `overflow-hidden`. Head in solid lapis (`text-on-lapis`): title, item
+  count (`on-lapis-muted`), CoverStack sm. Body: free gift, offer nudge, delivery estimate + free-delivery bar, the
+  coupon behind a "Have a coupon code?" link (opens the field and focuses it; a saved coupon shows the field straight
+  away), the sums (shipping reads "Free" in green when the offer gives free delivery). Then `.receipt-tear`: a 2px
+  dashed line with two notches cut into the card's sides in the paper colour (light and dark mixes match
+  `.home-paper`). Under it: "Total before shipping" with a "You save $X" chip, the total in Gloock 2.25rem, the one
+  vermilion CTA, a "nothing is charged now" note (shield icon), TrustRow.
+- **Lines card**: a green "You're saving $X on this order" strip under the header when a discount applies, the live
+  PromoReminder, and a footer (surface-1) with "Keep shopping" and the subtotal.
+- **Laptops**: the general gaps are 12px. Under 820px tall (`short:`) gaps drop to 8px, the total to 1.85rem, the tear
+  tightens, and the chip, pay note and TrustRow hide. Measured checkout button bottom (mock cart, 4 items, offer +
+  nudge): 1366×768 → 735px (Khmer 764px), 1440×900 → 869px (Khmer 893px), 1920×1080 → 869px. A blocked cart (alert
+  above the button) can push the disabled button below the fold; the alert says why.
+- **Phones (< lg)**: a fixed bar (total, item count, Checkout) slides up while the summary's own button is below the
+  screen (IntersectionObserver) and hides once it shows. It writes its height to `--bottom-bar` on `<html>`; the page
+  adds that as bottom padding, `html { scroll-padding-bottom }` keeps focused/scrolled-to items above it, and the toast
+  stack (and SupportBubble, when mounted) move up by it. Hidden bar = `inert` + `aria-hidden`.
+- **Drawer**: the free-delivery bar and offer nudge sit above the lines; empty = a fan of popular covers (same
+  recommendations query as the cart), Gloock title, Browse books. Footer: PromoReminder, the offer's saving in a green
+  row, the total in Gloock 1.75rem, one full-width Checkout (lg), and View cart as a quiet ghost link.
+- Motion: the bar uses `translate-y` (`--dur-toggle`), none under reduced motion.
+
 ## 4. Checkout
 - Steps on a vertical rail: 36px discs (lapis ring + number; solid lapis + check once the step is settled: an address
   chosen, a payment chosen), a dotted hairline down to the next step; "(completed)" for screen readers.

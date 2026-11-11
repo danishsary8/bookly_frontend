@@ -48,7 +48,7 @@ export function AnnouncementBar() {
             </Link>
           </p>
         </div>
-        <nav aria-label={dict.homePage.help} className="hidden shrink-0 items-center gap-5 font-medium lg:flex">
+        <nav aria-label={dict.homePage.helpLinks} className="hidden shrink-0 items-center gap-5 font-medium lg:flex">
           <Link to="/account/orders" className="inline-flex items-center gap-1.5 text-primary-foreground/85 underline-offset-4 transition-colors hover:text-primary-foreground hover:underline">
             <PackageSearch className="size-4" aria-hidden="true" /> {dict.homePage.trackOrder}
           </Link>

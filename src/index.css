@@ -1424,6 +1424,20 @@
 /* Summary cards on the warm paper: a hairline, a white inner edge and a soft lift, like the home shelf caption. */
 .shop-card { box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 24px 48px -36px rgb(20 32 122 / 0.45); }
 .dark .shop-card { box-shadow: 0 24px 48px -36px rgb(0 0 0 / 0.7); }
+/* Cart v2 receipt (pages/shopping.md): a perforated tear between the sums and the total. Two notches bite into the
+   card's sides in the paper colour (the same mix as .home-paper), with a dashed line between them. */
+.receipt-tear { --paper: color-mix(in srgb, var(--background) 70%, #EFE6D4); position: relative; height: 1.25rem; }
+.dark .receipt-tear { --paper: color-mix(in srgb, var(--background) 88%, #3B332B); }
+.receipt-tear::before, .receipt-tear::after {
+  content: ""; position: absolute; top: 50%; width: 1.25rem; height: 1.25rem; border-radius: 9999px; translate: 0 -50%;
+  background: var(--paper); box-shadow: inset 0 0 0 1px var(--border);
+}
+.receipt-tear::before { left: -0.625rem; }
+.receipt-tear::after { right: -0.625rem; }
+.receipt-tear > span { position: absolute; inset: 50% 1rem auto; border-top: 2px dashed color-mix(in srgb, var(--border) 80%, var(--muted-foreground)); }
+@media (min-width: 1024px) and (max-height: 820px) { .receipt-tear { height: 0.875rem; } }
+/* While a fixed bottom bar is up (cart below lg), focus and in-page scrolling stop above it (WCAG 2.4.11). */
+html { scroll-padding-bottom: var(--bottom-bar, 0px); }
 @media (prefers-reduced-motion: reduce) { .cover-fan, .group:hover .cover-fan { transition: none; transform: translateX(var(--fan-x, 0)) rotate(var(--fan-r, 0deg)); } }
 
 /* Staff area (pages/admin.md, redesign 2026-11-11): calmer than the shop's sheets, a hairline and a faint lift only. */
