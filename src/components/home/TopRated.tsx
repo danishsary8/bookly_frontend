@@ -32,11 +32,15 @@ export function TopRated() {
   const cart = useAddToCart();
   const navigate = useNavigate();
   const query = useQuery(catalogQueries.books({ sort: "rating", per_page: 20 }));
-  const books = (query.data?.data ?? []).filter(hasScore).slice(0, 10);
+  // Ten rows: the rated books first (the API's rating order), then — only when fewer than ten have a rating — the next
+  // books from the same list, marked "Not rated yet". The heading says "Top 10 rated" only when all ten are rated.
+  const all = query.data?.data ?? [];
+  const scored = all.filter(hasScore);
+  const books = [...scored, ...all.filter((b) => !hasScore(b))].slice(0, 10);
   const [front, setFront] = useState(0);
   const [pick, setPick] = useState<number | undefined>(undefined);
 
-  if (query.isError || (!query.isPending && books.length === 0)) return null;
+  if (query.isError || (!query.isPending && scored.length === 0)) return null;
   const price = (b: BookCard) => formatMoney(b.price_from_usd, b.price_from_khr, currency);
   const lead = books[front] ?? books[0];
 
@@ -48,7 +52,7 @@ export function TopRated() {
             <span className="h-px w-12 bg-current" aria-hidden="true" />
             {h.topRatedEyebrow}
           </p>
-          <h2 id="top-rated-title" className="mt-2 font-display text-[1.953rem] leading-tight">{h.topTen}</h2>
+          <h2 id="top-rated-title" className="mt-2 font-display text-[1.953rem] leading-tight">{scored.length >= 10 || query.isPending ? h.topTen : h.topTenBooks}</h2>
         </div>
         <Link to="/books?sort=rating" className="inline-flex h-11 items-center gap-1.5 rounded-md px-2 text-[15px] font-semibold text-primary underline-offset-4 hover:underline">
           {dict.cards.seeAll} <ArrowRight className="size-4" aria-hidden="true" />
@@ -73,11 +77,11 @@ export function TopRated() {
             <span className="absolute left-5 top-5 z-10 inline-flex items-center gap-1.5 rounded-full bg-[#1B1A2E] px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-gold shadow-sm">
               <Crown className="size-3.5" aria-hidden="true" /> {h.rank(front + 1)}
             </span>
-            <div className="relative mt-8 h-[25rem] flex-none">
+            <div className="relative mt-6 h-[26rem] flex-none">
               <span className="pointer-events-none absolute bottom-6 left-1/2 h-12 w-3/5 -translate-x-1/2 rounded-[50%] bg-[radial-gradient(closest-side,rgb(20_16_10/0.22),transparent)]" aria-hidden="true" />
               <CircularCarousel
                 items={books.map((b, i) => ({ src: b.cover_image_url, alt: b.title, title: b.title, subtitle: h.rank(i + 1) }))}
-                cardWidth={172}
+                cardWidth={190}
                 aspectRatio={2 / 3}
                 speed={12}
                 intro="rise"
@@ -93,10 +97,14 @@ export function TopRated() {
                     <Link to={`/books/${lead.id}`} className="underline-offset-4 hover:underline">{lead.title}</Link>
                   </p>
                   <p className="mt-0.5 truncate text-sm text-muted-foreground">{h.by(authorNames(lead.authors) || h.unknownAuthor)}</p>
-                  <div className="mt-3 flex items-center gap-3">
-                    <span className="font-display text-4xl leading-none tabular-nums">{scoreOf(lead).toFixed(1)}</span>
-                    <ReaderScore book={lead} className="text-[13px]" />
-                  </div>
+                  {hasScore(lead) ? (
+                    <div className="mt-3 flex items-center gap-3">
+                      <span className="font-display text-4xl leading-none tabular-nums">{scoreOf(lead).toFixed(1)}</span>
+                      <ReaderScore book={lead} className="text-[13px]" />
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-sm text-muted-foreground">{h.notRated}</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-xl font-semibold tabular-nums">{price(lead)}</span>
@@ -139,7 +147,7 @@ export function TopRated() {
                   {book.low_stock_remaining ? (
                     <span className="hidden shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-semibold text-accent-text xl:inline">{dict.cards.onlyLeft(book.low_stock_remaining)}</span>
                   ) : null}
-                  <ReaderScore book={book} className="hidden shrink-0 text-xs sm:inline-flex" />
+                  {hasScore(book) ? <ReaderScore book={book} className="hidden shrink-0 text-xs sm:inline-flex" /> : <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">{h.notRated}</span>}
                   <span className="w-14 shrink-0 text-right text-sm font-semibold tabular-nums">{price(book)}</span>
                 </Link>
               </li>

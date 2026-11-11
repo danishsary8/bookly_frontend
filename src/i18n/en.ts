@@ -1355,6 +1355,8 @@ export const en = {
     soldShort: (n: number) => `${n} sold`,
     continueCta: "Continue",
     topTen: "Top 10 rated",
+    topTenBooks: "Top 10 books",
+    notRated: "Not rated yet",
     daysToGo: (n: number): string => (n === 1 ? "day to go" : "days to go"),
     announcedShort: "Announced",
     categoryCount: (n: number) => `${n} categories`,

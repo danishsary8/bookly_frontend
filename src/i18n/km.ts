@@ -1361,6 +1361,8 @@ export const km: Translations = {
     soldShort: (n: number) => `លក់បាន ${n}`,
     continueCta: "បន្ត",
     topTen: "កំពូលទាំង ១០",
+    topTenBooks: "សៀវភៅកំពូលទាំង ១០",
+    notRated: "មិនទាន់មានការវាយតម្លៃ",
     daysToGo: (): string => "ថ្ងៃទៀត",
     announcedShort: "បានប្រកាស",
     categoryCount: (n: number) => `${n} ប្រភេទ`,
