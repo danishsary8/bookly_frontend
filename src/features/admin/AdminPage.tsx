@@ -7,7 +7,7 @@ export function AdminPage({ title, lead, actions, back, children }: { title: str
   useDocumentTitle(`${title} · Staff`);
   return (
     <div className="mx-auto grid w-full max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-6">
-      <div className="grid gap-3">
+      <div className="grid gap-3 border-b border-border pb-5">
         {back}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="grid gap-1">

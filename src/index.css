@@ -1328,3 +1328,7 @@
 .shop-card { box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 24px 48px -36px rgb(20 32 122 / 0.45); }
 .dark .shop-card { box-shadow: 0 24px 48px -36px rgb(0 0 0 / 0.7); }
 @media (prefers-reduced-motion: reduce) { .cover-fan, .group:hover .cover-fan { transition: none; transform: translateX(var(--fan-x, 0)) rotate(var(--fan-r, 0deg)); } }
+
+/* Staff area (pages/admin.md, redesign 2026-11-11): calmer than the shop's sheets, a hairline and a faint lift only. */
+.desk-card { box-shadow: 0 1px 2px rgb(7 11 34 / 0.04), 0 12px 24px -22px rgb(7 11 34 / 0.3); }
+.dark .desk-card { box-shadow: 0 12px 24px -22px rgb(0 0 0 / 0.6); }
