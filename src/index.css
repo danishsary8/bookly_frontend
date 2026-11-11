@@ -8,7 +8,7 @@
 /* Bookly design system v3 "Lapis & Vermilion" — see design-system/bookly/MASTER.md */
 @theme {
     --font-sans: "Hanken Grotesk", "Kantumruy Pro", system-ui, sans-serif;
-    --font-display: "Gloock", "Kantumruy Pro", Georgia, serif;
+    --font-display: "Newsreader Variable", "Kantumruy Pro", Georgia, serif;
     /* Motion (MASTER §5) — keep in sync with src/lib/motion.ts */
     --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-standard: cubic-bezier(0.2, 0, 0, 1);
@@ -240,12 +240,18 @@
       color 160ms ease;
   }
 
-  /* Gloock ships one weight: never let the browser fake bold or italic. */
+  /* Headings in Newsreader (font preview 2026-11-11): a screen serif with optical sizes, so small book titles stay open
+     and readable and large titles keep their elegance. Medium (500) weight; never faux bold or italic. */
   h1, h2, h3 {
     font-family: var(--font-display);
-    font-weight: 400;
+    font-weight: 500;
     font-synthesis: none;
-    letter-spacing: -0.01em;
+    font-optical-sizing: auto;
+    letter-spacing: -0.012em;
+  }
+  .font-display {
+    font-weight: 500;
+    font-optical-sizing: auto;
   }
 
   h4, h5, h6 {
