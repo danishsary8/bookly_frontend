@@ -85,3 +85,20 @@ On `/` the header search hides (fade) while the hero search is on screen, and re
 - Promises: a lapis band (`.hero-lapis` + `.promise-frame`, the bookplate's double gold hairline without corners): gold
   label, "Why shop with Bookly" in display type, four promises (cash on delivery, Bakong KHQR, delivery across Cambodia,
   easy returns) with gold-ringed icons and gold hairline dividers.
+
+## Home round 2 (2026-11-11, on `main`)
+- Mixed genres (`useMixedPicks.ts`): the top-level categories with books (largest first, up to 6) each give 4 best
+  sellers; `interleave()` deals one book per lane per round, without repeats. Cached, so hero and shelf share requests.
+- Hero: 20 slides — staff picks + popular books as one lane, dealt in turns with the category lanes ("Popular in every
+  genre"). No description; the cover is larger instead: `min(360px, 64%, (100svh − header − 22.5rem) × 0.6)`, the band
+  `clamp(540px, 100svh − header − 7rem, 830px)`, floor 6:1 (horizon at 90%). Left column sits above the stack (z-10).
+- Shelf: first tab "Every genre" (16 books from the category lanes); "All books" link for it. The caption is the shelf's
+  front rail (`.shelf-rail`): a darker oak plank with grain under the board, brass knobs (`.shelf-knob`) for prev/next,
+  a brass label holder (`.shelf-holder`) around a cream paper label (`.shelf-card`) with cover, title, author and stock:
+  "Only N left" + a five-notch meter when low (`low_stock_remaining`, shown from `shop.low_stock_badge` = 5 copies down),
+  else "In stock" / "Out of stock". No rank, no sold count. Price, rating and actions sit on the wood in cream.
+- Top 10: scores without the review count (`showCount={false}` on `StarRating` / `ReaderScore`); showcase 21.5rem
+  stage, 158px books, 10 tighter rows, so heading + showcase + list fit 1366×768 and 1440×900.
+- Coming soon: an endless marquee of premiere tickets (stub with the cover on its own colours, a perforation with notches,
+  body with Pre-order/Announced, date, title, author, day countdown). Pauses on hover, focus and with a pause button;
+  repeats and the second loop are `aria-hidden` and out of the tab order; reduced motion: no movement, scroll by hand.

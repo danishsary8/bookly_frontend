@@ -10,10 +10,10 @@ import { useT } from "@/i18n";
  * shows as one star, the score and its source ("4.3 · Goodreads"), clearly labelled as coming from elsewhere.
  * With neither, nothing renders (no "No reviews yet" noise in rows).
  */
-export function ReaderScore({ book, className }: { book: BookCard; className?: string }) {
+export function ReaderScore({ book, showCount = true, className }: { book: BookCard; showCount?: boolean; className?: string }) {
   const { dict } = useT();
   const h = dict.homePage;
-  if (toNumber(book.review_count) > 0 && toNumber(book.rating_avg) > 0) return <StarRating value={book.rating_avg} count={book.review_count} compact className={className} />;
+  if (toNumber(book.review_count) > 0 && toNumber(book.rating_avg) > 0) return <StarRating value={book.rating_avg} count={book.review_count} compact showCount={showCount} className={className} />;
   const score = toNumber(book.reader_rating);
   if (!(score > 0)) return null;
   const source = book.reader_rating_source || h.readers;

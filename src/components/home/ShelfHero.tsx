@@ -1,11 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useReducedMotion } from "motion/react";
-import { ArrowLeft, ArrowRight, Flame, ShoppingBag, Trophy } from "lucide-react";
+import { ArrowLeft, ArrowRight, ShoppingBag } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { catalogApi } from "@/api/endpoints/catalog";
 import type { BookCard } from "@/api/types";
 import { useAddToCart } from "@/components/catalog/useCatalogActions";
+import { interleave, useCategoryLanes } from "@/components/home/useMixedPicks";
 import { ReaderScore } from "@/components/ReaderScore";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
@@ -22,9 +23,11 @@ import { useT } from "@/i18n";
  * stops while the shelf is off screen. Reduced motion: books snap, no autoplay, no tilt, no entrance slide.
  */
 
-type RowId = "best_sellers" | "new_arrivals" | "coming_soon" | "ebook_deals";
-const ROWS: RowId[] = ["best_sellers", "new_arrivals", "coming_soon", "ebook_deals"];
+/** "mixed" (the first tab, owner 2026-11-11): best sellers from every big category, dealt in turns. */
+type RowId = "mixed" | "best_sellers" | "new_arrivals" | "coming_soon" | "ebook_deals";
+const ROWS: RowId[] = ["mixed", "best_sellers", "new_arrivals", "coming_soon", "ebook_deals"];
 const ROW_LINK: Record<RowId, string> = {
+  mixed: "/books",
   best_sellers: "/books?sort=best_selling",
   new_arrivals: "/books?sort=newest",
   coming_soon: "/books?coming_soon=1&sort=release_soon",
@@ -129,11 +132,14 @@ export function ShelfHero() {
   const { dict } = useT();
   const h = dict.homePage;
   const rows = useQuery({ queryKey: ["catalog", "rows", null], queryFn: () => catalogApi.rows(), staleTime: 15 * 60 * 1000 });
-  const [row, setRow] = useState<RowId>("best_sellers");
+  const mixed = useCategoryLanes();
+  const [row, setRow] = useState<RowId>("mixed");
 
-  const available = ROWS.filter((id) => (rows.data?.find((r) => r.id === id)?.books.length ?? 0) >= 3);
-  const current = available.includes(row) ? row : (available[0] ?? "best_sellers");
-  const books = (rows.data?.find((r) => r.id === current)?.books ?? []).slice(0, 12);
+  const booksOf = (id: RowId) => (id === "mixed" ? interleave(mixed.lanes, 16) : (rows.data?.find((r) => r.id === id)?.books ?? []).slice(0, 12));
+  const available = ROWS.filter((id) => booksOf(id).length >= 3);
+  // Wait for the mixed row before choosing, so the shelf doesn't open on Best sellers and then jump.
+  const current = available.includes(row) ? row : mixed.pending ? row : (available[0] ?? "best_sellers");
+  const books = booksOf(current);
   const tones = useCoverTones(books.flatMap((b) => (b.cover_image_url ? [b.cover_image_url] : [])));
   const list = books.length >= 3 ? books : Array.from({ length: 9 }, () => null);
   const items: ShelfItem[] = list.map((book, i) => {
@@ -188,7 +194,7 @@ export function ShelfHero() {
           </nav>
         ) : <span />}
         <Link to={ROW_LINK[current]} className="group/all inline-flex min-h-11 w-44 items-center justify-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline md:justify-end">
-          {h.seeAllRow(dict.shopExtras.rows[current])} <ArrowRight className="size-4 transition-transform duration-200 group-hover/all:translate-x-0.5" aria-hidden="true" />
+          {current === "mixed" ? h.allBooks : h.seeAllRow(dict.shopExtras.rows[current])} <ArrowRight className="size-4 transition-transform duration-200 group-hover/all:translate-x-0.5" aria-hidden="true" />
         </Link>
       </div>
 
@@ -518,53 +524,36 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
         </div>
       </div>
 
-      {/* Caption card: arrows at the ends; the book (thumb, title, author) with its selling points — rank in this
-          row, copies sold, "Only N left" — then the price, Add to cart and View book. */}
-      {/* The caption hangs from the board like a paper shelf label: cream stock, two brass pins, tucked under the lip. */}
-      <div className="relative z-10 mx-auto -mt-1 w-full max-w-[1100px] px-4 pb-8" aria-live="polite">
-        <div className="shelf-label relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 rounded-b-[1.25rem] rounded-t-md px-3 pb-3 pt-4 md:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] md:gap-x-5 md:px-4">
-          <span className="shelf-pin left-6" aria-hidden="true" />
-          <span className="shelf-pin right-6" aria-hidden="true" />
-          <button type="button" onClick={() => go(-1)} aria-label={h.prevBook} className="grid size-11 shrink-0 place-items-center rounded-full border border-[#D9CCB2] bg-[#FFFCF6] text-foreground transition-[background-color,transform,border-color] hover:border-[#8C8170] hover:bg-[#F3EADA] active:scale-95 dark:border-border dark:bg-background dark:hover:bg-muted">
+      {/* The shelf's front rail (owner 2026-11-11): an oak plank hung under the board, in the board's own wood. Brass
+          knobs at the ends turn the shelf; in the middle a brass label holder carries the book's paper label (cover,
+          title, author and how many copies are left), then the price and the actions straight on the wood. */}
+      <div className="relative z-10 mx-auto -mt-1 w-full max-w-[1180px] px-4 pb-8" aria-live="polite">
+        <div className="shelf-rail grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 rounded-b-[1.4rem] rounded-t-[3px] px-3 py-3 md:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] md:gap-x-5 md:px-4">
+          <button type="button" onClick={() => go(-1)} aria-label={h.prevBook} className="shelf-knob">
             <ArrowLeft className="size-[18px]" aria-hidden="true" />
           </button>
-          <div className="flex min-w-0 items-center gap-4">
-            {book?.cover_image_url ? (
-              <img key={`c-${shown?.id}`} src={book.cover_image_url} alt="" aria-hidden="true" className="shelf-roll hidden aspect-[2/3] w-12 shrink-0 -rotate-2 rounded-[3px] object-cover shadow-[0_12px_20px_-10px_rgb(60_40_20/0.65)] md:block" />
-            ) : null}
-            <div className="min-w-0 overflow-hidden">
-              <p key={`t-${shown?.id}`} className={cn("shelf-roll truncate font-display text-[clamp(1.15rem,1.6vw,1.4rem)] leading-tight text-foreground", dir < 0 && "shelf-roll-down")}>
-                {shown?.book ? shown.title : dict.splash.tagline}
-              </p>
-              <p key={`a-${shown?.id}`} className={cn("shelf-roll mt-0.5 truncate text-[13px] text-muted-foreground [animation-delay:60ms]", dir < 0 && "shelf-roll-down")}>
-                {shown?.book ? (shown.by ? h.by(shown.by) : h.unknownAuthor) : dict.shopExtras.rows[current]}
-              </p>
-              {book ? (
-                <p key={`b-${shown?.id}`} className="shelf-roll mt-1.5 flex flex-wrap items-center gap-1.5 [animation-delay:120ms]">
-                  <span className="inline-flex h-6 items-center gap-1 rounded-full bg-lapis-tint px-2.5 text-xs font-semibold text-primary">
-                    <Trophy className="size-3.5" aria-hidden="true" /> {h.rankIn(active + 1, dict.shopExtras.rows[current])}
-                  </span>
-                  {book.sold_count ? (
-                    <span className="inline-flex h-6 items-center gap-1 rounded-full bg-muted px-2.5 text-xs font-semibold text-foreground">
-                      <Flame className="size-3.5 text-accent-text" aria-hidden="true" /> {h.soldShort(book.sold_count)}
-                    </span>
-                  ) : null}
-                  {book.low_stock_remaining ? (
-                    <span className="inline-flex h-6 items-center gap-1.5 rounded-full bg-accent/10 px-2.5 text-xs font-semibold text-accent-text ring-1 ring-inset ring-accent/30">
-                      <span className="size-1.5 animate-pulse rounded-full bg-accent motion-reduce:animate-none" aria-hidden="true" />
-                      {dict.cards.onlyLeft(book.low_stock_remaining)}
-                    </span>
-                  ) : null}
-                </p>
+          <div className="shelf-holder min-w-0 rounded-[9px] p-[5px]">
+            <div className="shelf-card flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1.5 rounded-[5px] px-3 py-2 md:flex-nowrap md:px-4">
+              {book?.cover_image_url ? (
+                <img key={`c-${shown?.id}`} src={book.cover_image_url} alt="" aria-hidden="true" className="shelf-roll hidden aspect-[2/3] w-11 shrink-0 rounded-[2px] object-cover shadow-[0_8px_14px_-8px_rgb(60_40_20/0.7)] md:block" />
               ) : null}
+              <div className="min-w-[9rem] flex-1 overflow-hidden">
+                <p key={`t-${shown?.id}`} className={cn("shelf-roll truncate font-display text-[clamp(1.1rem,1.5vw,1.32rem)] leading-tight text-[#1B1A2E]", dir < 0 && "shelf-roll-down")}>
+                  {shown?.book ? shown.title : dict.splash.tagline}
+                </p>
+                <p key={`a-${shown?.id}`} className={cn("shelf-roll mt-0.5 truncate text-[13px] text-[#5C5547] [animation-delay:60ms]", dir < 0 && "shelf-roll-down")}>
+                  {shown?.book ? (shown.by ? h.by(shown.by) : h.unknownAuthor) : dict.shopExtras.rows[current]}
+                </p>
+              </div>
+              {book ? <StockNote key={`s-${shown?.id}`} book={book} /> : null}
             </div>
           </div>
-          <button type="button" onClick={() => go(1)} aria-label={h.nextBook} className="grid size-11 shrink-0 place-items-center rounded-full border border-[#D9CCB2] bg-[#FFFCF6] text-foreground transition-[background-color,transform,border-color] hover:border-[#8C8170] hover:bg-[#F3EADA] active:scale-95 md:order-last dark:border-border dark:bg-background dark:hover:bg-muted">
+          <button type="button" onClick={() => go(1)} aria-label={h.nextBook} className="shelf-knob md:order-last">
             <ArrowRight className="size-[18px]" aria-hidden="true" />
           </button>
           <div className="col-span-3 flex flex-col items-center gap-0.5 md:col-span-1 md:items-end">
-            {price ? <span className="whitespace-nowrap font-display text-[1.6rem] leading-none tabular-nums">{price}</span> : null}
-            {book ? <ReaderScore book={book} className="text-[13px]" /> : null}
+            {price ? <span className="whitespace-nowrap font-display text-[1.6rem] leading-none tabular-nums text-[#FBF6EC]">{price}</span> : null}
+            {book ? <ReaderScore book={book} className="text-[13px] text-[#F1DCBC] [&_.text-foreground]:text-[#FBF6EC]" /> : null}
           </div>
           <div className="col-span-3 flex items-center justify-center gap-2 md:col-span-1">
             {book && book.in_stock !== false ? (
@@ -575,12 +564,12 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
                   cart.add(book, undefined, undefined, { from: img ?? null });
                 }}
                 disabled={cart.pendingBookId === book.id}
-                className="inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[0_10px_22px_-12px_rgb(20_32_122/0.7)] transition-[filter,transform] hover:brightness-110 active:scale-[0.97] disabled:opacity-70"
+                className="inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[0_10px_22px_-12px_rgb(0_0_0/0.7)] ring-1 ring-inset ring-white/10 transition-[filter,transform] hover:brightness-110 active:scale-[0.97] disabled:opacity-70"
               >
                 <ShoppingBag className="size-4" aria-hidden="true" /> {h.addToCart}
               </button>
             ) : null}
-            <Link to={href} className="inline-flex h-11 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#8C8170]/50 px-4 text-sm font-semibold text-foreground transition-colors hover:bg-[#F3EADA] dark:border-border dark:hover:bg-muted">
+            <Link to={href} className="inline-flex h-11 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#F1DCBC]/45 px-4 text-sm font-semibold text-[#FBF6EC] transition-colors hover:bg-white/10">
               {book ? h.viewBook : dict.shopExtras.viewAll}
             </Link>
           </div>
@@ -589,5 +578,35 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
         <p id="shelf-hint" className="shelf-hint mt-2 text-center text-xs text-muted-foreground">{h.shelfHint}</p>
       </div>
     </>
+  );
+}
+
+/**
+ * Stock on the paper label: "Only N left" with a five-notch meter when stock is low (the shop shows the count from
+ * shop.low_stock_badge copies down), otherwise a quiet "In stock" or "Out of stock".
+ */
+function StockNote({ book }: { book: BookCard }) {
+  const { dict } = useT();
+  const left = book.low_stock_remaining ?? 0;
+  if (book.in_stock === false) return <span className="shelf-roll shrink-0 text-[13px] font-semibold text-[#5C5547]">{dict.cards.outOfStock}</span>;
+  if (left <= 0) {
+    return (
+      <span className="shelf-roll inline-flex shrink-0 items-center gap-1.5 text-[13px] font-semibold text-[#2F5D4A]">
+        <span className="size-2 rounded-full bg-[#3F7D5E]" aria-hidden="true" /> {dict.cards.inStock}
+      </span>
+    );
+  }
+  return (
+    <span className="shelf-roll grid shrink-0 justify-items-start gap-1 [animation-delay:120ms] md:justify-items-end">
+      <span className="inline-flex items-center gap-1.5 text-[13px] font-bold text-[#A63A1F]">
+        <span className="size-1.5 animate-pulse rounded-full bg-[#C2410C] motion-reduce:animate-none" aria-hidden="true" />
+        {dict.cards.onlyLeft(left)}
+      </span>
+      <span className="flex gap-[3px]" aria-hidden="true">
+        {Array.from({ length: 5 }, (_, i) => (
+          <span key={i} className={cn("h-1.5 w-3.5 rounded-full", i < Math.min(left, 5) ? "bg-[#C2410C]" : "bg-[#DCCDB1]")} />
+        ))}
+      </span>
+    </span>
   );
 }

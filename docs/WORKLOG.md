@@ -848,3 +848,13 @@ real-book carousel; premium promises band; Bakong KHQR instead of "Delivery acro
   run) then axe at 1366×768, 1440×900, 1920×930, 1440 dark, 1440 Khmer, 390×844: axe 0, no sideways scroll, no console
   errors. Exercised: shelf autoplay frames at 1366/1440/1920, carousel steps and list highlight. Not exercised: real
   covers with CORS spine colours, the live API's real rating mix (the "Not rated yet" fill was not hit by the mock).
+
+## Home round 2 (2026-11-11, on `main`, owner asked for direct pushes)
+- Hero mixes genres (20 books dealt from popular + each big category), no description, larger cover; fits 1366×768,
+  1440×900, 1920×1080.
+- Shelf: "Every genre" tab first; caption rebuilt as the shelf's oak front rail with a brass label holder; shows stock
+  left (no rank / sold count).
+- Top 10: no review count; sized to fit a laptop screen.
+- Coming soon: marquee of premiere tickets with pause button.
+- Checks: lint, typecheck, 648 tests, build; browser + axe 0 at 1440×900, 1366×768 dark, Khmer, 390, reduced motion (mock API).
+- Backend: `DemoReviewsSeeder` (bookly_backend_v2) fills reviews for unrated books, see that repo's WORKLOG.

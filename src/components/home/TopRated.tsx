@@ -9,6 +9,7 @@ import { BookCover } from "@/components/catalog/BookCover";
 import { authorNames, hasScore } from "@/components/catalog/bookMeta";
 import { useAddToCart } from "@/components/catalog/useCatalogActions";
 import { ReaderScore } from "@/components/ReaderScore";
+import { StarRating } from "@/components/StarRating";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { toNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -20,7 +21,8 @@ import { useT } from "@/i18n";
  * cylinder (CircularCarousel) over a soft wash of the front book's colours, with its rank, score, price and Add to
  * cart underneath. Right, the ranked list (the accessible version of the same ten): rank, cover, title, author,
  * stars, price and "Only N left" when stock is low. Hovering or focusing a row spins the carousel to that book; the
- * row of the book in front is highlighted. Only books with a rating (reviews or the shop's Reader rating) appear.
+ * row of the book in front is highlighted. Scores show without the number of reviews (owner 2026-11-11). The whole
+ * section (heading, showcase and the ten rows) is sized to fit one laptop screen under the header.
  */
 
 const scoreOf = (b: BookCard) => (toNumber(b.review_count) > 0 && toNumber(b.rating_avg) > 0 ? toNumber(b.rating_avg) : toNumber(b.reader_rating));
@@ -61,15 +63,15 @@ export function TopRated() {
 
       {query.isPending ? (
         <SkeletonGroup label={h.topRatedTitle} className="grid gap-5 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)]">
-          <Skeleton className="h-[36rem] rounded-3xl" />
+          <Skeleton className="h-[31rem] rounded-3xl" />
           <div className="grid gap-2">
-            {Array.from({ length: 10 }, (_, i) => <Skeleton key={i} className="h-14 rounded-xl" />)}
+            {Array.from({ length: 10 }, (_, i) => <Skeleton key={i} className="h-12 rounded-xl" />)}
           </div>
         </SkeletonGroup>
       ) : (
         <div className="grid gap-5 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)]">
           {/* Showcase */}
-          <div className="relative isolate flex min-h-[36rem] flex-col overflow-hidden rounded-3xl border border-border bg-card">
+          <div className="relative isolate flex flex-col overflow-hidden rounded-3xl border border-border bg-card">
             {lead?.cover_image_url ? (
               <img key={`wash-${lead.id}`} src={lead.cover_image_url} alt="" aria-hidden="true" className="hero-wash pointer-events-none absolute inset-0 -z-10 size-full scale-125 object-cover opacity-25 blur-3xl saturate-150" />
             ) : null}
@@ -77,11 +79,11 @@ export function TopRated() {
             <span className="absolute left-5 top-5 z-10 inline-flex items-center gap-1.5 rounded-full bg-[#1B1A2E] px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-gold shadow-sm">
               <Crown className="size-3.5" aria-hidden="true" /> {h.rank(front + 1)}
             </span>
-            <div className="relative mt-6 h-[26rem] flex-none">
+            <div className="relative mt-5 h-[21.5rem] flex-none">
               <span className="pointer-events-none absolute bottom-6 left-1/2 h-12 w-3/5 -translate-x-1/2 rounded-[50%] bg-[radial-gradient(closest-side,rgb(20_16_10/0.22),transparent)]" aria-hidden="true" />
               <CircularCarousel
                 items={books.map((b, i) => ({ src: b.cover_image_url, alt: b.title, title: b.title, subtitle: h.rank(i + 1) }))}
-                cardWidth={190}
+                cardWidth={158}
                 aspectRatio={2 / 3}
                 speed={12}
                 intro="rise"
@@ -91,16 +93,17 @@ export function TopRated() {
               />
             </div>
             {lead ? (
-              <div key={`cap-${lead.id}`} className="hero-caption mt-auto flex flex-wrap items-end justify-between gap-4 px-6 pb-6">
+              <div key={`cap-${lead.id}`} className="hero-caption mt-auto flex flex-wrap items-end justify-between gap-4 px-6 pb-5">
                 <div className="min-w-0">
-                  <p className="truncate font-display text-[1.7rem] leading-tight">
+                  <p className="truncate font-display text-[1.55rem] leading-tight">
                     <Link to={`/books/${lead.id}`} className="underline-offset-4 hover:underline">{lead.title}</Link>
                   </p>
                   <p className="mt-0.5 truncate text-sm text-muted-foreground">{h.by(authorNames(lead.authors) || h.unknownAuthor)}</p>
                   {hasScore(lead) ? (
-                    <div className="mt-3 flex items-center gap-3">
-                      <span className="font-display text-4xl leading-none tabular-nums">{scoreOf(lead).toFixed(1)}</span>
-                      <ReaderScore book={lead} className="text-[13px]" />
+                    <div className="mt-2 flex items-center gap-3">
+                      <span className="font-display text-[2rem] leading-none tabular-nums">{scoreOf(lead).toFixed(1)}</span>
+                      {/* customer reviews: stars beside the big score; a Reader rating keeps its source label */}
+                      {toNumber(lead.review_count) > 0 ? <StarRating value={scoreOf(lead)} summary={false} /> : <ReaderScore book={lead} className="text-[13px]" />}
                     </div>
                   ) : (
                     <p className="mt-3 text-sm text-muted-foreground">{h.notRated}</p>
@@ -133,13 +136,13 @@ export function TopRated() {
                   onFocus={() => setPick(i)}
                   aria-current={i === front || undefined}
                   className={cn(
-                    "group relative flex items-center gap-3.5 rounded-xl border px-3 py-1.5 outline-none transition-[background-color,border-color,box-shadow] duration-300 focus-visible:ring-2 focus-visible:ring-ring",
+                    "group relative flex items-center gap-3.5 rounded-xl border px-3 py-1 outline-none transition-[background-color,border-color,box-shadow] duration-300 focus-visible:ring-2 focus-visible:ring-ring",
                     i === front ? "border-input bg-card shadow-[0_14px_28px_-22px_rgb(20_32_122/0.55)]" : "border-transparent hover:bg-card/70",
                   )}
                 >
                   <span className={cn("absolute inset-y-2 left-0 w-[3px] rounded-full bg-primary transition-opacity duration-300", i === front ? "opacity-100" : "opacity-0")} aria-hidden="true" />
                   <span className={cn("w-8 shrink-0 text-center font-display text-[1.6rem] leading-none tabular-nums", i < 3 ? "text-[#946C1F]" : "rank-numeral-sm")}>{i + 1}</span>
-                  <span className="w-8 shrink-0"><BookCover src={book.cover_image_url} title={book.title} className="rounded-[3px] shadow-[0_6px_12px_-8px_rgb(20_16_10/0.6)]" /></span>
+                  <span className="w-7 shrink-0"><BookCover src={book.cover_image_url} title={book.title} className="rounded-[3px] shadow-[0_6px_12px_-8px_rgb(20_16_10/0.6)]" /></span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-display text-[15.5px] leading-snug">{book.title}</span>
                     <span className="block truncate text-xs text-muted-foreground">{authorNames(book.authors) || h.unknownAuthor}</span>
@@ -147,7 +150,7 @@ export function TopRated() {
                   {book.low_stock_remaining ? (
                     <span className="hidden shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-semibold text-accent-text xl:inline">{dict.cards.onlyLeft(book.low_stock_remaining)}</span>
                   ) : null}
-                  {hasScore(book) ? <ReaderScore book={book} className="hidden shrink-0 text-xs sm:inline-flex" /> : <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">{h.notRated}</span>}
+                  {hasScore(book) ? <ReaderScore book={book} showCount={false} className="hidden shrink-0 text-xs sm:inline-flex" /> : <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">{h.notRated}</span>}
                   <span className="w-14 shrink-0 text-right text-sm font-semibold tabular-nums">{price(book)}</span>
                 </Link>
               </li>

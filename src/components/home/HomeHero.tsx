@@ -18,8 +18,8 @@ import { useT } from "@/i18n";
  * Home hero (MASTER §2.1a, §5; pages/home.md): an inset lapis card. Left: eyebrow, BlurText headline, search, three
  * popular categories as quiet links and the page's one vermilion CTA. Right: a centred cover stack (current cover in
  * front on a glossy floor, neighbours peeking out on each side), then "n of N", title, author with a gold price chip,
- * a two-line description when the book has one, and the controls: prev, View book (the slide timer
- * runs along its bottom edge), next, pause. Autoplay (4 s) stops for pause, hover, focus, reduced motion, off screen.
+ * and the controls: prev, View book (the slide timer runs along its bottom edge), next, pause. No description (owner
+ * 2026-11-11): the cover gets that room instead. Autoplay (4 s) stops for pause, hover, focus, reduced motion, off screen.
  */
 
 const SLIDE_MS = 4000;
@@ -40,9 +40,6 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const current = books[index % Math.max(books.length, 1)];
-  // Short description of the current book: cards don't carry one, so read the book (cached per book).
-  const detail = useQuery({ ...catalogQueries.book(current?.id ?? 0), enabled: Boolean(current?.id), staleTime: 10 * 60_000 });
-  const blurb = usefulBlurb(shortBlurb(detail.data?.description), current);
   // The slideshow only runs while the hero is on screen: no slide changes (or image loads) once scrolled past.
   const sectionRef = useRef<HTMLElement>(null);
   const [onScreen, setOnScreen] = useState(true);
@@ -91,8 +88,8 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
       ) : null}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(100deg,rgb(20_32_122/0.9)_0%,rgb(20_32_122/0.7)_45%,rgb(24_38_130/0.55)_100%)]" aria-hidden="true" />
 
-      <div className="grid grid-cols-1 items-center gap-12 px-6 py-12 sm:px-10 lg:h-[clamp(540px,calc(100svh-var(--header-h)-8.5rem),780px)] lg:grid-cols-12 lg:gap-x-8 lg:px-14 lg:py-6">
-        <div className="lg:col-span-6">
+      <div className="grid grid-cols-1 items-center gap-12 px-6 py-12 sm:px-10 lg:h-[clamp(540px,calc(100svh-var(--header-h)-7rem),830px)] lg:grid-cols-12 lg:gap-x-8 lg:px-14 lg:py-6">
+        <div className="relative z-10 lg:col-span-6">
           <p className="eyebrow">{h.heroEyebrow}</p>
           <h1 id="home-hero-title" className="mt-4 font-display text-[clamp(2.4rem,3.9vw,3.4rem)] leading-[1.03] tracking-[-0.02em] text-on-lapis [@media(max-height:820px)]:text-[clamp(2.2rem,3.8vw,3.4rem)]">
             <BlurText
@@ -185,7 +182,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                   e.currentTarget.style.setProperty("--tilt-y", "0deg");
                   e.currentTarget.style.setProperty("--tilt-x", "0deg");
                 }}
-                className="hero-stack relative mx-auto w-[min(370px,70%,calc((100svh-var(--header-h)-23rem)*0.64))]"
+                className="hero-stack relative mx-auto w-[min(360px,64%,calc((100svh-var(--header-h)-22.5rem)*0.6))]"
               >
                 <span className="pointer-events-none absolute left-1/2 top-[42%] -z-10 size-[210%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(130_160_255/0.3),transparent)]" aria-hidden="true" />
                 <div className="relative aspect-[2/3] [perspective:1400px]">
@@ -216,8 +213,8 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                     );
                   })}
                 </div>
-                <span className="pointer-events-none absolute left-1/2 top-[88.2%] block h-px w-[200%] -translate-x-1/2 bg-[linear-gradient(90deg,transparent,rgb(255_255_255/0.22),transparent)]" aria-hidden="true" />
-                <div className="aspect-[5/1]" aria-hidden="true" />
+                <span className="pointer-events-none absolute left-1/2 top-[90%] block h-px w-[200%] -translate-x-1/2 bg-[linear-gradient(90deg,transparent,rgb(255_255_255/0.22),transparent)]" aria-hidden="true" />
+                <div className="aspect-[6/1]" aria-hidden="true" />
               </div>
 
               {current ? (
@@ -244,15 +241,6 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                           </span>
                         ) : null}
                       </p>
-                      {/* A short description (two lines). Books without one simply show none: the column stays centred. */}
-                      {blurb ? (
-                        <p className="mx-auto mt-3 line-clamp-2 max-w-md text-[15px] leading-relaxed text-on-lapis/80">{blurb}</p>
-                      ) : detail.isPending && current.id ? (
-                        <span className="mx-auto mt-4 grid max-w-sm justify-items-center gap-2" aria-hidden="true">
-                          <Skeleton className="h-3 w-11/12 bg-on-lapis/10" />
-                          <Skeleton className="h-3 w-3/5 bg-on-lapis/10" />
-                        </span>
-                      ) : null}
                     </div>
                   </div>
 
@@ -285,23 +273,4 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
     </section>
     </div>
   );
-}
-
-/** First two sentences of a description as plain text, at most ~220 characters. */
-function shortBlurb(text: string | null | undefined) {
-  const plain = (text ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-  if (!plain) return "";
-  const sentences = plain.match(/[^.!?។]+[.!?។]+/g) ?? [plain];
-  let out = sentences.slice(0, 2).join(" ").trim();
-  if (out.length > 220) out = `${out.slice(0, 217).replace(/\s+\S*$/, "")}…`;
-  return out;
-}
-
-/** Hide placeholder descriptions that only repeat the title and author ("Moby-Dick by Herman Melville, a classic…"). */
-function usefulBlurb(blurb: string, book: BookCard | undefined) {
-  if (!blurb || !book?.title) return blurb;
-  const norm = (v: string) => v.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
-  const rest = norm(blurb).replace(norm(book.title), " ").replace(norm(authorNames(book.authors)), " ").replace(/\s+/g, " ").trim();
-  // Fewer than about eight words left once the title and author are taken out: nothing worth reading.
-  return rest.split(" ").filter(Boolean).length < 8 ? "" : blurb;
 }

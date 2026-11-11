@@ -12,6 +12,7 @@ import { ComingSoon } from "@/components/home/ComingSoon";
 import { readingListsApi } from "@/api/endpoints/readingLists";
 import { ShelfHero } from "@/components/home/ShelfHero";
 import { StaffPicks } from "@/components/home/StaffPicks";
+import { interleave, useCategoryLanes } from "@/components/home/useMixedPicks";
 import AnimatedContent from "@/components/AnimatedContent";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -55,12 +56,15 @@ export default function HomePage() {
   const h = dict.homePage;
   // Seasonal collections (owner 2026-11-01): up to 2 live ones, above New arrivals. None, or an older API: no row.
   const collections = useQuery(collectionQueries.live());
-  // Hero carousel: staff picks first (if any), then the shop's most popular books, 15 in all.
+  // Hero carousel (owner 2026-11-11): 20 books dealt in turns from staff picks + the most popular books, and from the
+  // best sellers of each big category (self-help, comics, kids …), so the slides mix genres.
   const picks = useQuery({ queryKey: ["reading-lists", "picks"], queryFn: readingListsApi.picks });
   const popular = useQuery(catalogQueries.books({ sort: "best_selling", per_page: 15 }));
   const picked = (picks.data ?? []).flatMap((list) => list.books.flatMap((entry) => (entry.book ? [entry.book] : [])));
+  const mixed = useCategoryLanes();
   const newest = useQuery(catalogQueries.books({ sort: "newest", per_page: 12 }));
-  const featured = [...picked, ...(popular.data?.data ?? [])].filter((b, i, all) => all.findIndex((x) => x.id === b.id) === i).slice(0, 15);
+  const featured = interleave([[...picked, ...(popular.data?.data ?? [])], ...mixed.lanes], 20);
+  const heroLoading = (popular.isPending && picks.isPending) || mixed.pending;
   const categories = useQuery(catalogQueries.categories());
   const recent = useRecentlyViewed();
 
@@ -84,10 +88,7 @@ export default function HomePage() {
   return (
     <div className="home-paper overflow-x-clip pb-16">
       <JsonLd data={websiteJsonLd} />
-      <HomeHero
-featured={popular.isPending && picks.isPending ? undefined : featured}
-        label={dict.home.popularBooks}
-      />
+      <HomeHero featured={heroLoading ? undefined : featured} label={dict.home.popularBooks} />
       {/* The 3D shelf sits on the same page colour as everything else (one calm background, no band). */}
       <ShelfHero />
       <div className="container-shell grid gap-24 pb-10 pt-16">
