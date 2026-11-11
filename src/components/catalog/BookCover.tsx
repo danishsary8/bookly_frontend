@@ -19,20 +19,25 @@ type BookCoverProps = {
 
 export function BookCover({ src, title = "", alt = "", eager = false, className }: BookCoverProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
   const showImage = Boolean(src) && failedSrc !== src;
 
   return (
     <div className={cn("relative aspect-[2/3] overflow-hidden rounded-[2px] bg-lapis-tint", className)}>
       {showImage ? (
+        <>
+        {loadedSrc !== src ? <span aria-hidden="true" className="skeleton absolute! inset-0" /> : null}
         <img
           src={src!}
           alt={alt}
           loading={eager ? "eager" : "lazy"}
           fetchPriority={eager ? "high" : undefined}
           decoding="async"
+          onLoad={() => setLoadedSrc(src ?? null)}
           onError={() => setFailedSrc(src ?? null)}
-          className="size-full object-cover"
+          className={cn("relative size-full object-cover transition-opacity duration-300 motion-reduce:transition-none", loadedSrc === src ? "opacity-100" : "opacity-0")}
         />
+        </>
       ) : (
         <div role={alt ? "img" : undefined} aria-label={alt || undefined} className="flex size-full flex-col justify-center gap-2 border-l-2 border-primary/20 px-[12%] [container-type:inline-size]">
           <span aria-hidden="true" className="line-clamp-4 break-words font-display text-[clamp(0.85rem,10cqw,1.5rem)] leading-tight text-primary">
