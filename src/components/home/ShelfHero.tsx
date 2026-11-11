@@ -53,12 +53,6 @@ type ShelfItem = {
 
 const smooth = (x: number) => x * x * (3 - 2 * x);
 const bump = (r: number) => (Math.abs(r) < 1 ? (r + Math.sin(Math.PI * r) / Math.PI) / 2 : Math.sign(r) * 0.5);
-/** A stable 0–1 number per book. */
-const hash01 = (key: string) => {
-  let h = 2166136261;
-  for (let i = 0; i < key.length; i++) h = Math.imul(h ^ key.charCodeAt(i), 16777619);
-  return ((h >>> 0) % 1000) / 1000;
-};
 const luminance = (r: number, g: number, b: number) => {
   const c = [r, g, b].map((v) => {
     const s = v / 255;
@@ -145,7 +139,6 @@ export function ShelfHero() {
   const items: ShelfItem[] = list.map((book, i) => {
     const id = book ? String(book.id) : `board-${i}`;
     const names = (book?.authors ?? []).map((a) => a.name).filter(Boolean) as string[];
-    const seed = hash01(id);
     return {
       id,
       book,
@@ -154,7 +147,7 @@ export function ShelfHero() {
       by: names.join(", "),
       surname: names[0]?.split(" ").filter(Boolean).pop() ?? "Bookly",
       tall: 1,
-      thick: 0.88 + seed * 0.12,
+      thick: 1,
     };
   });
 
@@ -295,8 +288,9 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
         const o = smooth(Math.max(0, 1 - Math.abs(r)));
         const y = -o * 0.02 * H - m.lift[v] * 0.07 * H;
         // spines further from the middle sit further back, so the shelf curves away like a bookcase seen up close
-        const depth = -Math.pow(Math.min(Math.abs(r), 12), 1.35) * 0.11 * H;
-        el.style.transform = `translate3d(${x}px, ${y}px, ${o * 0.16 * H + depth}px) rotateZ(${-3 * o}deg) rotateX(${m.ty * 6 * o}deg) rotateY(${-90 * o + m.tx * 9 * o}deg)`;
+        // A straight, even row (owner 2026-11-11): every spine on one line, no curve back.
+        const depth = 0;
+        el.style.transform = `translate3d(${x}px, ${y}px, ${o * 0.16 * H + depth}px) rotateZ(0deg) rotateX(${m.ty * 6 * o}deg) rotateY(${-90 * o + m.tx * 9 * o}deg)`;
         el.style.zIndex = String(Math.round(100 - Math.abs(r) * 4));
         el.style.setProperty("--o", o.toFixed(3));
       }
