@@ -827,3 +827,15 @@ reminders; decisions appended to `design-system/bookly/pages/content.md`. Behavi
 - Checks (mocked API): lint 0 errors (existing warning), typecheck, tests, build. Browser + axe on all 10 routes at
   1366×768, 1440×900, 1920×930, 1440 dark, 1440 Khmer, 390×844: axe 0, no sideways scroll, no console errors; /login
   checked unchanged. Not exercised: the contact form's real send, error paths of the email-link pages with the live API.
+
+## Redesign phase 5 — staff/admin panel (2026-11-11, branch `design/admin-panel`, stacked on `design/content-pages`)
+Staff frame, staff sign-in pages and every staff screen; decisions appended to `design-system/bookly/pages/admin.md`.
+Behaviour, routes, permissions and API calls unchanged. Print pages unchanged.
+- `.desk-card` sheets for panels, tables and cards; lapis Staff tag; active menu rule; hairline under page titles;
+  lapis band on the staff sign-in card.
+- Checks (mocked API): lint 0 errors (existing warning), typecheck, `npm test`, build. Browser + axe on /admin and 19
+  staff screens (books, stock, orders, returns, reviews, customers, coupons, offers, collections, members, audit log,
+  security, support, authors, exchange rates, trash, gifts, ratings, newsletter) at 1440×900, 1366×768, 1440 dark and
+  390×844, plus staff login, two-factor and reset: axe 0, no sideways scroll, no console errors once the mock had the
+  right shapes. Known mock gaps (same before and after the redesign, not app errors): the staff order page and the
+  reports tabs need richer payloads than the mock serves, so they were not reviewed with data.

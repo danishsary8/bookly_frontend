@@ -42,3 +42,16 @@ foreground ink on white.
 ## Roles
 Delete actions (books, formats, lookups) and the admin-only screens are hidden from
 the `staff` role; the API enforces the same rules.
+
+
+## Redesign 2026-11-11 (phase 5, branch `design/admin-panel`)
+Calmer and denser than the shop, same tokens. No warm paper and no showpieces here: the staff area stays on the cool
+work canvas.
+- Sheets: `.desk-card` (index.css) = hairline + a faint lift (`0 1px 2px` + `0 12px 24px -22px`, navy 4–30%), radius
+  stays 10px (MASTER §4). Used by `Panel` (reportKit), the list table wrapper (listKit) and every plain admin card.
+  Print pages unchanged (print.md).
+- Frame: the "Staff" tag is a solid lapis chip (`bg-lapis` / `text-on-lapis`); menu group labels carry a 16px rule; the
+  active link keeps the lapis tint, turns 600 and gets a 3px lapis rule on its left (same as the customer account).
+- `AdminPage`: a hairline under the title block (16px below it) separates the header from the work.
+- Staff sign-in / two-step setup / reset: the card opens with a lapis band (wordmark in on-lapis, a gold-outlined
+  Staff tag, a faint periwinkle glow), the form below on the card. The security note stays under the card.
