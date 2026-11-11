@@ -20,6 +20,7 @@ import { useT } from "@/i18n";
 // The cart drawer and mobile menu (and the dialog code they need) aren't part of the first paint:
 // they load when first opened, or earlier when the browser is idle.
 const loadCartDrawer = () => import("./CartDrawer");
+const PromoPopup = lazy(() => import("@/features/promotions/PromoPopup").then((mod) => ({ default: mod.PromoPopup })));
 const loadMobileMenu = () => import("./MobileMenu");
 const CartDrawer = lazy(() => loadCartDrawer().then((mod) => ({ default: mod.CartDrawer })));
 const MobileMenu = lazy(() => loadMobileMenu().then((mod) => ({ default: mod.MobileMenu })));
@@ -89,6 +90,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
       <Suspense fallback={null}>
         {cartOpened ? <CartDrawer /> : null}
         {menuOpened ? <MobileMenu /> : null}
+        {/* Promotion pop-up (owner 2026-11-12): loads on its own, shows only when a promotion is live. */}
+        <PromoPopup />
       </Suspense>
     </div>
   );

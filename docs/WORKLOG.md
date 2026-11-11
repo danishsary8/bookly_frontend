@@ -869,3 +869,17 @@ real-book carousel; premium promises band; Bakong KHQR instead of "Delivery acro
 - Admin → Offers: "Full set offer" and "Free delivery" switches in the form, preview and list label.
 - Checks: lint, typecheck, tests, build; series page in the browser with a mocked set offer (1440, 390, dark; axe 0).
   Not exercised in a browser: the admin form and a real cart with a set offer (backend tests cover the pricing).
+
+## Promotion pop-up, reminders and admin page (2026-11-12, on `main`) — promotions step 2 of 3
+- `PromoPopup` (features/promotions, mounted in SiteShell): the live promotion from `GET /promotions/current` as a lapis
+  card: title, text, what the linked offer gives, dates, a live countdown, one button, "Maybe later" and a
+  "Don't show this again" tick box. Shown once per visit after the splash; never on cart, checkout, orders, sign-in,
+  account or admin pages. The tick box hides that promotion for good (`promoStorage`); a new promotion shows again.
+- `PromoReminder`: one quiet line with the title, end date and a link, in the cart and checkout summaries, shown even
+  after "Don't show this again" (owner's request).
+- `/admin/promotions` (menu: Sales → Promotions): list with status, dates, times shown, button uses (rate), the linked
+  offer's orders and revenue, an on/off switch, edit and delete; form with EN/KM text, picture upload, offer, button
+  target (a shop path), start and end.
+- Checks: lint, typecheck, tests (+2), build; in the browser with a mocked promotion: pop-up at 1440, 390 Khmer and
+  1366 dark (axe 0, console clean), tick box then reload shows nothing, second page in the same visit shows nothing;
+  cart, checkout and the admin list load clean (axe 0). Not exercised: saving the admin form against a real API.

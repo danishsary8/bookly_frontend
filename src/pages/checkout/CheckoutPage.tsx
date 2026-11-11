@@ -32,6 +32,7 @@ import { formatName, getDict, useT } from "@/i18n";
 import { FreeGiftLine } from "@/features/offers/FreeGiftLine";
 import { CouponNotUsedNote } from "@/features/offers/offerText";
 import { offerLineText } from "@/features/offers/offerLineText";
+import { PromoReminder } from "@/features/promotions/PromoReminder";
 import { shopFeaturesQuery } from "@/api/endpoints/credit";
 
 /*
@@ -337,6 +338,8 @@ export default function CheckoutPage() {
                   </Link>
                 </p>
               )}
+
+              <PromoReminder />
 
               {data && shipsSomething ? (
                 <FreeShippingBar subtotalUsd={Number(data.subtotal?.usd || 0) - Number(data.discount?.usd || 0)} thresholdUsd={data.free_shipping_threshold?.usd} />

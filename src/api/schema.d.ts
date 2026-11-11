@@ -3627,6 +3627,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/promotions/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The live promotion for the shop pop-up (switched on, started, not ended; the newest start wins), or data null */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The promotion, or null */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Promotion"];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/promotions/{id}/view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Count one showing of the pop-up (no login; 30 a minute) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                204: components["responses"]["NoContent"];
+                404: components["responses"]["NotFound"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/promotions/{id}/click": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Count one use of the pop-up button (no login; 30 a minute) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                204: components["responses"]["NoContent"];
+                404: components["responses"]["NotFound"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/collections/{slug}": {
         parameters: {
             query?: never;
@@ -8598,6 +8698,133 @@ export interface paths {
         };
         trace?: never;
     };
+    "/staff/promotions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Promotion pop-ups, newest first (per_page). Staff with catalog:view and admins. Each: all fields, offer_name, status (live|scheduled|hidden|ended), views, clicks, orders_count and revenue_usd of the linked offer while the promotion ran (cancelled orders left out) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Promotions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /** Create (catalog:manage or admin): title_en, title_km?, body_en/km? max 500, image_url? https, cta_label_en/km? max 40, cta_url? a path inside the shop starting with / (default /books), offer_id? an existing offer, starts_at?, ends_at? after starts_at, is_active? default false. Audited */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                403: components["responses"]["Forbidden"];
+                422: components["responses"]["Validation"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/promotions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One promotion with its results */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Promotion */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Delete (catalog:manage or admin). Audited */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                204: components["responses"]["NoContent"];
+                403: components["responses"]["Forbidden"];
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Update any field, e.g. is_active to show or hide (catalog:manage or admin). Audited (no row when nothing changed) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                403: components["responses"]["Forbidden"];
+                422: components["responses"]["Validation"];
+            };
+        };
+        trace?: never;
+    };
     "/staff/collections": {
         parameters: {
             query?: never;
@@ -12428,6 +12655,37 @@ export interface components {
             description?: string | null;
             books_count?: number;
         };
+        /** @description What the shop pop-up announces. `offer` is the linked automatic offer while that offer is live, else null. */
+        Promotion: {
+            id?: number;
+            title_en?: string;
+            /** @description Null: the shop shows title_en in Khmer too */
+            title_km?: string | null;
+            body_en?: string | null;
+            body_km?: string | null;
+            image_url?: string | null;
+            /** @description Null: the shop's own "Shop now" */
+            cta_label_en?: string | null;
+            cta_label_km?: string | null;
+            /**
+             * @description A path inside the shop
+             * @example /series/3
+             */
+            cta_url?: string;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            ends_at?: string | null;
+            offer?: {
+                id?: number;
+                /** @example 20.00 */
+                percent_off?: string;
+                min_quantity?: number;
+                whole_series?: boolean;
+                free_delivery?: boolean;
+                target_label?: string | null;
+            } | null;
+        } | null;
         SeriesDetail: {
             id?: number;
             name?: string;
@@ -13301,6 +13559,7 @@ export type SchemaCategory = components['schemas']['Category'];
 export type SchemaCategoryNode = components['schemas']['CategoryNode'];
 export type SchemaPublisher = components['schemas']['Publisher'];
 export type SchemaSeries = components['schemas']['Series'];
+export type SchemaPromotion = components['schemas']['Promotion'];
 export type SchemaSeriesDetail = components['schemas']['SeriesDetail'];
 export type SchemaRatingSummary = components['schemas']['RatingSummary'];
 export type SchemaEstimatedDelivery = components['schemas']['EstimatedDelivery'];

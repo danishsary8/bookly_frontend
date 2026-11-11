@@ -23,6 +23,7 @@ import { useCartMutations, useUsableCart } from "@/features/cart/useCart";
 import { cartTotals } from "@/features/offers/cartTotals";
 import { CouponNotUsedNote, OfferNudge } from "@/features/offers/offerText";
 import { offerLineText } from "@/features/offers/offerLineText";
+import { PromoReminder } from "@/features/promotions/PromoReminder";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
@@ -65,6 +66,7 @@ function Summary() {
         </div>
         <CoverStack items={(data.items ?? []).map((l) => ({ src: l.cover_image_url, title: l.book?.title }))} size="sm" />
       </div>
+      <PromoReminder />
       <OfferNudge nudge={data.pricing?.nudge} />
       <CartDeliveryEstimate version={cartVersion} coupon={coupon} />
       <CouponField cartVersion={cartVersion} onChecked={setCheck} />
