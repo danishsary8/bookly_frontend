@@ -9,7 +9,7 @@ export function PaymentMethods({ rows }: { rows: NonNullable<DashboardInsights["
   const label = (method: string) => method === "cod" ? t.cod : method === "khqr" ? t.khqr : method === "card" ? t.card : method === "wallet" ? credit.balance : method;
 
   return (
-    <div role="region" aria-label={t.payments} tabIndex={0} className="overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
+    <div role="group" aria-label={t.payments} tabIndex={0} className="overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
       <table className="w-full text-left text-sm tabular-nums">
         <thead><tr>{[t.method, t.orders, t.amount, t.share].map((heading) => <th scope="col" key={heading} className="p-2">{heading}</th>)}</tr></thead>
         <tbody>{rows.map((row) => (

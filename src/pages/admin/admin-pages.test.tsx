@@ -318,15 +318,19 @@ describe("dashboard", () => {
     expect(within(healthRegion).getByText("Telegram bot")).toBeInTheDocument();
   });
 
-  it("does not show system health card on dashboard for non-admin staff", async () => {
+  it("gives staff a to-do dashboard without the admin-only sales calls", async () => {
     signIn(staff);
-    vi.spyOn(staffApi, "summary").mockResolvedValue(summary);
-    vi.spyOn(staffApi, "sales").mockResolvedValue(days);
+    const summarySpy = vi.spyOn(staffApi, "summary").mockResolvedValue(summary);
+    const salesSpy = vi.spyOn(staffApi, "sales").mockResolvedValue(days);
     const healthSpy = vi.spyOn(staffApi, "health").mockReturnValue(new Promise(() => {}));
     app("/admin");
 
-    expect(await screen.findByText("$50.50")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "To do" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Orders to process/ })).toHaveAttribute("href", "/admin/orders?status=pending");
+    expect(screen.queryByText("$50.50")).not.toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "System health" })).not.toBeInTheDocument();
+    expect(summarySpy).not.toHaveBeenCalled();
+    expect(salesSpy).not.toHaveBeenCalled();
     expect(healthSpy).not.toHaveBeenCalled();
   });
 });

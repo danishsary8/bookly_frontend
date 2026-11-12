@@ -40,7 +40,7 @@ export function RecentOrders({ user }: { user?: StaffUser }) {
   return (
     <Panel id="recent-orders" title={t.title}>
       {orders.isPending ? <p role="status">{t.loading}</p> : orders.isError ? <InlineError error={orders.error} onRetry={() => void orders.refetch()} /> : !orders.data.data.length ? <p>{t.empty}</p> : (
-        <div role="region" aria-label={t.title} tabIndex={0} className="overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
+        <div role="group" aria-label={t.title} tabIndex={0} className="overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
           <table className="w-full text-left text-sm">
             <thead><tr>{[t.order, t.status, t.total, t.action].map((name) => <th scope="col" className="p-2" key={name}>{name}</th>)}</tr></thead>
             <tbody>{orders.data.data.map((order) => {
