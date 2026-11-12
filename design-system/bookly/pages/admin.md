@@ -72,3 +72,38 @@ This revision supersedes the earlier frame, table, sign-in and no-transition rul
 - Long book forms have a sticky save bar. Print toolbar follows workspace styling while document sheets retain A4 layout.
 - Admin sales queries remain inside AdminDashboard; StaffDashboard uses only existing staff-safe counts and recent orders.
 - Existing checks remain; promotion and knowledge deletion controls are also hidden from staff, as required by the admin-only deletion policy.
+
+
+## Console redesign — 2026-11-12 (branch `staff-area-redesign`)
+Supersedes the frame, colour and dashboard rules above. Fonts, lapis, gold and component library stay MASTER's.
+- Rail: deep navy in both themes (`--rail-bg` #0B1030 / dark #060920, slight top gradient), light text (#D3D7F0,
+  ≥ 11:1), group labels #8F97C6. Current page: white text, 11% white fill, 3px gold marker. Counts are gold chips.
+  Same styling in the phone sheet (`.admin-rail-sheet`).
+- Navigation regrouped by job: Overview · Orders (orders, returns, customers) · Customer care (support, reviews,
+  ratings, assistant knowledge) · Marketing · Catalogue · Admin. Every page has its own icon.
+- Area colours (`data-tone`, admin.css): blue, teal, violet, amber, rose, green, slate. Each has `ink` (text/icons,
+  ≥ 4.5:1 on its tint and the card, light and dark) and `tint` (fills). Used for group dots, rail icons, page eyebrow
+  chip, task cards, quick actions and metric side bars. Colour never carries meaning alone (labels + icons).
+- Cards: 14px radius, soft two-layer shadow; canvas has a faint blue glow at the top.
+- Staff dashboard: greeting lead; a lapis→violet "Today" band with the date, a live summary ("2 tasks need you
+  today" / all clear) and a Start working button to the first busy queue; three task cards (orders blue, returns
+  amber, stock rose) with Needs action / All clear chip, big figure, hint, Open link; recent orders with direct
+  next-step buttons beside Quick actions. Copy in `staffHome` (en + km).
+
+## Admin dashboard redesign — 2026-11-12 (branch `admin-dashboard-redesign`)
+Bento layout, read top to bottom: performance → sales → books → customers & payments → operations.
+- Net revenue leads on the lapis→violet band (white text, white trend area, white "View sales report" button,
+  change chip in light green/rose); KPI tiles beside it, each with its own tone (orders blue, average violet,
+  customers teal, books amber, ebooks rose, ratings amber), tinted icon, 4px top colour bar and a trend line in
+  that colour. 2 columns at laptop widths, 3 from 1536px.
+- Small caps section labels with a hairline split the page. Panels can carry a tinted icon chip (`Panel icon tone`).
+- Income chart: blue→violet gradient line and fill, dashed previous period, 288px tall. Donut with rounded segments.
+- Best sellers / top categories: ranked rows (gold #1), tinted bars. Low stock: bordered rows with status chips.
+- Payment methods: a stacked share bar above the table (colour per method; table repeats every value).
+- Small figures (`Stat`) sit on the panel's tint. Activity: attention tiles with icons; activity as a timeline.
+- Motion: tiles rise 10px with the shared stagger; reduced motion shows the final state.
+- Interaction (polish pass): KPI and revenue trend lines show day + value on hover (guide line, moving dot);
+  income chart tooltip lists both periods with colour keys and the % difference; donut slices and legend rows
+  highlight each other and the centre shows the hovered status and share; payment bar segments show
+  method · share · total on hover. Bars grow in (700ms, staggered), trend lines reveal left to right (1.1s),
+  charts draw in (900ms); all off with reduced motion. Panels tint their border on hover.

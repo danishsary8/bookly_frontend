@@ -23,11 +23,12 @@ import { StaffAssistantDialog } from "@/features/assistant/StaffAssistantDialog"
 const itemClass =
   "flex min-h-11 cursor-pointer select-none items-center gap-3 rounded-md px-3 text-[15px] text-foreground outline-none data-[highlighted]:bg-secondary";
 
-function Wordmark() {
+function Wordmark({ onRail = false }: { onRail?: boolean }) {
   return (
-    <Link to="/admin" className="flex items-center gap-2.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring">
-      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground"><BookOpen className="size-5" aria-hidden="true" /></span><span className="admin-brand-label font-display text-[1.6rem] leading-none text-primary">Bookly</span>
-      <span className="admin-brand-label rounded-[4px] bg-lapis px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-on-lapis max-sm:sr-only">Staff</span>
+    <Link to="/admin" className={cn("flex items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring", onRail && "admin-rail-brand")}>
+      <span className={cn("grid size-9 shrink-0 place-items-center rounded-[10px]", onRail ? "bg-gold text-[#0E1335]" : "bg-primary text-primary-foreground")}><BookOpen className="size-5" aria-hidden="true" /></span>
+      <span className={cn("admin-brand-label font-display text-[1.55rem] leading-none", !onRail && "text-primary")}>Bookly</span>
+      <span className={cn("admin-brand-label rounded-md px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.18em] max-sm:sr-only", onRail ? "border border-gold/60 text-gold" : "bg-lapis text-on-lapis")}>Staff</span>
     </Link>
   );
 }
@@ -36,11 +37,11 @@ function Nav({ onNavigate, collapsed = false }: { onNavigate?: () => void; colla
   const session = useStaff();
   const counts = useMenuCounts(Boolean(session)).data;
   return (
-    <nav aria-label="Admin" className="admin-navigation grid gap-6">
+    <nav aria-label="Admin" className="admin-navigation grid gap-5">
       {navFor(session?.user.role).map((group) => (
-        <div key={group.label} className="grid gap-1">
-          <p className="admin-nav-group flex items-center gap-2 px-3 pb-1 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
-            <span className="h-px w-4 bg-current opacity-60" aria-hidden="true" />
+        <div key={group.label} data-tone={group.tone} className="grid gap-0.5">
+          <p className="admin-nav-group flex items-center gap-2 px-3 pb-1.5 text-[11px] font-bold uppercase tracking-[0.16em]">
+            <span className="admin-nav-group-dot" aria-hidden="true" />
             {group.label}
           </p>
           {group.items.map(({ to, label, Icon, end }) => (
@@ -50,23 +51,16 @@ function Nav({ onNavigate, collapsed = false }: { onNavigate?: () => void; colla
               end={end}
               title={collapsed ? label : undefined}
               onClick={onNavigate}
-              className={({ isActive }) =>
-                cn(
-                  "admin-nav-link relative flex min-h-11 items-center gap-3 rounded-md px-3 text-[15px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring",
-                  isActive
-                    ? "bg-lapis-tint font-semibold text-primary before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-primary"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                )
-              }
+              className="admin-nav-link relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14.5px] font-medium outline-none"
             >
               <Icon className="size-[18px] shrink-0" aria-hidden="true" />
-              <span className="admin-nav-label">{label}</span>
+              <span className="admin-nav-label truncate">{label}</span>
               {to === "/admin/support" ? <SupportMenuBadge /> : null}
               {(() => {
                 const badge = COUNT_FOR[to];
                 const n = badge && counts ? counts[badge.key] : 0;
                 return n > 0 ? (
-                  <span className="admin-nav-count ml-auto min-w-6 rounded-md bg-lapis-tint px-1.5 py-0.5 text-center text-xs font-bold tabular-nums text-primary">
+                  <span className="admin-nav-count ml-auto min-w-6 rounded-full px-1.5 py-0.5 text-center text-xs font-bold tabular-nums">
                     <span aria-hidden="true">{badgeText(n)}</span>
                     <span className="sr-only">, {badge.label(n)}</span>
                   </span>
@@ -164,18 +158,18 @@ export function AdminShell() {
       >
         Skip to content
       </a>
-      <aside aria-label="Workspace sidebar" className="admin-sidebar hidden border-r border-border bg-card lg:block">
-        <div className="admin-sidebar-inner sticky top-0 grid max-h-dvh gap-7 overflow-y-auto px-3 py-5">
+      <aside aria-label="Workspace sidebar" className="admin-sidebar hidden lg:block">
+        <div className="admin-sidebar-inner sticky top-0 grid max-h-dvh gap-6 overflow-y-auto px-3 py-5">
           <div className="px-2">
-            <Wordmark />
+            <Wordmark onRail />
           </div>
           <Nav collapsed={collapsed} />
-          <Link to="/" target="_blank" rel="noreferrer" className="admin-shop-link flex min-h-11 items-center gap-3 rounded-md border border-border px-3 text-sm font-semibold text-muted-foreground hover:bg-secondary"><ExternalLink className="size-[18px] shrink-0" aria-hidden="true" /><span className="admin-nav-label">Open storefront</span></Link>
+          <Link to="/" target="_blank" rel="noreferrer" className="admin-shop-link flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold"><ExternalLink className="size-[18px] shrink-0" aria-hidden="true" /><span className="admin-nav-label">Open storefront</span></Link>
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-col">
-        <header className="admin-topbar sticky top-0 z-(--z-header) flex h-16 items-center gap-1 border-b border-border bg-card/95 px-3 backdrop-blur-sm sm:gap-2 sm:px-6">
+        <header className="admin-topbar sticky top-0 z-(--z-header) flex h-16 items-center gap-1 border-b border-border px-3 backdrop-blur-md sm:gap-2 sm:px-6">
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMenuOpen(true)} aria-label="Open menu" aria-expanded={menuOpen}>
             <Menu aria-hidden="true" />
           </Button>
@@ -194,7 +188,7 @@ export function AdminShell() {
             <UserMenu />
           </div>
         </header>
-        <main id="admin-content" tabIndex={-1} className="admin-main flex-1 px-4 py-6 outline-none sm:px-6 lg:px-8 lg:py-8">
+        <main id="admin-content" tabIndex={-1} className="admin-main flex-1 px-4 py-6 outline-none sm:px-6 lg:px-10 lg:py-8">
           <RouteErrorBoundary>
             <Suspense fallback={<PageFallback />}>
               <Outlet />
@@ -204,9 +198,10 @@ export function AdminShell() {
       </div>
 
       <Drawer open={menuOpen} onOpenChange={setMenuOpen}>
-        <DrawerContent side="left" className="w-[18rem]">
+        <DrawerContent side="left" className="admin-rail-sheet w-[18rem]">
           <DrawerHeader>
-            <DrawerTitle>Menu</DrawerTitle>
+            <DrawerTitle className="sr-only">Menu</DrawerTitle>
+            <Wordmark onRail />
           </DrawerHeader>
           <DrawerBody className="px-3">
             <Nav onNavigate={() => setMenuOpen(false)} />

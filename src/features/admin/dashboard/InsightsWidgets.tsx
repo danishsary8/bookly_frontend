@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MapPin, PenTool, Snail, TicketPercent } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { DashboardInsights } from "@/api/endpoints/dashboardInsights";
 import { Panel, Tile } from "@/features/admin/reportKit";
@@ -23,8 +23,8 @@ function BarRow({ label, value, max, detail }: { label: React.ReactNode; value: 
         <span className="min-w-0 truncate">{label}</span>
         <span className="shrink-0 font-semibold">{value}</span>
       </div>
-      <div className="h-1.5 rounded-full bg-secondary" aria-hidden="true">
-        <div className="h-full rounded-full bg-primary" style={{ width: `${share}%` }} />
+      <div className="h-2 rounded-full bg-secondary" aria-hidden="true">
+        <div className="admin-bar h-full rounded-full" style={{ width: `${share}%`, background: "linear-gradient(90deg, color-mix(in oklab, var(--tone-ink, var(--primary)) 55%, var(--card)), var(--tone-ink, var(--primary)))" }} />
       </div>
     </li>
   );
@@ -44,7 +44,7 @@ export function InsightsWidgets({ data }: { data: DashboardInsights }) {
 
   return (
     <div className="grid grid-cols-1 gap-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 [&>*:nth-child(1)]:[--tone-ink:var(--tone-green-ink)] [&>*:nth-child(2)]:[--tone-ink:var(--tone-rose-ink)] [&>*:nth-child(3)]:[--tone-ink:var(--tone-teal-ink)]">
         <Tile label="Stock value" value={formatUsd(data.stock_value.value_usd)} khr={data.stock_value.value_khr} detail={`${count(data.stock_value.copies)} printed copies · at selling price`} />
         <Tile label={`Dead stock (no sale in ${dead.days} days)`} value={formatUsd(dead.value_usd)} khr={dead.value_khr} detail={`${count(dead.copies)} copies of ${count(dead.variants)} ${dead.variants === 1 ? "format" : "formats"}`} />
         <Tile
@@ -56,7 +56,7 @@ export function InsightsWidgets({ data }: { data: DashboardInsights }) {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Panel
-          id="dead-stock"
+          id="dead-stock" icon={Snail} tone="rose"
           title="Slow movers"
           action={
             <Link to="/admin/stock" className="inline-flex items-center gap-1 text-sm font-semibold text-primary underline-offset-4 hover:underline">
@@ -85,7 +85,7 @@ export function InsightsWidgets({ data }: { data: DashboardInsights }) {
           )}
         </Panel>
 
-        <Panel id="top-authors" title="Top authors" action={<span className="text-sm text-muted-foreground">by copies in orders placed</span>}>
+        <Panel id="top-authors" icon={PenTool} tone="violet" title="Top authors" action={<span className="text-sm text-muted-foreground">by copies in orders placed</span>}>
           {data.top_authors.length === 0 ? (
             <p className="text-[15px] text-muted-foreground">No sales in this period yet.</p>
           ) : (
@@ -97,7 +97,7 @@ export function InsightsWidgets({ data }: { data: DashboardInsights }) {
           )}
         </Panel>
 
-        <Panel id="provinces" title="Orders by province" action={<span className="text-sm text-muted-foreground">from the delivery address</span>}>
+        <Panel id="provinces" icon={MapPin} tone="green" title="Orders by province" action={<span className="text-sm text-muted-foreground">from the delivery address</span>}>
           {data.provinces.length === 0 ? (
             <p className="text-[15px] text-muted-foreground">No orders in this period yet.</p>
           ) : (
@@ -116,7 +116,7 @@ export function InsightsWidgets({ data }: { data: DashboardInsights }) {
         </Panel>
 
         <Panel
-          id="promotions"
+          id="promotions" icon={TicketPercent} tone="amber"
           title="Offers and coupons"
           action={
             <Link to="/admin/reports?tab=offers" className="inline-flex items-center gap-1 text-sm font-semibold text-primary underline-offset-4 hover:underline">

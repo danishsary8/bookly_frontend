@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent, type ReactNode } from "react";
+import { useId, useState, type ComponentType, type FormEvent, type ReactNode } from "react";
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import type { DashboardPeriod, DashboardRange } from "@/api/endpoints/staff";
 import { Button } from "@/components/ui/button";
@@ -22,17 +22,17 @@ export function Khr({ value, className }: { value?: string | null; className?: s
  * Change against the previous period of the same length. Up is green and down is red, except where more is worse
  * (refunds). The API reports "nothing before, something now" as 100%, which reads better as "New".
  */
-export function Change({ percent, previous, versus, moreIsBetter = true }: { percent?: number; previous?: number; versus: string; moreIsBetter?: boolean }) {
+export function Change({ percent, previous, versus, moreIsBetter = true, onDark = false }: { percent?: number; previous?: number; versus: string; moreIsBetter?: boolean; onDark?: boolean }) {
   if (percent === undefined || previous === undefined) return null;
   if (previous === 0 && percent !== 0) {
     return (
-      <span className="text-sm font-semibold text-muted-foreground">
+      <span className={cn("text-sm font-semibold", onDark ? "text-white" : "text-muted-foreground")}>
         New <span className="font-normal">{versus}</span>
       </span>
     );
   }
   if (percent === 0) {
-    return <span className="text-sm text-muted-foreground">No change {versus}</span>;
+    return <span className={cn("text-sm", onDark ? "admin-hero-muted" : "text-muted-foreground")}>No change {versus}</span>;
   }
   const up = percent > 0;
   const good = up === moreIsBetter;
@@ -40,12 +40,12 @@ export function Change({ percent, previous, versus, moreIsBetter = true }: { per
   const amount = `${Math.abs(percent).toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
   return (
     <span className="inline-flex flex-wrap items-center gap-x-1 text-sm tabular-nums">
-      <span className={cn("inline-flex items-center gap-0.5 font-semibold", good ? "text-success" : "text-destructive")}>
+      <span className={cn("inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 font-semibold", onDark ? (good ? "bg-[#7EDDB0]/20 text-[#B7F5D6]" : "bg-[#FF9FB6]/20 text-[#FFD1DC]") : good ? "bg-success-tint text-success" : "bg-destructive-tint text-destructive")}>
         <Icon className="size-4" aria-hidden="true" />
         <span className="sr-only">{up ? "up" : "down"} </span>
         {amount}
       </span>{" "}
-      <span className="text-muted-foreground">{versus}</span>
+      <span className={onDark ? "admin-hero-muted" : "text-muted-foreground"}>{versus}</span>
     </span>
   );
 }
@@ -74,11 +74,12 @@ export function ResultSummary({ items }: { items: Array<{ label: string; value: 
   );
 }
 
-export function Panel({ id, title, action, children, className }: { id: string; title: string; action?: ReactNode; children: ReactNode; className?: string }) {
+export function Panel({ id, title, action, children, className, icon: Icon, tone }: { id: string; title: string; action?: ReactNode; children: ReactNode; className?: string; icon?: ComponentType<{ className?: string }>; tone?: string }) {
   return (
-    <section aria-labelledby={id} className={cn("admin-panel grid grid-cols-1 content-start gap-4 desk-card rounded-xl border border-border bg-card p-5", className)}>
-      <div className="admin-panel-header flex flex-wrap items-baseline justify-between gap-2 border-b border-border/70 pb-4">
-        <h2 id={id} className="font-sans text-[1.0625rem] font-semibold tracking-normal">
+    <section aria-labelledby={id} data-tone={tone} className={cn("admin-panel grid grid-cols-1 content-start gap-4 desk-card rounded-xl border border-border bg-card p-5", className)}>
+      <div className="admin-panel-header flex flex-wrap items-center justify-between gap-2 border-b border-border/70 pb-4">
+        <h2 id={id} className="flex items-center gap-2.5 font-sans text-[1.0625rem] font-semibold tracking-normal">
+          {Icon ? <span aria-hidden="true" className="admin-kpi-icon !size-8 !rounded-[10px]"><Icon className="size-4" /></span> : null}
           {title}
         </h2>
         {action}

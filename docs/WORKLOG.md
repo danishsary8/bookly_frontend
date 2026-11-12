@@ -938,3 +938,18 @@ Backend in bookly_backend_v2 (same branch; see its WORKLOG). Owner's choices: KH
 - Audit: signed in as a real Staff account against the local API and opened every staff menu page plus order, return,
   customer and book detail pages: no other API refusals or page errors. Admin-only buttons were already hidden for staff.
 - Checks: lint, typecheck, tests (updated the staff dashboard test), build; axe 0 on both dashboards (1440, 390, 1366 dark).
+
+### 2026-11-12 — Staff console redesign (branch `staff-area-redesign`)
+New navy rail, regrouped menu with unique icons, colour per work area, new staff dashboard (Today band, task cards,
+recent orders with next-step buttons, quick actions). Handoff: docs/handoff/2026-11-staff-console.md.
+Checks: lint, typecheck, tests (671 passed), build. Browser (mocked API): staff dashboard at 1366, 1440, 1440 dark,
+390 phone + phone menu, collapse sidebar, task card → orders link; no page errors, no sideways scroll.
+
+### 2026-11-12 — Admin dashboard redesign (branch `admin-dashboard-redesign`)
+Bento dashboard: revenue hero band, colour-coded KPI tiles with trend lines, gradient income chart, ranked best
+sellers/categories, stock chips, payment share bar, activity timeline. Handoff: docs/handoff/2026-11-admin-dashboard.md.
+Checks: lint, typecheck, tests, build. Browser (mocked API, 30 days of data): 1366, 1440, 1440 dark, 390 phone;
+no page errors, no sideways scroll.
+Polish pass (same branch): hover tooltips on every chart (trend lines, income, donut, payment bar), grow/reveal/draw-in
+motion (off with reduced motion), revenue card gross/refunds/delivered chips, insights widgets toned with icons.
+Browser: each hover exercised at 1440 (tooltip text read back); 1366/1440/dark/390 no errors, no sideways scroll.
