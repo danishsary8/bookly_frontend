@@ -18,6 +18,7 @@ import { SalesChart } from "@/features/admin/SalesChart";
 import { day, rangeFromParams, rangeToParams } from "@/features/admin/dashboardRange";
 import { Change, CustomRange, Khr, Panel, PeriodPicker } from "@/features/admin/reportKit";
 import { SystemHealthCard } from "@/features/admin/SystemHealthCard";
+import { StaffDashboard } from "@/features/admin/dashboard/StaffDashboard";
 import { useStaff } from "@/features/admin/staffSession";
 import { useT } from "@/i18n";
 import { formatLabel } from "@/lib/catalog";
@@ -62,7 +63,13 @@ const series = (days: TrendDay[] | undefined, pick: (d: TrendDay) => number) => 
  * period and a "View" link; the income chart (this period solid, the previous one dashed, Income/Orders switch);
  * best sellers, low stock, an orders-by-status donut and top categories (BI design 2026-11-01, branch 2).
  */
+/** Admins get the sales dashboard; staff get their to-do dashboard (the sales endpoints are admin-only). */
 export default function DashboardPage() {
+  const session = useStaff();
+  return session?.user.role === "admin" ? <AdminDashboard /> : <StaffDashboard user={session?.user} />;
+}
+
+function AdminDashboard() {
   const { dict } = useT();
   const session = useStaff();
   const [params, setParams] = useSearchParams();

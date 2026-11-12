@@ -927,3 +927,14 @@ Backend in bookly_backend_v2 (same branch; see its WORKLOG). Owner's choices: KH
   Not exercised in a browser: the order page / confirmation coupon card (no mocked order with a coupon), saving the
   admin forms against a real API, the real backend end to end.
 
+
+## Staff dashboard fix (2026-11-12)
+- Bug: a staff (non-admin) account saw "Something went wrong — Invalid ability provided." on /admin. The dashboard always
+  loaded /staff/dashboard/summary, /sales and /insights, which the API keeps admin-only (403 for staff).
+- Fix: admins keep the sales dashboard; staff get a to-do dashboard (`features/admin/dashboard/StaffDashboard.tsx`):
+  orders to process, open returns, low stock (GET /staff/dashboard/counts, allowed for every staff member), recent orders,
+  shortcuts filtered by permission. The table wrappers in Recent orders / Payment methods became labelled groups instead of
+  second landmarks with the same name (axe landmark-unique).
+- Audit: signed in as a real Staff account against the local API and opened every staff menu page plus order, return,
+  customer and book detail pages: no other API refusals or page errors. Admin-only buttons were already hidden for staff.
+- Checks: lint, typecheck, tests (updated the staff dashboard test), build; axe 0 on both dashboards (1440, 390, 1366 dark).
