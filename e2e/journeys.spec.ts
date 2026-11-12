@@ -53,8 +53,9 @@ test("new customer: sign up → email code → verified", async ({ page }) => {
   // Verified customers can open their account and shop.
   await page.goto("/account");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  // The email shows twice on /account (the page lead and the account menu): either proves the sign-in.
-  await expect(page.getByText(email).first()).toBeVisible();
+  // The email shows twice on /account (the page lead and the account menu), one of them hidden at some widths:
+  // the visible one proves the sign-in.
+  await expect(page.getByText(email).filter({ visible: true }).first()).toBeVisible();
 });
 
 /** Places and delivers an order for one printed book (ebooks can't be returned) through the API. */
