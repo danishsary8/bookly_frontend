@@ -89,3 +89,16 @@ Supersedes the frame, colour and dashboard rules above. Fonts, lapis, gold and c
   today" / all clear) and a Start working button to the first busy queue; three task cards (orders blue, returns
   amber, stock rose) with Needs action / All clear chip, big figure, hint, Open link; recent orders with direct
   next-step buttons beside Quick actions. Copy in `staffHome` (en + km).
+
+## Admin dashboard redesign — 2026-11-12 (branch `admin-dashboard-redesign`)
+Bento layout, read top to bottom: performance → sales → books → customers & payments → operations.
+- Net revenue leads on the lapis→violet band (white text, white trend area, white "View sales report" button,
+  change chip in light green/rose); KPI tiles beside it, each with its own tone (orders blue, average violet,
+  customers teal, books amber, ebooks rose, ratings amber), tinted icon, 4px top colour bar and a trend line in
+  that colour. 2 columns at laptop widths, 3 from 1536px.
+- Small caps section labels with a hairline split the page. Panels can carry a tinted icon chip (`Panel icon tone`).
+- Income chart: blue→violet gradient line and fill, dashed previous period, 288px tall. Donut with rounded segments.
+- Best sellers / top categories: ranked rows (gold #1), tinted bars. Low stock: bordered rows with status chips.
+- Payment methods: a stacked share bar above the table (colour per method; table repeats every value).
+- Small figures (`Stat`) sit on the panel's tint. Activity: attention tiles with icons; activity as a timeline.
+- Motion: tiles rise 10px with the shared stagger; reduced motion shows the final state.

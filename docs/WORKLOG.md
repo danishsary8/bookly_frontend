@@ -944,3 +944,9 @@ New navy rail, regrouped menu with unique icons, colour per work area, new staff
 recent orders with next-step buttons, quick actions). Handoff: docs/handoff/2026-11-staff-console.md.
 Checks: lint, typecheck, tests (671 passed), build. Browser (mocked API): staff dashboard at 1366, 1440, 1440 dark,
 390 phone + phone menu, collapse sidebar, task card → orders link; no page errors, no sideways scroll.
+
+### 2026-11-12 — Admin dashboard redesign (branch `admin-dashboard-redesign`)
+Bento dashboard: revenue hero band, colour-coded KPI tiles with trend lines, gradient income chart, ranked best
+sellers/categories, stock chips, payment share bar, activity timeline. Handoff: docs/handoff/2026-11-admin-dashboard.md.
+Checks: lint, typecheck, tests, build. Browser (mocked API, 30 days of data): 1366, 1440, 1440 dark, 390 phone;
+no page errors, no sideways scroll.

@@ -46,7 +46,7 @@ export function IncomeChart({ days }: { days: TrendDay[] }) {
         <ul className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground" aria-label="Legend">
           <li className="flex items-center gap-2">
             <svg width="24" height="8" aria-hidden="true">
-              <line x1="0" y1="4" x2="24" y2="4" stroke="var(--primary)" strokeWidth="2.5" />
+              <line x1="0" y1="4" x2="24" y2="4" stroke="var(--tone-violet-ink, var(--primary))" strokeWidth="3" strokeLinecap="round" />
             </svg>
             This period · <span className="font-semibold text-foreground tabular-nums">{fmt(total("now"))}</span>
           </li>
@@ -59,10 +59,10 @@ export function IncomeChart({ days }: { days: TrendDay[] }) {
         </ul>
       </div>
       <figure className="grid gap-2">
-        <div role="img" aria-label={summary} className="h-64 w-full">
+        <div role="img" aria-label={summary} className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={points} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-              <defs><linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--primary)" stopOpacity={0.16} /><stop offset="100%" stopColor="var(--primary)" stopOpacity={0} /></linearGradient></defs>
+              <defs><linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--tone-violet-ink, var(--primary))" stopOpacity={0.22} /><stop offset="100%" stopColor="var(--tone-blue-ink, var(--primary))" stopOpacity={0} /></linearGradient><linearGradient id={`${fillId}-line`} x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="var(--tone-blue-ink, var(--primary))" /><stop offset="100%" stopColor="var(--tone-violet-ink, var(--primary))" /></linearGradient></defs>
               <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 5" />
               <XAxis dataKey="label" tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} tickLine={false} axisLine={{ stroke: "var(--border)" }} minTickGap={24} />
               <YAxis
@@ -77,7 +77,7 @@ export function IncomeChart({ days }: { days: TrendDay[] }) {
                 cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "3 3" }}
                 content={({ active, payload }) =>
                   active && payload?.length ? (
-                    <div className="rounded-md border border-border bg-card px-3 py-2 text-sm shadow-sm tabular-nums">
+                    <div className="rounded-xl border border-border bg-popover px-3.5 py-2.5 text-sm shadow-overlay tabular-nums">
                       <p className="font-semibold">
                         {payload[0].payload.label}: {fmt(payload[0].payload.now)}
                       </p>
@@ -89,7 +89,7 @@ export function IncomeChart({ days }: { days: TrendDay[] }) {
                 }
               />
               <Line type="monotone" dataKey="before" stroke="var(--muted-foreground)" strokeWidth={2} strokeDasharray="5 4" dot={false} isAnimationActive={false} />
-              <Area type="monotone" dataKey="now" fill={`url(#${fillId})`} stroke="var(--primary)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: "var(--card)" }} isAnimationActive={false} />
+              <Area type="monotone" dataKey="now" fill={`url(#${fillId})`} stroke={`url(#${fillId}-line)`} strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 3, stroke: "var(--card)", fill: "var(--tone-violet-ink, var(--primary))" }} isAnimationActive={false} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>

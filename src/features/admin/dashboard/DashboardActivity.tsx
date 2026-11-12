@@ -1,3 +1,4 @@
+import { Activity, Boxes, Clock, Headset, MessageSquareText, Package, RotateCcw } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { DashboardInsights } from "@/api/endpoints/dashboardInsights";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,16 +11,46 @@ export function DashboardActivity({ data }: { data: DashboardInsights }) {
   if (!data.attention || !data.activity) return null;
   const a = data.attention;
   const rows = [
-    [t.pending, a.pending_orders, "/admin/orders?status=pending"], [t.returns, a.open_returns, "/admin/returns"],
-    [t.stock, a.low_stock, "/admin/stock"], [t.waiting, a.waiting_orders, "/admin/orders?status=waiting"],
-    [t.reviews, a.recent_reviews, "/admin/reviews"], [t.chats, a.open_chats, "/admin/support"],
+    [t.pending, a.pending_orders, "/admin/orders?status=pending", Package, "blue"],
+    [t.returns, a.open_returns, "/admin/returns", RotateCcw, "amber"],
+    [t.stock, a.low_stock, "/admin/stock", Boxes, "rose"],
+    [t.waiting, a.waiting_orders, "/admin/orders?status=waiting", Clock, "violet"],
+    [t.reviews, a.recent_reviews, "/admin/reviews", MessageSquareText, "teal"],
+    [t.chats, a.open_chats, "/admin/support", Headset, "teal"],
   ] as const;
 
-  return <Panel id="dashboard-activity" title={t.title}>
-    <Tabs defaultValue="attention">
-      <TabsList><TabsTrigger value="attention">{t.attention}</TabsTrigger><TabsTrigger value="activity">{t.activity}</TabsTrigger></TabsList>
-      <TabsContent value="attention"><ul className="grid gap-2 sm:grid-cols-2">{rows.map(([label, count, to]) => <li key={to}><Link to={to} className="flex justify-between gap-4 rounded-md border border-border p-3 hover:bg-secondary"><span>{label}</span><span className="font-semibold tabular-nums">{count}</span></Link></li>)}</ul></TabsContent>
-      <TabsContent value="activity">{data.activity.length ? <ol className="divide-y divide-border">{data.activity.map((event) => <li key={event.id} className="py-2 text-sm"><span className="font-semibold">{event.staff_name ?? t.unknown}</span> · {event.action} · {event.entity_type} #{event.entity_id}<br /><time dateTime={event.created_at} className="text-muted-foreground">{orderDateTime(event.created_at)}</time></li>)}</ol> : <p>{t.empty}</p>}</TabsContent>
-    </Tabs>
-  </Panel>;
+  return (
+    <Panel id="dashboard-activity" title={t.title} icon={Activity} tone="teal">
+      <Tabs defaultValue="attention">
+        <TabsList><TabsTrigger value="attention">{t.attention}</TabsTrigger><TabsTrigger value="activity">{t.activity}</TabsTrigger></TabsList>
+        <TabsContent value="attention">
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {rows.map(([label, count, to, Icon, tone]) => (
+              <li key={to} data-tone={tone}>
+                <Link to={to} className="admin-quick flex min-h-14 items-center gap-3 rounded-xl border border-border px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span aria-hidden="true" className="admin-quick-icon grid size-9 shrink-0 place-items-center rounded-lg"><Icon className="size-[18px]" /></span>
+                  <span className="min-w-0 flex-1 text-[15px]">{label}</span>
+                  <span className="text-lg font-semibold tabular-nums">{count}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </TabsContent>
+        <TabsContent value="activity">
+          {data.activity.length ? (
+            <ol className="relative grid gap-4 border-l-2 border-border pl-5">
+              {data.activity.map((event) => (
+                <li key={event.id} className="relative text-sm">
+                  <span aria-hidden="true" className="absolute -left-[1.6rem] top-1 size-3 rounded-full border-2 border-card bg-[var(--tone-ink)]" />
+                  <span className="font-semibold">{event.staff_name ?? t.unknown}</span> · {event.action} · {event.entity_type} #{event.entity_id}
+                  <br />
+                  <time dateTime={event.created_at} className="text-muted-foreground">{orderDateTime(event.created_at)}</time>
+                </li>
+              ))}
+            </ol>
+          ) : <p className="text-muted-foreground">{t.empty}</p>}
+        </TabsContent>
+      </Tabs>
+    </Panel>
+  );
 }

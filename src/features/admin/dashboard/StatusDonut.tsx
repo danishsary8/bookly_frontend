@@ -26,8 +26,8 @@ export function StatusDonut({ counts }: { counts: Record<string, number> }) {
   const shown = rows.filter((r) => r.n > 0);
 
   return (
-    <div className="grid items-center gap-6 sm:grid-cols-[11rem_minmax(0,1fr)]">
-      <div className="relative mx-auto size-44" aria-hidden="true">
+    <div className="grid items-center gap-6 sm:grid-cols-[12rem_minmax(0,1fr)] xl:grid-cols-1 2xl:grid-cols-[12rem_minmax(0,1fr)]">
+      <div className="relative mx-auto size-48" aria-hidden="true">
         <ResponsiveContainer width="100%" height="100%">
           {/* Nothing in this aria-hidden picture may take focus (axe aria-hidden-focus): Recharts makes the chart and the
               pie focusable by default. The list beside it is the accessible version. */}
@@ -37,7 +37,7 @@ export function StatusDonut({ counts }: { counts: Record<string, number> }) {
               data={shown.length ? shown : [{ status: "none", n: 1 }]}
               dataKey="n"
               nameKey="status"
-              innerRadius="68%"
+              innerRadius="72%" cornerRadius={6}
               outerRadius="100%"
               paddingAngle={shown.length > 1 ? 2 : 0}
               stroke="var(--card)"
@@ -51,7 +51,7 @@ export function StatusDonut({ counts }: { counts: Record<string, number> }) {
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 grid place-content-center text-center">
-          <span className="text-[1.75rem] font-semibold leading-none tabular-nums">{total}</span>
+          <span className="text-[2rem] font-semibold leading-none tabular-nums">{total}</span>
           <span className="text-xs text-muted-foreground">orders</span>
         </div>
       </div>

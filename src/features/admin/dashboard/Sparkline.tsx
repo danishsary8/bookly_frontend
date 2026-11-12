@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
  * A small trend line for a KPI card (dataviz: no axes, one series, the last point marked). Decorative: the card's
  * number and its "vs previous period" text say the same thing in words, so the SVG is hidden from screen readers.
  */
-export function Sparkline({ values, className }: { values: number[]; className?: string }) {
+export function Sparkline({ values, className, color = "var(--primary)", fill = 0.18 }: { values: number[]; className?: string; color?: string; fill?: number }) {
   const gradient = `spark-${useId().replace(/:/g, "")}`;
   if (values.length < 2) return null;
   const w = 120;
@@ -21,13 +21,13 @@ export function Sparkline({ values, className }: { values: number[]; className?:
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true" className={cn("h-8 w-full overflow-visible", className)} data-testid="sparkline">
       <defs>
         <linearGradient id={gradient} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.18} />
-          <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
+          <stop offset="0%" stopColor={color} stopOpacity={fill} />
+          <stop offset="100%" stopColor={color} stopOpacity={0} />
         </linearGradient>
       </defs>
       <path d={`${line} L${w},${h} L0,${h} Z`} fill={`url(#${gradient})`} />
-      <path d={line} fill="none" stroke="var(--primary)" strokeWidth={1.75} vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
-      <circle cx={x(last)} cy={y(values[last])} r={2.5} fill="var(--primary)" />
+      <path d={line} fill="none" stroke={color} strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+      <circle cx={x(last)} cy={y(values[last])} r={3} fill={color} />
     </svg>
   );
 }
