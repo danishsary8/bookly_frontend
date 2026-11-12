@@ -938,3 +938,9 @@ Backend in bookly_backend_v2 (same branch; see its WORKLOG). Owner's choices: KH
 - Audit: signed in as a real Staff account against the local API and opened every staff menu page plus order, return,
   customer and book detail pages: no other API refusals or page errors. Admin-only buttons were already hidden for staff.
 - Checks: lint, typecheck, tests (updated the staff dashboard test), build; axe 0 on both dashboards (1440, 390, 1366 dark).
+
+### 2026-11-12 — Staff console redesign (branch `staff-area-redesign`)
+New navy rail, regrouped menu with unique icons, colour per work area, new staff dashboard (Today band, task cards,
+recent orders with next-step buttons, quick actions). Handoff: docs/handoff/2026-11-staff-console.md.
+Checks: lint, typecheck, tests (671 passed), build. Browser (mocked API): staff dashboard at 1366, 1440, 1440 dark,
+390 phone + phone menu, collapse sidebar, task card → orders link; no page errors, no sideways scroll.

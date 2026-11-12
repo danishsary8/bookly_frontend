@@ -72,3 +72,20 @@ This revision supersedes the earlier frame, table, sign-in and no-transition rul
 - Long book forms have a sticky save bar. Print toolbar follows workspace styling while document sheets retain A4 layout.
 - Admin sales queries remain inside AdminDashboard; StaffDashboard uses only existing staff-safe counts and recent orders.
 - Existing checks remain; promotion and knowledge deletion controls are also hidden from staff, as required by the admin-only deletion policy.
+
+
+## Console redesign — 2026-11-12 (branch `staff-area-redesign`)
+Supersedes the frame, colour and dashboard rules above. Fonts, lapis, gold and component library stay MASTER's.
+- Rail: deep navy in both themes (`--rail-bg` #0B1030 / dark #060920, slight top gradient), light text (#D3D7F0,
+  ≥ 11:1), group labels #8F97C6. Current page: white text, 11% white fill, 3px gold marker. Counts are gold chips.
+  Same styling in the phone sheet (`.admin-rail-sheet`).
+- Navigation regrouped by job: Overview · Orders (orders, returns, customers) · Customer care (support, reviews,
+  ratings, assistant knowledge) · Marketing · Catalogue · Admin. Every page has its own icon.
+- Area colours (`data-tone`, admin.css): blue, teal, violet, amber, rose, green, slate. Each has `ink` (text/icons,
+  ≥ 4.5:1 on its tint and the card, light and dark) and `tint` (fills). Used for group dots, rail icons, page eyebrow
+  chip, task cards, quick actions and metric side bars. Colour never carries meaning alone (labels + icons).
+- Cards: 14px radius, soft two-layer shadow; canvas has a faint blue glow at the top.
+- Staff dashboard: greeting lead; a lapis→violet "Today" band with the date, a live summary ("2 tasks need you
+  today" / all clear) and a Start working button to the first busy queue; three task cards (orders blue, returns
+  amber, stock rose) with Needs action / All clear chip, big figure, hint, Open link; recent orders with direct
+  next-step buttons beside Quick actions. Copy in `staffHome` (en + km).

@@ -1,6 +1,6 @@
 import { m, useReducedMotion } from "motion/react";
 import { transitions } from "@/lib/motion";
-import { navFor } from "./adminNav";
+import { groupFor } from "./adminNav";
 import { useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -11,15 +11,15 @@ export function AdminPage({ title, lead, actions, back, children }: { title: str
   useDocumentTitle(`${title} · Staff`);
   const reducedMotion = useReducedMotion();
   const { pathname } = useLocation();
-  const section = navFor("admin").find((group) => group.items.some((item) => item.end ? item.to === pathname : pathname.startsWith(item.to)))?.label ?? "Workspace";
+  const group = groupFor(pathname);
   return (
     <m.div className="admin-page mx-auto grid w-full max-w-[1440px] grid-cols-[minmax(0,1fr)] gap-6" initial={reducedMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={transitions.page}>
-      <div className="admin-page-header grid gap-3 pb-1">
-        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground"><span aria-hidden="true" className="h-px w-6 bg-primary" />{section}</p>
+      <div className="admin-page-header grid gap-3" data-tone={group?.tone ?? "blue"}>
+        <p className="admin-eyebrow inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em]"><span aria-hidden="true" className="size-1.5 rounded-full bg-current" />{group?.label ?? "Workspace"}</p>
         {back}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="grid min-w-0 gap-2">
-            <h1 className="font-display text-[clamp(1.9rem,3vw,2.4rem)] leading-[1.1]">{title}</h1>
+            <h1 className="font-display text-[clamp(1.85rem,2.6vw,2.3rem)] leading-[1.1]">{title}</h1>
             {lead ? <div className="text-[15px] text-muted-foreground">{lead}</div> : null}
             <RefreshNote />
           </div>
