@@ -1,3 +1,4 @@
+import { AdminPage } from "@/features/admin/AdminPage";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -35,12 +36,12 @@ export default function SupportInboxPage() {
   const list = useConversations(true, `?${filters}`, allowed);
   const templates = useQuery({ queryKey: ["support", "templates"], queryFn: supportApi.templates, enabled: allowed });
   if (!allowed) return <p role="alert">{t.noPermission}</p>;
-  return <div className="grid gap-6"><h1 className="font-display text-3xl">{t.title}</h1>
+  return <AdminPage title={t.title} lead="One place for customer conversations, follow-ups and resolutions.">
     <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1">{t.statusLabel}<select className={supportField} value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}><option value="">{t.all}</option>{Object.entries(t.status).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label><label className="grid gap-1">{t.topic}<select className={supportField} value={topic} onChange={(event) => { setTopic(event.target.value); setPage(1); }}><option value="">{t.all}</option>{Object.entries(t.topics).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label>
       <label className="flex min-h-11 items-center gap-2"><input type="checkbox" checked={assigned} onChange={(event) => { setAssigned(event.target.checked); setPage(1); }} />{t.assigned}</label><label className="flex min-h-11 items-center gap-2"><input type="checkbox" checked={unread} onChange={(event) => { setUnread(event.target.checked); setPage(1); }} />{t.unreadOnly}</label>
     </div><Button variant="outline" onClick={() => void client.invalidateQueries({ queryKey: ["support"] })}>{t.refresh}</Button>
     <div className="grid min-w-0 gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]"><div className="grid content-start gap-3"><ul className="grid gap-2">{list.data?.value.data.map((item) => <li key={item.id}><Button variant={selected === item.id ? "default" : "outline"} className="h-auto min-h-11 w-full justify-start whitespace-normal break-words text-left" onClick={() => setParams({ conversation: String(item.id) })}>#{item.id} · {t.topics[item.topic]} · {t.status[item.status]}{item.unread_count ? ` (${item.unread_count})` : ""}</Button></li>)}</ul>{list.isError ? <p role="alert">{t.error}</p> : !list.data?.value.data.length ? <p>{list.isPending ? t.loading : t.empty}</p> : null}
     <div className="flex gap-2"><Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)} aria-label={dict.ui.previousPage}>&larr;</Button><span className="self-center">{page}</span><Button variant="outline" disabled={page >= (list.data?.value.meta?.last_page ?? 1)} onClick={() => setPage(page + 1)} aria-label={dict.ui.nextPage}>&rarr;</Button></div></div>{selected ? <StaffConversation key={selected} id={selected} /> : null}</div>
     <SupportTools templates={templates.data ?? []} admin={session?.user.role === "admin"} />
-  </div>;
+  </AdminPage>;
 }

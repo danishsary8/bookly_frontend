@@ -51,7 +51,7 @@ export function Change({ percent, previous, versus, moreIsBetter = true }: { per
 
 export function Tile({ label, value, khr, detail, change }: { label: string; value: string | number; khr?: string | null; detail?: string; change?: ReactNode }) {
   return (
-    <div className="grid content-start gap-1 desk-card rounded-xl border border-border bg-card p-4">
+    <div className="admin-metric grid content-start gap-2 desk-card rounded-xl border border-border bg-card p-4">
       <p className="text-sm text-muted-foreground">{label}</p>
       <p className="text-[1.75rem] font-semibold leading-tight tabular-nums">{value}</p>
       <Khr value={khr} />
@@ -63,8 +63,8 @@ export function Tile({ label, value, khr, detail, change }: { label: string; val
 
 export function Panel({ id, title, action, children, className }: { id: string; title: string; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section aria-labelledby={id} className={cn("grid grid-cols-1 content-start gap-4 desk-card rounded-xl border border-border bg-card p-5", className)}>
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
+    <section aria-labelledby={id} className={cn("admin-panel grid grid-cols-1 content-start gap-4 desk-card rounded-xl border border-border bg-card p-5", className)}>
+      <div className="admin-panel-header flex flex-wrap items-baseline justify-between gap-2 border-b border-border/70 pb-4">
         <h2 id={id} className="font-sans text-[1.0625rem] font-semibold tracking-normal">
           {title}
         </h2>
@@ -124,7 +124,7 @@ export function PeriodPicker({ active, onPick }: { active: DashboardPeriod | "cu
     { value: "custom", label: "Custom" },
   ];
   return (
-    <div role="radiogroup" aria-label="Period" className="flex flex-wrap rounded-md border border-border bg-card p-1">
+    <div role="radiogroup" aria-label="Period" className="admin-segmented flex flex-wrap rounded-lg border border-border bg-surface-2/50 p-1">
       {periods.map((p) => (
         <button
           key={p.value}
@@ -133,8 +133,8 @@ export function PeriodPicker({ active, onPick }: { active: DashboardPeriod | "cu
           aria-checked={active === p.value}
           onClick={() => onPick(p.value)}
           className={cn(
-            "min-h-9 rounded-[4px] px-3 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
-            active === p.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+            "min-h-11 rounded-[4px] px-3 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+            active === p.value ? "bg-card text-primary shadow-xs" : "text-muted-foreground hover:bg-card/60 hover:text-foreground",
           )}
         >
           {p.label}

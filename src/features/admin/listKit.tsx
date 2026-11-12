@@ -19,7 +19,7 @@ export function SearchBox({ label, value, onSearch, placeholder, className }: { 
     onSearch(draft.trim());
   };
   return (
-    <form onSubmit={submit} role="search" className={cn("relative min-w-0 flex-1 basis-64", className)}>
+    <form onSubmit={submit} role="search" aria-label={label} className={cn("relative min-w-0 flex-1 basis-64", className)}>
       <label className="sr-only" htmlFor={`search-${label}`}>
         {label}
       </label>
@@ -30,7 +30,7 @@ export function SearchBox({ label, value, onSearch, placeholder, className }: { 
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
         placeholder={placeholder}
-        className="h-11 w-full rounded-md border border-input bg-card pl-10 pr-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="admin-search h-11 w-full rounded-md border border-input bg-card pl-10 pr-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
     </form>
   );
@@ -38,7 +38,7 @@ export function SearchBox({ label, value, onSearch, placeholder, className }: { 
 
 export function Segmented<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: Array<{ value: T; label: string }>; onChange: (v: T) => void }) {
   return (
-    <div role="radiogroup" aria-label={label} className="inline-flex max-w-full overflow-x-auto rounded-md border border-border bg-card p-1">
+    <div role="radiogroup" aria-label={label} className="admin-segmented inline-flex max-w-full overflow-x-auto rounded-lg border border-border bg-surface-2/50 p-1">
       {options.map((opt) => (
         <button
           key={opt.value}
@@ -47,8 +47,8 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
           aria-checked={value === opt.value}
           onClick={() => onChange(opt.value)}
           className={cn(
-            "min-h-9 shrink-0 whitespace-nowrap rounded-[4px] px-3 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            value === opt.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+            "min-h-11 shrink-0 whitespace-nowrap rounded-[4px] px-3 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            value === opt.value ? "bg-card text-primary shadow-xs" : "text-muted-foreground hover:bg-card/60 hover:text-foreground",
           )}
         >
           {opt.label}
@@ -113,7 +113,7 @@ export function ListTabs<T extends string>({
 export function TableCard({ children, stale, minWidth = 720, label }: { children: ReactNode; stale?: boolean; minWidth?: number; label?: string }) {
   return (
     <div
-      className={cn("relative overflow-x-auto desk-card rounded-xl border border-border bg-card outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background", stale && "opacity-60 transition-opacity")}
+      className={cn("admin-table relative overflow-x-auto desk-card rounded-xl border border-border bg-card outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background", stale && "opacity-60 transition-opacity")}
       {...(label ? { role: "region", "aria-label": label, tabIndex: 0 } : {})}
     >
       <table className="w-full text-left text-[15px]" style={{ minWidth }}>
@@ -123,9 +123,9 @@ export function TableCard({ children, stale, minWidth = 720, label }: { children
   );
 }
 
-export const th = "px-4 py-3 font-semibold";
-export const thead = "border-b border-border bg-surface-2 text-sm text-muted-foreground";
-export const td = "px-4 py-3";
+export const th = "px-5 py-3.5 font-semibold whitespace-nowrap";
+export const thead = "sticky top-0 border-b border-border bg-surface-1 text-xs uppercase tracking-[0.08em] text-muted-foreground";
+export const td = "px-5 py-4 align-middle";
 
 /** Error, skeleton or empty state for a list, or the list itself. */
 export function ListState({

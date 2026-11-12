@@ -31,6 +31,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
+import { Panel } from "@/features/admin/reportKit";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { StrictDeleteDialog } from "@/features/admin/StrictDeleteDialog";
 import { AuthorPicker } from "@/features/admin/books/AuthorPicker";
@@ -63,36 +64,6 @@ const back = (
     <ArrowLeft className="size-4" aria-hidden="true" /> All books
   </Link>
 );
-
-function Panel({
-  id,
-  title,
-  action,
-  children,
-}: {
-  id: string;
-  title: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <section
-      aria-labelledby={id}
-      className="grid grid-cols-1 content-start gap-4 desk-card rounded-xl border border-border bg-card p-5"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2
-          id={id}
-          className="font-sans text-[1.0625rem] font-semibold tracking-normal"
-        >
-          {title}
-        </h2>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
 
 /** Title, authors, categories, publisher, series, language, pages, date and description. */
 function DetailsForm({ book }: { book: StaffBook | null }) {

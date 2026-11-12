@@ -39,17 +39,17 @@ export function StaffDashboard({ user }: { user?: StaffUser }) {
                 <li key={to}>
                   <Link
                     to={to}
-                    className="desk-card group flex min-h-28 items-center justify-between gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="admin-task desk-card group flex min-h-28 items-center justify-between gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     <span className="grid gap-1">
                       <span className="text-[15px] font-semibold text-muted-foreground">{label}</span>
                       {counts.isPending ? (
                         <Skeleton className="h-9 w-12" />
                       ) : (
-                        <span className="font-display text-[2.25rem] leading-none tabular-nums">{value ?? "—"}</span>
+                        <span className="font-sans font-semibold text-[2.25rem] leading-none tabular-nums">{value ?? "—"}</span>
                       )}
                     </span>
-                    <span className="grid size-11 place-items-center rounded-full bg-lapis-tint text-primary">
+                    <span className="grid size-11 place-items-center rounded-lg bg-lapis-tint text-primary">
                       <Icon className="size-5" aria-hidden="true" />
                     </span>
                   </Link>

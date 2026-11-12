@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { AlertTriangle, ArrowRight } from "lucide-react";
+import { AlertTriangle, ArrowRight, BookOpen, DollarSign, ShoppingBag, Users } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { insightsQueries, type TrendDay } from "@/api/endpoints/dashboardInsights";
 import { staffQueries } from "@/api/endpoints/staff";
@@ -39,11 +39,11 @@ function Kpi({ id, label, value, khr, detail, change, trend, view, hero }: {
   hero?: boolean;
 }) {
   return (
-    <section aria-labelledby={id} className="grid content-start gap-2 desk-card rounded-xl border border-border bg-card p-5">
-      <h2 id={id} className="font-sans text-sm font-normal tracking-normal text-muted-foreground">
+    <section aria-labelledby={id} className="admin-kpi grid content-start gap-2 desk-card rounded-xl border border-border bg-card p-5" data-featured={hero}>
+      <div className="admin-kpi-top"><h2 id={id} className="font-sans text-sm font-normal tracking-normal text-muted-foreground">
         {label}
-      </h2>
-      <p className={cn("font-semibold leading-none tabular-nums", hero ? "text-[3.25rem]" : "text-[1.75rem]")}>{value}</p>
+      </h2><span className="admin-kpi-icon" aria-hidden="true">{hero || id === "average-order" ? <DollarSign className="size-[18px]" /> : id === "new-customers" ? <Users className="size-[18px]" /> : id === "orders-placed" ? <ShoppingBag className="size-[18px]" /> : <BookOpen className="size-[18px]" />}</span></div>
+      <p className={cn("font-semibold leading-none tabular-nums", hero ? "text-[clamp(2rem,3vw,3.25rem)]" : "text-[1.75rem]")}>{value}</p>
       <Khr value={khr} className={hero ? "text-[15px]" : undefined} />
       {change}
       {detail ? <p className="text-sm text-muted-foreground tabular-nums">{detail}</p> : null}
@@ -162,6 +162,23 @@ function AdminDashboard() {
             </div>
           </div>
 
+          {trend?.length ? (
+            <Panel id="sales-chart" title="Income report" action={<span className="text-sm text-muted-foreground">this period vs the previous one · by delivery date, less refunds</span>}>
+              <IncomeChart days={trend} />
+            </Panel>
+          ) : (
+            <Panel id="sales-chart" title="Net revenue by day" action={<span className="text-sm text-muted-foreground">by delivery date, less refunds</span>}>
+              {sales.isError ? (
+                <InlineError error={sales.error} onRetry={() => sales.refetch()} />
+              ) : sales.data ? (
+                <SalesChart days={sales.data} />
+              ) : (
+                <Skeleton className="h-60 rounded-md" />
+              )}
+            </Panel>
+          )}
+
+
           {s.books_sold !== undefined && s.ebooks_sold !== undefined ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <Kpi id="books-sold" label={dict.dashboardCopies.books} value={s.books_sold} detail={dict.dashboardCopies.detail}
@@ -191,21 +208,6 @@ function AdminDashboard() {
           {insights.data?.repeat_customer_rate ? <Panel id="buyers" title={dict.dashboardBuyers.title}><dl className="grid grid-cols-2 gap-3"><div><dt>{dict.dashboardPrint.firstTime}</dt><dd className="text-xl font-semibold tabular-nums">{insights.data.repeat_customer_rate.customers - insights.data.repeat_customer_rate.returning}</dd></div><div><dt>{dict.dashboardPrint.returning}</dt><dd className="text-xl font-semibold tabular-nums">{insights.data.repeat_customer_rate.returning}</dd></div></dl></Panel> : null}
           <RecentOrders user={session?.user} />
 
-          {trend?.length ? (
-            <Panel id="sales-chart" title="Income report" action={<span className="text-sm text-muted-foreground">this period vs the previous one · by delivery date, less refunds</span>}>
-              <IncomeChart days={trend} />
-            </Panel>
-          ) : (
-            <Panel id="sales-chart" title="Net revenue by day" action={<span className="text-sm text-muted-foreground">by delivery date, less refunds</span>}>
-              {sales.isError ? (
-                <InlineError error={sales.error} onRetry={() => sales.refetch()} />
-              ) : sales.data ? (
-                <SalesChart days={sales.data} />
-              ) : (
-                <Skeleton className="h-60 rounded-md" />
-              )}
-            </Panel>
-          )}
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Panel id="best-sellers" title="Best sellers">
