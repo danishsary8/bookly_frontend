@@ -24,6 +24,8 @@ import { cartTotals } from "@/features/offers/cartTotals";
 import { CouponNotUsedNote, OfferNudge } from "@/features/offers/offerText";
 import { offerLineText } from "@/features/offers/offerLineText";
 import { PromoReminder } from "@/features/promotions/PromoReminder";
+import { KhqrHint, RewardCouponSuggestion, RewardNudge } from "@/features/rewards/RewardBits";
+import { useUsableRewardCoupon } from "@/features/rewards/useUsableRewardCoupon";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
@@ -65,6 +67,7 @@ function Summary({ check, setCheck, ctaRef }: { check: CouponCheck | null; setCh
   // Changes whenever lines or quantities change, so the coupon is re-checked.
   const cartVersion = (data.items ?? []).map((i) => `${i.id}:${i.quantity}`).join(",") + `|${data.subtotal_usd}`;
   const showCoupon = Boolean(coupon) || couponOpen;
+  const reward = useUsableRewardCoupon();
 
   useEffect(() => {
     if (couponOpen && !coupon) document.getElementById("coupon-code")?.focus();
@@ -72,7 +75,7 @@ function Summary({ check, setCheck, ctaRef }: { check: CouponCheck | null; setCh
 
   return (
     <aside aria-labelledby="summary-title" className="shop-card overflow-hidden rounded-2xl border border-border bg-card lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
-      <div className="group flex items-end justify-between gap-4 bg-lapis px-5 pb-3 pt-3.5 text-on-lapis short:py-2.5 sm:px-6">
+      <div className="group flex items-end justify-between gap-4 bg-lapis px-5 pb-3 pt-3.5 text-on-lapis short:py-2 sm:px-6">
         <div className="min-w-0">
           <h2 id="summary-title" className="font-display text-[1.563rem] leading-tight short:text-[1.375rem]">
             {c.summary}
@@ -84,12 +87,14 @@ function Summary({ check, setCheck, ctaRef }: { check: CouponCheck | null; setCh
 
       <div className="grid gap-3 px-5 pb-1 pt-4 short:gap-2 short:pt-2.5 sm:px-6">
         <FreeGiftLine gift={data.free_gift} />
-        <OfferNudge nudge={data.pricing?.nudge} />
+        <OfferNudge nudge={data.pricing?.nudge} className="short:py-1.5" />
         <CartDeliveryEstimate version={cartVersion} coupon={coupon} className="short:gap-2" barClassName="short:gap-1.5 short:p-2.5" />
         {showCoupon ? (
           <div id="cart-coupon">
             <CouponField cartVersion={cartVersion} onChecked={setCheck} />
           </div>
+        ) : reward ? (
+          <RewardCouponSuggestion coupon={reward} />
         ) : (
           <button
             type="button"
@@ -281,6 +286,12 @@ function CartContents() {
             <BadgePercent className="size-[18px] shrink-0" aria-hidden="true" />
             {c.offerSaved(formatMoney(saved.usd, saved.khr, currency))}
           </p>
+        ) : null}
+        {cart.data.reward || cart.data.khqr_discount_percent ? (
+          <div className="mx-5 mt-4 grid gap-2 rounded-lg border border-border bg-surface-1 px-3 py-2.5 sm:mx-7">
+            <RewardNudge reward={cart.data.reward} />
+            <KhqrHint percent={cart.data.khqr_discount_percent} />
+          </div>
         ) : null}
         <PromoReminder className="mx-5 mt-4 sm:mx-7" />
         <ul className="grid px-5 sm:px-7 [&>li]:py-6 [&>li+li]:border-t [&>li+li]:border-border" aria-label={c.cartItems}>

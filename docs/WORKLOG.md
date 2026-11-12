@@ -911,3 +911,19 @@ lost), then finished.
   drawer (filled, empty, blocked, 390 dark Khmer): axe 0, no console errors, no sideways scroll. Not exercised: a real
   API, applying a valid coupon in the browser (unit tests cover it), touch devices.
 
+## KHQR advantage + next-order rewards in the shop (2026-11-12, owner said "go")
+Backend in bookly_backend_v2 (same branch; see its WORKLOG). Owner's choices: KHQR 3% off, cash on delivery up to $80,
+"buy 2+ books, get 10% off your next order, at most $5, for 30 days". Details: `pages/shopping.md` §3c.
+- API types regenerated from the backend's OpenAPI. `cartApi.preview` sends `payment_method`; new `api/endpoints/rewards.ts`.
+- Cart: reward nudge + KHQR hint in the lines card; usable reward coupon offered in the summary (one tap). Drawer:
+  reward nudge. Checkout: KHQR "Save $X" tag, KHQR discount row, COD disabled over the limit (KHQR chosen).
+  Order page and confirmation: earned coupon card with copy. New `/account/coupons` (menu: My coupons).
+  Admin: `/admin/rewards` (Sales → Rewards & payments).
+- New EN/KM strings: `rewards.*`, `account.coupons`, `checkoutPage.khqrSave/khqrDiscount/codOverLimit`.
+- Checks: lint 0 errors (existing warning), typecheck, tests (+6 in `features/rewards/rewards.test.tsx`; only the
+  known collections 404 test fails), build. Browser (mock API, Playwright + axe): cart 1366/1440/1920, 1366 dark and
+  Khmer, 1440 Khmer, 390 Khmer; checkout with KHQR chosen (1440), over the COD limit (1366 dark), 390 Khmer; My coupons
+  (1440, 390 Khmer, empty in dark); admin page (1440, 1366 dark): axe 0, no console errors, no sideways scroll.
+  Not exercised in a browser: the order page / confirmation coupon card (no mocked order with a coupon), saving the
+  admin forms against a real API, the real backend end to end.
+

@@ -34,6 +34,7 @@ const AssistantKnowledgePage = lazy(() => import("../pages/admin/AssistantKnowle
 const ReadingListsPage = lazy(() => import("../pages/account/ReadingListsPage"));
 const GiftCardsPage = lazy(() => import("../pages/account/GiftCardsPage"));
 const ReferralsPage = lazy(() => import("../pages/account/ReferralsPage"));
+const CouponsPage = lazy(() => import("../pages/account/CouponsPage"));
 const GiftCardsAdminPage = lazy(() => import("../pages/admin/GiftCardsPage"));
 const ReferralsAdminPage = lazy(() => import("../pages/admin/ReferralsPage"));
 const ReadingListPage = lazy(() => import("../pages/catalog/ReadingListPage"));
@@ -68,6 +69,7 @@ const ReturnAdminPage = lazy(() => import("../pages/admin/ReturnAdminPage"));
 const ReviewsAdminPage = lazy(() => import("../pages/admin/ReviewsAdminPage"));
 const CouponsAdminPage = lazy(() => import("../pages/admin/CouponsAdminPage"));
 const OffersAdminPage = lazy(() => import("../pages/admin/OffersAdminPage"));
+const RewardsAdminPage = lazy(() => import("../pages/admin/RewardsAdminPage"));
 const PromotionsAdminPage = lazy(() => import("../pages/admin/PromotionsAdminPage"));
 const GiftsPage = lazy(() => import("../pages/admin/GiftsPage"));
 const RatingsPage = lazy(() => import("../pages/admin/RatingsPage"));
@@ -168,6 +170,7 @@ const AppRoutes = () => {
               <Route path="lists" element={<ReadingListsPage />} />
               <Route path="gift-cards" element={<GiftCardsPage />} />
               <Route path="referrals" element={<ReferralsPage />} />
+              <Route path="coupons" element={<CouponsPage />} />
               <Route path="orders" element={<OrdersPage />} />
               <Route path="ebooks" element={<MyEbooksPage />} />
               <Route path="orders/:id" element={<OrderDetailPage />} />
@@ -231,6 +234,7 @@ const AppRoutes = () => {
               <Route path="coupons" element={<CouponsAdminPage />} />
               <Route path="offers" element={<OffersAdminPage />} />
               <Route path="promotions" element={<PromotionsAdminPage />} />
+              <Route path="rewards" element={<RewardsAdminPage />} />
               <Route path="gifts" element={<GiftsPage />} />
               <Route path="ratings" element={<RatingsPage />} />
               <Route path="reading-lists" element={<ReadingListPicksPage />} />

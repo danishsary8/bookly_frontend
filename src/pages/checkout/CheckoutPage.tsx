@@ -32,6 +32,7 @@ import { formatName, getDict, useT } from "@/i18n";
 import { FreeGiftLine } from "@/features/offers/FreeGiftLine";
 import { CouponNotUsedNote } from "@/features/offers/offerText";
 import { offerLineText } from "@/features/offers/offerLineText";
+import { percentLabel } from "@/features/offers/percent";
 import { PromoReminder } from "@/features/promotions/PromoReminder";
 import { shopFeaturesQuery } from "@/api/endpoints/credit";
 
@@ -105,21 +106,28 @@ export default function CheckoutPage() {
   const [useCredit, setUseCredit] = useState(false);
   const features = useQuery(shopFeaturesQuery());
   const addressId = chosenAddress ?? list.find((a) => a.is_default)?.id ?? list[0]?.id ?? null;
-  // Delivery depends on the address (Phnom Penh or the provinces), so the totals follow the chosen one.
-  const preview = useQuery({
-    ...cartQueries.preview(coupon, addressId, useCredit),
-    enabled: Boolean(cart.data?.items?.length) && !addresses.isPending,
-    retry: false,
-    placeholderData: keepPreviousData,
-  });
-  const [deliveryNote, setDeliveryNote] = useState("");
-  const [isGift, setIsGift] = useState(false);
-  const [giftMessage, setGiftMessage] = useState("");
   // KHQR is offered only when the API lists it (KHQR payments design 2026-11-02).
   const options = useQuery(deliveryQueries.options());
   const khqr = options.data?.payment_methods?.find((m) => m.code === "khqr") ?? null;
   const [chosenMethod, setChosenMethod] = useState<PaymentChoice>("cod");
   const paymentMethod: PaymentChoice = chosenMethod === "khqr" && khqr ? "khqr" : "cod";
+  // Delivery depends on the address (Phnom Penh or the provinces), so the totals follow the chosen one; with KHQR on
+  // offer they follow the payment way too (KHQR discount, owner 2026-11-12).
+  const preview = useQuery({
+    ...cartQueries.preview(coupon, addressId, useCredit, khqr ? paymentMethod : null),
+    enabled: Boolean(cart.data?.items?.length) && !addresses.isPending,
+    retry: false,
+    placeholderData: keepPreviousData,
+  });
+  // Cash on delivery stops at the shop's limit: then KHQR is the way to pay (chosen for the customer when offered).
+  const codBlocked =
+    preview.data?.cod_allowed === false && preview.data.cod_max ? dict.checkoutPage.codOverLimit(formatMoney(preview.data.cod_max.usd, preview.data.cod_max.khr, currency)) : null;
+  // Adjusted while rendering (React's "state from props" pattern), so there is no extra effect pass.
+  if (codBlocked && khqr && chosenMethod === "cod") setChosenMethod("khqr");
+  const khqrSaving = Number(preview.data?.khqr_saving?.usd) > 0 ? formatMoney(preview.data?.khqr_saving?.usd, preview.data?.khqr_saving?.khr, currency) : null;
+  const [deliveryNote, setDeliveryNote] = useState("");
+  const [isGift, setIsGift] = useState(false);
+  const [giftMessage, setGiftMessage] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   // Set when the last attempt lost its response: the order may exist even though the cart
   // now looks empty, so the page stays put and the retry (same key) returns that order.
@@ -199,9 +207,11 @@ export default function CheckoutPage() {
 
   const items = cart.data.items ?? [];
   const data = preview.data;
+  // The offer/coupon part of the discount; the KHQR part has its own row.
+  const otherDiscount = Math.max(0, Number(data?.discount?.usd ?? 0) - Number(data?.khqr_discount?.usd ?? 0));
   const blocked = cart.data.can_checkout === false || data?.can_checkout === false;
   // A retry after a lost response replays the same key, so it never depends on today's cart.
-  const ready = Boolean(addressId) && (unconfirmed || (Boolean(data) && !blocked && !preview.isFetching));
+  const ready = Boolean(addressId) && (unconfirmed || (Boolean(data) && !blocked && !preview.isFetching && !(paymentMethod === "cod" && codBlocked)));
   const shipsSomething = data?.requires_shipping !== false;
 
   const covers = items.map((line) => ({ src: line.cover_image_url, title: line.book?.title }));
@@ -271,7 +281,7 @@ export default function CheckoutPage() {
                   {dict.credit.use} ({formatMoney(preview.data?.credit_balance?.usd, preview.data?.credit_balance?.khr, currency)})
                 </label>
               ) : null}
-              <PaymentOptions value={paymentMethod} onChange={setChosenMethod} khqr={khqr} />
+              <PaymentOptions value={paymentMethod} onChange={setChosenMethod} khqr={khqr} khqrSaving={khqrSaving} codBlocked={codBlocked} />
             </Step>
 
             <Step
@@ -363,13 +373,16 @@ export default function CheckoutPage() {
               ) : data ? (
                 <dl className="grid gap-1.5 border-t border-border pt-3 text-[15px]" aria-busy={preview.isFetching || undefined}>
                   <Row label={<span className="text-muted-foreground">{k.subtotal}</span>} amount={data.subtotal} />
-                  {Number(data.discount?.usd) > 0 ? (
+                  {otherDiscount > 0 ? (
                     <Row
                       label={data.applied === "offer" && data.offer ? offerLineText(dict, data.offer) : k.discount}
-                      amount={data.discount}
+                      amount={{ usd: otherDiscount.toFixed(2), khr: null }}
                       negative
                       className="text-success"
                     />
+                  ) : null}
+                  {Number(data.khqr_discount?.usd) > 0 ? (
+                    <Row label={k.khqrDiscount(percentLabel(data.khqr_discount_percent ?? "0"))} amount={data.khqr_discount} negative className="text-success" />
                   ) : null}
                   {shipsSomething ? (
                     <Row

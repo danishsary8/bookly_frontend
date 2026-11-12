@@ -20,7 +20,8 @@ export interface AddSeriesResult {
 
 export const cartKeys = {
   cart: () => ["cart"] as const,
-  preview: (couponCode: string | null, addressId: number | null = null) => ["cart", "preview", couponCode ?? "", addressId ?? 0] as const,
+  preview: (couponCode: string | null, addressId: number | null = null, paymentMethod: "cod" | "khqr" | null = null) =>
+    ["cart", "preview", couponCode ?? "", addressId ?? 0, ...(paymentMethod ? [paymentMethod] : [])] as const,
 };
 
 export interface PlaceOrderInput {
@@ -52,9 +53,10 @@ export const cartApi = {
 
   checkCoupon: (code: string) => api.post<Resource<CouponCheck>>("/cart/coupon/check", { code }).then((r) => r.data),
   /** Totals for the cart; delivery is priced for `addressId` (else the default address). */
-  preview: (couponCode?: string | null, addressId?: number | null, deliveryArea?: "phnom_penh" | "provinces", useCredit = false) =>
+  /** `paymentMethod` khqr: the totals include the KHQR discount (owner 2026-11-12). */
+  preview: (couponCode?: string | null, addressId?: number | null, deliveryArea?: "phnom_penh" | "provinces", useCredit = false, paymentMethod?: "cod" | "khqr" | null) =>
     api
-      .post<Resource<CheckoutPreview>>("/checkout/preview", { ...(couponCode ? { coupon_code: couponCode } : {}), ...(addressId ? { address_id: addressId } : {}), ...(deliveryArea ? { delivery_area: deliveryArea } : {}), ...(useCredit ? { use_credit: true } : {}) })
+      .post<Resource<CheckoutPreview>>("/checkout/preview", { ...(couponCode ? { coupon_code: couponCode } : {}), ...(addressId ? { address_id: addressId } : {}), ...(deliveryArea ? { delivery_area: deliveryArea } : {}), ...(useCredit ? { use_credit: true } : {}), ...(paymentMethod ? { payment_method: paymentMethod } : {}) })
       .then((r) => r.data),
 
   /**
@@ -67,6 +69,10 @@ export const cartApi = {
 
 export const cartQueries = {
   cart: () => queryOptions({ queryKey: cartKeys.cart(), queryFn: cartApi.cart, staleTime: 0 }),
-  preview: (couponCode: string | null, addressId: number | null = null, useCredit = false) =>
-    queryOptions({ queryKey: useCredit ? [...cartKeys.preview(couponCode, addressId), true] : cartKeys.preview(couponCode, addressId), queryFn: () => useCredit ? cartApi.preview(couponCode, addressId, undefined, true) : cartApi.preview(couponCode, addressId), staleTime: 0 }),
+  preview: (couponCode: string | null, addressId: number | null = null, useCredit = false, paymentMethod: "cod" | "khqr" | null = null) =>
+    queryOptions({
+      queryKey: useCredit ? [...cartKeys.preview(couponCode, addressId, paymentMethod), true] : cartKeys.preview(couponCode, addressId, paymentMethod),
+      queryFn: () => (useCredit || paymentMethod ? cartApi.preview(couponCode, addressId, undefined, useCredit, paymentMethod) : cartApi.preview(couponCode, addressId)),
+      staleTime: 0,
+    }),
 };

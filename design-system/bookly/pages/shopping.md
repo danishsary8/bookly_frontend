@@ -68,6 +68,23 @@ Replaces the summary and drawer parts of §3; the lines themselves are unchanged
   row, the total in Gloock 1.75rem, one full-width Checkout (lg), and View cart as a quiet ghost link.
 - Motion: the bar uses `translate-y` (`--dur-toggle`), none under reduced motion.
 
+## 3c. Rewards and KHQR (2026-11-12)
+- **Cart lines card**: a quiet `surface-1` box under the saving strip with two lines: the next-order reward ("Add 1
+  more book to get 10% off your next order (up to $5.00)" / "This order earns …" + when the code comes) with a gift
+  icon, and "Pay by KHQR at checkout and save 3%" with a QR icon. Either line hides when the API sends nothing.
+- **Cart summary**: when the customer has a usable reward coupon and none is applied, a slim green line (left rule,
+  no box, same height as the "Have a coupon code?" link) "Your 10% off: CODE · Apply" replaces the link. The CTA still
+  fits at 1366×768 (727px; Khmer 756px) and 1440×900 (869px; Khmer 893px).
+- **Checkout payment tiles**: KHQR carries a green "Save $X" pill (right on sm+, under the title on phones). Over the
+  cash on delivery limit the COD tile is disabled with the reason in its detail line and KHQR is chosen for the
+  customer. The summary shows "KHQR discount (3%)" as its own green row, apart from the offer/coupon row.
+- **Order page / confirmation**: a card with a gift disc, "10% off your next order", the code in a dashed green
+  ticket, Copy code (status announced), cap and end date; struck through when used or switched off.
+- **Account → My coupons**: two-column cards, status chip (Ready to use / Used / Expired / No longer valid), "Use in
+  cart" for usable ones; an empty state with a heading and Find your next book.
+- **Admin → Sales → Rewards & payments**: a settings card (KHQR %, COD limit; read-only for non-admins) and the rules
+  table (earned with, gives, coupons made, used, on switch, "In use" badge on the rule the shop uses).
+
 ## 4. Checkout
 - Steps on a vertical rail: 36px discs (lapis ring + number; solid lapis + check once the step is settled: an address
   chosen, a payment chosen), a dotted hairline down to the next step; "(completed)" for screen readers.

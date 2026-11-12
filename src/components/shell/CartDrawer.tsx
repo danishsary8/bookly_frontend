@@ -5,6 +5,7 @@ import { catalogQueries } from "@/api/endpoints/catalog";
 import { CoverStack } from "@/components/shopping/CoverStack";
 import { OfferNudge } from "@/features/offers/offerText";
 import { PromoReminder } from "@/features/promotions/PromoReminder";
+import { RewardNudge } from "@/features/rewards/RewardBits";
 import { CartGate } from "@/features/cart/CartGate";
 import { CartLineItem } from "@/features/cart/CartLineItem";
 import { FreeShippingBar } from "@/components/cart/FreeShippingBar";
@@ -79,6 +80,7 @@ function CartBody() {
         <FreeShippingBar subtotalUsd={totals.totalBeforeShipping.usd} thresholdUsd={totals.freeShipping?.threshold_usd} free={totals.freeShipping?.is_free} />
       )}
       <OfferNudge nudge={cart.data.pricing?.nudge} onNavigate={closeShellPanel} />
+      <RewardNudge reward={cart.data.reward} className="px-1" />
       <ul className="grid [&>li]:py-5 [&>li:first-child]:pt-1 [&>li+li]:border-t [&>li+li]:border-border" aria-label={t.cartItems}>
         {items.map((line) => (
           <CartLineItem key={line.id} line={line} compact busy={mutations.busyLineId === line.id} onQuantity={mutations.setQuantity} onRemove={mutations.remove} onNavigate={closeShellPanel} />
