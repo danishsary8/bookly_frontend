@@ -1475,3 +1475,18 @@ html { scroll-padding-bottom: var(--bottom-bar, 0px); }
 .dark .shelf-rail { background: repeating-linear-gradient(90deg, rgb(255 236 200 / 0.03) 0 1px, transparent 1px 7px, rgb(0 0 0 / 0.06) 7px 9px, transparent 9px 23px), linear-gradient(to bottom, #2c2017 0, #3f2e20 5px, #36281c 55%, #2a1e15 100%); }
 /* Home promises band: the bookplate's fine double gold frame, without corners (pages/home.md). */
 .promise-frame { border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent); outline: 1px solid color-mix(in srgb, var(--gold) 16%, transparent); outline-offset: -6px; }
+
+/* Ebook reader surrounds (pages/account.md §4): dark in the shop's night colours, light, sepia. Components read the
+   variables (bg-(--reader-bg) …) so no colour is written in the page itself. */
+.reader-dark { --reader-bg: #070B22; --reader-bar: rgb(14 20 51 / 0.92); --reader-ink: #F1F2FA; --reader-line: #252D63; --reader-hover: #172050; --reader-ring: #F2C84B; --reader-shade: rgb(0 0 0 / 0.8); }
+.reader-light { --reader-bg: #F4F4F5; --reader-bar: rgb(255 255 255 / 0.94); --reader-ink: #18181B; --reader-line: #E4E4E7; --reader-hover: #E4E4E7; --reader-ring: #14207A; --reader-shade: rgb(0 0 0 / 0.15); }
+.reader-sepia { --reader-bg: #F4ECD8; --reader-bar: rgb(235 220 185 / 0.94); --reader-ink: #4D3B2B; --reader-line: #DBC69D; --reader-hover: #DBC79F; --reader-ring: #4D3B2B; --reader-shade: rgb(77 59 43 / 0.25); }
+/* The bars step aside while reading and come back on any movement, tap or key. */
+.reader-chrome { transition: opacity 320ms cubic-bezier(0.2, 0, 0, 1), transform 320ms cubic-bezier(0.2, 0, 0, 1); }
+.reader-chrome[data-hidden="true"] { opacity: 0; pointer-events: none; }
+.reader-chrome-top[data-hidden="true"] { transform: translateY(-100%); }
+.reader-chrome-bottom[data-hidden="true"] { transform: translateY(100%); }
+@media (prefers-reduced-motion: reduce) {
+  .reader-chrome { transition: opacity 1ms; }
+  .reader-chrome-top[data-hidden="true"], .reader-chrome-bottom[data-hidden="true"] { transform: none; }
+}

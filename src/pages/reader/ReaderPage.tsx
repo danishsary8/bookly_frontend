@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Eye,
   Laptop,
+  ListOrdered,
   Maximize2,
   Minimize2,
   Moon,
@@ -19,6 +20,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { ebookApi, ebookKeys, ebookQueries, type EbookReaderMeta, type EbookPreviewMeta } from "@/api/endpoints/ebooks";
 import { ApiError } from "@/api/errors";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Drawer, DrawerBody, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useT } from "@/i18n";
@@ -29,6 +31,7 @@ type SurroundTheme = "dark" | "light" | "sepia";
 export default function ReaderPage() {
   const { dict } = useT();
   const e = dict.ebook;
+  const r = dict.readerUi;
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -58,6 +61,27 @@ export default function ReaderPage() {
   const activeBlobUrlRef = useRef<string | null>(null);
   const preloadedUrlsRef = useRef<Map<number, string>>(new Map());
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // The bars step aside after a few quiet seconds and come back on any pointer movement, tap or key (pages/account.md
+  // §4). They stay while the Go to page panel is open.
+  const [chromeHidden, setChromeHidden] = useState(false);
+  const [jumpOpen, setJumpOpen] = useState(false);
+  const [jumpValue, setJumpValue] = useState("");
+  const hideTimer = useRef<number | undefined>(undefined);
+  const wake = useCallback(() => {
+    setChromeHidden(false);
+    window.clearTimeout(hideTimer.current);
+    hideTimer.current = window.setTimeout(() => setChromeHidden(true), 3000);
+  }, []);
+  useEffect(() => {
+    const events = ["mousemove", "pointerdown", "keydown", "focusin"] as const;
+    for (const name of events) window.addEventListener(name, wake, { passive: true });
+    hideTimer.current = window.setTimeout(() => setChromeHidden(true), 3000);
+    return () => {
+      for (const name of events) window.removeEventListener(name, wake);
+      window.clearTimeout(hideTimer.current);
+    };
+  }, [wake]);
 
   // 1. Fetch metadata
   const metaQuery = useQuery({
@@ -300,25 +324,11 @@ export default function ReaderPage() {
     if (!fitWidth) setZoomLevel(100);
   };
 
-  // Theme style classes
-  const themeClasses = {
-    dark: "bg-[#070B22] text-[#F1F2FA] selection:bg-[#172050]",
-    light: "bg-zinc-100 text-zinc-900 selection:bg-zinc-200",
-    sepia: "bg-[#f4ecd8] text-[#5b4636] selection:bg-[#e6d8b8]",
-  }[theme];
-
-  const barClasses = {
-    dark: "bg-[#0E1433]/95 border-[#252D63] text-[#F1F2FA]",
-    light: "bg-white/95 border-zinc-200 text-zinc-800 shadow-sm",
-    sepia: "bg-[#ebdcb9]/95 border-[#dbc69d] text-[#4d3b2b]",
-  }[theme];
-
-  // Ghost controls take the bar's own ink (the site's lapis text vanished on the dark bar). pages/account.md, reader.
-  const ghostTone = {
-    dark: "text-[#F1F2FA] hover:bg-[#172050] hover:text-white focus-visible:ring-[#F2C84B]",
-    light: "text-zinc-800 hover:bg-zinc-200 hover:text-zinc-950",
-    sepia: "text-[#4d3b2b] hover:bg-[#dbc79f] hover:text-[#2f2419]",
-  }[theme];
+  // Theme colours live in index.css (.reader-dark / -light / -sepia); the page only reads the variables.
+  const themeClasses = cn(`reader-${theme}`, "bg-(--reader-bg) text-(--reader-ink) selection:bg-(--reader-hover)");
+  const barClasses = "border-(--reader-line) bg-(--reader-bar) text-(--reader-ink)";
+  // Ghost controls take the bar's own ink (the site's lapis text vanished on the dark bar).
+  const ghostTone = "text-(--reader-ink) hover:bg-(--reader-hover) hover:text-(--reader-ink) focus-visible:ring-(--reader-ring)";
 
   // -------------------------------------------------------------
   // Error and Friendly States
@@ -418,6 +428,20 @@ export default function ReaderPage() {
   }
 
   const isLastPreviewPage = isPreview && currentPage >= totalPages;
+  const hidden = chromeHidden && !jumpOpen && !isLastPreviewPage && !pageError;
+  const percent = totalPages > 0 ? Math.round((currentPage / totalPages) * 100) : 0;
+  const jumpTo = (page: number) => {
+    goToPage(page);
+    setJumpOpen(false);
+    setJumpValue("");
+  };
+  const quickJumps = [
+    { label: r.jumpStart, page: 1 },
+    { label: "25%", page: Math.max(1, Math.round(totalPages * 0.25)) },
+    { label: "50%", page: Math.max(1, Math.round(totalPages * 0.5)) },
+    { label: "75%", page: Math.max(1, Math.round(totalPages * 0.75)) },
+    { label: r.jumpEnd, page: totalPages },
+  ];
 
   return (
     <div
@@ -430,10 +454,16 @@ export default function ReaderPage() {
       {/* Hide on print */}
       <style>{`@media print { body { display: none !important; } }`}</style>
 
+      {/* Reading progress: a hairline along the top edge, there even while the bars are away. */}
+      <div className="absolute inset-x-0 top-0 z-30 h-[3px] bg-(--reader-line)" aria-hidden="true">
+        <span className="block h-full origin-left bg-(--reader-ring) transition-transform duration-300 motion-reduce:transition-none" style={{ transform: `scaleX(${percent / 100})` }} />
+      </div>
+
       {/* Top Controls Bar */}
       <header
+        data-hidden={hidden}
         className={cn(
-          "flex h-14 shrink-0 items-center justify-between border-b px-4 backdrop-blur-md transition-colors",
+          "reader-chrome reader-chrome-top absolute inset-x-0 top-0 z-20 flex h-16 items-center justify-between gap-2 border-b px-3 backdrop-blur-md sm:px-4",
           barClasses
         )}
       >
@@ -441,14 +471,14 @@ export default function ReaderPage() {
           <Link
             to={`/books/${bookId}`}
             aria-label={e.closeReader}
-            className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-9 rounded-full", ghostTone)}
+            className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-11 shrink-0 rounded-full", ghostTone)}
           >
             <ArrowLeft className="size-5" />
           </Link>
           <div className="flex flex-col truncate">
             <span className="truncate text-sm font-semibold">{title}</span>
             {isPreview ? (
-              <span className="text-[11px] font-medium tracking-wide uppercase text-amber-500">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-(--reader-ring)">
                 {e.previewTitle} ({totalPages} {dict.ebook.pages})
               </span>
             ) : null}
@@ -466,7 +496,7 @@ export default function ReaderPage() {
               aria-label={e.zoomOut}
               onClick={handleZoomOut}
               disabled={fitWidth && zoomLevel <= 100}
-              className={cn("size-8 rounded-md", ghostTone)}
+              className={cn("size-11 rounded-md", ghostTone)}
             >
               <ZoomOut className="size-4" />
             </Button>
@@ -480,45 +510,52 @@ export default function ReaderPage() {
               aria-label={e.zoomIn}
               onClick={handleZoomIn}
               disabled={zoomLevel >= 200}
-              className={cn("size-8 rounded-md", ghostTone)}
+              className={cn("size-11 rounded-md", ghostTone)}
             >
               <ZoomIn className="size-4" />
             </Button>
             <Button
               type="button"
-              variant={fitWidth ? "secondary" : "ghost"}
+              variant="ghost"
+              aria-pressed={fitWidth}
               size="icon"
               aria-label={e.fitWidth}
               onClick={toggleFitWidth}
-              className={cn("size-8 rounded-md", !fitWidth && ghostTone)}
+              className={cn("size-11 rounded-md", ghostTone, fitWidth && "bg-(--reader-hover)")}
             >
               {fitWidth ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
             </Button>
           </div>
 
           {/* Theme toggles */}
-          <div className="flex items-center rounded-lg border border-border/40 p-0.5">
+          <Button type="button" variant="ghost" size="icon" aria-label={r.goToPage} aria-expanded={jumpOpen} onClick={() => setJumpOpen(true)} className={cn("size-11 rounded-md", ghostTone)}>
+            <ListOrdered className="size-5" aria-hidden="true" />
+          </Button>
+          <div className="flex items-center rounded-lg border border-(--reader-line) p-0.5" role="group" aria-label={r.readingTheme}>
             <button
               type="button"
               aria-label={e.themeDark}
               onClick={() => changeTheme("dark")}
-              className={cn("size-7 rounded-md grid place-items-center transition-colors", theme === "dark" ? "bg-[#172050] text-white" : "opacity-60 hover:opacity-100")}
+              aria-pressed={theme === "dark"}
+              className={cn("grid size-10 place-items-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--reader-ring)", theme === "dark" ? "bg-(--reader-hover)" : "opacity-70 hover:opacity-100")}
             >
-              <Moon className="size-3.5" />
+              <Moon className="size-4" aria-hidden="true" />
             </button>
             <button
               type="button"
               aria-label={e.themeLight}
               onClick={() => changeTheme("light")}
-              className={cn("size-7 rounded-md grid place-items-center transition-colors", theme === "light" ? "bg-zinc-200 text-zinc-950" : "opacity-60 hover:opacity-100")}
+              aria-pressed={theme === "light"}
+              className={cn("grid size-10 place-items-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--reader-ring)", theme === "light" ? "bg-(--reader-hover)" : "opacity-70 hover:opacity-100")}
             >
-              <Sun className="size-3.5" />
+              <Sun className="size-4" aria-hidden="true" />
             </button>
             <button
               type="button"
               aria-label={e.themeSepia}
               onClick={() => changeTheme("sepia")}
-              className={cn("size-7 rounded-md grid place-items-center font-serif text-xs font-bold transition-colors", theme === "sepia" ? "bg-[#dbc79f] text-[#4d3b2b]" : "opacity-60 hover:opacity-100")}
+              aria-pressed={theme === "sepia"}
+              className={cn("grid size-10 place-items-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--reader-ring) font-display text-sm", theme === "sepia" ? "bg-(--reader-hover)" : "opacity-70 hover:opacity-100")}
             >
               S
             </button>
@@ -529,7 +566,7 @@ export default function ReaderPage() {
       {/* Main Canvas Viewport */}
       <main
         ref={containerRef}
-        className="relative flex-1 overflow-auto p-4 sm:p-8 flex items-start justify-center"
+        className="relative flex flex-1 items-start justify-center overflow-auto px-4 pb-24 pt-20 sm:px-8"
       >
         {/* Navigation hover arrows for large screens */}
         <button
@@ -537,11 +574,12 @@ export default function ReaderPage() {
           aria-label={e.prevPage}
           onClick={prevPage}
           disabled={currentPage <= 1}
+          data-hidden={hidden}
           className={cn(
-            "fixed left-4 top-1/2 -translate-y-1/2 z-10 hidden lg:grid size-12 place-items-center rounded-full bg-black/40 text-white backdrop-blur-md transition-opacity hover:bg-black/70 disabled:pointer-events-none disabled:opacity-0"
+            "reader-chrome fixed left-4 top-1/2 z-10 hidden size-12 -translate-y-1/2 place-items-center rounded-full border border-(--reader-line) bg-(--reader-bar) text-(--reader-ink) backdrop-blur-md hover:bg-(--reader-hover) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--reader-ring) disabled:pointer-events-none disabled:opacity-0 lg:grid"
           )}
         >
-          <ChevronLeft className="size-6" />
+          <ChevronLeft className="size-6" aria-hidden="true" />
         </button>
 
         <button
@@ -549,11 +587,12 @@ export default function ReaderPage() {
           aria-label={e.nextPage}
           onClick={nextPage}
           disabled={currentPage >= totalPages}
+          data-hidden={hidden}
           className={cn(
-            "fixed right-4 top-1/2 -translate-y-1/2 z-10 hidden lg:grid size-12 place-items-center rounded-full bg-black/40 text-white backdrop-blur-md transition-opacity hover:bg-black/70 disabled:pointer-events-none disabled:opacity-0"
+            "reader-chrome fixed right-4 top-1/2 z-10 hidden size-12 -translate-y-1/2 place-items-center rounded-full border border-(--reader-line) bg-(--reader-bar) text-(--reader-ink) backdrop-blur-md hover:bg-(--reader-hover) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--reader-ring) disabled:pointer-events-none disabled:opacity-0 lg:grid"
           )}
         >
-          <ChevronRight className="size-6" />
+          <ChevronRight className="size-6" aria-hidden="true" />
         </button>
 
         {/* Canvas wrapper */}
@@ -580,19 +619,16 @@ export default function ReaderPage() {
           ) : (
             <canvas
               ref={canvasRef}
-              className="block w-full h-auto rounded-lg shadow-2xl transition-shadow bg-white pointer-events-none"
-              style={{
-                boxShadow: theme === "dark" ? "0 20px 40px -15px rgba(0,0,0,0.8)" : "0 10px 30px -10px rgba(0,0,0,0.15)",
-              }}
+              className="pointer-events-none block h-auto w-full rounded-lg bg-white shadow-[0_20px_40px_-15px_var(--reader-shade)]"
             />
           )}
 
           {/* End of Preview Callout */}
           {isLastPreviewPage ? (
-            <div className="mt-8 w-full rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-center text-foreground">
-              <h2 className="font-display text-xl font-bold">{e.previewLimitReached}</h2>
-              <p className="mt-2 text-sm text-muted-foreground">{e.previewLimitReachedLead}</p>
-              <Link to={`/books/${bookId}`} className={cn(buttonVariants(), "mt-4")}>
+            <div className="mt-8 w-full rounded-2xl border border-(--reader-line) bg-(--reader-bar) p-6 text-center">
+              <h2 className="font-display text-xl">{e.previewLimitReached}</h2>
+              <p className="mt-2 text-sm opacity-80">{e.previewLimitReachedLead}</p>
+              <Link to={`/books/${bookId}`} className={cn(buttonVariants({ variant: "cta" }), "mt-4")}>
                 <ShoppingBag className="size-4" aria-hidden="true" /> {e.buyEbook}
               </Link>
             </div>
@@ -602,8 +638,9 @@ export default function ReaderPage() {
 
       {/* Bottom Navigation & Slider Bar */}
       <footer
+        data-hidden={hidden}
         className={cn(
-          "flex h-16 shrink-0 items-center justify-between border-t px-4 sm:px-8 backdrop-blur-md transition-colors gap-3",
+          "reader-chrome reader-chrome-bottom absolute inset-x-0 bottom-0 z-20 flex h-16 items-center justify-between gap-3 border-t px-3 backdrop-blur-md sm:px-8",
           barClasses
         )}
       >
@@ -614,7 +651,7 @@ export default function ReaderPage() {
           onClick={prevPage}
           disabled={currentPage <= 1}
           aria-label={e.prevPage}
-          className={cn("gap-1 min-w-[70px]", ghostTone)}
+          className={cn("h-11 min-w-11 gap-1", ghostTone)}
         >
           <ChevronLeft className="size-4" />
           <span className="hidden sm:inline">{e.prevPage}</span>
@@ -643,10 +680,11 @@ export default function ReaderPage() {
               }
             }}
             aria-label={e.pageOf(currentPage, totalPages)}
-            className="flex-1 accent-primary h-2 cursor-pointer rounded-lg bg-border"
+            className="h-2 flex-1 cursor-pointer rounded-lg accent-(--reader-ring)"
           />
-          <span className="text-xs sm:text-sm font-medium tabular-nums whitespace-nowrap opacity-90">
+          <span className="whitespace-nowrap text-xs font-medium tabular-nums opacity-90 sm:text-sm">
             {currentPage} / {totalPages}
+            <span className="hidden sm:inline"> · {percent}%</span>
           </span>
         </div>
 
@@ -657,12 +695,64 @@ export default function ReaderPage() {
           onClick={nextPage}
           disabled={currentPage >= totalPages}
           aria-label={e.nextPage}
-          className={cn("gap-1 min-w-[70px]", ghostTone)}
+          className={cn("h-11 min-w-11 gap-1", ghostTone)}
         >
           <span className="hidden sm:inline">{e.nextPage}</span>
           <ChevronRight className="size-4" />
         </Button>
       </footer>
+
+      <Drawer open={jumpOpen} onOpenChange={setJumpOpen}>
+        <DrawerContent side="right">
+          <DrawerHeader>
+            <DrawerTitle>{r.goToPage}</DrawerTitle>
+            <DrawerDescription>{e.pageOf(currentPage, totalPages)}</DrawerDescription>
+          </DrawerHeader>
+          <DrawerBody className="grid content-start gap-6">
+            <form
+              className="flex items-end gap-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const page = Number(jumpValue);
+                if (Number.isInteger(page)) jumpTo(page);
+              }}
+            >
+              <label className="grid flex-1 gap-1.5 text-sm font-semibold">
+                {r.pageNumber}
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={totalPages}
+                  value={jumpValue}
+                  onChange={(event) => setJumpValue(event.target.value)}
+                  placeholder={`1–${totalPages}`}
+                  className="h-12 rounded-md border border-input bg-card px-3 text-base font-normal tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </label>
+              <Button type="submit" size="lg">
+                {r.go}
+              </Button>
+            </form>
+            <ul className="grid gap-1">
+              {quickJumps.map((jump) => (
+                <li key={jump.label}>
+                  <button
+                    type="button"
+                    onClick={() => jumpTo(jump.page)}
+                    aria-current={jump.page === currentPage ? "page" : undefined}
+                    className="flex min-h-11 w-full items-center justify-between rounded-md px-3 text-left outline-none hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring aria-[current=page]:bg-lapis-tint aria-[current=page]:font-semibold aria-[current=page]:text-primary"
+                  >
+                    <span>{jump.label}</span>
+                    <span className="text-sm tabular-nums text-muted-foreground">{e.pageOf(jump.page, totalPages)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <p className="text-sm text-muted-foreground">{r.noChapters}</p>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

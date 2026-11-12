@@ -6,7 +6,10 @@ import { useSession } from "@/api/session";
 import type { Customer } from "@/api/types";
 import { TextField } from "@/components/form/Field";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Users } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ui/error-state";
+import { AccountSection } from "@/features/account/AccountSection";
 import { referralDevice } from "@/features/account/referralAttribution";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useT } from "@/i18n";
@@ -25,21 +28,20 @@ export default function ReferralsPage() {
   const data = referral.data;
   const link = data ? `${window.location.origin}/?ref=${encodeURIComponent(data.code)}` : "";
   const copy = async () => { try { await navigator.clipboard.writeText(link); setCopyResult(t.copied); } catch { setCopyResult(t.copyFailed); } };
-  return <div className="grid gap-5">
-    <h1 className="font-display text-3xl">{t.referrals}</h1>
+  return <AccountSection title={t.referrals}>
     {referral.isError ? <ErrorState error={referral.error} onRetry={() => referral.refetch()} /> : null}
     {referral.isPending ? <p role="status">{t.loading}</p> : null}
     {data ? <><p>{t.referralLead(data.friend_discount_usd, data.reward_usd)}</p><p className="text-sm text-muted-foreground">{t.referralRules}</p>
-      <p>{t.balance}: <strong>{formatUsd(data.balance_usd)}</strong></p>
+      <p>{t.balance}: <strong className="font-display text-2xl">{formatUsd(data.balance_usd)}</strong></p>
       <TextField label={t.link} readOnly value={link} onFocus={(e) => e.target.select()} />
       <div className="flex flex-wrap gap-3"><Button onClick={() => void copy()}>{t.copy}</Button>
         <a className={buttonVariants({ variant: "outline" })} href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`} target="_blank" rel="noopener noreferrer">Facebook</a>
         <a className={buttonVariants({ variant: "outline" })} href={`https://t.me/share/url?url=${encodeURIComponent(link)}`} target="_blank" rel="noopener noreferrer">Telegram</a></div>
       {copyResult ? <p role="status">{copyResult}</p> : null}
       <h2 className="font-display text-2xl">{t.history}</h2>
-      {data.history.length === 0 ? <p>{t.noReferrals}</p> : null}
+      {data.history.length === 0 ? <EmptyState icon={Users} headingLevel="h3" title={dict.accountEmpty.referralsTitle} description={dict.accountEmpty.referralsLead} className="py-6" /> : null}
       <ul className="grid gap-3">{data.history.map((row) => <li key={row.id} className="shop-card rounded-2xl border border-border bg-card p-4">#{row.id} · {t.status[row.status]} · {formatUsd(row.reward_cents / 100)}</li>)}</ul>
       <div className="flex gap-3"><Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>{t.previous}</Button><Button variant="outline" disabled={page >= data.last_page} onClick={() => setPage(page + 1)}>{t.next}</Button></div>
     </> : null}
-  </div>;
+  </AccountSection>;
 }
