@@ -889,3 +889,41 @@ real-book carousel; premium promises band; Bakong KHQR instead of "Delivery acro
   (`?sort=` in the URL). Slow sellers stay in Reports ("worst sellers"); promotion results are on Admin → Promotions.
 - Checks: lint, typecheck, tests, build; the Books page in the browser with mocked numbers (axe 0). The order itself is
   the API's (covered by the backend's StaffBooksSoldTest), not checked against a real API from here.
+
+## Cart v2: cart page and drawer redesign (2026-11-12)
+Details in `design-system/bookly/pages/shopping.md` §3b. Rebuilt in a fresh checkout (the earlier uncommitted draft was
+lost), then finished.
+- Cart summary as a receipt (lapis head, perforated tear, big total with a "You save" chip, pay note); coupon behind
+  "Have a coupon code?"; shipping shows "Free" when the offer gives free delivery. Lines card: saving strip, promotion
+  reminder, Keep shopping + subtotal footer.
+- `short:` laptop variant so the checkout button is on the first screen at 1366×768; fixed total + checkout bar on
+  phones with page padding, scroll padding and the toast stack lifted above it (`--bottom-bar`).
+- Drawer: free-delivery bar and offer nudge above the lines, covers in the empty state, promotion reminder, one
+  full-width Checkout and a quiet View cart.
+- Small a11y fixes found by axe on the cart page (shell): the announcement bar's nav now has its own name
+  ("Order tracking and help", was a second "Help" landmark); the preferences button's name starts with its visible
+  text ("EN · $, Language, currency and theme"); Khmer "remove" label contains the visible word.
+- New EN/KM strings: cartPage.offerSaved, savedShort, keepShopping, haveCoupon, payNote, stickyTotal, free;
+  homePage.helpLinks.
+- Checks: lint 0 errors (existing warning), typecheck, tests (only the known collections 404 test fails), build.
+  Browser (Node mock API + Vite, Playwright + axe): 1366×768, 1440×900, 1920×1080, 1366 dark, 1440 and 1366 Khmer,
+  390×844 Khmer and English, reduced motion, empty cart, blocked cart, offer with free delivery, coupon link focus,
+  drawer (filled, empty, blocked, 390 dark Khmer): axe 0, no console errors, no sideways scroll. Not exercised: a real
+  API, applying a valid coupon in the browser (unit tests cover it), touch devices.
+
+## KHQR advantage + next-order rewards in the shop (2026-11-12, owner said "go")
+Backend in bookly_backend_v2 (same branch; see its WORKLOG). Owner's choices: KHQR 3% off, cash on delivery up to $80,
+"buy 2+ books, get 10% off your next order, at most $5, for 30 days". Details: `pages/shopping.md` §3c.
+- API types regenerated from the backend's OpenAPI. `cartApi.preview` sends `payment_method`; new `api/endpoints/rewards.ts`.
+- Cart: reward nudge + KHQR hint in the lines card; usable reward coupon offered in the summary (one tap). Drawer:
+  reward nudge. Checkout: KHQR "Save $X" tag, KHQR discount row, COD disabled over the limit (KHQR chosen).
+  Order page and confirmation: earned coupon card with copy. New `/account/coupons` (menu: My coupons).
+  Admin: `/admin/rewards` (Sales → Rewards & payments).
+- New EN/KM strings: `rewards.*`, `account.coupons`, `checkoutPage.khqrSave/khqrDiscount/codOverLimit`.
+- Checks: lint 0 errors (existing warning), typecheck, tests (+6 in `features/rewards/rewards.test.tsx`; only the
+  known collections 404 test fails), build. Browser (mock API, Playwright + axe): cart 1366/1440/1920, 1366 dark and
+  Khmer, 1440 Khmer, 390 Khmer; checkout with KHQR chosen (1440), over the COD limit (1366 dark), 390 Khmer; My coupons
+  (1440, 390 Khmer, empty in dark); admin page (1440, 1366 dark): axe 0, no console errors, no sideways scroll.
+  Not exercised in a browser: the order page / confirmation coupon card (no mocked order with a coupon), saving the
+  admin forms against a real API, the real backend end to end.
+

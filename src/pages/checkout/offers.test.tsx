@@ -122,7 +122,8 @@ describe("Cart with an automatic offer", () => {
     };
     vi.spyOn(cartApi, "checkCoupon").mockResolvedValue(check);
     app("/cart");
-    await user.type(await screen.findByLabelText("Coupon code"), "read5");
+    await user.click(await screen.findByRole("button", { name: "Have a coupon code?" }));
+    await user.type(screen.getByLabelText("Coupon code"), "read5");
     await user.click(screen.getByRole("button", { name: "Apply" }));
     expect(await screen.findByText(/Your coupon READ5 wasn't used: the offer saves you more/)).toBeInTheDocument();
     const summary = screen.getByRole("complementary", { name: "Order summary" });

@@ -14,6 +14,7 @@ import { BuyAgainButton } from "@/features/orders/BuyAgainButton";
 import { CancelOrderDialog } from "@/features/orders/CancelOrderDialog";
 import { DeliveryAddressCard, OrderItemsCard } from "@/features/orders/OrderSummary";
 import { OrderTimeline } from "@/features/orders/OrderTimeline";
+import { RewardCouponCard } from "@/features/rewards/RewardBits";
 import { orderDate } from "@/features/orders/format";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useT } from "@/i18n";
@@ -138,6 +139,7 @@ export default function OrderDetailPage() {
           <OrderTimeline history={o.status_history ?? []} />
         </div>
         <div className="grid content-start gap-6">
+          <RewardCouponCard coupon={o.reward_coupon} />
           <DeliveryAddressCard address={o.shipping_address} title={t.deliveryAddress} />
           {o.delivery_note ? (
             <section aria-labelledby="delivery-note" className="grid gap-2 shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">

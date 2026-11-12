@@ -19,7 +19,6 @@ const rain: SeasonalCollection = {
   description_km: null, ends_at: "2026-11-30T16:59:59Z", books_count: 2, books: [book(5, "The Sign of the Four"), book(1, "Pride and Prejudice")],
 };
 const exam: SeasonalCollection = { ...rain, id: 2, slug: "exam-season", title_en: "Exam season", title_km: null, books: [book(9, "The Art of War")] };
-const empty = { data: [], links: {}, meta: { current_page: 1, last_page: 1, per_page: 10, total: 0, from: null, to: null } } as never;
 
 const app = (route: string) =>
   renderWithProviders(
@@ -33,7 +32,8 @@ const app = (route: string) =>
 const quietHome = () => {
   vi.spyOn(catalogApi, "rows").mockResolvedValue([{ id: "new_arrivals", total: 1, books: [book(30, "A new arrival")] }]);
   vi.spyOn(readingListsApi, "picks").mockResolvedValue([]);
-  vi.spyOn(catalogApi, "books").mockResolvedValue(empty);
+  // The home page takes New arrivals from the books list (sort=newest), so it needs one book to show the row.
+  vi.spyOn(catalogApi, "books").mockResolvedValue({ data: [book(30, "A new arrival")], links: {}, meta: { current_page: 1, last_page: 1, per_page: 10, total: 1, from: 1, to: 1 } } as never);
   vi.spyOn(catalogApi, "categories").mockResolvedValue([]);
 };
 

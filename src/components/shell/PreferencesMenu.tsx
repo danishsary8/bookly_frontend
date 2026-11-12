@@ -19,7 +19,7 @@ export function PreferencesMenu({ className }: { className?: string }) {
   return (
     <Popover.Root>
       <Popover.Trigger
-        aria-label={dict.shell.preferences}
+        aria-label={`${lang.toUpperCase()} · ${currency === "USD" ? "$" : "៛"}, ${dict.shell.preferences}`}
         className={cn(
           "group inline-flex h-10 items-center gap-1.5 rounded-full border border-border px-3 text-sm font-semibold text-foreground outline-none transition-colors duration-150 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-muted",
           className,

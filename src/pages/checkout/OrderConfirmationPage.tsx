@@ -38,6 +38,7 @@ function OrderNextVolumePrompt({ bookIds }: { bookIds: number[] }) {
   );
 }
 
+import { RewardCouponCard } from "@/features/rewards/RewardBits";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, FileText, PackageCheck, Send, Truck, ArrowRight } from "lucide-react";
 import { catalogQueries } from "@/api/endpoints/catalog";
@@ -147,6 +148,9 @@ export default function OrderConfirmationPage() {
           </div>
           {covers.some((c) => c.src) ? <CoverStack items={covers} size="xl" max={4} className="hidden justify-self-center sm:block lg:mr-4" /> : null}
         </header>
+
+        {/* Paid by KHQR: the next-order reward is already made (owner 2026-11-12). */}
+        <RewardCouponCard coupon={o.reward_coupon} />
 
         {/* What happens next: three stops on one line; the first is where the order is now. */}
         <section aria-labelledby="whats-next" className="grid gap-6">

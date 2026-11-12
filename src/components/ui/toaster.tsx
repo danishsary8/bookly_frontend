@@ -97,7 +97,7 @@ function Toaster() {
   const { dict } = useT()
   const toasts = useToasts()
   return (
-    <section aria-label={dict.shell.notifications} className="pointer-events-none fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-(--z-toast) sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[400px]">
+    <section aria-label={dict.shell.notifications} className="pointer-events-none fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-(--z-toast) translate-y-[calc(var(--bottom-bar,0px)*-1)] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[400px]">
       {/* A persistent live region: announced reliably, and kept visible to assistive tech while a
           dialog or drawer is open (Radix hides everything else, but leaves [aria-live] alone). */}
       <div aria-live="polite" className="flex flex-col gap-3">

@@ -120,7 +120,7 @@ describe("i18n system", () => {
     expect(screen.getByRole("link", { name: "New arrivals" })).toBeInTheDocument();
 
     // Language lives in the one "EN · $" settings menu.
-    await user.click(screen.getByRole("button", { name: "Language, currency and theme" }));
+    await user.click(screen.getByRole("button", { name: /Language, currency and theme/ }));
     await user.click(await screen.findByRole("radio", { name: "ភាសាខ្មែរ" }));
 
     // The same link in Khmer

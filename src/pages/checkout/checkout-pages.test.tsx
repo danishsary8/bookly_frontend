@@ -94,7 +94,8 @@ describe("CartPage", () => {
     const user = userEvent.setup();
     vi.spyOn(cartApi, "checkCoupon").mockResolvedValue({ code: "WELCOME10", type: "percentage", value: "10.00", subtotal_usd: "25.98", discount_usd: "2.59", discount_khr: "10619" });
     app("/cart");
-    await user.type(await screen.findByLabelText("Coupon code"), "welcome10");
+    await user.click(await screen.findByRole("button", { name: "Have a coupon code?" }));
+    await user.type(screen.getByLabelText("Coupon code"), "welcome10");
     await user.click(screen.getByRole("button", { name: "Apply" }));
     expect((await screen.findAllByText(/−\$2\.59/)).length).toBeGreaterThan(0);
     expect(getCoupon()).toBe("WELCOME10");
@@ -106,7 +107,8 @@ describe("CartPage", () => {
       new ApiError({ kind: "validation", status: 422, message: "Invalid", fieldErrors: { code: ["Order subtotal must be at least 30.00."] } }),
     );
     app("/cart");
-    await user.type(await screen.findByLabelText("Coupon code"), "SAVE5");
+    await user.click(await screen.findByRole("button", { name: "Have a coupon code?" }));
+    await user.type(screen.getByLabelText("Coupon code"), "SAVE5");
     await user.click(screen.getByRole("button", { name: "Apply" }));
     expect(await screen.findByText("Order subtotal must be at least 30.00.")).toBeInTheDocument();
     expect(getCoupon()).toBeNull();

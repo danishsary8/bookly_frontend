@@ -5360,6 +5360,65 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/coupons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reward coupons of the signed-in customer ("10% off your next order")
+         * @description Usable ones first, then newest. Each coupon is one use, only for this customer, capped by max_discount_usd, and is made when the earning order is paid by KHQR or delivered. Cancelling or returning that order switches an unused coupon off. An order paid with a reward coupon earns no new one.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Reward coupons */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                id?: number;
+                                /** @example THANKS-K7M2Q9 */
+                                code?: string;
+                                /** @example 10.00 */
+                                percent_off?: string;
+                                max_discount_usd?: string | null;
+                                /** Format: date-time */
+                                expires_at?: string | null;
+                                used?: boolean;
+                                expired?: boolean;
+                                is_usable?: boolean;
+                                earned_by_order?: {
+                                    id?: number;
+                                    order_number?: string;
+                                };
+                                /** Format: date-time */
+                                created_at?: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/store-credits": {
         parameters: {
             query?: never;
@@ -6177,6 +6236,8 @@ export interface paths {
                 content: {
                     "application/json": {
                         use_credit?: boolean;
+                        /** @enum {string} */
+                        payment_method?: "cod" | "khqr";
                         coupon_code?: string;
                         address_id?: number;
                         /** @enum {string} */
@@ -8813,6 +8874,167 @@ export interface paths {
             requestBody?: never;
             responses: {
                 /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                403: components["responses"]["Forbidden"];
+                422: components["responses"]["Validation"];
+            };
+        };
+        trace?: never;
+    };
+    "/staff/reward-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Next-order reward rules, newest first (the newest active one is used). Staff with catalog:view and admins. Each: id, name, is_active, min_books, min_amount_usd, percent_off, max_discount_usd, valid_days, issued_count, used_count */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Rules */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /** (admin) Create: name, is_active?, min_books? 1-100 and/or min_amount? (at least one), percent_off 1-90, max_discount? cap in USD, valid_days 1-365. Audited */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                403: components["responses"]["Forbidden"];
+                422: components["responses"]["Validation"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/reward-rules/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** (admin) Delete; coupons already given keep working. Audited */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                204: components["responses"]["NoContent"];
+                403: components["responses"]["Forbidden"];
+            };
+        };
+        options?: never;
+        head?: never;
+        /** (admin) Update any field. Audited */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["Id"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                403: components["responses"]["Forbidden"];
+                422: components["responses"]["Validation"];
+            };
+        };
+        trace?: never;
+    };
+    "/staff/settings/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Payment settings: khqr_discount_percent (null = off), cod_max_order_usd (null = no limit), khqr_enabled. Staff with catalog:view and admins */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Settings */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** (admin) Change khqr_discount_percent 0-20 (0 or null = off) and/or cod_max_order_usd (null = no limit). Audited as shop_settings.updated */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Updated settings */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -12829,6 +13051,17 @@ export interface components {
             credit_used?: components["schemas"]["Amount"];
             payment_due?: components["schemas"]["Amount"];
             referral_discount?: components["schemas"]["Amount"];
+            khqr_discount?: components["schemas"]["Amount"];
+            khqr_saving?: components["schemas"]["Amount"];
+            /**
+             * @description Percent off the books for paying by KHQR (after other discounts); null when off. khqr_discount (part of discount) is set when payment_method is khqr; khqr_saving is what KHQR would save either way. Free delivery is decided before it.
+             * @example 3.00
+             */
+            khqr_discount_percent?: string | null;
+            /** @description Most a cash on delivery order may cost; null = no limit */
+            cod_max?: components["schemas"]["Amount"] | null;
+            /** @description False when this order is over cod_max: only KHQR then */
+            cod_allowed?: boolean;
             /** @description A saved address was selected or defaulted; otherwise delivery_area is an estimate choice only. */
             has_delivery_address?: boolean;
             free_gift?: components["schemas"]["FreeGift"];
@@ -13133,6 +13366,26 @@ export interface components {
         };
         Cart: {
             free_gift?: components["schemas"]["FreeGift"];
+            /**
+             * @description Percent off for paying by KHQR at checkout; null when off
+             * @example 3.00
+             */
+            khqr_discount_percent?: string | null;
+            /** @description The "next order" reward this cart would earn (newest active reward rule); null when there is none or the cart is empty */
+            reward?: {
+                /** @example 10.00 */
+                percent_off?: string;
+                /** @example 5.00 */
+                max_discount_usd?: string | null;
+                /** @example 30 */
+                valid_days?: number;
+                /** @example 2 */
+                min_books?: number | null;
+                min_amount_usd?: string | null;
+                /** @description Books still needed (0 = earns already); null for an amount-only rule */
+                add_books?: number | null;
+                earns?: boolean;
+            } | null;
             id?: number;
             items?: {
                 id?: number;
@@ -13191,6 +13444,19 @@ export interface components {
         };
         Order: {
             credit_used_usd?: components["schemas"]["Money"];
+            khqr_discount_usd?: components["schemas"]["Money"];
+            /** @description The coupon this order earned for the next order: made when it is paid by KHQR or delivered */
+            reward_coupon?: {
+                /** @example THANKS-K7M2Q9 */
+                code?: string;
+                /** @example 10.00 */
+                percent_off?: string;
+                /** @example 5.00 */
+                max_discount_usd?: string | null;
+                /** Format: date-time */
+                expires_at?: string | null;
+                is_usable?: boolean;
+            } | null;
             payment_due_usd?: components["schemas"]["Money"];
             free_gift?: components["schemas"]["FreeGift"];
             id?: number;
