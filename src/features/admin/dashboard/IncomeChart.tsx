@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useId, useState } from "react";
+import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { TrendDay } from "@/api/endpoints/dashboardInsights";
 import { Segmented } from "@/features/admin/listKit";
 import { formatUsd } from "@/stores/currency";
@@ -16,6 +16,7 @@ const compactUsd = (n: number) => (n >= 1000 ? `$${(n / 1000).toFixed(1)}k` : `$
 type Metric = "income" | "orders";
 
 export function IncomeChart({ days }: { days: TrendDay[] }) {
+  const fillId = useId().replace(/:/g, "");
   const [metric, setMetric] = useState<Metric>("income");
   const [table, setTable] = useState(false);
   const isIncome = metric === "income";
@@ -60,8 +61,9 @@ export function IncomeChart({ days }: { days: TrendDay[] }) {
       <figure className="grid gap-2">
         <div role="img" aria-label={summary} className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={points} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-              <CartesianGrid vertical={false} stroke="var(--border)" />
+            <ComposedChart data={points} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+              <defs><linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--primary)" stopOpacity={0.16} /><stop offset="100%" stopColor="var(--primary)" stopOpacity={0} /></linearGradient></defs>
+              <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 5" />
               <XAxis dataKey="label" tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} tickLine={false} axisLine={{ stroke: "var(--border)" }} minTickGap={24} />
               <YAxis
                 tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
@@ -87,13 +89,13 @@ export function IncomeChart({ days }: { days: TrendDay[] }) {
                 }
               />
               <Line type="monotone" dataKey="before" stroke="var(--muted-foreground)" strokeWidth={2} strokeDasharray="5 4" dot={false} isAnimationActive={false} />
-              <Line type="monotone" dataKey="now" stroke="var(--primary)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: "var(--card)" }} isAnimationActive={false} />
-            </LineChart>
+              <Area type="monotone" dataKey="now" fill={`url(#${fillId})`} stroke="var(--primary)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: "var(--card)" }} isAnimationActive={false} />
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
         <figcaption className="sr-only">{summary}</figcaption>
       </figure>
-      <button type="button" onClick={() => setTable((t) => !t)} aria-expanded={table} className="justify-self-start text-sm font-semibold text-primary underline-offset-4 hover:underline">
+      <button type="button" onClick={() => setTable((t) => !t)} aria-expanded={table} className="min-h-11 justify-self-start text-sm font-semibold text-primary underline-offset-4 hover:underline">
         {table ? "Hide the table" : "Show as a table"}
       </button>
       {table ? (

@@ -1,3 +1,4 @@
+import { ResultSummary } from "@/features/admin/reportKit";
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Gift, Pencil, Plus, QrCode, Trash2 } from "lucide-react";
@@ -66,6 +67,11 @@ export default function RewardsAdminPage() {
     >
       <PaymentSettingsCard isAdmin={isAdmin} />
 
+      {rules.data && list.length > 0 ? <ResultSummary items={[
+        { label: "Reward rules", value: list.length },
+        { label: "Coupons issued", value: list.reduce((total, rule) => total + rule.issued_count, 0) },
+        { label: "Coupons used", value: list.reduce((total, rule) => total + rule.used_count, 0) },
+      ]} /> : null}
       <section aria-labelledby="rules-title" className="grid gap-3">
         <div className="grid gap-1">
           <h2 id="rules-title" className="font-display text-[1.563rem] leading-tight">Next-order rewards</h2>

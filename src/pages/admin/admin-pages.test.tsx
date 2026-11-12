@@ -265,9 +265,9 @@ describe("dashboard", () => {
     const hero = screen.getByRole("region", { name: "Net revenue" });
     expect(hero).toHaveTextContent("≈ 207,050");
     expect(hero).toHaveTextContent("up 13.7% vs 5 Aug – 3 Sept");
-    expect(screen.getByText("Orders placed").parentElement).toHaveTextContent("down 20% vs 5 Aug – 3 Sept");
-    expect(screen.getByText("Average order").parentElement).toHaveTextContent("≈ 75,850");
-    expect(screen.getByText("New customers").parentElement).toHaveTextContent("New vs 5 Aug – 3 Sept");
+    expect(screen.getByRole("region", { name: "Orders placed" })).toHaveTextContent("down 20% vs 5 Aug – 3 Sept");
+    expect(screen.getByRole("region", { name: "Average order" })).toHaveTextContent("≈ 75,850");
+    expect(screen.getByRole("region", { name: "New customers" })).toHaveTextContent("New vs 5 Aug – 3 Sept");
     const categories = screen.getByRole("region", { name: "Top categories" });
     expect(within(categories).getByRole("rowheader", { name: "Mystery" })).toBeInTheDocument();
     expect(categories).toHaveTextContent("≈ 90,118");

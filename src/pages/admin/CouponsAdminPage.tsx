@@ -1,3 +1,4 @@
+import { ResultSummary } from "@/features/admin/reportKit";
 import { Link } from "react-router-dom";
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -346,6 +347,11 @@ export default function CouponsAdminPage() {
         )
       }
     >
+      {coupons.data && list.length > 0 ? <ResultSummary items={[
+        { label: "Coupons", value: list.length },
+        { label: "Active codes", value: list.filter((coupon) => couponState(coupon).label === "Live").length },
+        { label: "Times used", value: list.reduce((total, coupon) => total + coupon.used_count, 0) },
+      ]} /> : null}
       <div className="flex flex-wrap items-center gap-3">
         <SearchBox
           label="Search coupons"

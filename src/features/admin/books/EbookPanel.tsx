@@ -9,10 +9,12 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { controlClassName } from "@/components/form/Field";
 import { cn } from "@/lib/utils";
+import { useStaff } from "@/features/admin/staffSession";
 import { toast } from "@/stores/toast";
 
 export function EbookPanel({ book }: { book: StaffBook }) {
   const queryClient = useQueryClient();
+  const isAdmin = useStaff()?.user.role === "admin";
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadPercent, setUploadPercent] = useState<number | null>(null);
   const [previewInput, setPreviewInput] = useState<string>("");
@@ -145,8 +147,8 @@ export function EbookPanel({ book }: { book: StaffBook }) {
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
                 <div
-                  className="h-full bg-primary transition-all duration-300"
-                  style={{ width: `${uploadPercent ?? 0}%` }}
+                  className="h-full origin-left bg-primary"
+                  style={{ transform: `scaleX(${(uploadPercent ?? 0) / 100})` }}
                 />
               </div>
             </div>
@@ -186,7 +188,7 @@ export function EbookPanel({ book }: { book: StaffBook }) {
             </p>
           ) : null}
 
-          <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+          <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
             <div>
               <span className="block font-medium text-foreground">File size</span>
               {(ebook.size_bytes / (1024 * 1024)).toFixed(2)} MB
@@ -198,7 +200,7 @@ export function EbookPanel({ book }: { book: StaffBook }) {
           </div>
 
           <form onSubmit={handleSavePreview} className="space-y-2 border-t border-border pt-3">
-            <label htmlFor="preview-pages" className="block text-xs font-medium text-foreground">
+            <label htmlFor="preview-pages" className="block text-sm font-medium text-foreground">
               Preview pages override (1 - {ebook.page_count})
             </label>
             <div className="flex gap-2">
@@ -213,7 +215,9 @@ export function EbookPanel({ book }: { book: StaffBook }) {
                   setPreviewInput(e.target.value);
                   setPreviewError(null);
                 }}
-                className={cn(controlClassName, "h-9 text-sm")}
+                className={cn(controlClassName, "h-11 text-base")}
+                aria-invalid={!!previewError}
+                aria-describedby={previewError ? "preview-pages-error" : undefined}
               />
               <Button
                 type="submit"
@@ -230,7 +234,7 @@ export function EbookPanel({ book }: { book: StaffBook }) {
               </p>
             ) : null}
             {previewError ? (
-              <p className="text-xs text-destructive">{previewError}</p>
+              <p id="preview-pages-error" role="alert" className="text-sm text-destructive">{previewError}</p>
             ) : null}
           </form>
 
@@ -242,8 +246,8 @@ export function EbookPanel({ book }: { book: StaffBook }) {
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
                 <div
-                  className="h-full bg-primary transition-all duration-300"
-                  style={{ width: `${uploadPercent ?? 0}%` }}
+                  className="h-full origin-left bg-primary"
+                  style={{ transform: `scaleX(${(uploadPercent ?? 0) / 100})` }}
                 />
               </div>
             </div>
@@ -257,15 +261,15 @@ export function EbookPanel({ book }: { book: StaffBook }) {
               >
                 <FileUp className="size-4 mr-1.5" /> Re-upload PDF
               </Button>
-              <Button
+              {isAdmin ? <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setConfirmDelete(true)}
                 className="border-destructive/50 text-destructive hover:bg-destructive-tint"
               >
-                <Trash2 className="size-4 mr-1.5" /> Remove ebook
-              </Button>
+                <Trash2 className="size-4 mr-1.5" aria-hidden="true" /> Remove ebook
+              </Button> : null}
             </div>
           )}
         </div>

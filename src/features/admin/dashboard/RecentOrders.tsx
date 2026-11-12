@@ -41,13 +41,13 @@ export function RecentOrders({ user }: { user?: StaffUser }) {
     <Panel id="recent-orders" title={t.title}>
       {orders.isPending ? <p role="status">{t.loading}</p> : orders.isError ? <InlineError error={orders.error} onRetry={() => void orders.refetch()} /> : !orders.data.data.length ? <p>{t.empty}</p> : (
         <div role="group" aria-label={t.title} tabIndex={0} className="overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
-          <table className="w-full text-left text-sm">
+          <table className="w-full min-w-[560px] text-left text-sm">
             <thead><tr>{[t.order, t.status, t.total, t.action].map((name) => <th scope="col" className="p-2" key={name}>{name}</th>)}</tr></thead>
             <tbody>{orders.data.data.map((order) => {
               const action = actionFor(order);
               return (
                 <tr key={order.id} className="border-t border-border">
-                  <th scope="row" className="p-2"><Link className="text-primary underline" to={`/admin/orders/${order.id}`}>{order.order_number}</Link></th>
+                  <th scope="row" className="p-2"><Link className="whitespace-nowrap text-primary underline-offset-4 hover:underline" to={`/admin/orders/${order.id}`}>{order.order_number}</Link></th>
                   <td className="p-2"><OrderStatusBadge status={order.status} /></td>
                   <td className="p-2 tabular-nums">{order.total_usd == null ? "–" : formatUsd(order.total_usd)}</td>
                   <td className="p-2">

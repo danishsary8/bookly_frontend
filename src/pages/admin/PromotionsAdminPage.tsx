@@ -1,3 +1,5 @@
+import { formatUsd } from "@/stores/currency";
+import { ResultSummary } from "@/features/admin/reportKit";
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, CircleSlash, Megaphone, Pencil, Plus, Trash2 } from "lucide-react";
@@ -13,6 +15,7 @@ import { ImageUploadField } from "@/components/ui/ImageUploadField";
 import { Switch } from "@/components/ui/switch";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { ListState, TableCard, td, th, thead } from "@/features/admin/listKit";
+import { useStaff } from "@/features/admin/staffSession";
 import { orderDate } from "@/features/orders/format";
 import { toast } from "@/stores/toast";
 
@@ -37,6 +40,7 @@ const rate = (clicks: number, views: number) => (views > 0 ? `${Math.round((clic
 
 export default function PromotionsAdminPage() {
   const queryClient = useQueryClient();
+  const isAdmin = useStaff()?.user.role === "admin";
   const promotions = useQuery(promotionQueries.staffList());
   const list = promotions.data?.data ?? [];
   const [editing, setEditing] = useState<StaffPromotion | "new" | null>(null);
@@ -74,6 +78,11 @@ export default function PromotionsAdminPage() {
         </Button>
       }
     >
+      {promotions.data && list.length > 0 ? <ResultSummary items={[
+        { label: "Times shown", value: list.reduce((total, promotion) => total + promotion.views, 0).toLocaleString("en-US") },
+        { label: "Button uses", value: list.reduce((total, promotion) => total + promotion.clicks, 0).toLocaleString("en-US") },
+        { label: "Linked offer revenue", value: formatUsd(list.filter((promotion) => promotion.offer_id !== null).reduce((total, promotion) => total + Number(promotion.revenue_usd), 0)) },
+      ]} /> : null}
       <ListState query={promotions} empty={{ when: list.length === 0, icon: Megaphone, title: "No promotions yet", description: "Create one to announce a sale or a set offer." }}>
         <TableCard minWidth={980}>
           <thead className={thead}>
@@ -127,9 +136,9 @@ export default function PromotionsAdminPage() {
                       <Button size="icon" variant="ghost" aria-label={`Edit ${p.title_en}`} onClick={() => setEditing(p)}>
                         <Pencil aria-hidden="true" />
                       </Button>
-                      <Button size="icon" variant="ghost" aria-label={`Delete ${p.title_en}`} onClick={() => setDeleting(p)}>
+                      {isAdmin ? <Button size="icon" variant="ghost" aria-label={`Delete ${p.title_en}`} onClick={() => setDeleting(p)}>
                         <Trash2 aria-hidden="true" />
-                      </Button>
+                      </Button> : null}
                     </div>
                   </td>
                 </tr>

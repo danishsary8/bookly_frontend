@@ -40,7 +40,7 @@ export function QuickJump() {
         type="button"
         onClick={() => setOpen(true)}
         aria-keyshortcuts="Control+K Meta+K"
-        className="flex h-10 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-foreground/30 focus-visible:ring-2 focus-visible:ring-ring sm:w-72"
+        className="admin-quick-search flex h-11 min-w-11 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-foreground/30 focus-visible:ring-2 focus-visible:ring-ring sm:w-64 xl:w-80"
       >
         <Search className="size-4 shrink-0" aria-hidden="true" />
         <span className="hidden sm:inline">Search or jump to…</span>

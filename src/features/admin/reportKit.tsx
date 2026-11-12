@@ -1,10 +1,11 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import type { DashboardPeriod, DashboardRange } from "@/api/endpoints/staff";
 import { Button } from "@/components/ui/button";
 import { rangeProblem, shopToday } from "@/features/admin/dashboardRange";
 import { cn } from "@/lib/utils";
 import { formatKhr } from "@/stores/currency";
+import { Segmented } from "./listKit";
 import { useT } from "@/i18n";
 
 /*
@@ -51,7 +52,7 @@ export function Change({ percent, previous, versus, moreIsBetter = true }: { per
 
 export function Tile({ label, value, khr, detail, change }: { label: string; value: string | number; khr?: string | null; detail?: string; change?: ReactNode }) {
   return (
-    <div className="grid content-start gap-1 desk-card rounded-xl border border-border bg-card p-4">
+    <div className="admin-metric grid content-start gap-2 desk-card rounded-xl border border-border bg-card p-4">
       <p className="text-sm text-muted-foreground">{label}</p>
       <p className="text-[1.75rem] font-semibold leading-tight tabular-nums">{value}</p>
       <Khr value={khr} />
@@ -61,10 +62,22 @@ export function Tile({ label, value, khr, detail, change }: { label: string; val
   );
 }
 
+/** Summarises only the loaded rows, so filters and pagination keep an honest scope. */
+export function ResultSummary({ items }: { items: Array<{ label: string; value: ReactNode }> }) {
+  return (
+    <section aria-label="Results on this page" className="grid gap-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Results on this page</p>
+      <dl className="grid gap-3 sm:grid-cols-3">
+        {items.map(({ label, value }) => <div key={label} className="admin-metric desk-card grid gap-2 rounded-xl border border-border bg-card p-4"><dt className="text-sm text-muted-foreground">{label}</dt><dd className="text-2xl font-semibold tabular-nums">{value}</dd></div>)}
+      </dl>
+    </section>
+  );
+}
+
 export function Panel({ id, title, action, children, className }: { id: string; title: string; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section aria-labelledby={id} className={cn("grid grid-cols-1 content-start gap-4 desk-card rounded-xl border border-border bg-card p-5", className)}>
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
+    <section aria-labelledby={id} className={cn("admin-panel grid grid-cols-1 content-start gap-4 desk-card rounded-xl border border-border bg-card p-5", className)}>
+      <div className="admin-panel-header flex flex-wrap items-baseline justify-between gap-2 border-b border-border/70 pb-4">
         <h2 id={id} className="font-sans text-[1.0625rem] font-semibold tracking-normal">
           {title}
         </h2>
@@ -77,6 +90,7 @@ export function Panel({ id, title, action, children, className }: { id: string; 
 
 /** Phnom Penh days From–To; Apply puts them in the URL (at most 366 days, the API's limit). */
 export function CustomRange({ range, shown, onApply }: { range: DashboardRange; shown?: { from: string; to: string }; onApply: (from: string, to: string) => void }) {
+  const errorId = useId();
   const today = shopToday();
   // Start from the days on screen, so "Custom" then Apply changes nothing until a day is changed.
   const [from, setFrom] = useState(range.period === "custom" ? range.from : (shown?.from ?? ""));
@@ -93,17 +107,17 @@ export function CustomRange({ range, shown, onApply }: { range: DashboardRange; 
     <form onSubmit={submit} noValidate aria-label="Custom period" className="flex flex-wrap items-end gap-2">
       <label className="grid gap-1 text-sm font-semibold">
         From
-        <input type="date" value={from} max={to || today} onChange={(e) => setFrom(e.target.value)} className={field} aria-invalid={!!error} />
+        <input type="date" value={from} max={to || today} onChange={(e) => setFrom(e.target.value)} className={field} aria-invalid={!!error} aria-describedby={error ? errorId : undefined} />
       </label>
       <label className="grid gap-1 text-sm font-semibold">
         To
-        <input type="date" value={to} min={from || undefined} max={today} onChange={(e) => setTo(e.target.value)} className={field} aria-invalid={!!error} />
+        <input type="date" value={to} min={from || undefined} max={today} onChange={(e) => setTo(e.target.value)} className={field} aria-invalid={!!error} aria-describedby={error ? errorId : undefined} />
       </label>
       <Button type="submit" variant="outline">
         Apply
       </Button>
       {error ? (
-        <p role="alert" className="basis-full text-sm font-semibold text-destructive">
+        <p id={errorId} role="alert" className="basis-full text-sm font-semibold text-destructive">
           {error}
         </p>
       ) : null}
@@ -123,23 +137,5 @@ export function PeriodPicker({ active, onPick }: { active: DashboardPeriod | "cu
     { value: "12m", label: dict.dashboardPeriods.twelveMonths },
     { value: "custom", label: "Custom" },
   ];
-  return (
-    <div role="radiogroup" aria-label="Period" className="flex flex-wrap rounded-md border border-border bg-card p-1">
-      {periods.map((p) => (
-        <button
-          key={p.value}
-          type="button"
-          role="radio"
-          aria-checked={active === p.value}
-          onClick={() => onPick(p.value)}
-          className={cn(
-            "min-h-9 rounded-[4px] px-3 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
-            active === p.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          {p.label}
-        </button>
-      ))}
-    </div>
-  );
+  return <Segmented label="Period" value={active} options={periods} onChange={onPick} />;
 }

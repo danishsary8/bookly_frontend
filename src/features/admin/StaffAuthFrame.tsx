@@ -1,5 +1,8 @@
+import { m, useReducedMotion } from "motion/react";
+import { transitions } from "@/lib/motion";
+import "./admin.css";
 import type { ReactNode } from "react";
-import { ShieldCheck } from "lucide-react";
+import { BookOpen, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
@@ -10,17 +13,15 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
  */
 export function StaffAuthFrame({ title, lead, children, footer }: { title: string; lead?: ReactNode; children: ReactNode; footer?: ReactNode }) {
   useDocumentTitle(`${title} · Staff`);
+  const reducedMotion = useReducedMotion();
   return (
-    <main id="content" tabIndex={-1} className="grid min-h-dvh place-items-center bg-background px-4 py-10 outline-none">
+    <main id="content" tabIndex={-1} className="admin-auth grid min-h-dvh place-items-center bg-background px-4 py-10 outline-none">
       <div className="grid w-full max-w-[26rem] gap-6">
-        <section aria-labelledby="staff-auth-title" className="desk-card grid overflow-hidden rounded-xl border border-border bg-card">
-          {/* A lapis band with the wordmark: the same "library card" header as the customer account (pages/admin.md). */}
-          <div className="relative flex items-center gap-3 overflow-hidden bg-lapis px-6 py-5 sm:px-8">
-            <span className="pointer-events-none absolute -right-8 -top-12 size-32 rounded-full bg-[radial-gradient(closest-side,rgb(154_166_255/0.4),transparent)]" aria-hidden="true" />
-            <Link to="/" className="relative font-display text-[1.75rem] leading-none text-on-lapis outline-none focus-visible:ring-2 focus-visible:ring-gold">
-              Bookly
-            </Link>
-            <span className="relative rounded-[4px] border border-gold/60 px-2 py-1 text-xs font-bold uppercase tracking-[0.18em] text-gold">Staff</span>
+        <m.section initial={reducedMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={transitions.enter} aria-labelledby="staff-auth-title" className="admin-auth-card desk-card grid overflow-hidden rounded-xl border border-border bg-card">
+          <div className="admin-auth-brand">
+            <span className="grid size-10 place-items-center rounded-lg bg-primary text-primary-foreground"><BookOpen className="size-5" aria-hidden="true" /></span>
+            <Link to="/" className="font-display text-[1.75rem] leading-none text-primary outline-none focus-visible:ring-2 focus-visible:ring-ring">Bookly</Link>
+            <span className="ml-auto rounded-md border border-border bg-surface-1 px-2 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Workspace</span>
           </div>
           <div className="grid gap-6 p-6 sm:p-8">
           <div className="grid gap-2">
@@ -31,10 +32,10 @@ export function StaffAuthFrame({ title, lead, children, footer }: { title: strin
           </div>
           {children}
           </div>
-        </section>
+        </m.section>
         {footer ? <div className="grid justify-items-center gap-1 text-sm">{footer}</div> : null}
-        <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <ShieldCheck className="size-4 text-success" aria-hidden="true" /> Staff accounts are protected by two-step verification.
+        <p className="flex items-start justify-center gap-2 text-center text-sm text-muted-foreground">
+          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-success" aria-hidden="true" /> Staff accounts are protected by two-step verification.
         </p>
       </div>
     </main>

@@ -25,9 +25,9 @@ export function PrintFrame({ title, summary, backTo, backLabel, ready, children,
 
   return (
     <div className="print-canvas min-h-dvh bg-surface-2">
-      <div className="print-hide sticky top-0 z-10 border-b border-border bg-card">
+      <div className="print-hide sticky top-0 z-(--z-header) border-b border-border bg-card">
         <div className="mx-auto flex max-w-[210mm] flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <Link to={backTo} className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+          <Link to={backTo} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline">
             <ArrowLeft className="size-4" aria-hidden="true" /> {backLabel}
           </Link>
           <div className="flex flex-wrap items-center gap-3">
@@ -39,7 +39,7 @@ export function PrintFrame({ title, summary, backTo, backLabel, ready, children,
         </div>
       </div>
       <main className="print-sheets grid justify-center gap-6 px-4 py-6">
-        <h1 className="sr-only">{title}</h1>
+        <h1 className="print-hide font-display text-3xl leading-tight text-foreground">{title}</h1>
         {children}
       </main>
     </div>

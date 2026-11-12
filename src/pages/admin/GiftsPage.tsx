@@ -1,10 +1,11 @@
+import { Gift as GiftIcon } from "lucide-react";
+import { ListState } from "@/features/admin/listKit";
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { giftsApi, type Gift } from "@/api/endpoints/gifts";
 import { ApiError } from "@/api/errors";
 import { TextField } from "@/components/form/Field";
 import { Button } from "@/components/ui/button";
-import { ErrorState } from "@/components/ui/error-state";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { useStaff } from "@/features/admin/staffSession";
@@ -24,13 +25,13 @@ export default function GiftsPage() {
     setEditing(null);
   } });
   const submit = (event: FormEvent) => { event.preventDefault(); if (editing) save.mutate(editing); };
-  return <AdminPage title={t.gifts}>
+  return <AdminPage title={t.gifts} lead="Manage the gifts included with special offers.">
     {admin ? <Button onClick={() => { save.reset(); setEditing({ ...blank }); }}>{t.create}</Button> : null}
-    {gifts.isError ? <ErrorState error={gifts.error} onRetry={() => gifts.refetch()} /> : null}
-    <ul className="grid gap-4">{gifts.data?.map((gift) => <li key={gift.id} className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-border bg-card p-4">
+
+    <ListState query={gifts} empty={{ when: (gifts.data?.length ?? 0) === 0, icon: GiftIcon, title: "No gifts yet", description: "Gifts added to your offers appear here." }}><ul className="grid gap-4">{gifts.data?.map((gift) => <li key={gift.id} className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-border bg-card p-4">
       <div><p className="font-semibold">{gift.name_en} · {gift.name_km}</p><p>{t.stock}: {gift.stock}</p>{(gift.stock ?? 0) <= 5 ? <p className="text-warning">{t.lowGift}</p> : null}</div>
       {admin ? <Button variant="outline" onClick={() => { save.reset(); setEditing({ ...gift }); }}>{t.edit}</Button> : null}
-    </li>)}</ul>
+    </li>)}</ul></ListState>
     <Dialog open={editing !== null} onOpenChange={(open) => { if (!open && !save.isPending) setEditing(null); }}>
       <DialogContent><DialogHeader><DialogTitle>{editing?.id ? t.save : t.create}</DialogTitle></DialogHeader>
         {editing ? <form className="grid gap-4" onSubmit={submit}>
