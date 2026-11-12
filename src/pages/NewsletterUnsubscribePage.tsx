@@ -1,51 +1,31 @@
-import { useEffect, useState, useRef } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { newsletterApi } from "@/api/endpoints/newsletter";
-import { useT } from "@/i18n";
-import { Button } from "@/components/ui/button";
 import { StatusPanel } from "@/components/StatusPanel";
+import { useEmailLink } from "@/features/content/useEmailLink";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useT } from "@/i18n";
 
+/* /newsletter/unsubscribe?token=…: the unsubscribe link in every newsletter. Next steps: browse, or subscribe again. */
 export default function NewsletterUnsubscribePage() {
   const { dict } = useT();
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
+  const n = dict.newsletter;
+  const l = dict.emailLink;
+  const token = useSearchParams()[0].get("token") ?? "";
+  useDocumentTitle(n.unsubscribeTitle, { noindex: true });
+  const { state, message, retry } = useEmailLink(useCallback(() => newsletterApi.unsubscribe(token), [token]), token !== "");
 
-  const [status, setStatus] = useState<"loading" | "success" | "error">(
-    token ? "loading" : "error",
-  );
-  const [message, setMessage] = useState<string>("");
-  const calledRef = useRef(false);
-
-  useEffect(() => {
-    if (!token || calledRef.current) return;
-    calledRef.current = true;
-
-    newsletterApi
-      .unsubscribe(token)
-      .then((res) => {
-        setStatus("success");
-        setMessage(res.message || dict.newsletter.unsubscribeSuccess);
-      })
-      .catch((err) => {
-        setStatus("error");
-        setMessage(
-          err?.response?.data?.message || dict.newsletter.unsubscribeError,
-        );
-      });
-  }, [token, dict]);
-
-  if (status === "loading") return <StatusPanel tone="loading" title={dict.newsletter.unsubscribing} />;
+  if (state === "loading") return <StatusPanel state="loading" title={n.unsubscribing} />;
+  if (state === "success") {
+    return (
+      <StatusPanel state="success" title={n.unsubscribeTitle} primary={{ to: "/books", label: l.browse }} quiet={{ to: "/account/profile", label: l.subscribeAgain }}>
+        <p>{message || n.unsubscribeSuccess}</p>
+      </StatusPanel>
+    );
+  }
   return (
-    <StatusPanel
-      tone={status === "success" ? "success" : "error"}
-      title={dict.newsletter.unsubscribeTitle}
-      actions={
-        <Button asChild variant={status === "success" ? "default" : "outline"}>
-          <Link to="/">{dict.newsletter.backToHome}</Link>
-        </Button>
-      }
-    >
-      <p>{message || (status === "success" ? dict.newsletter.unsubscribeSuccess : dict.newsletter.unsubscribeError)}</p>
+    <StatusPanel state={state} title={state === "invalid" ? l.invalidTitle : l.errorTitle} onRetry={retry} primary={{ to: "/account/profile", label: l.subscribeAgain }} quiet={{ to: "/", label: n.backToHome }}>
+      <p>{state === "invalid" ? n.unsubscribeError : l.errorLead}</p>
     </StatusPanel>
   );
 }

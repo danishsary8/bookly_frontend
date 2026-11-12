@@ -1,9 +1,11 @@
+import { useState } from "react";
+import { Search, SearchX } from "lucide-react";
 import { Link } from "react-router-dom";
 import { buttonVariants } from "@/components/ui/button";
 import { policy } from "@/content/shop";
 import { ContentPage } from "@/features/content/ContentPage";
 import { FaqList, type Faq } from "@/features/content/FaqList";
-import { cn } from "@/lib/utils";
+import { useT } from "@/i18n";
 
 const groups: Array<{ id: string; title: string; items: Faq[] }> = [
   {
@@ -199,8 +201,26 @@ const groups: Array<{ id: string; title: string; items: Faq[] }> = [
   },
 ];
 
-/* /faq: common questions, grouped; each answer is linkable (/faq#cancel-order). */
+/** The questions whose wording (or group) contains every word typed, in their groups; empty groups drop out. */
+function filterGroups(query: string) {
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return groups;
+  return groups
+    .map((group) => ({ ...group, items: group.items.filter((item) => words.every((w) => `${group.title} ${item.q}`.toLowerCase().includes(w))) }))
+    .filter((group) => group.items.length > 0);
+}
+
+/*
+ * /faq: common questions in groups (radix accordion, several open at once); each answer is linkable
+ * (/faq#cancel-order opens it). A search field filters the questions as you type; nothing found points to Contact.
+ */
 export default function FaqPage() {
+  const { dict } = useT();
+  const t = dict.infoPages;
+  const [query, setQuery] = useState("");
+  const shown = filterGroups(query);
+  const count = shown.reduce((n, g) => n + g.items.length, 0);
+
   return (
     <ContentPage
       englishOnly
@@ -209,12 +229,48 @@ export default function FaqPage() {
       crumb="FAQ"
       eyebrow="Help"
       lead="Paying, delivery, returns, your account and reviews: the short answers, with links to the full details."
-      plate={
-        <Link to="/contact" className={cn(buttonVariants({ variant: "outline" }), "border-gold/60 bg-transparent text-on-lapis hover:bg-white/10 hover:text-on-lapis")}>
+      action={
+        <Link to="/contact" className={buttonVariants({ variant: "outline" })}>
           Can't find it? Contact us
         </Link>
       }
-      sections={groups.map((group) => ({ id: group.id, title: group.title, body: <FaqList items={group.items} /> }))}
+      highlight={
+        <div className="grid max-w-[68ch] gap-2" role="search">
+          <label htmlFor="faq-search" className="text-sm font-semibold">
+            {t.faqSearch}
+          </label>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <input
+              id="faq-search"
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={t.faqSearchHint}
+              aria-describedby="faq-count"
+              className="h-12 w-full rounded-md border border-input bg-card pl-11 pr-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            />
+          </div>
+          <p id="faq-count" role="status" className="text-sm text-muted-foreground">
+            {query.trim() ? t.faqCount(count) : " "}
+          </p>
+          {count === 0 ? (
+            <div className="mt-2 grid justify-items-start gap-2 rounded-xl border border-dashed border-input px-5 py-6">
+              <SearchX className="size-6 text-primary" aria-hidden="true" />
+              <p className="font-semibold">{t.faqNone(query.trim())}</p>
+              <p className="text-muted-foreground">{t.faqNoneLead}</p>
+              <Link to="/contact" className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
+                {dict.content.contactUs}
+              </Link>
+            </div>
+          ) : null}
+        </div>
+      }
+      sections={shown.map((group) => ({ id: group.id, title: group.title, body: <FaqList items={group.items} /> }))}
+      related={[
+        { to: "/shipping", label: t.pages.shipping },
+        { to: "/returns-policy", label: t.pages.returns },
+      ]}
     />
   );
 }

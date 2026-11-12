@@ -1,3 +1,4 @@
+import { Banknote, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { delivery, policy } from "@/content/shop";
 import { ContentPage } from "@/features/content/ContentPage";
@@ -5,7 +6,8 @@ import { useT } from "@/i18n";
 
 /* /shipping: what delivery costs, where and how fast, paying the courier, following an order. */
 export default function ShippingPage() {
-  const { lang } = useT();
+  const { lang, dict } = useT();
+  const t = dict.infoPages;
   const isKm = lang === "km";
 
   const title = isKm ? "ការដឹកជញ្ជូន និងការប្រគល់ទំនិញ" : "Shipping & delivery";
@@ -213,7 +215,39 @@ export default function ShippingPage() {
       eyebrow={eyebrow}
       lead={lead}
       facts={facts}
+      highlight={
+        <section aria-labelledby="areas-title" className="grid gap-4">
+          <h2 id="areas-title" className="font-display text-[clamp(1.6rem,2.6vw,2rem)] leading-[1.15]">
+            {t.deliveryAreas}
+          </h2>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {delivery.areas.map((a) => (
+              <li key={a.area} className="grid gap-1 rounded-xl border border-border bg-surface-1 px-4 py-3">
+                <span className="font-semibold">{isKm ? a.areaKm : a.area}</span>
+                <span className="flex items-baseline justify-between gap-3 text-[15px] text-muted-foreground">
+                  <span>{isKm ? a.timeKm : a.time}</span>
+                  <span className="font-display text-xl tabular-nums text-foreground">${a.feeUsd}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <ul className="grid gap-2 text-[15px]">
+            <li className="flex items-start gap-2">
+              <Truck className="mt-0.5 size-[18px] shrink-0 text-primary" aria-hidden="true" />
+              {t.freeDelivery(policy.freeShippingThresholdUsd)}
+            </li>
+            <li className="flex items-start gap-2">
+              <Banknote className="mt-0.5 size-[18px] shrink-0 text-primary" aria-hidden="true" />
+              {t.payOnDelivery}
+            </li>
+          </ul>
+        </section>
+      }
       sections={sections}
+      related={[
+        { to: "/returns-policy", label: t.pages.returns },
+        { to: "/faq", label: t.pages.faq },
+      ]}
     />
   );
 }

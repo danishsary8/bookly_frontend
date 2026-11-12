@@ -9,7 +9,7 @@ import { useT } from "@/i18n";
  * API and this frontend on 2026-10-02, approved by the owner 2026-10-06).
  */
 export default function PrivacyPage() {
-  const { lang } = useT();
+  const { dict, lang } = useT();
   const isKm = lang === "km";
 
   const title = isKm ? "គោលការណ៍ភាពឯកជន" : "Privacy";
@@ -288,6 +288,9 @@ export default function PrivacyPage() {
       numbered
       notice={<LegalNotice />}
       sections={sections}
+      related={[
+        { to: "/terms", label: dict.infoPages.pages.terms },
+      ]}
     />
   );
 }

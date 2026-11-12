@@ -25,6 +25,17 @@ export default function AboutPage() {
       crumb={c.about}
       eyebrow={c.about}
       lead={c.aboutLead}
+      action={
+        <CtaGlare>
+          <Link to="/books" className={buttonVariants({ variant: "cta", size: "lg" })}>
+            {c.browseShelves} <ArrowRight aria-hidden="true" />
+          </Link>
+        </CtaGlare>
+      }
+      related={[
+        { to: "/shipping", label: dict.infoPages.pages.shipping },
+        { to: "/returns-policy", label: dict.infoPages.pages.returns },
+      ]}
       facts={[
         { value: c.factFormats, label: c.factFormatsLabel },
         {
@@ -69,7 +80,7 @@ export default function AboutPage() {
         },
       ]}
       after={
-        <div className="mt-20 grid gap-10">
+        <div className="mt-14">
           <BookShelf
             id="about-newest"
             eyebrow={c.justIn}
@@ -80,13 +91,6 @@ export default function AboutPage() {
             onRetry={() => newest.refetch()}
             seeAllHref="/books?sort=newest"
           />
-          <div className="flex justify-center">
-            <CtaGlare>
-              <Link to="/books" className={buttonVariants({ variant: "cta", size: "lg" })}>
-                {c.browseShelves} <ArrowRight aria-hidden="true" />
-              </Link>
-            </CtaGlare>
-          </div>
         </div>
       }
     />
