@@ -1,3 +1,4 @@
+import { ApiError } from "@/api/errors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -60,13 +61,13 @@ describe("Cart reminder emails", () => {
     expect(await screen.findByText("Done. You won't get cart reminder emails any more.")).toBeInTheDocument();
     expect(accountApi.stopCartReminders).toHaveBeenCalledTimes(1);
     expect(accountApi.stopCartReminders).toHaveBeenCalledWith(7, "abc123");
-    expect(screen.getByRole("link", { name: "Change this in your profile" })).toHaveAttribute("href", "/account/profile");
+    expect(screen.getByRole("link", { name: "View your cart" })).toHaveAttribute("href", "/cart");
   });
 
   it("says so when the link is broken", async () => {
-    vi.mocked(accountApi.stopCartReminders).mockRejectedValue(new Error("422"));
+    vi.mocked(accountApi.stopCartReminders).mockRejectedValue(new ApiError({ kind: "validation", status: 422, message: "Invalid link." }));
     openStopLink("?customer=7&token=wrong");
-    expect(await screen.findByText(/This link doesn't work/)).toBeInTheDocument();
+    expect(await screen.findByText(/You can turn cart reminders off in Account/)).toBeInTheDocument();
 
     vi.clearAllMocks();
     openStopLink("?token=abc");

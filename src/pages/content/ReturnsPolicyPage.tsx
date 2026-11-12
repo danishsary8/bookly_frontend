@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { buttonVariants } from "@/components/ui/button";
 import { policy } from "@/content/shop";
 import { ContentPage } from "@/features/content/ContentPage";
 import { useT } from "@/i18n";
@@ -6,7 +7,8 @@ import { useT } from "@/i18n";
 /* /returns-policy: the rules the API enforces for returns, and how to ask for one. */
 export default function ReturnsPolicyPage() {
   const days = policy.returnWindowDays;
-  const { lang } = useT();
+  const { lang, dict } = useT();
+  const t = dict.infoPages;
   const isKm = lang === "km";
 
   const title = isKm ? "គោលការណ៍ប្តូរ និងសងត្រឡប់" : "Returns policy";
@@ -209,7 +211,31 @@ export default function ReturnsPolicyPage() {
       eyebrow={eyebrow}
       lead={lead}
       facts={facts}
+      highlight={
+        <section aria-labelledby="steps-title" className="grid gap-4">
+          <h2 id="steps-title" className="font-display text-[clamp(1.6rem,2.6vw,2rem)] leading-[1.15]">
+            {t.returnSteps}
+          </h2>
+          <ol className="grid gap-3 md:grid-cols-3">
+            {[t.returnStep1, t.returnStep2, t.returnStep3].map((step, i) => (
+              <li key={step} className="grid content-start gap-2 rounded-xl border border-border bg-surface-1 p-4">
+                <span className="grid size-8 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <span className="text-[15px]">{step}</span>
+              </li>
+            ))}
+          </ol>
+          <Link to="/account/returns" className={buttonVariants({ className: "justify-self-start" })}>
+            {t.startReturn}
+          </Link>
+        </section>
+      }
       sections={sections}
+      related={[
+        { to: "/shipping", label: t.pages.shipping },
+        { to: "/terms#returns", label: t.pages.terms },
+      ]}
     />
   );
 }

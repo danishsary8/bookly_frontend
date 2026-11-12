@@ -10,7 +10,7 @@ import { useT } from "@/i18n";
  * Section ids are linked from elsewhere (/terms#reviews from the FAQ).
  */
 export default function TermsPage() {
-  const { lang } = useT();
+  const { dict, lang } = useT();
   const isKm = lang === "km";
 
   const title = isKm ? "លក្ខខណ្ឌនៃការលក់" : "Terms of sale";
@@ -197,6 +197,10 @@ export default function TermsPage() {
       numbered
       notice={<LegalNotice />}
       sections={sections}
+      related={[
+        { to: "/privacy", label: dict.infoPages.pages.privacy },
+        { to: "/returns-policy", label: dict.infoPages.pages.returns },
+      ]}
     />
   );
 }

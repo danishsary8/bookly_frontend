@@ -1,51 +1,31 @@
-import { useEffect, useState, useRef } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { newsletterApi } from "@/api/endpoints/newsletter";
-import { useT } from "@/i18n";
-import { Button } from "@/components/ui/button";
 import { StatusPanel } from "@/components/StatusPanel";
+import { useEmailLink } from "@/features/content/useEmailLink";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useT } from "@/i18n";
 
+/* /newsletter/confirm?token=…: the confirmation link in the newsletter sign-up email. Next step: new arrivals. */
 export default function NewsletterConfirmPage() {
   const { dict } = useT();
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
+  const n = dict.newsletter;
+  const l = dict.emailLink;
+  const token = useSearchParams()[0].get("token") ?? "";
+  useDocumentTitle(n.confirmTitle, { noindex: true });
+  const { state, message, retry } = useEmailLink(useCallback(() => newsletterApi.confirm(token), [token]), token !== "");
 
-  const [status, setStatus] = useState<"loading" | "success" | "error">(
-    token ? "loading" : "error",
-  );
-  const [message, setMessage] = useState<string>("");
-  const calledRef = useRef(false);
-
-  useEffect(() => {
-    if (!token || calledRef.current) return;
-    calledRef.current = true;
-
-    newsletterApi
-      .confirm(token)
-      .then((res) => {
-        setStatus("success");
-        setMessage(res.message || dict.newsletter.confirmSuccess);
-      })
-      .catch((err) => {
-        setStatus("error");
-        setMessage(
-          err?.response?.data?.message || dict.newsletter.confirmError,
-        );
-      });
-  }, [token, dict]);
-
-  if (status === "loading") return <StatusPanel tone="loading" title={dict.newsletter.confirming} />;
+  if (state === "loading") return <StatusPanel state="loading" title={n.confirming} />;
+  if (state === "success") {
+    return (
+      <StatusPanel state="success" title={n.confirmTitle} primary={{ to: "/books?sort=newest", label: l.newArrivals }} quiet={{ to: "/", label: n.backToHome }}>
+        <p>{message || n.confirmSuccess}</p>
+      </StatusPanel>
+    );
+  }
   return (
-    <StatusPanel
-      tone={status === "success" ? "success" : "error"}
-      title={dict.newsletter.confirmTitle}
-      actions={
-        <Button asChild variant={status === "success" ? "default" : "outline"}>
-          <Link to="/">{dict.newsletter.backToHome}</Link>
-        </Button>
-      }
-    >
-      <p>{message || (status === "success" ? dict.newsletter.confirmSuccess : dict.newsletter.confirmError)}</p>
+    <StatusPanel state={state} title={state === "invalid" ? l.invalidTitle : l.errorTitle} onRetry={retry} primary={{ to: "/", label: n.backToHome }} quiet={{ to: "/books", label: l.browse }}>
+      <p>{state === "invalid" ? `${n.confirmError} ${l.newsletterInvalid}` : l.errorLead}</p>
     </StatusPanel>
   );
 }
