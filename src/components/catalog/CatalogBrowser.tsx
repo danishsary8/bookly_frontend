@@ -1,3 +1,4 @@
+import { DiscoveryShelf } from "./DiscoveryShelf";
 import { useEffect, useState, type ReactNode } from "react";
 import { Search, SearchX, SlidersHorizontal, SpellCheck } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
@@ -76,7 +77,7 @@ export function CatalogBrowser({ locked = {}, noun: nounFor, empty, searchBox = 
   }, [pageTooFar, lastPage, setSearchParams]);
 
   const chips = locked.category_id === undefined;
-  const filterPanel = (prefix: string) => <CatalogFilters filters={filters} onChange={apply} locked={locked} idPrefix={prefix} facets={query.data?.facets} hideCategories={chips} />;
+  const filterPanel = (prefix: string) => <CatalogFilters filters={filters} onChange={apply} locked={locked} idPrefix={prefix} facets={query.data?.facets} hideCategories={prefix === "sheet" && chips} />;
   const [term, setTerm] = useState(filters.q ?? "");
   const [termFor, setTermFor] = useState(filters.q);
   if (termFor !== filters.q) {
@@ -85,7 +86,7 @@ export function CatalogBrowser({ locked = {}, noun: nounFor, empty, searchBox = 
   }
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-6">
       <aside aria-label={t.filters} className="hidden lg:block">
         <div className="shop-card sticky top-[calc(var(--header-h)+1.5rem)] max-h-[calc(100dvh-var(--header-h)-3rem)] overflow-y-auto rounded-2xl border border-border bg-card p-5">
           <h2 className="mb-5 flex items-center justify-between gap-2 font-display text-xl">
@@ -100,19 +101,19 @@ export function CatalogBrowser({ locked = {}, noun: nounFor, empty, searchBox = 
         </div>
       </aside>
 
-      <div className="grid min-w-0 content-start gap-6">
-        {chips ? <CategoryChips filters={filters} onChange={apply} counts={filters.category_id === undefined ? query.data?.facets?.categories : undefined} /> : null}
+      <div className="grid min-w-0 content-start gap-4">
+        {chips ? <div className="lg:hidden"><CategoryChips filters={filters} onChange={apply} counts={filters.category_id === undefined ? query.data?.facets?.categories : undefined} /></div> : null}
         {filters.q && query.data?.search?.typo_tolerant ? (
           <p className="flex items-start gap-2 rounded-lg border border-border bg-muted/50 px-4 py-3 text-[15px]" role="status">
             <SpellCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             <span>{t.similarSpelling(filters.q)}</span>
           </p>
         ) : null}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="catalogue-tools flex flex-wrap items-center gap-3">
           {/* Search inside the catalogue (keeps the other filters). */}
           {searchBox ? (
           <form
-            role="search"
+            role="search" aria-label={t.searchWithinLabel}
             onSubmit={(e) => {
               e.preventDefault();
               apply(withFilter(filters, "q", term.trim() || undefined));
@@ -210,6 +211,7 @@ export function CatalogBrowser({ locked = {}, noun: nounFor, empty, searchBox = 
           />
         )}
 
+        {meta?.total === 0 ? <DiscoveryShelf /> : null}
         <Pagination page={meta?.current_page ?? 1} lastPage={lastPage} hrefFor={hrefFor} className="mt-4" />
       </div>
     </div>

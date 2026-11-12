@@ -37,7 +37,7 @@ const shown = (count: number | undefined, selected: boolean) => selected || coun
 function Group({ legend, children, defaultOpen = true }: { legend: string; children: ReactNode; defaultOpen?: boolean }) {
   return (
     <details open={defaultOpen} className="group/f border-t border-border pt-4">
-      <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between rounded-md text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between rounded-md text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
         {legend}
         <ChevronDown className="size-4 transition-transform duration-200 group-open/f:rotate-180" aria-hidden="true" />
       </summary>
@@ -57,7 +57,7 @@ function Trimmed({ items, keep = 6 }: { items: ReactNode[]; keep?: number }) {
   return (
     <>
       {all ? items : items.slice(0, keep)}
-      <button type="button" onClick={() => setAll((v) => !v)} aria-expanded={all} className="mt-1 inline-flex min-h-9 w-max items-center px-1 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+      <button type="button" onClick={() => setAll((v) => !v)} aria-expanded={all} className="mt-1 inline-flex min-h-11 w-max items-center px-1 text-sm font-semibold text-primary underline-offset-4 hover:underline">
         {all ? dict.browse.showFewer : dict.browse.showAllN(items.length)}
       </button>
     </>
@@ -66,7 +66,7 @@ function Trimmed({ items, keep = 6 }: { items: ReactNode[]; keep?: number }) {
 
 function Choice({ name, checked, onSelect, label, count }: { name: string; checked: boolean; onSelect: () => void; label: string; count?: number }) {
   return (
-    <label className={cn("flex min-h-10 cursor-pointer items-center gap-3 rounded-md px-1 text-[15px] hover:bg-secondary", checked && "font-semibold")}>
+    <label className={cn("flex min-h-11 cursor-pointer items-center gap-3 rounded-md px-1 text-[15px] hover:bg-secondary", checked && "font-semibold")}>
       <input type="radio" name={name} checked={checked} onChange={onSelect} className="size-[18px] accent-primary" />
       <span className="flex-1">{label}</span>
       {count !== undefined ? <span className="text-sm tabular-nums text-muted-foreground">{count}</span> : null}

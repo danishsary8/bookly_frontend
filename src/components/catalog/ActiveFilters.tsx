@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import type { BookFilters } from "@/api/endpoints/catalog";
 import { catalogQueries } from "@/api/endpoints/catalog";
-import { AGE_BANDS, FILTER_KEYS, clearFilters, withFilter } from "@/lib/catalog";
+import { AGE_BANDS, FILTER_KEYS, withFilter } from "@/lib/catalog";
 import { formatUsd } from "@/stores/currency";
 import { formatName, useT } from "@/i18n";
 
@@ -21,7 +21,7 @@ export function ActiveFilters({ filters, onChange, locked = {} }: Props) {
   const { dict } = useT();
   const t = dict.browse;
 
-  const chips: { key: (typeof FILTER_KEYS)[number]; label: string }[] = [];
+  const chips: { key: (typeof FILTER_KEYS)[number] | "sort" | "q"; label: string }[] = [];
   const add = (key: (typeof FILTER_KEYS)[number], label: string) => {
     if (filters[key] !== undefined && locked[key] === undefined) chips.push({ key, label });
   };
@@ -45,9 +45,14 @@ export function ActiveFilters({ filters, onChange, locked = {} }: Props) {
   add("school_grade", dict.catalogFilters.gradeN(filters.school_grade ?? 0));
   add("level", dict.catalogFilters.levelN(filters.level ?? ""));
 
+  if (filters.q) chips.unshift({ key: "q", label: filters.q });
+  if (filters.sort) {
+    const label = filters.sort in t.sorts ? t.sorts[filters.sort as keyof typeof t.sorts] : dict.catalogFilters.sorts[filters.sort as keyof typeof dict.catalogFilters.sorts];
+    chips.push({ key: "sort", label });
+  }
   if (chips.length === 0) return null;
 
-  const remove = (key: (typeof FILTER_KEYS)[number]) => {
+  const remove = (key: (typeof FILTER_KEYS)[number] | "q" | "sort") => {
     let next = withFilter(filters, key, undefined);
     if (key === "min_price" && filters.max_price !== undefined && filters.min_price !== undefined) next = withFilter(next, "max_price", undefined);
     onChange(next);
@@ -60,7 +65,7 @@ export function ActiveFilters({ filters, onChange, locked = {} }: Props) {
           key={chip.key}
           type="button"
           onClick={() => remove(chip.key)}
-          className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card pl-3 pr-2 text-sm font-medium transition-colors duration-150 hover:border-input hover:bg-secondary outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border bg-card pl-3 pr-2 text-sm font-medium transition-colors duration-150 hover:border-input hover:bg-secondary outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={t.removeFilter(chip.label)}
         >
           {chip.label}
@@ -69,8 +74,8 @@ export function ActiveFilters({ filters, onChange, locked = {} }: Props) {
       ))}
       <button
         type="button"
-        onClick={() => onChange({ ...clearFilters(filters), ...locked })}
-        className="inline-flex h-9 items-center rounded-md px-2 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+        onClick={() => onChange({ ...locked })}
+        className="inline-flex min-h-11 items-center rounded-md px-2 text-sm font-semibold text-primary underline-offset-4 hover:underline"
       >
         {t.clearAll}
       </button>

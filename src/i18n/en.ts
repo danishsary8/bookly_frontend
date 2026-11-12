@@ -1189,6 +1189,7 @@ export const en = {
     scanQrLead: "Scan this QR code with any phone camera to view this book instantly on mobile.",
     downloadQr: "Download QR",
   },
+  catalogueV2: { biography: "About the author", curated: "Selected order", isbnHint: "Search by title, author or the 10- or 13-digit ISBN on the book.", explore: "Explore more books" },
   catalogFilters: {
     hasEbook: "Has an ebook",
     age: "Reader age",

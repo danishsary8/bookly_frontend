@@ -1195,6 +1195,12 @@ export const km: Translations = {
     scanQrLead: "ស្កេនកូដ QR នេះដោយកាមេរ៉ាទូរស័ព្ទ ដើម្បីបើកមើលសៀវភៅនេះភ្លាមៗលើទូរស័ព្ទ។",
     downloadQr: "ទាញយក QR",
   },
+  catalogueV2: {
+    biography: "អំពីអ្នកនិពន្ធ",
+    curated: "លំដាប់ដែលបានជ្រើសរើស",
+    isbnHint: "ស្វែងរកតាមចំណងជើង អ្នកនិពន្ធ ឬលេខ ISBN ១០ ឬ ១៣ ខ្ទង់នៅលើសៀវភៅ។",
+    explore: "ស្វែងរកសៀវភៅបន្ថែម",
+  },
   catalogFilters: {
     hasEbook: "មានសៀវភៅអេឡិចត្រូនិក",
     age: "អាយុអ្នកអាន",

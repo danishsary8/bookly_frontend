@@ -50,6 +50,7 @@ export function BookGrid({ books, loading = false, skeletonCount = 8, empty, hea
   return (
     <Stagger
       as="ul"
+      aria-busy={stale || undefined}
       key={books.map((b) => b.id).join(",")}
       className={cn(gridClass, "transition-opacity duration-150", stale && "opacity-60", className)}
     >

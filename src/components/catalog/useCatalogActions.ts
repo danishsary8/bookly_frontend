@@ -56,6 +56,7 @@ export const pickVariant = (variants: BookVariant[] | undefined) =>
   (variants ?? []).filter((v) => v.in_stock && v.id).sort((a, b) => Number(a.price_usd) - Number(b.price_usd))[0];
 
 export function useAddToCart() {
+  const location = useLocation();
   const queryClient = useQueryClient();
   const gate = useAccountGate();
 
@@ -75,6 +76,7 @@ export function useAddToCart() {
     },
     onSuccess: ({ cart, line }, { book }) => {
       queryClient.setQueryData(cartKeys.cart(), cart);
+      if (/^\/(books$|search$|categories\/|authors\/|series\/|publishers\/|collections\/|lists\/)/.test(location.pathname)) openShellPanel("cart");
       toast.success({
         title: getDict().cartPage.added,
         description: [book.title, line?.format ? formatName(getDict(), line.format) : null].filter(Boolean).join(" · "),

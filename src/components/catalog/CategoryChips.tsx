@@ -28,7 +28,7 @@ export function CategoryChips({ filters, onChange, counts }: { filters: BookFilt
   const chip = (active: boolean, small = false) =>
     cn(
       "relative inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border font-semibold outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring",
-      small ? "min-h-9 px-3.5 text-[13px]" : "min-h-10 px-4 text-sm",
+      small ? "min-h-11 px-3.5 text-[13px]" : "min-h-11 px-4 text-sm",
       active ? "border-transparent text-primary-foreground" : "border-border bg-card text-foreground hover:border-input hover:bg-muted",
     );
 
