@@ -145,6 +145,26 @@ export default function OrderConfirmationPage() {
                 </div>
               ) : null}
             </dl>
+            {/* The next steps sit in the thank-you panel, on the first screen. */}
+            <div className="flex flex-wrap gap-3">
+              <Link to="/books" className={buttonVariants()}>
+                {k.keepBrowsing} <ArrowRight aria-hidden="true" />
+              </Link>
+              <Link to={`/account/orders/${o.id}`} className={buttonVariants({ variant: "outline" })}>
+                {k.viewOrder}
+              </Link>
+              {o.status !== "cancelled" ? (
+                <Link
+                  to={`/account/orders/${o.id}/invoice?autoprint=1`}
+                  target="_blank"
+                  rel="noopener"
+                  className={buttonVariants({ variant: "outline" })}
+                >
+                  <FileText className="size-4" aria-hidden="true" />
+                  {dict.orders.printReceipt}
+                </Link>
+              ) : null}
+            </div>
           </div>
           {covers.some((c) => c.src) ? <CoverStack items={covers} size="xl" max={4} className="hidden justify-self-center sm:block lg:mr-4" /> : null}
         </header>
@@ -198,25 +218,6 @@ export default function OrderConfirmationPage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-3">
-          <Link to="/books" className={buttonVariants({ size: "lg" })}>
-            {k.keepBrowsing} <ArrowRight aria-hidden="true" />
-          </Link>
-          <Link to={`/account/orders/${o.id}`} className={buttonVariants({ variant: "outline", size: "lg" })}>
-            {k.viewOrder}
-          </Link>
-          {o.status !== "cancelled" ? (
-            <Link
-              to={`/account/orders/${o.id}/invoice?autoprint=1`}
-              target="_blank"
-              rel="noopener"
-              className={buttonVariants({ variant: "outline", size: "lg" })}
-            >
-              <FileText className="size-4" aria-hidden="true" />
-              {dict.orders.printReceipt}
-            </Link>
-          ) : null}
-        </div>
       </div>
     </div>
   );

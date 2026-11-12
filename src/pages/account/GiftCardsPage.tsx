@@ -7,8 +7,11 @@ import { ApiError } from "@/api/errors";
 import { useSession } from "@/api/session";
 import type { Customer } from "@/api/types";
 import { TextAreaField, TextField } from "@/components/form/Field";
+import { Gift } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
+import { AccountSection } from "@/features/account/AccountSection";
 import { GiftCardPayment } from "@/features/account/GiftCardPayment";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useT } from "@/i18n";
@@ -45,9 +48,7 @@ function GiftCardsContent({ customerId }: { customerId: number | undefined }) {
   if (!flags.data?.gift_cards) return <Navigate to="/account" replace />;
   const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Phnom_Penh" }).format(new Date());
   const latest = new Date(`${today}T00:00:00Z`); latest.setUTCDate(latest.getUTCDate() + 90);
-  return <div className="grid gap-8">
-    <h1 className="font-display text-3xl">{t.gifts}</h1>
-    {purchases.data ? <p className="text-lg">{t.balance}: <strong>{formatUsd(purchases.data.balance_usd)}</strong></p> : null}
+  return <AccountSection title={t.gifts} lead={purchases.data ? <p className="text-lg">{t.balance}: <strong className="font-display text-2xl text-foreground">{formatUsd(purchases.data.balance_usd)}</strong></p> : undefined}>
     <section className="grid gap-4 shop-card rounded-2xl border border-border bg-card p-5" aria-labelledby="redeem-title">
       <h2 id="redeem-title" className="font-display text-2xl">{t.redeem}</h2>
       <form className="grid gap-3" onSubmit={(e) => { e.preventDefault(); redeem.mutate(); }}>
@@ -80,7 +81,7 @@ function GiftCardsContent({ customerId }: { customerId: number | undefined }) {
       <h2 id="purchases-title" className="font-display text-2xl">{t.purchases}</h2>
       {purchases.isError ? <ErrorState error={purchases.error} onRetry={() => purchases.refetch()} /> : null}
       {purchases.isPending ? <p role="status">{t.loading}</p> : null}
-      {purchases.data?.data.length === 0 ? <p>{t.empty}</p> : null}
+      {purchases.data?.data.length === 0 ? <EmptyState icon={Gift} headingLevel="h3" title={dict.accountEmpty.giftsTitle} description={dict.accountEmpty.giftsLead} action={<a href="#buy-title" className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">{dict.accountEmpty.buyGift}</a>} className="py-6" /> : null}
       <ul className="grid gap-3">{purchases.data?.data.map((card) => <li key={card.id} className="grid gap-2 shop-card rounded-2xl border border-border bg-card p-4">
         <p className="break-words font-semibold">{card.recipient_name} · {formatUsd(card.amount_usd)} · ••••{card.last_four}</p>
         <p>{t.status[card.status]}</p><p>{t.sendOn}: {card.send_on}</p>
@@ -90,5 +91,5 @@ function GiftCardsContent({ customerId }: { customerId: number | undefined }) {
       </li>)}</ul>
       <div className="flex gap-3"><Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>{t.previous}</Button><Button variant="outline" disabled={page >= (purchases.data?.last_page ?? 1)} onClick={() => setPage(page + 1)}>{t.next}</Button></div>
     </section>
-  </div>;
+  </AccountSection>;
 }

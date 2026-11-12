@@ -268,6 +268,48 @@ export const km: Translations = {
     refunded: "បានសងប្រាក់វិញ",
     unknown: "មិនស្គាល់",
   },
+  // TODO(antigravity)
+  accountNav: {
+    menu: "Menu",
+    groups: { shopping: "Orders & shopping", library: "Your library", settings: "Settings", help: "Help" },
+  },
+  // TODO(antigravity)
+  accountEmpty: {
+    listsTitle: "No reading lists yet",
+    listsLead: "Name a list above, then add books to it from any book page.",
+    findBooks: "Find books",
+    giftsTitle: "No gift cards sent yet",
+    giftsLead: "Gift cards you buy for friends will show here with their status.",
+    buyGift: "Buy a gift card",
+    referralsTitle: "No friends invited yet",
+    referralsLead: "Share your link: when a friend's first order is delivered, you both save.",
+  },
+  // TODO(antigravity)
+  dashboard: {
+    latestOrder: "Your latest order",
+    next: {
+      pending: "Order received. We'll confirm it soon.",
+      payKhqr: "Waiting for your KHQR payment.",
+      paid: "Paid. We're getting it ready.",
+      processing: "We're packing your books.",
+      shipped: "On its way to you.",
+      delivered: "Delivered. Enjoy your books!",
+      cancelled: "This order was cancelled.",
+      returned: "This order was returned.",
+    },
+    viewOrder: "View order",
+    writeReview: "Write a review",
+    couponsReady: "Coupons ready",
+    couponsLead: (n: number) => (n === 0 ? "None right now" : `${n} ready to use at checkout`),
+    priceDrops: "Price drops",
+    priceDropsLead: (n: number) => (n === 0 ? "No saved book is cheaper yet" : `${n} saved ${n === 1 ? "book is" : "books are"} cheaper now`),
+    continueReading: "Continue reading",
+    pageOf: (page: number, total: number) => `Page ${page} of ${total}`,
+    readNow: "Continue",
+    startReading: "Your ebooks",
+    startReadingLead: "Ebooks you buy are read right here.",
+    quickLinks: "Quick links",
+  },
   account: {
     coupons: "ប័ណ្ណបញ្ចុះតម្លៃ",
     readingLists: "បញ្ជីអាន",
@@ -290,11 +332,6 @@ export const km: Translations = {
     emailVerified: "អ៊ីមែលបានផ្ទៀងផ្ទាត់",
     phoneVerified: "លេខទូរស័ព្ទបានផ្ទៀងផ្ទាត់",
     memberSince: (when: string) => `អានជាមួយ Bookly តាំងពី ${when}`,
-    addPhone: "បន្ថែមលេខទូរស័ព្ទ",
-    savedCount: (n: number) => `បានរក្សាទុក ${n}`,
-    savedBooks: (n: number) => `សៀវភៅបានរក្សាទុក ${n}`,
-    securityDone: "អ៊ីមែល លេខទូរស័ព្ទ និងពាក្យសម្ងាត់",
-    securityTodo: "ផ្ទៀងផ្ទាត់លេខទូរស័ព្ទ ប្តូរពាក្យសម្ងាត់",
     recentOrders: "ការបញ្ជាទិញថ្មីៗ",
     seeAllOrders: "មើលការបញ្ជាទិញទាំងអស់",
     loadingOrders: "កំពុងផ្ទុកការបញ្ជាទិញ…",
@@ -1688,6 +1725,16 @@ export const km: Translations = {
   categorySubNav: {
     subcategories: "ប្រភេទរង",
     backToParent: (name: string) => `← ត្រឡប់ទៅ ${name}`,
+  },
+  // TODO(antigravity)
+  readerUi: {
+    goToPage: "Go to page",
+    pageNumber: "Page number",
+    go: "Go",
+    jumpStart: "Start",
+    jumpEnd: "Last page",
+    readingTheme: "Reading colours",
+    noChapters: "This ebook has no chapter list yet, so jump by page.",
   },
   ebook: {
     reader: "កម្មវិធីអានសៀវភៅអេឡិចត្រូនិច",
