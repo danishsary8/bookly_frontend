@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Library } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
-import { PageHeader } from "@/components/catalog/PageHeader";
+import { CatalogueHeader as PageHeader } from "@/components/catalog/CatalogueHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { ErrorState } from "@/components/ui/error-state";
@@ -12,7 +12,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
 import { useT } from "@/i18n";
 
-const SPINES = ["#14207A", "#7A2E2A", "#2F5D4A", "#8A5A3B", "#4C5378", "#1E4E5C", "#5B3A66"];
+const SPINES = ["var(--primary)", "var(--muted-foreground)", "var(--success)", "var(--warning)"];
 
 /* /series (pages/catalogue.md): each series as a card with decorative cloth spines, one per book (up to 7). */
 export default function SeriesListPage() {
@@ -26,7 +26,7 @@ export default function SeriesListPage() {
   const meta = series.data?.meta;
 
   return (
-    <div className="container-shell pb-16">
+    <div className="catalogue-v2 container-shell pb-16">
       <PageHeader crumbs={[{ label: p.home, to: "/" }, { label: p.series }]} eyebrow={p.readInOrder} title={p.series} lead={p.seriesLead} />
 
       {series.isError && !series.data ? (
@@ -56,7 +56,7 @@ export default function SeriesListPage() {
                       className="w-[18px] rounded-[2px] shadow-[inset_-2px_0_0_rgb(0_0_0/0.18),inset_1px_0_0_rgb(255_255_255/0.18)] transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] group-hover:-translate-y-1 motion-reduce:transform-none"
                       style={{ height: `${86 + ((((s.id ?? 0) + i) * 37) % 15)}%`, background: SPINES[((s.id ?? 0) + i) % SPINES.length], transitionDelay: `${i * 40}ms` }}
                     >
-                      <span className="mx-auto mt-3 block h-px w-2.5 bg-[#F2C84B]/70" />
+                      <span className="mx-auto mt-3 block h-px w-2.5 bg-primary-foreground/70" />
                     </span>
                   ))}
                 </span>

@@ -1,10 +1,11 @@
+import { DiscoveryShelf } from "@/components/catalog/DiscoveryShelf";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { CatalogBrowser } from "@/components/catalog/CatalogBrowser";
 import { coversOf, useCatalogListing } from "@/components/catalog/catalogListing";
 import { NotFoundState } from "@/components/catalog/NotFoundState";
-import { PageHeader } from "@/components/catalog/PageHeader";
+import { CatalogueHeader as PageHeader } from "@/components/catalog/CatalogueHeader";
 import { ErrorState } from "@/components/ui/error-state";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useT } from "@/i18n";
@@ -23,7 +24,7 @@ export default function PublisherPage() {
   if (publishers.data && !publisher) return <NotFoundState what={p.whatPublisher} backTo="/books" backLabel={p.browseAll} />;
 
   return (
-    <div className="container-shell pb-16">
+    <div className="catalogue-v2 container-shell pb-16">
       <PageHeader
         crumbs={[{ label: p.home, to: "/" }, { label: p.books, to: "/books" }, { label: publisher?.name ?? p.publisher }]}
         eyebrow={p.publisher}
@@ -33,6 +34,7 @@ export default function PublisherPage() {
         covers={publisher?.id ? coversOf(listing.data?.data) : undefined}
       />
       {publisher?.id ? <CatalogBrowser locked={{ publisher_id: publisher.id }} /> : null}
+      <DiscoveryShelf />
     </div>
   );
 }

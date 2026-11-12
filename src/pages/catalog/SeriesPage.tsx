@@ -1,3 +1,4 @@
+import { RelatedDirectory } from "@/components/catalog/RelatedDirectory";
 import { useQuery } from "@tanstack/react-query";
 import { Library } from "lucide-react";
 import { useParams } from "react-router-dom";
@@ -10,7 +11,7 @@ import { toast } from "@/stores/toast";
 import { ApiError } from "@/api/errors";
 import { BookCard } from "@/components/catalog/BookCard";
 import { NotFoundState } from "@/components/catalog/NotFoundState";
-import { PageHeader } from "@/components/catalog/PageHeader";
+import { CatalogueHeader as PageHeader } from "@/components/catalog/CatalogueHeader";
 import { useAddToCart, useWishlist } from "@/components/catalog/useCatalogActions";
 import { BookCardSkeleton } from "@/components/BookCardSkeleton";
 import { EmptyState } from "@/components/EmptyState";
@@ -62,7 +63,7 @@ export default function SeriesPage() {
 
   const books = series.data?.books ?? [];
   return (
-    <div className="container-shell pb-16">
+    <div className="catalogue-v2 container-shell pb-16">
       <PageHeader
         crumbs={[{ label: p.home, to: "/" }, { label: p.series, to: "/series" }, { label: series.data?.name ?? p.series }]}
         eyebrow={series.data ? p.seriesEyebrow(books.length) : p.series}
@@ -100,8 +101,8 @@ export default function SeriesPage() {
           {books.map((book, index) => (
             <StaggerItem as="li" key={book.id} index={index} className="grid min-w-0 content-start gap-3 [&>*]:min-w-0">
               <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                <span className="grid size-7 place-items-center rounded-full bg-primary font-sans text-[13px] tracking-normal text-primary-foreground" aria-hidden="true">{index + 1}</span>
-                {p.bookN(index + 1)}
+                <span className="grid size-7 place-items-center rounded-full bg-primary font-sans text-[13px] tracking-normal text-primary-foreground" aria-hidden="true">{book.series_order ?? index + 1}</span>
+                {p.bookN(book.series_order ?? index + 1)}
               </p>
               <BookCard
                 book={book}
@@ -116,6 +117,7 @@ export default function SeriesPage() {
           ))}
         </Stagger>
       )}
+      <RelatedDirectory kind="series" exclude={id} />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { Search, UserRoundSearch } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { AuthorAvatar } from "@/components/catalog/AuthorAvatar";
-import { PageHeader } from "@/components/catalog/PageHeader";
+import { CatalogueHeader as PageHeader } from "@/components/catalog/CatalogueHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,8 @@ export default function AuthorsPage() {
   const q = params.get("q")?.trim() ?? "";
   const page = Math.max(1, Number(params.get("page")) || 1);
   const [draft, setDraft] = useState(q);
+  const [draftFor, setDraftFor] = useState(q);
+  if (draftFor !== q) { setDraftFor(q); setDraft(q); }
   const authors = useQuery({ ...catalogQueries.authors({ q: q || undefined, page, per_page: PER_PAGE }), placeholderData: (prev) => prev });
   const showSkeleton = useSkeletonVisible(authors.isPending);
   const meta = authors.data?.meta;
@@ -43,7 +45,7 @@ export default function AuthorsPage() {
   };
 
   return (
-    <div className="container-shell pb-16">
+    <div className="catalogue-v2 container-shell pb-16">
       <PageHeader crumbs={[{ label: p.home, to: "/" }, { label: p.authors }]} eyebrow={p.writers} title={p.authors} lead={p.authorsLead} />
 
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -97,6 +99,7 @@ export default function AuthorsPage() {
                   <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                     {p.bookCount(author.books_count ?? 0)}
                   </span>
+                  {author.bio ? <span className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{author.bio}</span> : null}
                 </span>
               </Link>
             </StaggerItem>

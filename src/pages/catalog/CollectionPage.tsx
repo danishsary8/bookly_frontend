@@ -1,3 +1,7 @@
+import { curatedBooks } from "@/components/catalog/curatedBooks";
+import { CuratedToolbar } from "@/components/catalog/CuratedToolbar";
+import { useSearchParams } from "react-router-dom";
+import { DiscoveryShelf } from "@/components/catalog/DiscoveryShelf";
 import { useQuery } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
 import { useParams } from "react-router-dom";
@@ -5,7 +9,7 @@ import { collectionQueries, collectionText } from "@/api/endpoints/collections";
 import { ApiError } from "@/api/errors";
 import { BookCard } from "@/components/catalog/BookCard";
 import { NotFoundState } from "@/components/catalog/NotFoundState";
-import { PageHeader } from "@/components/catalog/PageHeader";
+import { CatalogueHeader as PageHeader } from "@/components/catalog/CatalogueHeader";
 import { useAddToCart, useWishlist } from "@/components/catalog/useCatalogActions";
 import { BookCardSkeleton } from "@/components/BookCardSkeleton";
 import { EmptyState } from "@/components/EmptyState";
@@ -19,6 +23,7 @@ import { useT } from "@/i18n";
 
 /* /collections/:slug: a seasonal collection ("Rainy season reads") with all its books, in the admin's order. */
 export default function CollectionPage() {
+  const [curatedParams] = useSearchParams();
   const slug = useParams().slug ?? "";
   const valid = /^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug);
   const collection = useQuery({ ...collectionQueries.bySlug(slug), enabled: valid });
@@ -37,9 +42,10 @@ export default function CollectionPage() {
   if (collection.isError) return <div className="container-shell py-16"><ErrorState error={collection.error} onRetry={() => collection.refetch()} headingLevel="h1" /></div>;
 
   const books = collection.data?.books ?? [];
+  const selection = curatedBooks(books, curatedParams);
   const ends = collection.data?.ends_at;
   return (
-    <div className="container-shell pb-16">
+    <div className="catalogue-v2 container-shell pb-16">
       <PageHeader
         crumbs={[{ label: p.home, to: "/" }, { label: text?.title ?? c.eyebrow }]}
         eyebrow={collection.data ? c.pageEyebrow(collection.data.books_count) : c.eyebrow}
@@ -49,6 +55,7 @@ export default function CollectionPage() {
         covers={books.filter((b) => b.cover_image_url).slice(0, 5).map((b) => ({ src: b.cover_image_url, title: b.title }))}
       />
 
+      {!collection.isPending ? <CuratedToolbar {...selection} /> : null}
       {collection.isPending ? (
         showSkeleton ? (
           <SkeletonGroup label={p.loadingBooks} className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
@@ -57,11 +64,11 @@ export default function CollectionPage() {
             ))}
           </SkeletonGroup>
         ) : null
-      ) : books.length === 0 ? (
+      ) : selection.books.length === 0 ? (
         <EmptyState icon={Sparkles} title={c.empty} description={p.checkBack} />
       ) : (
         <Stagger as="ul" className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
-          {books.map((book, index) => (
+          {selection.books.map((book, index) => (
             <StaggerItem as="li" key={book.id} index={index}>
               <BookCard
                 book={book}
@@ -76,6 +83,7 @@ export default function CollectionPage() {
           ))}
         </Stagger>
       )}
+      <DiscoveryShelf />
     </div>
   );
 }

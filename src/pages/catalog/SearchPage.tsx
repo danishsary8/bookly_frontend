@@ -5,7 +5,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { CatalogBrowser } from "@/components/catalog/CatalogBrowser";
 import { coversOf, useCatalogListing } from "@/components/catalog/catalogListing";
-import { PageHeader } from "@/components/catalog/PageHeader";
+import { CatalogueHeader as PageHeader } from "@/components/catalog/CatalogueHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -65,15 +65,15 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="container-shell pb-16">
+    <div className="catalogue-v2 container-shell pb-16">
       <PageHeader
         crumbs={[{ label: p.home, to: "/" }, { label: s.title }]}
-        title={q ? p.resultsFor(q) : s.title}
+        title={<>{q ? p.resultsFor(q) : s.title}{listing.data?.meta?.total !== undefined ? <span className="ml-3 inline-block align-middle font-sans text-base tabular-nums text-muted-foreground">{p.bookCount(listing.data.meta.total)}</span> : null}</>}
         lead={q ? undefined : p.searchLead}
         covers={q ? coversOf(listing.data?.data, 4) : undefined}
       />
 
-      <form role="search" onSubmit={submit} className="mb-6 flex max-w-2xl gap-3">
+      <form role="search" aria-label={s.title} onSubmit={submit} className="mb-6 flex max-w-2xl gap-3">
         <label htmlFor="search-page-field" className="sr-only">
           {s.title}
         </label>
@@ -97,6 +97,7 @@ export default function SearchPage() {
         </Button>
       </form>
 
+      {!q ? <p className="mb-6 text-sm text-muted-foreground">{dict.catalogueV2.isbnHint}</p> : null}
       {/* Discovery Hub when no search query is active */}
       {!q ? (
         <div className="max-w-4xl space-y-10">
@@ -129,7 +130,7 @@ export default function SearchPage() {
                     <button
                       type="button"
                       onClick={() => executeSearch(item)}
-                      className="cursor-pointer text-left focus:outline-none"
+                      className="cursor-pointer text-left focus-visible:outline-2 focus-visible:outline-ring"
                     >
                       {item}
                     </button>
@@ -139,8 +140,8 @@ export default function SearchPage() {
                         e.stopPropagation();
                         removeRecentSearch(item);
                       }}
-                      aria-label={`Remove ${item}`}
-                      className="rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none"
+                      aria-label={dict.browse.removeFilter(item)}
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
                     >
                       <X className="size-3.5" aria-hidden="true" />
                     </button>

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { ArrowRight, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import "@/components/catalog/catalogue-v2.css";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { CtaGlare } from "@/components/CtaGlare";
 import { buttonVariants } from "@/components/ui/button";
@@ -34,7 +35,7 @@ export default function NotFoundPage() {
   };
 
   return (
-    <div className="container-shell pb-20 pt-6 sm:pt-8">
+    <div className="catalogue-v2 catalogue-not-found container-shell pb-12 pt-4">
       <Breadcrumb items={[{ label: c.home, to: "/" }, { label: c.notFoundDoc }]} />
       <Bookplate
         className="mt-4"

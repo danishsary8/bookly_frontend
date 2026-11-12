@@ -5,7 +5,7 @@ import { CatalogBrowser } from "@/components/catalog/CatalogBrowser";
 import { coversOf, useCatalogListing } from "@/components/catalog/catalogListing";
 import { CatalogRows } from "@/components/catalog/CatalogRows";
 import { NotFoundState } from "@/components/catalog/NotFoundState";
-import { PageHeader } from "@/components/catalog/PageHeader";
+import { CatalogueHeader as PageHeader } from "@/components/catalog/CatalogueHeader";
 import { ErrorState } from "@/components/ui/error-state";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useT } from "@/i18n";
@@ -34,9 +34,9 @@ export default function CategoryPage() {
   const parentCategory = category?.parent_id ? categories.data?.find((c) => c.id === category.parent_id) : null;
 
   return (
-    <div className="container-shell pb-16">
+    <div className="catalogue-v2 container-shell pb-16">
       <PageHeader
-        crumbs={[{ label: p.home, to: "/" }, { label: p.books, to: "/books" }, { label: category?.name ?? p.category }]}
+        crumbs={[{ label: p.home, to: "/" }, { label: p.books, to: "/books" }, ...(parentCategory ? [{ label: parentCategory.name ?? p.category, to: `/categories/${parentCategory.slug}` }] : []), { label: category?.name ?? p.category }]}
         eyebrow={p.category}
         title={category?.name ?? <span aria-hidden="true" className="skeleton inline-block h-12 w-64 max-w-full rounded-sm align-middle" />}
         lead={category ? p.categoryLead(category.books_count ?? 0, category.name ?? "") : undefined}
@@ -54,7 +54,7 @@ export default function CategoryPage() {
         </div>
       ) : null}
       {children.length > 0 ? (
-        <nav aria-label={t.subcategories} className="mb-8">
+        <nav aria-label={t.subcategories} className="mb-4">
           <ul className="flex flex-wrap gap-2 list-none p-0 m-0">
             {children.map((child) => {
               const count = child.books_count ?? child.total_books ?? 0;
@@ -73,7 +73,7 @@ export default function CategoryPage() {
           </ul>
         </nav>
       ) : null}
-      {category?.id ? <div className="grid gap-12"><CatalogRows categoryId={category.id} categoryName={category.name} /><CatalogBrowser locked={{ category_id: category.id }} /></div> : null}
+      {category?.id ? <div className="grid gap-12"><CatalogBrowser locked={{ category_id: category.id }} /><CatalogRows categoryId={category.id} categoryName={category.name} /></div> : null}
     </div>
   );
 }

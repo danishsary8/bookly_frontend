@@ -1,3 +1,4 @@
+import { RelatedDirectory } from "@/components/catalog/RelatedDirectory";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
@@ -7,7 +8,7 @@ import { CatalogBrowser } from "@/components/catalog/CatalogBrowser";
 import { CoverStack } from "@/components/shopping/CoverStack";
 import { coversOf, useCatalogListing } from "@/components/catalog/catalogListing";
 import { NotFoundState } from "@/components/catalog/NotFoundState";
-import { PageHeader } from "@/components/catalog/PageHeader";
+import { CatalogueHeader as PageHeader } from "@/components/catalog/CatalogueHeader";
 import { ErrorState } from "@/components/ui/error-state";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -43,7 +44,7 @@ export default function AuthorPage() {
 
   const name = author.data?.name;
   return (
-    <div className="container-shell pb-16">
+    <div className="catalogue-v2 container-shell pb-16">
       {jsonLdData ? <JsonLd data={jsonLdData} /> : null}
       <PageHeader
         crumbs={[{ label: p.home, to: "/" }, { label: p.authors, to: "/authors" }, { label: name ?? p.author }]}
@@ -59,12 +60,13 @@ export default function AuthorPage() {
             <span aria-hidden="true" className="skeleton inline-block h-12 w-72 max-w-full rounded-sm align-middle" />
           )
         }
-        lead={author.data?.bio ? <p className="line-clamp-4 max-w-prose">{author.data.bio}</p> : undefined}
+        lead={author.data?.bio ? <details className="max-w-prose"><summary className="min-h-11 cursor-pointer text-base font-semibold text-primary">{dict.catalogueV2.biography}</summary><p className="mt-2 text-base leading-relaxed">{author.data.bio}</p></details> : undefined}
         meta={author.data ? <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">{p.bookCount(author.data.books_count ?? 0)}</p> : undefined}
         media={coversOf(listing.data?.data).length >= 2 ? <CoverStack items={coversOf(listing.data?.data)} size="lg" max={5} /> : undefined}
         covers={coversOf(listing.data?.data, 1)}
       />
       <CatalogBrowser locked={{ author_id: id }} />
+      <RelatedDirectory kind="authors" exclude={id} />
     </div>
   );
 }
