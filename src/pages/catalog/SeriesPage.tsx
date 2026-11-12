@@ -1,57 +1,54 @@
-import { useQuery } from "@tanstack/react-query";
-import { Library } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Library, Sparkles } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
 import { catalogKeys, catalogQueries } from "@/api/endpoints/catalog";
 import { cartApi, cartKeys } from "@/api/endpoints/cart";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Sparkles, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/stores/toast";
 import { ApiError } from "@/api/errors";
-import { BookCard } from "@/components/catalog/BookCard";
+import { BookGrid } from "@/components/catalog/BookGrid";
+import { CatalogueHeader } from "@/components/catalog/CatalogueHeader";
 import { NotFoundState } from "@/components/catalog/NotFoundState";
-import { PageHeader } from "@/components/catalog/PageHeader";
-import { useAddToCart, useWishlist } from "@/components/catalog/useCatalogActions";
-import { BookCardSkeleton } from "@/components/BookCardSkeleton";
+import { RelatedShelf } from "@/components/catalog/RelatedShelf";
 import { EmptyState } from "@/components/EmptyState";
-import { Stagger, StaggerItem } from "@/components/motion/Stagger";
+import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
-import { SkeletonGroup } from "@/components/ui/skeleton";
-import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import useSkeletonVisible from "@/hooks/useSkeletonVisible";
 import { SetOfferBanner } from "@/features/offers/SetOfferBanner";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useScrollMemory } from "@/hooks/useScrollMemory";
+import useSkeletonVisible from "@/hooks/useSkeletonVisible";
+import { openShellPanel } from "@/stores/shell";
+import { toast } from "@/stores/toast";
 import { useT } from "@/i18n";
 
-/* A series in reading order (pages/catalogue.md): a header panel with the volumes' covers and "Complete the set",
-   then each card labelled with a numbered disc, "Book 1", "Book 2", … */
+/*
+ * /series/:id (pages/catalogue-v2.md §4): the series on a sheet (blurb, who wrote it, volume count, every series)
+ * with the set offer banner or Complete the set; the volumes in reading order, each under a numbered disc; then more
+ * by the series' author. Completing the set adds the missing volumes and opens the cart drawer.
+ */
 export default function SeriesPage() {
   const id = Number(useParams().id);
   const valid = Number.isInteger(id) && id > 0;
   const series = useQuery({ ...catalogQueries.series(id), enabled: valid });
-  const cart = useAddToCart();
-  const wishlist = useWishlist();
   const showSkeleton = useSkeletonVisible(series.isPending);
+  useScrollMemory(Boolean(series.data));
   const { dict } = useT();
-  const vDict = dict.seriesVolumes;
+  const v = dict.seriesVolumes;
   const p = dict.pages;
+  const c = dict.catalogue;
   const queryClient = useQueryClient();
 
-  const completeSetMutation = useMutation({
+  const completeSet = useMutation({
     mutationFn: () => cartApi.addSeries(id, Boolean(series.data?.set_offer)),
     onSuccess: (data) => {
       void queryClient.invalidateQueries({ queryKey: cartKeys.cart() });
       void queryClient.invalidateQueries({ queryKey: catalogKeys.series(id) });
-      const addedCount = data.added.length;
-      const skippedCount = data.skipped.length;
-      if (addedCount > 0) {
-        toast.success(vDict.setAddedToast(addedCount, skippedCount));
+      if (data.added.length > 0) {
+        toast.success(v.setAddedToast(data.added.length, data.skipped.length));
+        openShellPanel("cart");
       } else {
-        toast.info(vDict.noMissingVolumes);
+        toast.info(v.noMissingVolumes);
       }
     },
-    onError: () => {
-      toast.error(dict.common.error);
-    },
+    onError: (error) => toast.error(ApiError.from(error).message || dict.common.error),
   });
   useDocumentTitle(series.data?.name, { description: series.data?.description || (series.data ? p.seriesBookMeta(series.data.name ?? "") : null) });
 
@@ -61,61 +58,84 @@ export default function SeriesPage() {
   if (series.isError) return <div className="container-shell py-16"><ErrorState error={series.error} onRetry={() => series.refetch()} headingLevel="h1" /></div>;
 
   const books = series.data?.books ?? [];
+  // Who wrote the series: every author of its volumes, first appearance first.
+  const authors = Array.from(new Map(books.flatMap((b) => b.authors ?? []).filter((a) => a.id && a.name).map((a) => [a.id, a])).values());
+  const lead = authors[0];
+  const volumeIds = books.map((b) => b.id);
+
   return (
     <div className="container-shell pb-16">
-      <PageHeader
+      <CatalogueHeader
+        variant="entity"
         crumbs={[{ label: p.home, to: "/" }, { label: p.series, to: "/series" }, { label: series.data?.name ?? p.series }]}
-        eyebrow={series.data ? p.seriesEyebrow(books.length) : p.series}
-        title={series.data?.name ?? <span aria-hidden="true" className="skeleton inline-block h-12 w-72 max-w-full rounded-sm align-middle" />}
-        lead={series.data?.description ?? undefined}
-        variant="panel"
-        covers={books.filter((b) => b.cover_image_url).slice(0, 5).map((b) => ({ src: b.cover_image_url, title: b.title }))}
-        meta={
-          books.length > 0 && !series.isPending && series.data?.set_offer ? (
-            <SetOfferBanner offer={series.data.set_offer} onAdd={() => completeSetMutation.mutate()} pending={completeSetMutation.isPending} />
-          ) : books.length > 0 && !series.isPending ? (
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-dashed border-border pt-4">
-              <Button onClick={() => completeSetMutation.mutate()} disabled={completeSetMutation.isPending} className="gap-1.5">
-                {completeSetMutation.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Sparkles className="size-4" aria-hidden="true" />}
-                <span>{vDict.completeSet}</span>
-              </Button>
-              <span className="max-w-sm text-sm text-muted-foreground">{vDict.completeSetDesc}</span>
-            </div>
+        eyebrow={p.series}
+        title={series.data?.name ?? <span aria-hidden="true" className="skeleton inline-block h-10 w-72 max-w-full rounded-sm align-middle" />}
+        blurb={series.data?.description}
+        covers={books.map((b) => ({ src: b.cover_image_url, title: b.title }))}
+        facts={
+          series.data ? (
+            <>
+              {authors.length > 0 ? (
+                <span>
+                  {c.writtenBy}{" "}
+                  {authors.map((a, i) => (
+                    <span key={a.id}>
+                      {i > 0 ? ", " : null}
+                      <Link to={`/authors/${a.id}`} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
+                        {a.name}
+                      </Link>
+                    </span>
+                  ))}
+                </span>
+              ) : null}
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{c.volumes(books.length)}</span>
+              <Link to="/series" className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
+                {p.allSeries}
+              </Link>
+            </>
           ) : undefined
+        }
+        actions={
+          books.length === 0 ? undefined : series.data?.set_offer ? (
+            <SetOfferBanner offer={series.data.set_offer} onAdd={() => completeSet.mutate()} pending={completeSet.isPending} />
+          ) : (
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+              <Button onClick={() => completeSet.mutate()} loading={completeSet.isPending}>
+                <Sparkles aria-hidden="true" /> {v.completeSet}
+              </Button>
+              <span className="max-w-sm text-sm text-muted-foreground">{v.completeSetDesc}</span>
+            </div>
+          )
         }
       />
 
-      {series.isPending ? (
-        showSkeleton ? (
-          <SkeletonGroup label={p.loadingBooks} className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
-            {Array.from({ length: 4 }, (_, i) => (
-              <BookCardSkeleton key={i} />
-            ))}
-          </SkeletonGroup>
-        ) : null
-      ) : books.length === 0 ? (
-        <EmptyState icon={Library} title={p.noSeriesBooks} description={p.checkBack} />
-      ) : (
-        <Stagger as="ol" className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
-          {books.map((book, index) => (
-            <StaggerItem as="li" key={book.id} index={index} className="grid min-w-0 content-start gap-3 [&>*]:min-w-0">
-              <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                <span className="grid size-7 place-items-center rounded-full bg-primary font-sans text-[13px] tracking-normal text-primary-foreground" aria-hidden="true">{index + 1}</span>
-                {p.bookN(index + 1)}
-              </p>
-              <BookCard
-                book={book}
-                instanceKey={`series-${book.id}`}
-                headingLevel="h2"
-                saved={wishlist.isSaved(book.id)}
-                adding={cart.pendingBookId === book.id}
-                onAddToCart={cart.add}
-                onToggleWishlist={wishlist.toggle}
-              />
-            </StaggerItem>
-          ))}
-        </Stagger>
-      )}
+      <div className="grid gap-14">
+        <BookGrid
+          books={books}
+          loading={series.isPending && showSkeleton}
+          skeletonCount={4}
+          ordered
+          headingLevel="h2"
+          instancePrefix="series"
+          above={(book, index) => (
+            <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              <span className="grid size-7 place-items-center rounded-full bg-primary font-sans text-[13px] tracking-normal text-primary-foreground" aria-hidden="true">
+                {book.series_order ?? index + 1}
+              </span>
+              {p.bookN(book.series_order ?? index + 1)}
+            </p>
+          )}
+          empty={series.isPending ? null : <EmptyState icon={Library} title={p.noSeriesBooks} description={p.checkBack} />}
+        />
+        {lead?.id ? (
+          <RelatedShelf
+            id={`series-${id}-author`}
+            title={c.moreBy(lead.name ?? "")}
+            source={{ kind: "filter", filters: { author_id: lead.id, sort: "best_selling" }, exclude: volumeIds }}
+            seeAllHref={`/authors/${lead.id}`}
+          />
+        ) : null}
+      </div>
     </div>
   );
 }

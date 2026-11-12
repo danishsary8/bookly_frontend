@@ -1,57 +1,25 @@
-import { useQuery } from "@tanstack/react-query";
-import { X } from "lucide-react";
+import { ArrowDownUp, X } from "lucide-react";
 import type { BookFilters } from "@/api/endpoints/catalog";
-import { catalogQueries } from "@/api/endpoints/catalog";
-import { AGE_BANDS, FILTER_KEYS, clearFilters, withFilter } from "@/lib/catalog";
-import { formatUsd } from "@/stores/currency";
-import { formatName, useT } from "@/i18n";
+import { clearFilters } from "@/lib/catalog";
+import { cn } from "@/lib/utils";
+import { useT } from "@/i18n";
+import { useFilterChips } from "./filterChips";
 
 /*
- * Removable chips for the filters in effect, plus "Clear all". Ids are shown by
- * name (category, publisher, author, series), read from cached lookups.
+ * Removable chips for the filters in effect (pages/catalogue-v2.md §3). Ids are shown by name (category, publisher,
+ * author, series), read from cached lookups. A sort the visitor chose (e.g. "Best selling" from a home "See all")
+ * is a chip too, so they can see why the order looks the way it does. The chips come from `useFilterChips`, which
+ * the no-results state shares.
  */
 
 type Props = { filters: BookFilters; onChange: (next: BookFilters) => void; locked?: Partial<BookFilters> };
 
 export function ActiveFilters({ filters, onChange, locked = {} }: Props) {
-  const categories = useQuery(catalogQueries.categories());
-  const publishers = useQuery(catalogQueries.publishers({ per_page: 100 }));
-  const author = useQuery({ ...catalogQueries.author(filters.author_id ?? 0), enabled: filters.author_id !== undefined });
-  const series = useQuery({ ...catalogQueries.series(filters.series_id ?? 0), enabled: filters.series_id !== undefined });
   const { dict } = useT();
   const t = dict.browse;
-
-  const chips: { key: (typeof FILTER_KEYS)[number]; label: string }[] = [];
-  const add = (key: (typeof FILTER_KEYS)[number], label: string) => {
-    if (filters[key] !== undefined && locked[key] === undefined) chips.push({ key, label });
-  };
-  add("category_id", categories.data?.find((c) => c.id === filters.category_id)?.name ?? t.category);
-  add("author_id", author.data?.name ? t.byAuthor(author.data.name) : t.author);
-  add("series_id", series.data?.name ? t.seriesName(series.data.name) : t.series);
-  add("publisher_id", publishers.data?.data.find((p) => p.id === filters.publisher_id)?.name ?? t.publisher);
-  add("format", formatName(dict, filters.format));
-  add("language", filters.language ?? "");
-  if (filters.min_price !== undefined && filters.max_price !== undefined) {
-    chips.push({ key: "min_price", label: `${formatUsd(filters.min_price)}–${formatUsd(filters.max_price)}` });
-  } else {
-    add("min_price", t.from(formatUsd(filters.min_price)));
-    add("max_price", t.upTo(formatUsd(filters.max_price)));
-  }
-  add("in_stock", t.inStock);
-  add("has_ebook", dict.catalogFilters.hasEbook);
-  add("coming_soon", dict.shopExtras.rows.coming_soon);
-  const band = AGE_BANDS.find((b) => b.age === filters.age);
-  add("age", dict.catalogFilters.agePrefix(band ? dict.catalogFilters.ages[band.key] : String(filters.age)));
-  add("school_grade", dict.catalogFilters.gradeN(filters.school_grade ?? 0));
-  add("level", dict.catalogFilters.levelN(filters.level ?? ""));
-
+  const chips = useFilterChips(filters, onChange, locked);
   if (chips.length === 0) return null;
-
-  const remove = (key: (typeof FILTER_KEYS)[number]) => {
-    let next = withFilter(filters, key, undefined);
-    if (key === "min_price" && filters.max_price !== undefined && filters.min_price !== undefined) next = withFilter(next, "max_price", undefined);
-    onChange(next);
-  };
+  const filterChips = chips.filter((c) => !c.sort);
 
   return (
     <div className="flex flex-wrap items-center gap-2" aria-label={t.activeFilters} role="group">
@@ -59,21 +27,27 @@ export function ActiveFilters({ filters, onChange, locked = {} }: Props) {
         <button
           key={chip.key}
           type="button"
-          onClick={() => remove(chip.key)}
-          className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card pl-3 pr-2 text-sm font-medium transition-colors duration-150 hover:border-input hover:bg-secondary outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={chip.remove}
+          className={cn(
+            "inline-flex min-h-11 items-center gap-1.5 rounded-full border pl-3.5 pr-2.5 text-sm font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring",
+            chip.sort ? "border-dashed border-input bg-transparent hover:bg-secondary" : "border-primary/25 bg-lapis-tint text-primary hover:border-primary/50",
+          )}
           aria-label={t.removeFilter(chip.label)}
         >
+          {chip.sort ? <ArrowDownUp className="size-3.5 text-muted-foreground" aria-hidden="true" /> : null}
           {chip.label}
-          <X className="size-4 text-muted-foreground" aria-hidden="true" />
+          <X className="size-4 opacity-70" aria-hidden="true" />
         </button>
       ))}
-      <button
-        type="button"
-        onClick={() => onChange({ ...clearFilters(filters), ...locked })}
-        className="inline-flex h-9 items-center rounded-md px-2 text-sm font-semibold text-primary underline-offset-4 hover:underline"
-      >
-        {t.clearAll}
-      </button>
+      {filterChips.length > 1 ? (
+        <button
+          type="button"
+          onClick={() => onChange({ ...clearFilters(filters), ...locked })}
+          className="inline-flex min-h-11 items-center rounded-md px-2 text-sm font-semibold text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {t.clearAll}
+        </button>
+      ) : null}
     </div>
   );
 }

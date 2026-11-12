@@ -1490,3 +1490,34 @@ html { scroll-padding-bottom: var(--bottom-bar, 0px); }
   .reader-chrome { transition: opacity 1ms; }
   .reader-chrome-top[data-hidden="true"], .reader-chrome-bottom[data-hidden="true"] { transform: none; }
 }
+
+/* Catalogue toolbar (pages/catalogue-v2.md §3): sticky under the header on phones and tablets, on the same warm
+   paper as the page so results scroll under it cleanly. Static from 1024px, where the filters have their own card. */
+@media (max-width: 1023px) {
+  .catalogue-toolbar {
+    background-color: color-mix(in srgb, color-mix(in srgb, var(--background) 70%, #EFE6D4) 94%, transparent);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 1px 0 var(--border);
+  }
+  .dark .catalogue-toolbar { background-color: color-mix(in srgb, color-mix(in srgb, var(--background) 88%, #3B332B) 94%, transparent); }
+}
+
+/* Series index spines (pages/catalogue-v2.md §4): decorative cloth spines, one per volume, in the shelf's cloth
+   colours, with a gold rule near the head. They rise in a short stagger on hover; no movement under reduced motion. */
+.series-spine {
+  --cloth: #14207A;
+  width: 18px;
+  border-radius: 2px;
+  background: var(--cloth);
+  box-shadow: inset -2px 0 0 rgb(0 0 0 / 0.18), inset 1px 0 0 rgb(255 255 255 / 0.18);
+  transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.series-spine::before { content: ""; display: block; width: 10px; height: 1px; margin: 12px auto 0; background: rgb(242 200 75 / 0.7); }
+.series-spine[data-cloth="1"] { --cloth: #7A2E2A; }
+.series-spine[data-cloth="2"] { --cloth: #2F5D4A; }
+.series-spine[data-cloth="3"] { --cloth: #8A5A3B; }
+.series-spine[data-cloth="4"] { --cloth: #4C5378; }
+.series-spine[data-cloth="5"] { --cloth: #1E4E5C; }
+.series-spine[data-cloth="6"] { --cloth: #5B3A66; }
+.group:hover .series-spine, .group:focus-visible .series-spine { transform: translateY(-4px); }
+@media (prefers-reduced-motion: reduce) { .series-spine, .group:hover .series-spine, .group:focus-visible .series-spine { transition: none; transform: none; } }

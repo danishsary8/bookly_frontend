@@ -16,7 +16,7 @@ export function CategoryChips({ filters, onChange, counts }: { filters: BookFilt
   const { dict } = useT();
   const t = dict.browse;
   const tree = useQuery(catalogQueries.categoryTree());
-    // With other filters on (and no category yet), hide categories that would show nothing.
+  // With other filters on (and no category yet), hide categories that would show nothing.
   const tops = (tree.data ?? []).filter((c) => c.id === filters.category_id || (counts ? (counts[String(c.id)] ?? 0) > 0 : (c.total_books ?? 0) > 0));
   if (tops.length === 0) return null;
 
@@ -24,6 +24,8 @@ export function CategoryChips({ filters, onChange, counts }: { filters: BookFilt
   const openTop = tops.find((c) => c.id === selected || (c.children ?? []).some((child) => child.id === selected));
   const children = (openTop?.children ?? []).filter((c) => (c.total_books ?? 0) > 0 || c.id === selected);
   const pick = (id: number | undefined) => onChange(withFilter(filters, "category_id", id));
+  // With other filters on (an author's page, a search) the chip shows how many of *these* books are in it.
+  const countOf = (c: { id?: number; total_books?: number }) => (c.id === undefined ? undefined : counts ? counts[String(c.id)] : c.total_books);
 
   const chip = (active: boolean, small = false) =>
     cn(
@@ -42,7 +44,7 @@ export function CategoryChips({ filters, onChange, counts }: { filters: BookFilt
               <button type="button" aria-pressed={active} onClick={() => pick(c.id)} className={chip(active)}>
                 {active ? <m.span layoutId="category-chip" transition={transitions.toggle} className="absolute inset-0 rounded-full bg-primary" aria-hidden="true" /> : null}
                 <span className="relative">{c.name}</span>
-                {c.total_books ? <span className={cn("relative text-xs tabular-nums", active ? "text-primary-foreground/75" : "text-muted-foreground")}>{c.total_books}</span> : null}
+                {countOf(c) ? <span className={cn("relative text-xs tabular-nums", active ? "text-primary-foreground/75" : "text-muted-foreground")}>{countOf(c)}</span> : null}
               </button>
             </li>
           );

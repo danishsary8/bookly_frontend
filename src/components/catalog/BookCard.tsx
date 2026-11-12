@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Heart, Loader2, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { BookCard as Book } from "@/api/types";
@@ -32,10 +33,27 @@ type BookCardProps = {
   /** Heading level of the title within the page outline. */
   headingLevel?: "h2" | "h3";
   eager?: boolean;
+  /** Catalogue listings: a quiet line for pre-orders and digital-only books (cards elsewhere stay as they are). */
+  showAvailability?: boolean;
   className?: string;
 };
 
-export function BookCard({ book, instanceKey, saved = false, adding = false, onAddToCart, onToggleWishlist, headingLevel = "h3", eager, className }: BookCardProps) {
+const DIGITAL = new Set(["ebook", "audiobook"]);
+
+/** Pre-order (with the release date) or digital-only, from the card fields alone; null for an ordinary book. */
+function useAvailability(book: Book): string | null {
+  const { dict, locale } = useT();
+  const [now] = useState(() => Date.now()); // when the card first rendered (render stays pure)
+  const release = book.publish_date ? Date.parse(book.publish_date) : NaN;
+  if (!Number.isNaN(release) && release > now) {
+    return dict.catalogue.preorderOn(new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(release));
+  }
+  const formats = book.formats ?? [];
+  if (formats.length > 0 && formats.every((f) => DIGITAL.has(f))) return formats.every((f) => f === "ebook") ? dict.catalogue.ebookOnly : dict.catalogue.digitalOnly;
+  return null;
+}
+
+export function BookCard({ book, instanceKey, saved = false, adding = false, onAddToCart, onToggleWishlist, headingLevel = "h3", eager, showAvailability = false, className }: BookCardProps) {
   const currency = useCurrency();
   const key = instanceKey ?? `card-${book.id}`;
   const layoutId = useMorphLayoutId(book.id, key);
@@ -48,6 +66,7 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
   const audienceTag = book.level ? book.level : book.school_grade ? dict.catalogFilters.gradeN(book.school_grade) : null;
   const Heading = headingLevel;
   const title = book.title ?? dict.cards.untitled;
+  const availability = useAvailability(book);
 
   const reveal = "opacity-0 transition-[opacity,translate] duration-200 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100";
 
@@ -127,6 +146,9 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
           </Link>
         </Heading>
         <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">{authors ? dict.homePage.by(authors) : " "}</p>
+        {showAvailability && availability ? (
+          <p className="mt-1.5 inline-flex w-max max-w-full items-center rounded border border-dashed border-input px-1.5 py-0.5 text-xs font-semibold text-foreground">{availability}</p>
+        ) : null}
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-3">
           <div className="min-w-0">

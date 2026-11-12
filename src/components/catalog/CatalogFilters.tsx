@@ -27,6 +27,8 @@ type Props = {
   facets?: BookFacets;
   /** The category chips above the results already cover categories. */
   hideCategories?: boolean;
+  /** Grade and level are already offered as quick chips above the results. */
+  hideAudience?: boolean;
 };
 
 /** Facet count for a choice; undefined while counts are not known (then everything is shown). */
@@ -37,7 +39,7 @@ const shown = (count: number | undefined, selected: boolean) => selected || coun
 function Group({ legend, children, defaultOpen = true }: { legend: string; children: ReactNode; defaultOpen?: boolean }) {
   return (
     <details open={defaultOpen} className="group/f border-t border-border pt-4">
-      <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between rounded-md text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between rounded-md text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
         {legend}
         <ChevronDown className="size-4 transition-transform duration-200 group-open/f:rotate-180" aria-hidden="true" />
       </summary>
@@ -57,7 +59,7 @@ function Trimmed({ items, keep = 6 }: { items: ReactNode[]; keep?: number }) {
   return (
     <>
       {all ? items : items.slice(0, keep)}
-      <button type="button" onClick={() => setAll((v) => !v)} aria-expanded={all} className="mt-1 inline-flex min-h-9 w-max items-center px-1 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+      <button type="button" onClick={() => setAll((v) => !v)} aria-expanded={all} className="mt-1 inline-flex min-h-11 w-max items-center px-1 text-sm font-semibold text-primary underline-offset-4 hover:underline">
         {all ? dict.browse.showFewer : dict.browse.showAllN(items.length)}
       </button>
     </>
@@ -66,7 +68,7 @@ function Trimmed({ items, keep = 6 }: { items: ReactNode[]; keep?: number }) {
 
 function Choice({ name, checked, onSelect, label, count }: { name: string; checked: boolean; onSelect: () => void; label: string; count?: number }) {
   return (
-    <label className={cn("flex min-h-10 cursor-pointer items-center gap-3 rounded-md px-1 text-[15px] hover:bg-secondary", checked && "font-semibold")}>
+    <label className={cn("flex min-h-11 cursor-pointer items-center gap-3 rounded-md px-1 text-[15px] hover:bg-secondary", checked && "font-semibold")}>
       <input type="radio" name={name} checked={checked} onChange={onSelect} className="size-[18px] accent-primary" />
       <span className="flex-1">{label}</span>
       {count !== undefined ? <span className="text-sm tabular-nums text-muted-foreground">{count}</span> : null}
@@ -127,7 +129,7 @@ function PriceRange({ filters, onChange, idPrefix }: Props) {
   );
 }
 
-export function CatalogFilters({ filters, onChange, locked = {}, idPrefix, facets, hideCategories = false }: Props) {
+export function CatalogFilters({ filters, onChange, locked = {}, idPrefix, facets, hideCategories = false, hideAudience = false }: Props) {
   const tree = useQuery(catalogQueries.categoryTree());
   const publishers = useQuery(catalogQueries.publishers({ per_page: 100 }));
   const { dict } = useT();
@@ -140,8 +142,8 @@ export function CatalogFilters({ filters, onChange, locked = {}, idPrefix, facet
   const openTop = tops.find((c) => c.id === filters.category_id || (c.children ?? []).some((child) => child.id === filters.category_id));
   const languages = Array.from(new Set([...LANGUAGES, ...Object.keys(facets?.languages ?? {}), ...(filters.language ? [filters.language] : [])]));
   // Grade and level only appear when some books have them (they are empty for most of the shop).
-  const grades = GRADES.filter((g) => filters.school_grade === g || (facets?.school_grades?.[String(g)] ?? 0) > 0);
-  const levels = LEVELS.filter((l) => filters.level === l || (facets?.levels?.[l] ?? 0) > 0);
+  const grades = hideAudience ? [] : GRADES.filter((g) => filters.school_grade === g || (facets?.school_grades?.[String(g)] ?? 0) > 0);
+  const levels = hideAudience ? [] : LEVELS.filter((l) => filters.level === l || (facets?.levels?.[l] ?? 0) > 0);
   const ebookCount = countOf(facets?.formats, "ebook");
   // Category counts from the API are narrowed by the category filter itself, so they only hide empty categories while
   // none is chosen; the numbers shown are always the category's own totals.

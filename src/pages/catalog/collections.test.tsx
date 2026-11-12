@@ -75,8 +75,10 @@ describe("seasonal collections", () => {
     vi.spyOn(collectionsApi, "bySlug").mockResolvedValue(rain);
     app("/collections/rainy-season-reads");
     expect(await screen.findByRole("heading", { level: 1, name: "Rainy season reads" })).toBeInTheDocument();
-    expect(screen.getByText(/Cosy books for wet afternoons\. · Until 30 Nov 2026/)).toBeInTheDocument();
-    expect(screen.getByText("Seasonal pick · 2 books")).toBeInTheDocument();
+    expect(screen.getByText("Cosy books for wet afternoons.")).toBeInTheDocument();
+    expect(screen.getByText("Until 30 Nov 2026")).toBeInTheDocument();
+    expect(screen.getByText("2 books")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "See all books" })).toHaveAttribute("href", "/books");
     expect(screen.getByRole("heading", { level: 2, name: "The Sign of the Four" })).toBeInTheDocument();
   });
 

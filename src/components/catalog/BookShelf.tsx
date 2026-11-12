@@ -36,11 +36,13 @@ type BookShelfProps = {
   className?: string;
   /** 2 = two rows of cards that page sideways together (home "New arrivals"). */
   rows?: 1 | 2;
+  /** Open the cart drawer after Add (catalogue pages). */
+  openCartDrawer?: boolean;
 };
 
-export function BookShelf({ id, title, eyebrow, books, loading, error, onRetry, seeAllHref, seeAllLabel, empty = null, action, className, rows = 1 }: BookShelfProps) {
+export function BookShelf({ id, title, eyebrow, books, loading, error, onRetry, seeAllHref, seeAllLabel, empty = null, action, className, rows = 1, openCartDrawer = false }: BookShelfProps) {
   const { dict } = useT();
-  const cart = useAddToCart();
+  const cart = useAddToCart({ openDrawer: openCartDrawer });
   const wishlist = useWishlist();
   const scroller = useRef<HTMLUListElement>(null);
   const [edges, setEdges] = useState({ start: true, end: false });
@@ -153,7 +155,7 @@ export function BookShelf({ id, title, eyebrow, books, loading, error, onRetry, 
             ))}
           </ul>
           {/* Where you are in the row: a thin track whose thumb follows the scroll. */}
-<ScrollProgress bar={bar} />
+          <ScrollProgress bar={bar} />
         </div>
       )}
     </section>

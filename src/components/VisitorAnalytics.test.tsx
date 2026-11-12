@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { cleanEvent, VisitorAnalytics } from "./VisitorAnalytics";
+import { cleanEvent } from "@/lib/analyticsEvent";
+import { VisitorAnalytics } from "./VisitorAnalytics";
 
 describe("visitor statistics", () => {
   it("removes everything after ? and # before a page view is sent", () => {
