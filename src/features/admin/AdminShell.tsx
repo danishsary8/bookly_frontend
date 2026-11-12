@@ -89,11 +89,11 @@ function UserMenu() {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <Button variant="ghost" className="gap-2 px-2.5" aria-label={`Account: ${user.name}`}>
+        <Button variant="ghost" className="gap-2 px-2.5">
           <span className="grid size-8 place-items-center rounded-full bg-lapis-tint text-primary">
             <UserRound className="size-4" aria-hidden="true" />
           </span>
-          <span className="hidden text-left sm:grid"><span className="max-w-36 truncate text-sm font-semibold">{user.name}</span><span className="text-xs font-normal text-muted-foreground">{user.role === "admin" ? "Administrator" : "Staff member"}</span></span><ChevronDown className="hidden size-3.5 text-muted-foreground sm:block" aria-hidden="true" />
+          <span className="hidden text-left sm:grid"><span className="max-w-36 truncate text-sm font-semibold">{user.name}</span>{" "}<span className="text-xs font-normal text-muted-foreground">{user.role === "admin" ? "Administrator" : "Staff member"}</span></span><span className="sr-only"> account menu</span><ChevronDown className="hidden size-3.5 text-muted-foreground sm:block" aria-hidden="true" />
         </Button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
