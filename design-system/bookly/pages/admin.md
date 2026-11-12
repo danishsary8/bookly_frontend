@@ -102,3 +102,8 @@ Bento layout, read top to bottom: performance → sales → books → customers 
 - Payment methods: a stacked share bar above the table (colour per method; table repeats every value).
 - Small figures (`Stat`) sit on the panel's tint. Activity: attention tiles with icons; activity as a timeline.
 - Motion: tiles rise 10px with the shared stagger; reduced motion shows the final state.
+- Interaction (polish pass): KPI and revenue trend lines show day + value on hover (guide line, moving dot);
+  income chart tooltip lists both periods with colour keys and the % difference; donut slices and legend rows
+  highlight each other and the centre shows the hovered status and share; payment bar segments show
+  method · share · total on hover. Bars grow in (700ms, staggered), trend lines reveal left to right (1.1s),
+  charts draw in (900ms); all off with reduced motion. Panels tint their border on hover.

@@ -31,7 +31,7 @@ import type { ReactNode } from "react";
 type Tone = "blue" | "teal" | "violet" | "amber" | "rose" | "green" | "slate";
 
 /** A KPI tile: tinted icon, label, figure, change vs the previous period, a trend line in the tile's colour and a "View …" link. */
-function Kpi({ id, label, value, khr, detail, change, trend, view, icon: Icon, tone }: {
+function Kpi({ id, label, value, khr, detail, change, trend, labels, format, view, icon: Icon, tone }: {
   id: string;
   label: string;
   value: ReactNode;
@@ -39,6 +39,8 @@ function Kpi({ id, label, value, khr, detail, change, trend, view, icon: Icon, t
   detail?: string;
   change?: ReactNode;
   trend?: number[];
+  labels?: string[];
+  format?: (n: number) => string;
   view: { to: string; label: string };
   icon: LucideIcon;
   tone: Tone;
@@ -53,7 +55,7 @@ function Kpi({ id, label, value, khr, detail, change, trend, view, icon: Icon, t
       <Khr value={khr} />
       {change}
       {detail ? <p className="text-sm text-muted-foreground tabular-nums">{detail}</p> : null}
-      {trend ? <Sparkline values={trend} color="var(--tone-ink)" className="mt-1 h-10" /> : null}
+      {trend ? <Sparkline values={trend} labels={labels} format={format} color="var(--tone-ink)" className="mt-1 h-10" /> : null}
       <Link to={view.to} className="group mt-auto inline-flex items-center gap-1 pt-1 text-sm font-semibold underline-offset-4 hover:underline" style={{ color: "var(--tone-ink)" }}>
         {view.label} <ArrowRight className="admin-arrow size-4" aria-hidden="true" />
       </Link>
@@ -62,7 +64,7 @@ function Kpi({ id, label, value, khr, detail, change, trend, view, icon: Icon, t
 }
 
 /** The lead figure: net revenue on the lapis→violet band, with a large trend line. */
-function RevenueHero({ value, khr, change, detail, trend }: { value: string; khr?: string | null; change?: ReactNode; detail: string; trend?: number[] }) {
+function RevenueHero({ value, khr, change, detail, trend, labels, stats }: { value: string; khr?: string | null; change?: ReactNode; detail: string; trend?: number[]; labels?: string[]; stats: Array<{ label: string; value: string }> }) {
   return (
     <section aria-labelledby="net-revenue" className="admin-hero admin-kpi relative flex flex-col gap-3 overflow-hidden rounded-2xl p-6 sm:p-7">
       <div className="flex items-center justify-between gap-3">
@@ -76,7 +78,15 @@ function RevenueHero({ value, khr, change, detail, trend }: { value: string; khr
       {khr ? <span className="admin-hero-muted block text-[15px] tabular-nums">≈ {formatKhr(khr)}</span> : null}
       {change}
       <p className="admin-hero-muted text-sm tabular-nums">{detail}</p>
-      {trend ? <Sparkline values={trend} color="#ffffff" fill={0.28} className="mt-auto h-28" /> : null}
+      <dl className="grid grid-cols-3 gap-2 pt-1">
+        {stats.map((stat) => (
+          <div key={stat.label} className="admin-hero-chip grid gap-0.5 rounded-xl px-3 py-2.5">
+            <dt className="admin-hero-muted text-xs">{stat.label}</dt>
+            <dd className="text-[15px] font-semibold tabular-nums text-white">{stat.value}</dd>
+          </div>
+        ))}
+      </dl>
+      {trend ? <Sparkline values={trend} labels={labels} format={usd} onDark color="#ffffff" fill={0.28} className="mt-auto h-36" /> : null}
       <Link to="/admin/reports" className="group inline-flex min-h-11 w-fit items-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold text-[#14207A] outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-[#14207A]">
         View sales report <ArrowRight className="admin-arrow size-4" aria-hidden="true" />
       </Link>
@@ -104,7 +114,7 @@ function RankTable({ head, rows }: { head: [string, string, string]; rows: Array
                 <span aria-hidden="true" className={cn("grid size-7 shrink-0 place-items-center rounded-lg text-xs font-bold", i === 0 ? "bg-gold text-[#0E1335]" : "admin-task-icon")}>{i + 1}</span>
                 <span className="min-w-0 flex-1">
                   {r.name}
-                  <span aria-hidden="true" className="mt-1.5 block h-1.5 rounded-full bg-secondary"><span className="block h-full rounded-full" style={{ width: `${(Math.max(0, r.copies) / max) * 100}%`, background: "linear-gradient(90deg, color-mix(in oklab, var(--tone-ink) 55%, var(--card)), var(--tone-ink))" }} /></span>
+                  <span aria-hidden="true" className="mt-1.5 block h-1.5 rounded-full bg-secondary"><span className="admin-bar block h-full rounded-full" style={{ animationDelay: `${i * 70}ms`, width: `${(Math.max(0, r.copies) / max) * 100}%`, background: "linear-gradient(90deg, color-mix(in oklab, var(--tone-ink) 55%, var(--card)), var(--tone-ink))" }} /></span>
                 </span>
               </span>
             </th>
@@ -120,6 +130,8 @@ function RankTable({ head, rows }: { head: [string, string, string]; rows: Array
 function SectionLabel({ children }: { children: ReactNode }) {
   return <p className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground"><span>{children}</span><span aria-hidden="true" className="h-px flex-1 bg-border" /></p>;
 }
+
+const usd = (n: number) => formatUsd(n.toFixed(2));
 
 const series = (days: TrendDay[] | undefined, pick: (d: TrendDay) => number) => (days?.length ? days.map(pick) : undefined);
 
@@ -150,6 +162,7 @@ function AdminDashboard() {
   const insights = useQuery(insightsQueries.get(range));
   const trend = insights.data?.trend;
   const ins = insights.data;
+  const labels = trend?.map((d) => day(d.date));
   const s = summary.data;
   const firstName = session?.user.name.split(" ")[0];
   const c = s?.comparison;
@@ -202,36 +215,42 @@ function AdminDashboard() {
                 change={c ? <Change onDark percent={c.change_percent.net_revenue} previous={Number(c.revenue.net_usd)} versus={versus} /> : null}
                 detail={`${formatUsd(s.revenue.gross_usd)} from ${s.delivered_orders} delivered ${s.delivered_orders === 1 ? "order" : "orders"}${Number(s.revenue.refunds_usd) > 0 ? `, less ${formatUsd(s.revenue.refunds_usd)} refunded` : ""}`}
                 trend={series(trend, (d) => Number(d.net_revenue_usd))}
+                labels={labels}
+                stats={[
+                  { label: h.gross, value: formatUsd(s.revenue.gross_usd) },
+                  { label: h.refunds, value: formatUsd(s.revenue.refunds_usd) },
+                  { label: h.delivered, value: String(s.delivered_orders) },
+                ]}
               />
             </m.div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
               <m.div className="grid" {...rise(1)}>
                 <Kpi id="orders-placed" label="Orders placed" value={s.orders_placed} icon={ShoppingBag} tone="blue"
                   change={c ? <Change percent={c.change_percent.orders_placed} previous={c.orders_placed} versus={versus} /> : null}
-                  trend={series(trend, (d) => d.orders_placed)} view={{ to: "/admin/orders", label: "View orders" }} />
+                  trend={series(trend, (d) => d.orders_placed)} labels={labels} view={{ to: "/admin/orders", label: "View orders" }} />
               </m.div>
               <m.div className="grid" {...rise(2)}>
                 <Kpi id="average-order" label="Average order" value={formatUsd(s.average_order_value_usd)} khr={s.average_order_value_khr} detail="delivered orders" icon={Receipt} tone="violet"
                   change={c ? <Change percent={c.change_percent.average_order_value} previous={Number(c.average_order_value_usd)} versus={versus} /> : null}
-                  trend={series(trend, (d) => Number(d.average_order_usd))} view={{ to: "/admin/reports?tab=orders", label: "View order report" }} />
+                  trend={series(trend, (d) => Number(d.average_order_usd))} labels={labels} format={usd} view={{ to: "/admin/reports?tab=orders", label: "View order report" }} />
               </m.div>
               <m.div className="grid" {...rise(3)}>
                 <Kpi id="new-customers" label="New customers" value={s.new_customers} detail="verified their account" icon={UserPlus} tone="teal"
                   change={c ? <Change percent={c.change_percent.new_customers} previous={c.new_customers} versus={versus} /> : null}
-                  trend={series(trend, (d) => d.new_customers)} view={{ to: "/admin/customers", label: "View customers" }} />
+                  trend={series(trend, (d) => d.new_customers)} labels={labels} view={{ to: "/admin/customers", label: "View customers" }} />
               </m.div>
               {s.books_sold !== undefined && s.ebooks_sold !== undefined ? (
                 <>
                   <m.div className="grid" {...rise(4)}>
                     <Kpi id="books-sold" label={dict.dashboardCopies.books} value={s.books_sold} detail={dict.dashboardCopies.detail} icon={BookOpen} tone="amber"
                       change={c ? <Change percent={c.change_percent.books_sold} previous={c.books_sold} versus={versus} /> : null}
-                      trend={trend?.every((d) => d.books_sold !== undefined) ? series(trend, (d) => d.books_sold ?? 0) : undefined}
+                      trend={trend?.every((d) => d.books_sold !== undefined) ? series(trend, (d) => d.books_sold ?? 0) : undefined} labels={labels}
                       view={{ to: "/admin/reports?tab=products", label: dict.dashboardCopies.view }} />
                   </m.div>
                   <m.div className="grid" {...rise(5)}>
                     <Kpi id="ebooks-sold" label={dict.dashboardCopies.ebooks} value={s.ebooks_sold} detail={dict.dashboardCopies.detail} icon={Tablet} tone="rose"
                       change={c ? <Change percent={c.change_percent.ebooks_sold} previous={c.ebooks_sold} versus={versus} /> : null}
-                      trend={trend?.every((d) => d.ebooks_sold !== undefined) ? series(trend, (d) => d.ebooks_sold ?? 0) : undefined}
+                      trend={trend?.every((d) => d.ebooks_sold !== undefined) ? series(trend, (d) => d.ebooks_sold ?? 0) : undefined} labels={labels}
                       view={{ to: "/admin/reports?tab=products", label: dict.dashboardCopies.view }} />
                   </m.div>
                 </>
@@ -331,7 +350,7 @@ function AdminDashboard() {
           {ins?.payment_methods || ins?.cart_reminder_recovery || ins?.repeat_customer_rate || ins?.delivery_areas ? (
             <>
               <SectionLabel>{h.customers}</SectionLabel>
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
                 {ins.payment_methods ? (
                   <Panel id="payment-methods" title={dict.dashboardAnalysis.payments} icon={CreditCard} tone="rose" action={<span className="text-sm text-muted-foreground">{dict.dashboardAnalysis.paymentNote}</span>}>
                     <PaymentMethods rows={ins.payment_methods} />

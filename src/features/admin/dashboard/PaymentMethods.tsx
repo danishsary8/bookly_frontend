@@ -14,9 +14,14 @@ export function PaymentMethods({ rows }: { rows: NonNullable<DashboardInsights["
 
   return (
     <div className="grid gap-4">
-      <div aria-hidden="true" className="flex h-3 w-full gap-1 overflow-hidden rounded-full">
-        {rows.filter((row) => row.percent > 0).map((row) => (
-          <span key={row.method} className="h-full rounded-full" style={{ width: `${Math.max(2, Math.min(100, row.percent))}%`, background: colour(row.method) }} />
+      <div aria-hidden="true" className="flex h-3.5 w-full gap-1">
+        {rows.filter((row) => row.percent > 0).map((row, i, all) => (
+          <span key={row.method} className="group relative h-full" style={{ width: `${Math.max(2, Math.min(100, row.percent))}%` }}>
+            <span className="admin-bar block h-full rounded-full transition-[filter] duration-200 group-hover:brightness-110" style={{ background: colour(row.method), animationDelay: `${i * 90}ms` }} />
+            <span className={`admin-pop pointer-events-none absolute bottom-full z-10 mb-2 hidden whitespace-nowrap rounded-lg border border-border bg-popover px-2.5 py-1.5 text-xs font-semibold tabular-nums shadow-overlay group-hover:block ${i === all.length - 1 ? "right-0" : i === 0 ? "left-0" : "left-1/2 -translate-x-1/2"}`}>
+              {label(row.method)} · {row.percent}% · {formatUsd(row.total_usd)}
+            </span>
+          </span>
         ))}
       </div>
       <div role="group" aria-label={t.payments} tabIndex={0} className="overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">

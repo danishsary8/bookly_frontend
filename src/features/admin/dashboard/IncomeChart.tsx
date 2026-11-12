@@ -1,4 +1,5 @@
 import { useId, useState } from "react";
+import { useReducedMotion } from "motion/react";
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { TrendDay } from "@/api/endpoints/dashboardInsights";
 import { Segmented } from "@/features/admin/listKit";
@@ -19,6 +20,7 @@ export function IncomeChart({ days }: { days: TrendDay[] }) {
   const fillId = useId().replace(/:/g, "");
   const [metric, setMetric] = useState<Metric>("income");
   const [table, setTable] = useState(false);
+  const animate = !useReducedMotion();
   const isIncome = metric === "income";
   const fmt = (n: number) => (isIncome ? formatUsd(n.toFixed(2)) : String(n));
   const points = days.map((d) => ({
@@ -74,22 +76,23 @@ export function IncomeChart({ days }: { days: TrendDay[] }) {
                 tickFormatter={(n: number) => (isIncome ? compactUsd(n) : String(n))}
               />
               <Tooltip
-                cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "3 3" }}
-                content={({ active, payload }) =>
-                  active && payload?.length ? (
-                    <div className="rounded-xl border border-border bg-popover px-3.5 py-2.5 text-sm shadow-overlay tabular-nums">
-                      <p className="font-semibold">
-                        {payload[0].payload.label}: {fmt(payload[0].payload.now)}
-                      </p>
-                      <p className="text-muted-foreground">
-                        {payload[0].payload.previousLabel}: {fmt(payload[0].payload.before)}
-                      </p>
+                cursor={{ stroke: "var(--tone-violet-ink, var(--primary))", strokeOpacity: 0.4, strokeWidth: 1.5 }}
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const p = payload[0].payload as (typeof points)[number];
+                  const diff = p.before ? Math.round(((p.now - p.before) / p.before) * 100) : null;
+                  return (
+                    <div className="min-w-44 rounded-xl border border-border bg-popover px-3.5 py-3 text-sm shadow-overlay tabular-nums">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{name}</p>
+                      <p className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><span aria-hidden="true" className="size-2.5 rounded-full bg-[var(--tone-violet-ink,var(--primary))]" />{p.label}</span><span className="font-semibold">{fmt(p.now)}</span></p>
+                      <p className="mt-1 flex items-center justify-between gap-4 text-muted-foreground"><span className="flex items-center gap-2"><span aria-hidden="true" className="size-2.5 rounded-full border-2 border-dashed border-muted-foreground" />{p.previousLabel}</span><span>{fmt(p.before)}</span></p>
+                      {diff !== null && diff !== 0 ? <p className={`mt-2 border-t border-border pt-2 text-xs font-semibold ${diff > 0 ? "text-success" : "text-destructive"}`}>{diff > 0 ? "▲" : "▼"} {Math.abs(diff)}% vs previous</p> : null}
                     </div>
-                  ) : null
-                }
+                  );
+                }}
               />
-              <Line type="monotone" dataKey="before" stroke="var(--muted-foreground)" strokeWidth={2} strokeDasharray="5 4" dot={false} isAnimationActive={false} />
-              <Area type="monotone" dataKey="now" fill={`url(#${fillId})`} stroke={`url(#${fillId}-line)`} strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 3, stroke: "var(--card)", fill: "var(--tone-violet-ink, var(--primary))" }} isAnimationActive={false} />
+              <Line type="monotone" dataKey="before" stroke="var(--muted-foreground)" strokeWidth={2} strokeDasharray="5 4" dot={false} isAnimationActive={animate} animationDuration={900} />
+              <Area type="monotone" dataKey="now" fill={`url(#${fillId})`} stroke={`url(#${fillId}-line)`} strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 3, stroke: "var(--card)", fill: "var(--tone-violet-ink, var(--primary))" }} isAnimationActive={animate} animationDuration={900} animationEasing="ease-out" />
             </ComposedChart>
           </ResponsiveContainer>
         </div>

@@ -196,3 +196,20 @@
   .admin-form-actions { position: static; box-shadow: none; }
   .admin-hero { color: inherit; background: none; border: 1px solid #ccc; }
 }
+
+/* ---- Chart motion and interaction (admin dashboard polish) --------------------------------------------------- */
+@keyframes admin-bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes admin-reveal { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes admin-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.admin-bar { transform-origin: left center; animation: admin-bar-grow 700ms var(--ease-out-expo) both; }
+.admin-spark svg { animation: admin-reveal 1100ms var(--ease-out-expo) both; }
+.admin-spark { cursor: crosshair; }
+.admin-workspace .admin-panel { transition: border-color var(--dur-hover), box-shadow var(--dur-hover); }
+.admin-workspace .admin-panel:hover { border-color: color-mix(in oklab, var(--tone-ink, var(--primary)) 22%, var(--border)); }
+.admin-hero.admin-kpi { transition: box-shadow 300ms ease; }
+.admin-hero.admin-kpi:hover { box-shadow: 0 24px 50px -28px rgb(42 47 158 / 0.75); }
+.admin-workspace .recharts-surface:focus { outline: none; }
+@media (prefers-reduced-motion: reduce) {
+  .admin-bar, .admin-spark svg { animation: none !important; }
+}
+.admin-pop { animation: admin-fade-in 150ms ease-out both; }

@@ -950,3 +950,6 @@ Bento dashboard: revenue hero band, colour-coded KPI tiles with trend lines, gra
 sellers/categories, stock chips, payment share bar, activity timeline. Handoff: docs/handoff/2026-11-admin-dashboard.md.
 Checks: lint, typecheck, tests, build. Browser (mocked API, 30 days of data): 1366, 1440, 1440 dark, 390 phone;
 no page errors, no sideways scroll.
+Polish pass (same branch): hover tooltips on every chart (trend lines, income, donut, payment bar), grow/reveal/draw-in
+motion (off with reduced motion), revenue card gross/refunds/delivered chips, insights widgets toned with icons.
+Browser: each hover exercised at 1440 (tooltip text read back); 1366/1440/dark/390 no errors, no sideways scroll.
