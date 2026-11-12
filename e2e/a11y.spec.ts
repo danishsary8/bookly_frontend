@@ -1,5 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { stayOffline } from "./offline";
+
+test.beforeEach(async ({ context }) => {
+  await stayOffline(context);
+});
 
 /*
  * WCAG 2.1 A/AA checks with axe in light and dark, desktop and phone: every public page, and (when sessions are

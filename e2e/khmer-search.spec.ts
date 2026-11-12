@@ -2,6 +2,11 @@ import { expect, test } from "@playwright/test";
 import { noAxeViolations } from "./axe";
 import fs from "node:fs";
 import path from "node:path";
+import { stayOffline } from "./offline";
+
+test.beforeEach(async ({ context }) => {
+  await stayOffline(context);
+});
 
 test.describe("Khmer and Latin search browser check", () => {
   test.beforeAll(() => {
