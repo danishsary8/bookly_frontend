@@ -23,33 +23,18 @@ export const BookCardSkeleton = () => (
   </div>
 );
 
-interface BookGridSkeletonProps {
-  count?: number;
-  label?: string;
-  /** Include the page-level header bars above the grid (§6.11 "page-level"). */
-  withHeader?: boolean;
-}
-
-export const BookGridSkeleton = ({
-  count = 8,
-  label = "Loading books…",
-  withHeader = false,
-}: BookGridSkeletonProps) => (
-  <div aria-busy="true" aria-live="polite">
-    <span className="sr-only">{label}</span>
-
-    {withHeader ? (
-      <div className="mb-8 space-y-4">
-        <div className="skeleton h-3.5 w-48 rounded-sm" />
-        <div className="skeleton h-9 w-[40%] rounded-sm" />
-        <div className="skeleton h-5 w-[70%] rounded-sm" />
+/** The frameless catalogue card (cover, format line, title, author, price), same height as the real card. */
+export const BookCardSkeletonFrameless = () => (
+  <div>
+    <div className="skeleton aspect-[2/3] w-full rounded-lg" />
+    <div className="mt-3.5 space-y-2 px-0.5">
+      <div className="skeleton h-3 w-[35%] rounded-sm" />
+      <div className="skeleton h-[18px] w-[90%] rounded-sm" />
+      <div className="skeleton h-3.5 w-[55%] rounded-sm" />
+      <div className="flex justify-between pt-3">
+        <div className="skeleton h-3.5 w-[30%] rounded-sm" />
+        <div className="skeleton h-4 w-[22%] rounded-sm" />
       </div>
-    ) : null}
-
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-      {Array.from({ length: count }).map((_, index) => (
-        <BookCardSkeleton key={index} />
-      ))}
     </div>
   </div>
 );

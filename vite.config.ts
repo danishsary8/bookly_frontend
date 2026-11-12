@@ -69,6 +69,8 @@ export default defineConfig(({ mode }) => {
               id.includes("node_modules/axios/")
             )
               return "data";
+            // Dialogs, drawers, menus and selects from the shell: on every page, rarely updated.
+            if (id.includes("node_modules/radix-ui/") || id.includes("node_modules/@radix-ui/")) return "ui";
           },
         },
       },

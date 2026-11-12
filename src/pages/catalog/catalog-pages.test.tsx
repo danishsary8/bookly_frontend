@@ -87,7 +87,9 @@ describe("BooksPage", () => {
       { route: "/books?q=frankenstien" },
     );
     expect(await screen.findByRole("link", { name: "Frankenstein" })).toBeInTheDocument();
-    expect(screen.getByText('No exact match for "frankenstien". Showing books with a similar spelling.')).toBeInTheDocument();
+    expect(screen.getByText(/No exact match for "frankenstien"\. Showing books with a similar spelling\./)).toBeInTheDocument();
+    // "Did you mean" is built from the titles the API sent back.
+    expect(screen.getByRole("link", { name: "frankenstein" })).toHaveAttribute("href", "/search?q=frankenstein");
   });
 
   it("shows no spelling notice for exact matches", async () => {
@@ -157,11 +159,13 @@ describe("BooksPage", () => {
     expect(within(chips).getByRole("button", { name: /^Fiction/ })).toHaveTextContent("6");
     await user.click(within(chips).getByRole("button", { name: /Fantasy/ }));
     expect(screen.getByTestId("where")).toHaveTextContent("/books?category_id=3");
-    await user.click(within(sidebar).getByRole("radio", { name: /Grade 9/ }));
+    // Inside a category, grades are one-tap chips above the results instead of a panel group.
+    expect(within(sidebar).queryByRole("radio", { name: /Grade 9/ })).not.toBeInTheDocument();
+    await user.click(within(screen.getByRole("group", { name: "School grade" })).getByRole("button", { name: "Grade 9" }));
     expect(screen.getByTestId("where")).toHaveTextContent("/books?category_id=3&school_grade=9");
   });
 
-  it("offers to clear filters when nothing matches", async () => {
+  it("offers to remove the filter when nothing matches", async () => {
     const user = userEvent.setup();
     vi.spyOn(catalogApi, "books").mockResolvedValue(page([]));
     renderWithProviders(
@@ -176,7 +180,8 @@ describe("BooksPage", () => {
       { route: "/books?format=audiobook" },
     );
     expect(await screen.findByRole("heading", { name: "No books match these filters" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Clear filters" }));
+    const empty = screen.getByRole("heading", { name: "No books match these filters" }).parentElement!;
+    await user.click(within(empty).getByRole("button", { name: "Remove filter: Audiobook" }));
     expect(screen.getByTestId("where")).toHaveTextContent(/^\/books$/);
   });
 
@@ -413,11 +418,11 @@ describe("CategoryPage", () => {
     const subNav = await screen.findByRole("navigation", { name: "Sub-categories" });
     const subLink = within(subNav).getByRole("link", { name: /Fantasy/ });
     expect(subLink).toHaveAttribute("href", "/categories/fantasy");
-    expect(subLink).toHaveTextContent("Fantasy · 4");
-    expect(screen.queryByText(/← Back to/)).not.toBeInTheDocument();
+    expect(subLink).toHaveTextContent(/Fantasy\s*4/);
+    expect(within(subNav).queryByRole("link", { name: /All Fiction/ })).not.toBeInTheDocument();
   });
 
-  it("shows a back link to the parent category on a sub-category page", async () => {
+  it("links a sub-category page to its parent and siblings", async () => {
     vi.spyOn(catalogApi, "books").mockResolvedValue(page([]));
     renderWithProviders(
       <Routes>
@@ -426,8 +431,10 @@ describe("CategoryPage", () => {
       { route: "/categories/fantasy" },
     );
 
-    const backLink = await screen.findByRole("link", { name: "← Back to Fiction" });
-    expect(backLink).toHaveAttribute("href", "/categories/fiction");
-    expect(screen.queryByRole("navigation", { name: "Sub-categories" })).not.toBeInTheDocument();
+    const subNav = await screen.findByRole("navigation", { name: "Sub-categories" });
+    expect(within(subNav).getByRole("link", { name: "All Fiction" })).toHaveAttribute("href", "/categories/fiction");
+    expect(within(subNav).getByRole("link", { name: /Fantasy/ })).toHaveAttribute("aria-current", "page");
+    // The parent is in the breadcrumb too.
+    expect(within(screen.getByRole("navigation", { name: "Breadcrumb" })).getByRole("link", { name: "Fiction" })).toHaveAttribute("href", "/categories/fiction");
   });
 });

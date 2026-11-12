@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activeFilterCount, clearFilters, effectiveSort, parseBookFilters, toSearchParams, withFilter } from "./catalog";
+import { activeFilterCount, clearFilters, customSort, effectiveSort, isbnDigits, parseBookFilters, suggestSpelling, toSearchParams, withFilter } from "./catalog";
 
 const parse = (query: string) => parseBookFilters(new URLSearchParams(query));
 
@@ -70,5 +70,32 @@ describe("filter helpers", () => {
     expect(toSearchParams(filters).toString()).toBe("age=10&school_grade=9&level=B1&has_ebook=1&sort=best_selling");
     expect(parseBookFilters(new URLSearchParams("age=40&school_grade=13&level=Z9&has_ebook=yes"))).toMatchObject({ age: undefined, school_grade: undefined, level: undefined, has_ebook: undefined });
     expect(activeFilterCount(filters)).toBe(4);
+  });
+});
+
+describe("search helpers", () => {
+  it("recognises ISBNs typed with or without hyphens", () => {
+    expect(isbnDigits("978-0-00-400000-1")).toBe("9780004000001");
+    expect(isbnDigits("0 306 40615 2")).toBe("0306406152");
+    expect(isbnDigits("030640615x")).toBe("030640615X");
+    expect(isbnDigits("12345")).toBeNull();
+    expect(isbnDigits("harry potter")).toBeNull();
+    expect(isbnDigits(undefined)).toBeNull();
+  });
+
+  it("suggests the closest spelling from the books that came back", () => {
+    const texts = ["Mistborn: The Final Empire", "Brandon Sanderson"];
+    expect(suggestSpelling("mistbron", texts)).toBe("mistborn");
+    expect(suggestSpelling("brandon sandersen", texts)).toBe("brandon sanderson");
+    expect(suggestSpelling("mistborn", texts)).toBeNull();
+    expect(suggestSpelling("qqqqqqqq", texts)).toBeNull();
+  });
+
+  it("shows a sort chip only for a sort the visitor chose", () => {
+    expect(customSort({})).toBeUndefined();
+    expect(customSort({ sort: "newest" })).toBeUndefined();
+    expect(customSort({ q: "x", sort: "relevance" })).toBeUndefined();
+    expect(customSort({ sort: "best_selling" })).toBe("best_selling");
+    expect(customSort({ q: "x", sort: "newest" })).toBe("newest");
   });
 });

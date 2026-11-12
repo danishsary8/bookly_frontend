@@ -55,7 +55,11 @@ function useAccountGate() {
 export const pickVariant = (variants: BookVariant[] | undefined) =>
   (variants ?? []).filter((v) => v.in_stock && v.id).sort((a, b) => Number(a.price_usd) - Number(b.price_usd))[0];
 
-export function useAddToCart() {
+/**
+ * `openDrawer`: open the cart drawer once the book is in (catalogue listings, pages/catalogue-v2.md §5), so the next
+ * step (checkout, free delivery left) is one glance away. Elsewhere the toast's View cart is enough.
+ */
+export function useAddToCart({ openDrawer = false }: { openDrawer?: boolean } = {}) {
   const queryClient = useQueryClient();
   const gate = useAccountGate();
 
@@ -75,10 +79,12 @@ export function useAddToCart() {
     },
     onSuccess: ({ cart, line }, { book }) => {
       queryClient.setQueryData(cartKeys.cart(), cart);
+      if (openDrawer) openShellPanel("cart");
       toast.success({
         title: getDict().cartPage.added,
         description: [book.title, line?.format ? formatName(getDict(), line.format) : null].filter(Boolean).join(" · "),
-        action: { label: getDict().cartPage.viewCart, onClick: () => openShellPanel("cart") },
+        // With the drawer already open the toast only confirms (and announces) the addition.
+        action: openDrawer ? undefined : { label: getDict().cartPage.viewCart, onClick: () => openShellPanel("cart") },
       });
     },
     onError: (error) => {

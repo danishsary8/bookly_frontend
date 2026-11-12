@@ -1,30 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { collectionQueries, collectionText } from "@/api/endpoints/collections";
 import { ApiError } from "@/api/errors";
-import { BookCard } from "@/components/catalog/BookCard";
+import { BookGrid } from "@/components/catalog/BookGrid";
+import { CatalogueHeader } from "@/components/catalog/CatalogueHeader";
 import { NotFoundState } from "@/components/catalog/NotFoundState";
-import { PageHeader } from "@/components/catalog/PageHeader";
-import { useAddToCart, useWishlist } from "@/components/catalog/useCatalogActions";
-import { BookCardSkeleton } from "@/components/BookCardSkeleton";
+import { RelatedShelf } from "@/components/catalog/RelatedShelf";
 import { EmptyState } from "@/components/EmptyState";
-import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { ErrorState } from "@/components/ui/error-state";
-import { SkeletonGroup } from "@/components/ui/skeleton";
 import { orderDate } from "@/features/orders/format";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useScrollMemory } from "@/hooks/useScrollMemory";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
 import { useT } from "@/i18n";
 
-/* /collections/:slug: a seasonal collection ("Rainy season reads") with all its books, in the admin's order. */
+/* /collections/:slug (pages/catalogue-v2.md §4): a seasonal collection ("Rainy season reads") with all its books in
+   the admin's order, when it ends, a way back to every book, then books like these. */
 export default function CollectionPage() {
   const slug = useParams().slug ?? "";
   const valid = /^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug);
   const collection = useQuery({ ...collectionQueries.bySlug(slug), enabled: valid });
-  const cart = useAddToCart();
-  const wishlist = useWishlist();
   const showSkeleton = useSkeletonVisible(collection.isPending);
+  useScrollMemory(Boolean(collection.data));
   const { dict, lang, locale } = useT();
   const c = dict.collections;
   const p = dict.pages;
@@ -38,44 +36,38 @@ export default function CollectionPage() {
 
   const books = collection.data?.books ?? [];
   const ends = collection.data?.ends_at;
+  const ids = books.map((b) => b.id);
   return (
     <div className="container-shell pb-16">
-      <PageHeader
-        crumbs={[{ label: p.home, to: "/" }, { label: text?.title ?? c.eyebrow }]}
-        eyebrow={collection.data ? c.pageEyebrow(collection.data.books_count) : c.eyebrow}
-        title={text?.title ?? <span aria-hidden="true" className="skeleton inline-block h-12 w-72 max-w-full rounded-sm align-middle" />}
-        lead={[text?.description, ends ? c.endsOn(orderDate(ends, locale)) : null].filter(Boolean).join(" · ") || undefined}
-        variant="panel"
-        covers={books.filter((b) => b.cover_image_url).slice(0, 5).map((b) => ({ src: b.cover_image_url, title: b.title }))}
+      <CatalogueHeader
+        variant="entity"
+        crumbs={[{ label: p.home, to: "/" }, { label: p.books, to: "/books" }, { label: text?.title ?? c.eyebrow }]}
+        eyebrow={c.eyebrow}
+        title={text?.title ?? <span aria-hidden="true" className="skeleton inline-block h-10 w-72 max-w-full rounded-sm align-middle" />}
+        blurb={text?.description}
+        covers={books.map((b) => ({ src: b.cover_image_url, title: b.title }))}
+        facts={
+          collection.data ? (
+            <>
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{p.bookCount(collection.data.books_count)}</span>
+              {ends ? <span className="text-muted-foreground">{c.endsOn(orderDate(ends, locale))}</span> : null}
+              <Link to="/books" className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
+                {dict.catalogue.seeAllBooks}
+              </Link>
+            </>
+          ) : undefined
+        }
       />
-
-      {collection.isPending ? (
-        showSkeleton ? (
-          <SkeletonGroup label={p.loadingBooks} className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
-            {Array.from({ length: 4 }, (_, i) => (
-              <BookCardSkeleton key={i} />
-            ))}
-          </SkeletonGroup>
-        ) : null
-      ) : books.length === 0 ? (
-        <EmptyState icon={Sparkles} title={c.empty} description={p.checkBack} />
-      ) : (
-        <Stagger as="ul" className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
-          {books.map((book, index) => (
-            <StaggerItem as="li" key={book.id} index={index}>
-              <BookCard
-                book={book}
-                instanceKey={`collection-${book.id}`}
-                headingLevel="h2"
-                saved={wishlist.isSaved(book.id)}
-                adding={cart.pendingBookId === book.id}
-                onAddToCart={cart.add}
-                onToggleWishlist={wishlist.toggle}
-              />
-            </StaggerItem>
-          ))}
-        </Stagger>
-      )}
+      <div className="grid gap-14">
+        <BookGrid
+          books={books}
+          loading={collection.isPending && showSkeleton}
+          headingLevel="h2"
+          instancePrefix="collection"
+          empty={collection.isPending ? null : <EmptyState icon={Sparkles} title={c.empty} description={p.checkBack} />}
+        />
+        {ids.length > 0 ? <RelatedShelf id={`collection-${slug}-similar`} title={dict.catalogue.moreLikeThese} source={{ kind: "similar", seeds: ids, exclude: ids }} /> : null}
+      </div>
     </div>
   );
 }
