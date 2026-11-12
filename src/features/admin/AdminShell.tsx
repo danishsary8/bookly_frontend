@@ -142,12 +142,15 @@ function PageFallback() {
 export function AdminShell() {
   // Links in the drawer close it themselves (Nav's onNavigate).
   const [menuOpen, setMenuOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(() => localStorage.getItem("bookly.admin.sidebar") === "collapsed");
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem("bookly.admin.sidebar") === "collapsed"; }
+    catch { return false; }
+  });
   const toggleSidebar = () => {
-    setCollapsed((value) => {
-      localStorage.setItem("bookly.admin.sidebar", value ? "expanded" : "collapsed");
-      return !value;
-    });
+    const next = !collapsed;
+    setCollapsed(next);
+    try { localStorage.setItem("bookly.admin.sidebar", next ? "collapsed" : "expanded"); }
+    catch { /* The menu still works when browser storage is unavailable. */ }
   };
   const session = useStaff();
   useNewOrderWatch(session?.user);

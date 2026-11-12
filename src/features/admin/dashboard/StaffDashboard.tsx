@@ -1,3 +1,5 @@
+import { m, useReducedMotion } from "motion/react";
+import { staggerDelay, transitions } from "@/lib/motion";
 import { ArrowRight, Boxes, MessageSquareText, Package, RotateCcw, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { StaffUser } from "@/api/endpoints/staff";
@@ -15,6 +17,7 @@ const can = (user: StaffUser | undefined, permission: string) => !user?.permissi
 
 export function StaffDashboard({ user }: { user?: StaffUser }) {
   const counts = useMenuCounts(true);
+  const reducedMotion = useReducedMotion();
   const firstName = user?.name.split(" ")[0];
   const tiles = [
     { show: can(user, "orders:view"), to: "/admin/orders?status=pending", label: "Orders to process", value: counts.data?.pending_orders, Icon: Package },
@@ -35,8 +38,8 @@ export function StaffDashboard({ user }: { user?: StaffUser }) {
           <section aria-labelledby="to-do-title" className="grid gap-3">
             <h2 id="to-do-title" className="font-display text-[1.563rem] leading-tight">To do</h2>
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {tiles.map(({ to, label, value, Icon }) => (
-                <li key={to}>
+              {tiles.map(({ to, label, value, Icon }, index) => (
+                <m.li key={to} initial={reducedMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...transitions.enter, delay: reducedMotion ? 0 : staggerDelay(index) }}>
                   <Link
                     to={to}
                     className="admin-task desk-card group flex min-h-28 items-center justify-between gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
@@ -53,7 +56,7 @@ export function StaffDashboard({ user }: { user?: StaffUser }) {
                       <Icon className="size-5" aria-hidden="true" />
                     </span>
                   </Link>
-                </li>
+                </m.li>
               ))}
             </ul>
           </section>

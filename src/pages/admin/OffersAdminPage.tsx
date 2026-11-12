@@ -1,3 +1,4 @@
+import { ResultSummary } from "@/features/admin/reportKit";
 import { useDeferredValue, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, CircleSlash, Pencil, Plus, Search, Tag, Trash2, X } from "lucide-react";
@@ -415,6 +416,11 @@ export default function OffersAdminPage() {
         />
       ) : (
         <>
+          {offers.data && list.length > 0 ? <ResultSummary items={[
+            { label: "Offers", value: list.length },
+            { label: "Live offers", value: list.filter((offer) => offer.status === "live").length },
+            { label: "Orders with offers", value: list.reduce((total, offer) => total + offer.used_count, 0) },
+          ]} /> : null}
           <div className="flex flex-wrap items-center gap-3">
             <SearchBox label="Search offers" value={q} placeholder="Name" onSearch={(val) => set({ q: val || undefined })} />
             <Segmented

@@ -39,7 +39,7 @@ function Kpi({ id, label, value, khr, detail, change, trend, view, hero }: {
   hero?: boolean;
 }) {
   return (
-    <section aria-labelledby={id} className="admin-kpi grid content-start gap-2 desk-card rounded-xl border border-border bg-card p-5" data-featured={hero}>
+    <section aria-labelledby={id} className="admin-kpi flex flex-col gap-2 desk-card rounded-xl border border-border bg-card p-5" data-featured={hero}>
       <div className="admin-kpi-top"><h2 id={id} className="font-sans text-sm font-normal tracking-normal text-muted-foreground">
         {label}
       </h2><span className="admin-kpi-icon" aria-hidden="true">{hero || id === "average-order" ? <DollarSign className="size-[18px]" /> : id === "new-customers" ? <Users className="size-[18px]" /> : id === "orders-placed" ? <ShoppingBag className="size-[18px]" /> : <BookOpen className="size-[18px]" />}</span></div>
@@ -304,7 +304,9 @@ function AdminDashboard() {
                   <tbody className="divide-y divide-border">
                     {s.top_categories.map((t) => (
                       <tr key={t.category_id}>
-                        <th scope="row" className="py-2 pr-3 font-semibold">{t.name}</th>
+                        <th scope="row" className="py-2 pr-3 font-semibold">{t.name}
+                          <span aria-hidden="true" className="mt-2 block h-1.5 rounded-full bg-secondary"><span className="block h-full rounded-full bg-primary" style={{ width: `${Math.max(0, t.copies_sold) / Math.max(1, ...s.top_categories!.map((category) => category.copies_sold)) * 100}%` }} /></span>
+                        </th>
                         <td className="py-2 pl-4 text-right">{t.copies_sold}</td>
                         <td className="whitespace-nowrap py-2 pl-4 text-right">
                           {formatUsd(t.sales_usd)}

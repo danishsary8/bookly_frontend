@@ -39,8 +39,8 @@ it("closes the assistant dialog when a visitor follows an answer link", async ()
   await user.click(await screen.findByRole("link", { name: en.assistant.title }));
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
 });
-it("prefills a redacted unanswered question, saves a bilingual FAQ and confirms deletion", async () => {
-  setSession("staff", { token: "test", expiresAt: null, user: { id: 4, role: "staff", name: "Staff", permissions: ["support:manage"] } });
+it.each(["admin", "staff"] as const)("lets %s teach a FAQ and reserves deletion for admins", async (role) => {
+  setSession("staff", { token: "test", expiresAt: null, user: { id: 4, role, name: "Staff", permissions: ["support:manage"] } });
   vi.spyOn(assistantApi, "faqs").mockResolvedValue({ current_page: 1, last_page: 1, data: [{ id: 4, question_en: "Existing?", question_km: "សំណួរ?", answer_en: "Answer", answer_km: "ចម្លើយ", keywords: ["existing"], is_active: true, hits: 2 }] });
   vi.spyOn(assistantApi, "unanswered").mockResolvedValue({ current_page: 1, last_page: 1, data: [{ id: 7, question: "Question from [email]", count: 2, last_seen: "2026-11-06T00:00:00Z" }] });
   const save = vi.spyOn(assistantApi, "save").mockResolvedValue(undefined);
@@ -54,6 +54,11 @@ it("prefills a redacted unanswered question, saves a bilingual FAQ and confirms 
   await user.type(screen.getByLabelText(en.assistant.keywords), "question, សំណួរ");
   await user.click(screen.getByRole("button", { name: en.assistant.save }));
   await waitFor(() => expect(save).toHaveBeenCalledWith(expect.objectContaining({ unanswered_id: 7, keywords: ["question", "សំណួរ"] }), undefined));
+  if (role === "staff") {
+    expect(screen.queryByRole("button", { name: en.assistant.remove })).not.toBeInTheDocument();
+    expect(remove).not.toHaveBeenCalled();
+    return;
+  }
   await user.click(screen.getByRole("button", { name: en.assistant.remove }));
   const confirm = screen.getByRole("alertdialog");
   expect(remove).not.toHaveBeenCalled();

@@ -401,7 +401,7 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
         error={errors.description?.message}
         {...register("description")}
       />
-      <div className="flex flex-wrap gap-3">
+      <div className="admin-form-actions flex flex-wrap gap-3">
         <Button
           type="submit"
           loading={isSubmitting}

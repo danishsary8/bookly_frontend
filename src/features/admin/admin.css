@@ -8,7 +8,7 @@
 .admin-nav-link[aria-current="page"] svg { stroke-width: 2; }
 .admin-main { min-width: 0; }
 .admin-page { align-content: start; }
-.admin-page-header h1 { letter-spacing: -0.025em; text-wrap: balance; }
+.admin-page-header h1 { letter-spacing: -0.025em; text-wrap: balance; overflow-wrap: anywhere; }
 .admin-page-header { padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
 .admin-page-actions > * { max-width: 100%; }
 .admin-workspace .desk-card, .admin-auth .desk-card { box-shadow: none; border-radius: 10px; }
@@ -37,7 +37,7 @@
 .admin-kpi-top { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
 .admin-kpi-icon { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid var(--border); border-radius: 6px; color: var(--primary); background: var(--surface-1); }
 .admin-kpi[data-featured="true"] { border-top: 3px solid var(--primary); }
-.admin-kpi > a { min-height: 2.75rem; border-top: 1px solid var(--border); padding-top: 0.75rem; margin-top: 0.5rem; width: 100%; justify-content: space-between; }
+.admin-kpi > a { min-height: 2.75rem; border-top: 1px solid var(--border); padding-top: 0.75rem; margin-top: auto; width: 100%; justify-content: space-between; }
 .admin-kpi > a svg { transition: transform var(--dur-hover) var(--ease-out-expo); }
 .admin-kpi > a:hover svg { transform: translateX(3px); }
 .admin-task { border-top: 3px solid var(--primary); }
@@ -45,6 +45,7 @@
 .admin-auth { font-variant-numeric: tabular-nums; }
 .admin-auth-card { border-top: 3px solid var(--primary); }
 .admin-auth-brand { display: flex; align-items: center; gap: 0.75rem; padding: 2rem 2rem 0; }
+.admin-workspace :where(input, select, textarea, button, a) { scroll-margin-block: 6rem; }
 .admin-form-actions { position: sticky; bottom: 1rem; z-index: 2; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--card); box-shadow: var(--shadow-overlay); }
 @media (min-width: 1024px) {
   .admin-workspace { grid-template-columns: 16rem minmax(0, 1fr); }
@@ -59,6 +60,8 @@
   .admin-workspace[data-collapsed="true"] .admin-sidebar .admin-nav-link > :not(svg):not(.admin-nav-label) { display: none; }
 }
 @media (max-width: 639px) {
+  .admin-topbar a > span:first-child { display: none; }
+  .admin-topbar .admin-brand-label { font-size: 1.35rem; }
   .admin-page-header { gap: 1rem; }
   .admin-page-actions { width: 100%; }
   .admin-page-actions > .grid { justify-items: start; width: 100%; }
@@ -77,5 +80,6 @@
   .admin-workspace { display: block; }
   .admin-main { padding: 0; }
   .admin-workspace .desk-card { break-inside: avoid; box-shadow: none; }
-  .admin-form-actions { position: static; box-shadow: none; }
+  .admin-workspace :where(input, select, textarea, button, a) { scroll-margin-block: 6rem; }
+.admin-form-actions { position: static; box-shadow: none; }
 }

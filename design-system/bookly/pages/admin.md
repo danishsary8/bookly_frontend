@@ -55,3 +55,20 @@ work canvas.
 - `AdminPage`: a hairline under the title block (16px below it) separates the header from the work.
 - Staff sign-in / two-step setup / reset: the card opens with a lapis band (wordmark in on-lapis, a gold-outlined
   Staff tag, a faint periwinkle glow), the form below on the card. The security note stays under the card.
+
+
+## Workspace redesign ? 2026-11-12
+This revision supersedes the earlier frame, table, sign-in and no-transition rules above.
+- Retain MASTER's cool neutral surfaces, lapis accent, Hanken UI and Gloock page titles. No new palette or packages.
+- Sidebar: 16rem expanded / 5rem collapsed at laptop widths; persist the user's choice. Below 1024px, use the existing accessible sheet.
+- Top bar: 64px, command search, assistant, theme switch, notifications and identity with visible role. Compact wordmark on phones.
+- Page: maximum 1440px, section eyebrow, title, descriptive lead, responsive actions and a separating hairline.
+- Panels: 10px radius, hairline borders, sans section headings. Shared panel headers separate content from controls.
+- Tables: neutral sticky headers, uppercase column labels, generous row spacing, no zebra fill; wide tables scroll within their card.
+- Segmented filters: card-surface active option on a neutral track; 44px controls, roving focus, arrows/Home/End.
+- Motion: `m.*` only, shared motion tokens; 8px page/auth entrances and short staff task stagger. Reduced motion renders the final state.
+- Charts: existing Recharts, lapis area/line comparison, dashed previous series and data-table alternatives. No invented statistics.
+- KPI links align to the card bottom; result summaries explicitly describe loaded rows, never whole-shop totals.
+- Long book forms have a sticky save bar. Print toolbar follows workspace styling while document sheets retain A4 layout.
+- Admin sales queries remain inside AdminDashboard; StaffDashboard uses only existing staff-safe counts and recent orders.
+- Existing checks remain; promotion and knowledge deletion controls are also hidden from staff, as required by the admin-only deletion policy.

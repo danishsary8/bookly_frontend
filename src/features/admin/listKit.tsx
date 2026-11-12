@@ -1,4 +1,4 @@
-import { useState, type ComponentType, type FormEvent, type ReactNode } from "react";
+import { useId, useState, type ComponentType, type FormEvent, type ReactNode } from "react";
 import { Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { EmptyState } from "@/components/EmptyState";
@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
  */
 
 export function SearchBox({ label, value, onSearch, placeholder, className }: { label: string; value: string; onSearch: (q: string) => void; placeholder?: string; className?: string }) {
+  const inputId = useId();
   const [draft, setDraft] = useState(value);
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -20,12 +21,12 @@ export function SearchBox({ label, value, onSearch, placeholder, className }: { 
   };
   return (
     <form onSubmit={submit} role="search" aria-label={label} className={cn("relative min-w-0 flex-1 basis-64", className)}>
-      <label className="sr-only" htmlFor={`search-${label}`}>
+      <label className="sr-only" htmlFor={inputId}>
         {label}
       </label>
       <Search className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
       <input
-        id={`search-${label}`}
+        id={inputId}
         type="search"
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
@@ -45,6 +46,16 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
           type="button"
           role="radio"
           aria-checked={value === opt.value}
+          tabIndex={value === opt.value ? 0 : -1}
+          onKeyDown={(event) => {
+            const direction = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 0;
+            if (!direction && event.key !== "Home" && event.key !== "End") return;
+            event.preventDefault();
+            const current = options.findIndex((option) => option.value === opt.value);
+            const index = event.key === "Home" ? 0 : event.key === "End" ? options.length - 1 : (current + direction + options.length) % options.length;
+            onChange(options[index].value);
+            event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>("button")[index]?.focus();
+          }}
           onClick={() => onChange(opt.value)}
           className={cn(
             "min-h-11 shrink-0 whitespace-nowrap rounded-[4px] px-3 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring",
