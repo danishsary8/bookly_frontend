@@ -33,7 +33,8 @@ const app = (route: string) =>
 const quietHome = () => {
   vi.spyOn(catalogApi, "rows").mockResolvedValue([{ id: "new_arrivals", total: 1, books: [book(30, "A new arrival")] }]);
   vi.spyOn(readingListsApi, "picks").mockResolvedValue([]);
-  vi.spyOn(catalogApi, "books").mockResolvedValue(empty);
+  // The home page takes New arrivals from the books list (sort=newest), so it needs one book to show the row.
+  vi.spyOn(catalogApi, "books").mockResolvedValue({ ...empty, data: [book(30, "A new arrival")] });
   vi.spyOn(catalogApi, "categories").mockResolvedValue([]);
 };
 
