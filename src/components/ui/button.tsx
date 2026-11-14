@@ -26,7 +26,8 @@ const buttonVariants = cva(
         outline: "border border-input bg-transparent text-foreground hover:bg-secondary",
         secondary: "bg-secondary text-secondary-foreground hover:bg-lapis-tint dark:hover:bg-border",
         ghost: "text-foreground hover:bg-secondary",
-        link: "h-auto px-1 text-primary underline-offset-4 hover:underline active:scale-100",
+        // Text-sized, but the tap area reaches 44px (WCAG 2.5.8 / pages on phones) without moving the layout.
+        link: "h-auto px-1 text-primary underline-offset-4 hover:underline active:scale-100 after:absolute after:-inset-y-2.5 after:inset-x-0 after:content-['']",
         "on-lapis": "border border-on-lapis-muted bg-transparent text-on-lapis hover:bg-on-lapis/10 focus-visible:ring-gold focus-visible:ring-offset-lapis",
       },
       size: {
