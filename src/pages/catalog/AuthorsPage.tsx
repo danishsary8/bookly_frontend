@@ -103,16 +103,16 @@ export default function AuthorsPage() {
           }
         />
       ) : (
-        <Stagger as="ul" key={`${q}-${page}`} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Stagger as="ul" key={`${q}-${page}`} className="grid gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {authors.data.data.map((author, index) => (
             <StaggerItem as="li" key={author.id} index={index}>
               <Link
                 to={`/authors/${author.id}`}
-                className="shop-card group flex h-full items-start gap-4 rounded-2xl border border-border bg-card p-5 outline-none transition-[border-color,translate] duration-300 hover:-translate-y-1 hover:border-input focus-visible:ring-2 focus-visible:ring-ring motion-reduce:hover:translate-y-0"
+                className="shop-card group flex h-full items-center gap-3.5 rounded-2xl border border-border bg-card px-4 py-3 sm:items-start sm:gap-4 sm:p-5 outline-none transition-[border-color,translate] duration-300 hover:-translate-y-1 hover:border-input focus-visible:ring-2 focus-visible:ring-ring motion-reduce:hover:translate-y-0"
               >
-                <AuthorAvatar name={author.name ?? ""} photoUrl={author.photo_url} className="size-16 text-xl ring-4 ring-lapis-tint" />
+                <AuthorAvatar name={author.name ?? ""} photoUrl={author.photo_url} className="size-12 text-base ring-4 ring-lapis-tint sm:size-16 sm:text-xl" />
                 <span className="grid min-w-0 gap-1">
-                  <span className="font-display text-xl leading-tight [overflow-wrap:anywhere] underline-offset-4 group-hover:underline">{author.name}</span>
+                  <span className="font-display text-lg leading-tight [overflow-wrap:anywhere] sm:text-xl underline-offset-4 group-hover:underline">{author.name}</span>
                   <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{p.bookCount(author.books_count ?? 0)}</span>
                   {author.bio ? <span className="line-clamp-2 text-sm text-muted-foreground">{author.bio}</span> : null}
                 </span>

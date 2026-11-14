@@ -57,7 +57,7 @@ export function ComingSoon() {
     const body = (
       <>
         {/* the stub */}
-        <span className="premiere-stage relative isolate grid w-[8.25rem] shrink-0 place-items-center overflow-hidden">
+        <span className="premiere-stage relative isolate grid w-[6.75rem] shrink-0 sm:w-[8.25rem] place-items-center overflow-hidden">
           {book.cover_image_url ? <img src={book.cover_image_url} alt="" aria-hidden="true" loading="lazy" className="pointer-events-none absolute inset-0 -z-10 size-full scale-150 object-cover opacity-60 blur-2xl saturate-150" /> : null}
           <span className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(80%_70%_at_50%_40%,transparent,rgb(10_16_60/0.8))]" aria-hidden="true" />
           <span className="relative block w-[4.9rem] -rotate-3 transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] group-hover:-translate-y-1 group-hover:rotate-0 motion-reduce:transform-none">
@@ -67,7 +67,7 @@ export function ComingSoon() {
         </span>
         {/* the body, past the perforation */}
         <span className="ticket-body flex min-w-0 flex-1 flex-col py-3.5 pl-5 pr-4">
-          <span className="flex items-center justify-between gap-2 text-[11px] font-bold uppercase tracking-[0.14em]">
+          <span className="flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-[0.14em]">
             <span className="inline-flex items-center gap-1 text-primary">
               <Sparkles className="size-3" aria-hidden="true" /> {book.announced ? h.announcedShort : dict.preorder.preorder}
             </span>
@@ -79,7 +79,7 @@ export function ComingSoon() {
             {at ? (
               <span className="flex items-baseline gap-1.5">
                 <span className="font-display text-[2rem] leading-none tabular-nums text-foreground">{at.days}</span>
-                <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{h.daysToGo(at.days)}</span>
+                <span className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{h.daysToGo(at.days)}</span>
                 <span className="sr-only">{h.releases(at.full)}</span>
               </span>
             ) : <span />}
@@ -88,7 +88,7 @@ export function ComingSoon() {
         </span>
       </>
     );
-    const shape = "ticket group flex h-[10.5rem] w-[23rem] overflow-hidden rounded-2xl";
+    const shape = "ticket group flex h-[10.5rem] w-[min(19.5rem,calc(100vw-4.5rem))] overflow-hidden rounded-2xl sm:w-[23rem]";
     return (
       // The copy in the second loop is for the eye only: hidden from assistive tech and out of the tab order.
       <li key={key} className="ticket-wrap shrink-0 px-2.5" aria-hidden={copy || undefined}>
@@ -131,7 +131,7 @@ export function ComingSoon() {
 
       {query.isPending ? (
         <SkeletonGroup label={h.comingSoon} className="flex gap-5 overflow-hidden">
-          {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-[10.5rem] w-[23rem] shrink-0 rounded-2xl" />)}
+          {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-[10.5rem] w-[min(19.5rem,calc(100vw-4.5rem))] shrink-0 rounded-2xl sm:w-[23rem]" />)}
         </SkeletonGroup>
       ) : books.length === 0 ? (
         <div className="relative isolate grid items-center gap-6 overflow-hidden rounded-3xl border border-dashed border-input/70 bg-card/60 p-6 sm:grid-cols-[auto_1fr] sm:p-8">

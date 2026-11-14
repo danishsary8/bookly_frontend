@@ -20,7 +20,7 @@ export function AgreeNote({ onLapis = false }: { onLapis?: boolean }) {
         {after}
       </p>
       {turnstileSiteKey() ? (
-        <p className={`inline-flex items-center gap-1 text-[11px] leading-4 ${onLapis ? "" : "justify-center"}`}>
+        <p className={`inline-flex items-center gap-1 text-xs leading-4 ${onLapis ? "" : "justify-center"}`}>
           <ShieldCheck className={`size-3 ${onLapis ? "text-gold" : "text-success"}`} aria-hidden="true" />
           {dict.signin.protectedBy}
         </p>

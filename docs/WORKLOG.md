@@ -987,3 +987,8 @@ Browser: each hover exercised at 1440 (tooltip text read back); 1366/1440/dark/3
 Spine bindings (rules / leather label / raised bands), headbands, cloth shading; bookcase grain, inner sides, underside
 of the top board, light pool, rounded lip. Animation untouched. Checks: lint, typecheck, tests, build; browser at
 1440, 1440 dark, 1366, 390 phone — no errors, no sideways scroll, autoplay and arrow keys still move the shelf.
+### 2026-11-14 — Responsive pass, customer side (branch `responsive-pass`)
+Sign-in pages, header + phone menu, home, catalogue, book page, info pages, cart, checkout, account, reader.
+Rules in MASTER.md "Responsive pass". Checked with a script at 10 widths (sideways scroll, content off screen, tap
+targets, text under 12px, page errors) using live catalogue data and a fake signed-in customer; screenshots reviewed
+at 320/390/768/1024/1366/1920. Checks: lint, typecheck, tests, build.

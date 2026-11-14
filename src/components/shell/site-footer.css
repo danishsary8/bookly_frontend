@@ -21,15 +21,15 @@
 .footer-brand { padding-right: 2rem; }
 .footer-wordmark { color: #fffaf0; font-size: 3rem; line-height: 1; letter-spacing: -.04em; }
 .footer-brand > p { max-width: 24ch; }
-.footer-brand > div > p { font-size: .6rem; letter-spacing: .18em; margin-top: .5rem; }
+.footer-brand > div > p { font-size: .75rem; letter-spacing: .18em; margin-top: .5rem; }
 .footer-brand ul { display: grid; gap: .65rem; margin-top: .5rem; }
 .footer-payment { display: flex; align-items: center; gap: .65rem; font-size: .75rem; color: #d4daeb; }
 .footer-payment svg { color: #efd58d; }
-.footer-directory nav h2 { color: #efd58d; font-size: .625rem; letter-spacing: .2em; margin-bottom: 1.25rem; }
+.footer-directory nav h2 { color: #efd58d; font-size: .75rem; letter-spacing: .2em; margin-bottom: 1.25rem; }
 .footer-directory nav a { font-size: .875rem; color: #d4daeb; }
 .footer-directory nav a:hover { color: #fffaf0; }
 .footer-contact { border-left: 1px solid var(--border); padding-left: 1.75rem; }
-.footer-contact h2 { font-family: var(--font-sans); color: #efd58d; font-size: .7rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 1rem; }
+.footer-contact h2 { font-family: var(--font-sans); color: #efd58d; font-size: .75rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 1rem; }
 .footer-contact-link { display: flex; align-items: center; gap: .65rem; min-height: 2.75rem; font-size: .8rem; color: #d4daeb; }
 .footer-contact-link span { overflow-wrap: anywhere; }
 .footer-contact-link svg { flex-shrink: 0; color: #efd58d; }
@@ -39,6 +39,8 @@
 .footer-socials { display: flex; flex-wrap: wrap; gap: .625rem; margin-top: 1rem; }
 .footer-socials a { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border: 1px solid var(--border); border-radius: 50%; background: #ffffff08; color: #fffaf0; }
 .footer-socials svg { width: 1.1rem; height: 1.1rem; }
+/* Small laptops: the contact column is narrow, so split the five icons 3 + 2 instead of leaving one alone. */
+@media (min-width: 1024px) and (max-width: 1279px) { .footer-socials { max-width: 9.5rem; } }
 .footer-socials a:hover { background: #ffffff18; border-color: #efd58d; color: #efd58d; }
 .footer-contact-page { display: inline-flex; align-items: center; gap: .5rem; min-height: 2.75rem; margin-top: .5rem; color: #efd58d; font-size: .8rem; font-weight: 600; }
 .footer-legal { border-top: 1px solid var(--border); background: #0c1236; }

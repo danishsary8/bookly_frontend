@@ -13,6 +13,7 @@ export const primaryNav: NavLink[] = [
   { label: "authors", to: "/authors" },
   { label: "series", to: "/series" },
   { label: "newArrivals", to: "/books?sort=newest" },
+  { label: "bestSellers", to: "/books?sort=best_selling" },
 ];
 
 export const accountNav: NavLink[] = [

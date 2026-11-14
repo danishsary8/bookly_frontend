@@ -967,6 +967,7 @@ export const km: Translations = {
     cardReaderName: "អ្នកអាន Bookly",
   },
   navLinks: {
+    bestSellers: "លក់ដាច់បំផុត",
     browse: "រុករក",
     books: "សៀវភៅ",
     authors: "អ្នកនិពន្ធ",

@@ -158,7 +158,17 @@
   .checkout-contact-grid { display: grid; gap: 1rem; }
 }
 @media (max-width: 639px) {
-  .checkout-section { padding: 1rem; grid-template-columns: 1.75rem minmax(0, 1fr); gap: .65rem; }
+  /* Phones: the step marker sits beside the heading and the content below gets the card's full width. */
+  .checkout-section { padding: 1rem; grid-template-columns: minmax(0, 1fr); gap: .65rem; }
+  .checkout-section > span { position: absolute; top: 1rem; left: 1rem; }
+  .checkout-section > div > div:first-child { min-height: 1.75rem; padding-left: 2.4rem; }
   .checkout-section > span > span:first-child { width: 1.75rem; height: 1.75rem; }
   .checkout-section h2 { font-size: 1.25rem; }
+  .checkout-payments label { padding: .85rem; gap: .65rem; }
+}
+/* Very small phones: a slimmer logo tile leaves the payment description room to breathe. */
+@media (max-width: 379px) {
+  .checkout-payments .payment-brand { width: 3.75rem; height: 2.75rem; }
+  .payment-brand img { width: 3rem; }
+  .payment-cash-art { transform: scale(.8); }
 }

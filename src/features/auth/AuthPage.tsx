@@ -41,7 +41,7 @@ export function AuthPage({
             to="/"
             aria-label={dict.content.backToStore}
             title={dict.content.backToStore}
-            className="hidden h-9 shrink-0 items-center gap-1.5 rounded-full border border-border pl-2.5 pr-3.5 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground lg:inline-flex"
+            className="hidden h-11 shrink-0 items-center gap-1.5 rounded-full border border-border pl-3 pr-4 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground lg:inline-flex"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
             <span aria-hidden="true">{dict.signin.store}</span>

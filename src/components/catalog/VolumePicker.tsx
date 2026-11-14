@@ -126,21 +126,21 @@ export function VolumePicker({ currentBookId, series, className }: VolumePickerP
                 {/* Status chip over thumbnail */}
                 {isOwned ? (
                   <span className="absolute top-1 left-1">
-                    <Badge tone="success" shape="solid" size="sm" className="h-5 px-1.5 text-[10px]">
+                    <Badge tone="success" shape="solid" size="sm" className="h-5 px-1.5 text-xs">
                       <Check className="size-3" aria-hidden="true" />
                       {vDict.owned}
                     </Badge>
                   </span>
                 ) : isInCart ? (
                   <span className="absolute top-1 left-1">
-                    <Badge tone="info" shape="solid" size="sm" className="h-5 px-1.5 text-[10px]">
+                    <Badge tone="info" shape="solid" size="sm" className="h-5 px-1.5 text-xs">
                       <ShoppingCart className="size-3" aria-hidden="true" />
                       {vDict.inCart}
                     </Badge>
                   </span>
                 ) : isOutOfStock ? (
                   <span className="absolute top-1 left-1">
-                    <Badge tone="danger" shape="outline" size="sm" className="h-5 px-1.5 text-[10px]">
+                    <Badge tone="danger" shape="outline" size="sm" className="h-5 px-1.5 text-xs">
                       <AlertCircle className="size-3" aria-hidden="true" />
                       {vDict.outOfStock}
                     </Badge>
