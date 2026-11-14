@@ -1,8 +1,10 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, BookCopy, BookPlus, Download, FileUp, Layers, Search, Sliders, X } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, BookCopy, BookPlus, Download, FileUp, Layers, Sliders, X } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
+import { catalogQueries } from "@/api/endpoints/catalog";
 import { staffApi, staffQueries, type BookListSort, type BookStatus, type StaffBook } from "@/api/endpoints/staff";
+import type { BookFormat } from "@/api/types";
 import { CoverThumb } from "@/components/CoverThumb";
 import { EmptyState } from "@/components/EmptyState";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -11,6 +13,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Pagination } from "@/components/ui/pagination";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { FilterSelect, Highlight, SearchBox } from "@/features/admin/listKit";
 import { BookImportDialog } from "@/features/admin/books/BookImportDialog";
 import { BookState } from "@/features/admin/books/BookState";
 import { BulkActionsDialog, type BulkActionType } from "@/features/admin/books/BulkActionsDialog";
@@ -57,7 +60,10 @@ export default function BooksPage() {
   const trashed = params.get("view") === "deleted";
   const statusParam = (params.get("status") as BookStatus | null) ?? undefined;
   const page = Math.max(1, Number(params.get("page")) || 1);
-  const [draft, setDraft] = useState(q);
+  const categoryId = Number(params.get("category")) || undefined;
+  const formatParam = (params.get("format") as BookFormat | null) || undefined;
+  const stockParam = (["in", "low", "out"] as const).find((v) => v === params.get("stock"));
+  const categories = useQuery(catalogQueries.categoryTree());
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkAction, setBulkAction] = useState<BulkActionType>(null);
@@ -66,9 +72,18 @@ export default function BooksPage() {
 
   // Sales next to stock (owner 2026-11-12): the Sold column's header switches newest → most sold → least sold.
   const sortParam = params.get("sort");
-  const sort: BookListSort = sortParam === "most_sold" || sortParam === "least_sold" ? sortParam : "newest";
-  const nextSort: BookListSort = sort === "newest" ? "most_sold" : sort === "most_sold" ? "least_sold" : "newest";
-  const books = useQuery(staffQueries.books({ q: q || undefined, status: statusParam, trashed, sort: sort === "newest" ? undefined : sort, page, per_page: PER_PAGE }));
+  const sort: BookListSort = sortParam === "most_sold" || sortParam === "least_sold" || sortParam === "title" ? sortParam : "newest";
+  const nextSort: BookListSort = sort === "most_sold" ? "least_sold" : sort === "least_sold" ? "newest" : "most_sold";
+  const books = useQuery(staffQueries.books({ q: q || undefined, status: statusParam, trashed, sort: sort === "newest" ? undefined : sort, category_id: categoryId, format: formatParam, stock: stockParam, page, per_page: PER_PAGE }));
+  const filtered = Boolean(q || categoryId || formatParam || stockParam);
+  const categoryOptions = [
+    { value: "", label: "All categories" },
+    ...(categories.data ?? []).flatMap((c) => [
+      { value: String(c.id), label: c.name ?? "" },
+      ...(c.children ?? []).map((child) => ({ value: String(child.id), label: child.name ?? "", indent: true })),
+    ]),
+  ];
+  const categoryName = categoryOptions.find((o) => o.value === String(categoryId))?.label;
   const meta = books.data?.meta;
   const list = books.data?.data ?? [];
 
@@ -80,11 +95,6 @@ export default function BooksPage() {
     }
     setParams(merged, { replace: true });
     setSelectedIds([]);
-  };
-
-  const search = (event: FormEvent) => {
-    event.preventDefault();
-    go({ q: draft.trim() || undefined, page: undefined });
   };
 
   const hrefFor = (p: number) => {
@@ -159,20 +169,13 @@ export default function BooksPage() {
       }
     >
       <div className="flex flex-wrap items-center gap-3">
-        <form onSubmit={search} role="search" className="relative min-w-0 flex-1 basis-64">
-          <label htmlFor="book-search" className="sr-only">
-            Search books by title
-          </label>
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-          <input
-            id="book-search"
-            type="search"
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder="Search by title"
-            className="h-11 w-full rounded-md border border-input bg-card pl-10 pr-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-        </form>
+        <SearchBox
+          label="Search books by title, author or ISBN"
+          value={q}
+          busy={books.isFetching && books.isPlaceholderData}
+          onSearch={(next) => go({ q: next || undefined, page: undefined })}
+          placeholder="Search title, author or ISBN"
+        />
 
         {/* Status filters */}
         <div role="radiogroup" aria-label="Status filter" className="inline-flex flex-wrap rounded-md border border-border bg-card p-1">
@@ -203,7 +206,20 @@ export default function BooksPage() {
         </div>
       </div>
 
-      {/* Bulk action toolbar */}
+      {/* Narrow the list: shelf, format, stock and order. Every choice lives in the URL, so a filtered view can be shared. */}
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-stretch">
+        <FilterSelect className="col-span-2 sm:w-60" label="Category" value={categoryId ? String(categoryId) : ""} onChange={(v) => go({ category: v || undefined, page: undefined })} options={categoryOptions} />
+        <FilterSelect className="sm:w-40" label="Format" value={formatParam ?? ""} onChange={(v) => go({ format: v || undefined, page: undefined })} options={[{ value: "", label: "Any format" }, { value: "paperback", label: "Paperback" }, { value: "hardcover", label: "Hardcover" }, { value: "ebook", label: "Ebook" }, { value: "audiobook", label: "Audiobook" }]} />
+        <FilterSelect className="sm:w-44" label="Stock" value={stockParam ?? ""} onChange={(v) => go({ stock: v || undefined, page: undefined })} options={[{ value: "", label: "Any stock" }, { value: "in", label: "In stock" }, { value: "low", label: "Running low" }, { value: "out", label: "Out of stock" }]} />
+        <FilterSelect className="col-span-2 sm:w-44" label="Sort" value={sort === "newest" ? "" : sort} onChange={(v) => go({ sort: v || undefined, page: undefined })} options={[{ value: "", label: "Newest first" }, { value: "title", label: "Title A–Z" }, { value: "most_sold", label: "Most sold (90 days)" }, { value: "least_sold", label: "Least sold (90 days)" }]} />
+        {filtered ? (
+          <button type="button" onClick={() => go({ q: undefined, category: undefined, format: undefined, stock: undefined, page: undefined })} className="col-span-2 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-semibold text-primary outline-none hover:bg-lapis-tint focus-visible:ring-2 focus-visible:ring-ring sm:ml-auto">
+            <X className="size-4" aria-hidden="true" /> Clear filters
+          </button>
+        ) : null}
+      </div>
+
+            {/* Bulk action toolbar */}
       {selectedIds.length > 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3 shadow-xs">
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -252,8 +268,8 @@ export default function BooksPage() {
       ) : list.length === 0 ? (
         <EmptyState
           icon={BookCopy}
-          title={q ? `No books match "${q}"` : trashed ? "No deleted books" : "No books yet"}
-          description={q ? "Check the spelling or search for part of the title." : trashed ? "Books you delete can be restored from here." : "Add the first book to start selling."}
+          title={filtered ? (q ? `No books match "${q}"` : "No books match these filters") : trashed ? "No deleted books" : "No books yet"}
+          description={filtered ? `Try part of the title, an author's surname or an ISBN${categoryName ? `, or look outside ${categoryName}` : ""}.` : trashed ? "Books you delete can be restored from here." : "Add the first book to start selling."}
           className="rounded-xl border border-dashed border-border"
         />
       ) : (
@@ -302,9 +318,9 @@ export default function BooksPage() {
                         <CoverThumb src={book.variants.find((v) => v.cover_image_url)?.cover_image_url} className="w-10 shrink-0" />
                         <span className="grid min-w-0 gap-0.5">
                           <Link to={`/admin/books/${book.id}`} className="font-semibold underline-offset-4 hover:text-primary hover:underline">
-                            {book.title}
+                            <Highlight text={book.title} query={q} />
                           </Link>
-                          <span className="truncate text-sm text-muted-foreground">{book.authors.map((a) => a.name).join(", ") || "No author"}</span>
+                          <span className="truncate text-sm text-muted-foreground"><Highlight text={book.authors.map((a) => a.name).join(", ") || "No author"} query={q} /></span>
                         </span>
                       </div>
                     </th>

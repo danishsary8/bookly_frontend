@@ -21,6 +21,7 @@ import { day, rangeFromParams, rangeToParams } from "@/features/admin/dashboardR
 import { Change, CustomRange, Khr, Panel, PeriodPicker } from "@/features/admin/reportKit";
 import { SystemHealthCard } from "@/features/admin/SystemHealthCard";
 import { StaffDashboard } from "@/features/admin/dashboard/StaffDashboard";
+import { AnimatedNumber } from "@/features/admin/dashboard/AnimatedNumber";
 import { useStaff } from "@/features/admin/staffSession";
 import { useT } from "@/i18n";
 import { formatLabel } from "@/lib/catalog";
@@ -64,7 +65,7 @@ function Kpi({ id, label, value, khr, detail, change, trend, labels, format, vie
 }
 
 /** The lead figure: net revenue on the lapis→violet band, with a large trend line. */
-function RevenueHero({ value, khr, change, detail, trend, labels, stats }: { value: string; khr?: string | null; change?: ReactNode; detail: string; trend?: number[]; labels?: string[]; stats: Array<{ label: string; value: string }> }) {
+function RevenueHero({ value, khr, change, detail, trend, labels, stats }: { value: ReactNode; khr?: string | null; change?: ReactNode; detail: string; trend?: number[]; labels?: string[]; stats: Array<{ label: string; value: string }> }) {
   return (
     <section aria-labelledby="net-revenue" className="admin-hero admin-kpi relative flex flex-col gap-3 overflow-hidden rounded-2xl p-6 sm:p-7">
       <div className="flex items-center justify-between gap-3">
@@ -132,6 +133,7 @@ function SectionLabel({ children }: { children: ReactNode }) {
 }
 
 const usd = (n: number) => formatUsd(n.toFixed(2));
+const count = (n: number) => Math.round(n).toLocaleString("en-US");
 
 const series = (days: TrendDay[] | undefined, pick: (d: TrendDay) => number) => (days?.length ? days.map(pick) : undefined);
 
@@ -205,12 +207,14 @@ function AdminDashboard() {
           </div>
         </SkeletonGroup>
       ) : (
-        <div className={cn("grid grid-cols-1 gap-6", summary.isPlaceholderData && "opacity-60 transition-opacity")}>
+        <div className="relative grid grid-cols-1 gap-6" aria-busy={summary.isPlaceholderData || undefined}>
+          {/* A new period loads in place: a slim bar runs along the top while the old figures stay, then everything glides to the new values. */}
+          <span aria-hidden="true" className={cn("admin-loadbar pointer-events-none absolute inset-x-0 -top-3 h-0.5 overflow-hidden rounded-full transition-opacity duration-300", summary.isPlaceholderData || insights.isPlaceholderData ? "opacity-100" : "opacity-0")} />
           {/* 1 · Performance: the lead figure on the left, supporting tiles on the right (bento). */}
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
             <m.div className="grid" {...rise(0)}>
               <RevenueHero
-                value={formatUsd(s.revenue.net_usd)}
+                value={<AnimatedNumber value={Number(s.revenue.net_usd)} format={usd} />}
                 khr={s.revenue.net_khr}
                 change={c ? <Change onDark percent={c.change_percent.net_revenue} previous={Number(c.revenue.net_usd)} versus={versus} /> : null}
                 detail={`${formatUsd(s.revenue.gross_usd)} from ${s.delivered_orders} delivered ${s.delivered_orders === 1 ? "order" : "orders"}${Number(s.revenue.refunds_usd) > 0 ? `, less ${formatUsd(s.revenue.refunds_usd)} refunded` : ""}`}
@@ -225,30 +229,30 @@ function AdminDashboard() {
             </m.div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
               <m.div className="grid" {...rise(1)}>
-                <Kpi id="orders-placed" label="Orders placed" value={s.orders_placed} icon={ShoppingBag} tone="blue"
+                <Kpi id="orders-placed" label="Orders placed" value={<AnimatedNumber value={s.orders_placed} format={count} />} icon={ShoppingBag} tone="blue"
                   change={c ? <Change percent={c.change_percent.orders_placed} previous={c.orders_placed} versus={versus} /> : null}
                   trend={series(trend, (d) => d.orders_placed)} labels={labels} view={{ to: "/admin/orders", label: "View orders" }} />
               </m.div>
               <m.div className="grid" {...rise(2)}>
-                <Kpi id="average-order" label="Average order" value={formatUsd(s.average_order_value_usd)} khr={s.average_order_value_khr} detail="delivered orders" icon={Receipt} tone="violet"
+                <Kpi id="average-order" label="Average order" value={<AnimatedNumber value={Number(s.average_order_value_usd)} format={usd} />} khr={s.average_order_value_khr} detail="delivered orders" icon={Receipt} tone="violet"
                   change={c ? <Change percent={c.change_percent.average_order_value} previous={Number(c.average_order_value_usd)} versus={versus} /> : null}
                   trend={series(trend, (d) => Number(d.average_order_usd))} labels={labels} format={usd} view={{ to: "/admin/reports?tab=orders", label: "View order report" }} />
               </m.div>
               <m.div className="grid" {...rise(3)}>
-                <Kpi id="new-customers" label="New customers" value={s.new_customers} detail="verified their account" icon={UserPlus} tone="teal"
+                <Kpi id="new-customers" label="New customers" value={<AnimatedNumber value={s.new_customers} format={count} />} detail="verified their account" icon={UserPlus} tone="teal"
                   change={c ? <Change percent={c.change_percent.new_customers} previous={c.new_customers} versus={versus} /> : null}
                   trend={series(trend, (d) => d.new_customers)} labels={labels} view={{ to: "/admin/customers", label: "View customers" }} />
               </m.div>
               {s.books_sold !== undefined && s.ebooks_sold !== undefined ? (
                 <>
                   <m.div className="grid" {...rise(4)}>
-                    <Kpi id="books-sold" label={dict.dashboardCopies.books} value={s.books_sold} detail={dict.dashboardCopies.detail} icon={BookOpen} tone="amber"
+                    <Kpi id="books-sold" label={dict.dashboardCopies.books} value={<AnimatedNumber value={s.books_sold} format={count} />} detail={dict.dashboardCopies.detail} icon={BookOpen} tone="amber"
                       change={c ? <Change percent={c.change_percent.books_sold} previous={c.books_sold} versus={versus} /> : null}
                       trend={trend?.every((d) => d.books_sold !== undefined) ? series(trend, (d) => d.books_sold ?? 0) : undefined} labels={labels}
                       view={{ to: "/admin/reports?tab=products", label: dict.dashboardCopies.view }} />
                   </m.div>
                   <m.div className="grid" {...rise(5)}>
-                    <Kpi id="ebooks-sold" label={dict.dashboardCopies.ebooks} value={s.ebooks_sold} detail={dict.dashboardCopies.detail} icon={Tablet} tone="rose"
+                    <Kpi id="ebooks-sold" label={dict.dashboardCopies.ebooks} value={<AnimatedNumber value={s.ebooks_sold} format={count} />} detail={dict.dashboardCopies.detail} icon={Tablet} tone="rose"
                       change={c ? <Change percent={c.change_percent.ebooks_sold} previous={c.ebooks_sold} versus={versus} /> : null}
                       trend={trend?.every((d) => d.ebooks_sold !== undefined) ? series(trend, (d) => d.ebooks_sold ?? 0) : undefined} labels={labels}
                       view={{ to: "/admin/reports?tab=products", label: dict.dashboardCopies.view }} />
@@ -360,17 +364,17 @@ function AdminDashboard() {
                   {ins.repeat_customer_rate ? (
                     <Panel id="buyers" title={dict.dashboardBuyers.title} icon={Users} tone="teal">
                       <dl className="grid grid-cols-2 gap-3">
-                        <Stat label={dict.dashboardPrint.firstTime} value={ins.repeat_customer_rate.customers - ins.repeat_customer_rate.returning} />
-                        <Stat label={dict.dashboardPrint.returning} value={ins.repeat_customer_rate.returning} />
+                        <Stat label={dict.dashboardPrint.firstTime} value={<AnimatedNumber value={ins.repeat_customer_rate.customers - ins.repeat_customer_rate.returning} format={count} />} />
+                        <Stat label={dict.dashboardPrint.returning} value={<AnimatedNumber value={ins.repeat_customer_rate.returning} format={count} />} />
                       </dl>
                     </Panel>
                   ) : null}
                   {ins.delivery_areas ? (
                     <Panel id="delivery-areas" title={dict.dashboardAreas.title} icon={MapPin} tone="green" action={<span className="text-sm text-muted-foreground">{dict.dashboardAreas.note}</span>}>
                       <dl className="grid grid-cols-3 gap-3">
-                        <Stat label={dict.dashboardAreas.phnomPenh} value={ins.delivery_areas.phnom_penh} />
-                        <Stat label={dict.dashboardAreas.provinces} value={ins.delivery_areas.provinces} />
-                        <Stat label={dict.dashboardAreas.unknown} value={ins.delivery_areas.unknown} />
+                        <Stat label={dict.dashboardAreas.phnomPenh} value={<AnimatedNumber value={ins.delivery_areas.phnom_penh} format={count} />} />
+                        <Stat label={dict.dashboardAreas.provinces} value={<AnimatedNumber value={ins.delivery_areas.provinces} format={count} />} />
+                        <Stat label={dict.dashboardAreas.unknown} value={<AnimatedNumber value={ins.delivery_areas.unknown} format={count} />} />
                       </dl>
                     </Panel>
                   ) : null}
@@ -379,8 +383,8 @@ function AdminDashboard() {
                       <p className="text-sm text-muted-foreground">{dict.dashboardAnalysis.reminderNote}</p>
                       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                         <Stat label={dict.dashboardAnalysis.recovered} value={`${ins.cart_reminder_recovery.recovered} (${ins.cart_reminder_recovery.percent}%)`} />
-                        <Stat label={dict.dashboardAnalysis.sent} value={ins.cart_reminder_recovery.sent} />
-                        {ins.promotions?.gift_orders !== undefined ? <Stat label={dict.dashboardAnalysis.gifts} value={ins.promotions.gift_orders} /> : null}
+                        <Stat label={dict.dashboardAnalysis.sent} value={<AnimatedNumber value={ins.cart_reminder_recovery.sent} format={count} />} />
+                        {ins.promotions?.gift_orders !== undefined ? <Stat label={dict.dashboardAnalysis.gifts} value={<AnimatedNumber value={ins.promotions.gift_orders} format={count} />} /> : null}
                       </dl>
                     </Panel>
                   ) : null}

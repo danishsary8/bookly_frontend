@@ -4,6 +4,7 @@ import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip,
 import type { TrendDay } from "@/api/endpoints/dashboardInsights";
 import { Segmented } from "@/features/admin/listKit";
 import { formatUsd } from "@/stores/currency";
+import { AnimatedNumber } from "./AnimatedNumber";
 
 /*
  * Income (net revenue) or orders per day: this period as a solid line, the previous period of the same length dashed
@@ -35,6 +36,19 @@ export function IncomeChart({ days }: { days: TrendDay[] }) {
 
   return (
     <div className="grid gap-3">
+      {/* Headline: the period's total gliding to its new value, and the change against the period before. */}
+      <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
+        <AnimatedNumber value={total("now")} format={fmt} className="text-[2rem] font-semibold leading-none tracking-[-0.02em] tabular-nums" />
+        {total("before") > 0 ? (() => {
+          const change = ((total("now") - total("before")) / total("before")) * 100;
+          const up = change >= 0;
+          return (
+            <span className={`mb-0.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-sm font-semibold tabular-nums ${up ? "bg-success-tint text-success" : "bg-destructive-tint text-destructive"}`}>
+              {up ? "↗" : "↘"} {Math.abs(change).toLocaleString("en-US", { maximumFractionDigits: 1 })}%<span className="sr-only"> {up ? "up" : "down"} on the previous period</span>
+            </span>
+          );
+        })() : null}
+      </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Segmented
           label="Show"
@@ -76,17 +90,18 @@ export function IncomeChart({ days }: { days: TrendDay[] }) {
                 tickFormatter={(n: number) => (isIncome ? compactUsd(n) : String(n))}
               />
               <Tooltip
-                cursor={{ stroke: "var(--tone-violet-ink, var(--primary))", strokeOpacity: 0.4, strokeWidth: 1.5 }}
+                cursor={{ stroke: "var(--muted-foreground)", strokeOpacity: 0.6, strokeWidth: 1, strokeDasharray: "4 4" }}
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
                   const p = payload[0].payload as (typeof points)[number];
                   const diff = p.before ? Math.round(((p.now - p.before) / p.before) * 100) : null;
                   return (
-                    <div className="min-w-44 rounded-xl border border-border bg-popover px-3.5 py-3 text-sm shadow-overlay tabular-nums">
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{name}</p>
-                      <p className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><span aria-hidden="true" className="size-2.5 rounded-full bg-[var(--tone-violet-ink,var(--primary))]" />{p.label}</span><span className="font-semibold">{fmt(p.now)}</span></p>
-                      <p className="mt-1 flex items-center justify-between gap-4 text-muted-foreground"><span className="flex items-center gap-2"><span aria-hidden="true" className="size-2.5 rounded-full border-2 border-dashed border-muted-foreground" />{p.previousLabel}</span><span>{fmt(p.before)}</span></p>
-                      {diff !== null && diff !== 0 ? <p className={`mt-2 border-t border-border pt-2 text-xs font-semibold ${diff > 0 ? "text-success" : "text-destructive"}`}>{diff > 0 ? "▲" : "▼"} {Math.abs(diff)}% vs previous</p> : null}
+                    // Ink tooltip (same in both themes): the day, both periods with their colour keys, the difference.
+                    <div className="admin-chart-tip min-w-48 rounded-xl px-3.5 py-3 text-sm tabular-nums">
+                      <p className="mb-2 font-semibold">{p.label}</p>
+                      <p className="flex items-center justify-between gap-5"><span className="flex items-center gap-2"><span aria-hidden="true" className="size-2.5 rounded-full bg-[#A78BFA]" />This period</span><span className="font-semibold">{fmt(p.now)}</span></p>
+                      <p className="mt-1 flex items-center justify-between gap-5 text-[#C9CEE6]"><span className="flex items-center gap-2"><span aria-hidden="true" className="size-2.5 rounded-full bg-[#8F97C6]" />{p.previousLabel}</span><span>{fmt(p.before)}</span></p>
+                      {diff !== null && diff !== 0 ? <p className={`mt-2 border-t border-white/10 pt-2 text-xs font-semibold ${diff > 0 ? "text-[#86EFAC]" : "text-[#FDA4AF]"}`}>{diff > 0 ? "▲" : "▼"} {Math.abs(diff)}% vs previous</p> : null}
                     </div>
                   );
                 }}
