@@ -982,3 +982,9 @@ Browser: each hover exercised at 1440 (tooltip text read back); 1366/1440/dark/3
 - Refined grouped sidebar navigation and active states. Rebuilt profile into personal-details and communication-preference panels. Reorganized security into sign-in/password, full-width devices and separate export/closure panels. Added proper Google/Facebook SVG marks.
 - Unified dashboard shortcuts, order rows, addresses, coupons, support, reading lists and library presentation. Preserved endpoint behaviour and the earlier functional fixes; returns-policy files were left to their separate owner.
 - Verified 149 regression tests; Chromium smoke across 15 account routes, selected routes at 390/768px and profile/security in both themes. Account-scoped axe WCAG checks passed in light and dark. Lint and TypeScript checks passed; production build passed. Screenshots in overnight-screenshots/account-redesign-*.png.
+
+### 2026-11-14 — Responsive pass, customer side (branch `responsive-pass`)
+Sign-in pages, header + phone menu, home, catalogue, book page, info pages, cart, checkout, account, reader.
+Rules in MASTER.md "Responsive pass". Checked with a script at 10 widths (sideways scroll, content off screen, tap
+targets, text under 12px, page errors) using live catalogue data and a fake signed-in customer; screenshots reviewed
+at 320/390/768/1024/1366/1920. Checks: lint, typecheck, tests, build.
