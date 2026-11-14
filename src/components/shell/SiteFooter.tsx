@@ -13,7 +13,7 @@ import { StoreRatingBadge } from "@/components/ratings/StoreRatingBadge";
 /* Editorial navy footer; newsletter behavior and translated navigation remain shared. */
 
 const linkClass =
-  "group inline-flex min-h-11 items-center rounded-sm text-[15px] text-foreground/80 outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring lg:min-h-9";
+  "group inline-flex min-h-11 items-center rounded-sm text-[15px] text-foreground/80 outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring xl:min-h-9";
 
 // Platform homepages until the shop provides its own public profiles.
 const socialLinks = [
@@ -99,7 +99,7 @@ export function SiteFooter({ className }: { className?: string }) {
           <ul className="flex gap-6">
             {legalNav.map((link) => (
               <li key={link.to}>
-                <Link to={link.to} className="inline-flex min-h-11 items-center underline-offset-4 hover:text-foreground hover:underline lg:min-h-0">
+                <Link to={link.to} className="inline-flex min-h-11 items-center underline-offset-4 hover:text-foreground hover:underline xl:min-h-0">
                   {dict.navLinks[link.label]}
                 </Link>
               </li>
