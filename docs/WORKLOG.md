@@ -982,3 +982,8 @@ Browser: each hover exercised at 1440 (tooltip text read back); 1366/1440/dark/3
 - Refined grouped sidebar navigation and active states. Rebuilt profile into personal-details and communication-preference panels. Reorganized security into sign-in/password, full-width devices and separate export/closure panels. Added proper Google/Facebook SVG marks.
 - Unified dashboard shortcuts, order rows, addresses, coupons, support, reading lists and library presentation. Preserved endpoint behaviour and the earlier functional fixes; returns-policy files were left to their separate owner.
 - Verified 149 regression tests; Chromium smoke across 15 account routes, selected routes at 390/768px and profile/security in both themes. Account-scoped axe WCAG checks passed in light and dark. Lint and TypeScript checks passed; production build passed. Screenshots in overnight-screenshots/account-redesign-*.png.
+
+### 2026-11-14 — Home shelf realism (branch `bookshelf-polish`)
+Spine bindings (rules / leather label / raised bands), headbands, cloth shading; bookcase grain, inner sides, underside
+of the top board, light pool, rounded lip. Animation untouched. Checks: lint, typecheck, tests, build; browser at
+1440, 1440 dark, 1366, 390 phone — no errors, no sideways scroll, autoplay and arrow keys still move the shelf.

@@ -464,6 +464,10 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
         {/* the board's front lip: always the nearest thing, so it is drawn flat on top at its projected place */}
         {/* the case: back panel behind the books; top board and uprights (with the shade they cast) in front */}
         <div className="shelf-back pointer-events-none absolute inset-0" aria-hidden="true" />
+        <div className="shelf-light pointer-events-none absolute inset-0 z-[190]" aria-hidden="true" />
+        <div className="shelf-under pointer-events-none absolute inset-x-0 z-[206]" style={{ top: CASE_TOP, height: 14 }} aria-hidden="true" />
+        <div className="shelf-side pointer-events-none absolute inset-y-0 z-[204]" style={{ left: CASE_POST, width: 14 }} aria-hidden="true" />
+        <div className="shelf-side shelf-side-right pointer-events-none absolute inset-y-0 z-[204]" style={{ right: CASE_POST, width: 14 }} aria-hidden="true" />
         <div className="shelf-post pointer-events-none absolute inset-y-0 left-0 z-[205]" style={{ width: CASE_POST }} aria-hidden="true" />
         <div className="shelf-post shelf-post-right pointer-events-none absolute inset-y-0 right-0 z-[205]" style={{ width: CASE_POST }} aria-hidden="true" />
         <div className="shelf-top pointer-events-none absolute inset-x-0 top-0 z-[210]" style={{ height: CASE_TOP }} aria-hidden="true" />
@@ -481,6 +485,11 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
             // Keep subtitles on the paper label; the narrow spine carries the main title.
             const spineTitle = item.title.split(/:\s+/)[0];
             const long = spineTitle.length > 24;
+            // Three classic bindings, picked from the id so a book always looks the same: gold rules, a leather title
+            // label, or raised bands across the spine.
+            const picked = (["rules", "label", "bands"] as const)[[...item.id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % 3];
+            // A long title needs the whole spine width, so it never sits in the narrower label.
+            const binding = picked === "label" && spineTitle.length > 16 ? "rules" : picked;
             return (
               <div
                 key={`${item.id}-${v}`}
@@ -506,27 +515,35 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
                   className="shelf-contact absolute"
                   style={{ width: bw * 2.2, height: bd * 1.15, left: -bw * 1.1, top: H / 2 - (bd * 1.15) / 2, transform: "rotateX(90deg)" }}
                 />
-                {/* spine (front of the box) */}
+                {/* spine (front of the box): rounded cloth with hinge grooves, headbands, and one of three bindings */}
                 <div
-                  className={cn("shelf-face shelf-spine absolute flex flex-col items-center justify-between overflow-hidden rounded-[3px] py-3", item.tone.light ? "text-[#1B1A2E]" : "text-[#F6EFDF]")}
+                  className={cn("shelf-face shelf-spine absolute flex flex-col items-center justify-between overflow-hidden rounded-[3px] py-3.5", item.tone.light ? "text-[#1B1A2E]" : "text-[#F6EFDF]")}
+                  data-ink={item.tone.light ? "dark" : "gold"}
+                  data-binding={binding}
                   style={{ width: bw, height: bh, left: -bw / 2, top, backgroundColor: item.tone.bg, transform: `translateZ(${bd / 2}px)`, "--shade": "calc(var(--o, 0) * 0.55)" } as CSSProperties}
                 >
-                  <span aria-hidden="true" className={cn("h-1 w-3/5 border-y", item.tone.light ? "border-[#1B1A2E]/40" : "border-[#E8C766]/65")} />
-                  <span
-                    className="shelf-title max-h-[63%] overflow-hidden text-center font-display leading-[1.25] tracking-[0.015em] [text-orientation:mixed] [writing-mode:vertical-rl]"
-                    style={{ fontSize: Math.max(10, Math.min(17, bw * (long ? 0.25 : 0.32))), maxWidth: bw * 0.72 }}
-                  >
-                    {spineTitle}
-                  </span>
-                  <span className="grid justify-items-center gap-1.5">
-                    <span className={cn("h-px w-3/5", item.tone.light ? "bg-[#1B1A2E]/45" : "bg-[#E8C766]/70")} />
+                  <span aria-hidden="true" className="shelf-headband shelf-headband-top" />
+                  <span aria-hidden="true" className="shelf-headband shelf-headband-bottom" />
+                  <span aria-hidden="true" className="shelf-rules" />
+                  {binding === "bands" ? <span aria-hidden="true" className="shelf-band" /> : null}
+                  <span className={cn("shelf-label grid place-items-center", binding === "label" && "shelf-label-panel")}>
                     <span
-                      className={cn("max-h-[5.5em] overflow-hidden whitespace-nowrap font-semibold uppercase tracking-[0.12em] [writing-mode:vertical-rl]", item.tone.light ? "text-[#1B1A2E]" : item.tone.gold ? "text-[#E8C766]" : "text-[#F6EFDF]")}
+                      className="shelf-title max-h-full overflow-hidden text-center font-display leading-[1.25] tracking-[0.015em] [text-orientation:mixed] [writing-mode:vertical-rl]"
+                      style={{ fontSize: Math.max(10, Math.min(17, bw * (long ? 0.25 : 0.32))), maxWidth: bw * (binding === "label" ? 0.62 : 0.72) }}
+                    >
+                      {spineTitle}
+                    </span>
+                  </span>
+                  {binding === "bands" ? <span aria-hidden="true" className="shelf-band" /> : null}
+                  <span className="grid w-full justify-items-center gap-1.5">
+                    <span aria-hidden="true" className="shelf-rule-thin" />
+                    <span
+                      className={cn("shelf-surname max-h-[5.5em] overflow-hidden whitespace-nowrap font-semibold uppercase tracking-[0.12em] [writing-mode:vertical-rl]", item.tone.light ? "text-[#1B1A2E]" : item.tone.gold ? "text-[#E8C766]" : "text-[#F6EFDF]")}
                       style={{ fontSize: Math.max(8, Math.min(10, bw * 0.18)) }}
                     >
                       {item.surname}
                     </span>
-                    <span aria-hidden="true" className={cn("size-1 rotate-45 border", item.tone.light ? "border-[#1B1A2E]/45" : "border-[#E8C766]/70")} />
+                    <span aria-hidden="true" className="shelf-ornament" />
                   </span>
                 </div>
                 {/* front cover (right side of the box) */}
