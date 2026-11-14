@@ -89,7 +89,7 @@ export function CatalogueHeader({ crumbs, eyebrow, title, lead, blurb, covers, m
         <Breadcrumb items={crumbs} />
         <div className="group flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
           {text}
-          {aside ?? (fan ? <div className="hidden shrink-0 pb-1 md:block short:hidden">{fan}</div> : null)}
+          {aside ?? (fan ? <div className="hidden shrink-0 pb-1 lg:block short:hidden">{fan}</div> : null)}
         </div>
       </header>
     );

@@ -133,7 +133,7 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
         ) : null}
       </div>
 
-      <div className="mt-3.5 flex flex-1 flex-col px-0.5">
+      <div className="@container mt-3.5 flex flex-1 flex-col px-0.5">
         {formats || audienceTag ? (
           <div className="flex items-center justify-between gap-1.5">
             {formats ? <p className="line-clamp-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{formats}</p> : <span />}
@@ -150,12 +150,13 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
           <p className="mt-1.5 inline-flex w-max max-w-full items-center rounded border border-dashed border-input px-1.5 py-0.5 text-xs font-semibold text-foreground">{availability}</p>
         ) : null}
 
-        <div className="mt-auto flex items-end justify-between gap-2 pt-3">
+        {/* Narrow cards (phones, dense grids): price under the rating instead of squeezing beside it. */}
+        <div className="mt-auto flex items-end justify-between gap-2 pt-3 @max-[13rem]:flex-col @max-[13rem]:items-start @max-[13rem]:gap-1.5">
           <div className="min-w-0">
             <ReaderScore book={book} />
             {book.sold_count ? <p className="mt-0.5 text-xs text-muted-foreground">{dict.shopExtras.sold(book.sold_count)}</p> : null}
           </div>
-          <p className={cn("shrink-0 text-right tabular-nums", outOfStock ? "text-muted-foreground" : "text-foreground")}>
+          <p className={cn("shrink-0 text-right tabular-nums @max-[13rem]:text-left", outOfStock ? "text-muted-foreground" : "text-foreground")}>
             {(book.formats?.length ?? 0) > 1 ? <span className="block text-xs leading-none text-muted-foreground">{dict.cards.from}</span> : null}
             <span className="text-base font-semibold leading-tight">{formatMoney(book.price_from_usd, book.price_from_khr, currency)}</span>
           </p>
