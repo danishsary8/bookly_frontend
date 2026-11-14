@@ -987,3 +987,9 @@ Browser: each hover exercised at 1440 (tooltip text read back); 1366/1440/dark/3
 Spine bindings (rules / leather label / raised bands), headbands, cloth shading; bookcase grain, inner sides, underside
 of the top board, light pool, rounded lip. Animation untouched. Checks: lint, typecheck, tests, build; browser at
 1440, 1440 dark, 1366, 390 phone — no errors, no sideways scroll, autoplay and arrow keys still move the shelf.
+
+### 2026-11-14 — Admin polish (branch `admin-polish`; backend `feature/staff-book-filters`)
+Live search on every admin list; Books filters (category, format, stock, sort) using the new backend query options;
+light sidebar; dashboard figures/charts animate between periods without reloading; ink chart tooltip with change.
+Sweep of 37 admin routes (admin) + 24 (staff) at 1440 and 390 with a mocked API: no sideways scroll, no crashes
+except four pages that crash only on wrongly shaped mock data. Test: src/pages/admin/books-search.test.tsx.

@@ -140,7 +140,9 @@ export interface StaffVariant {
 export type BookStatus = "draft" | "scheduled" | "live";
 
 /** Order of the staff Books list: newest first, or by copies sold in the last 90 days. */
-export type BookListSort = "newest" | "most_sold" | "least_sold";
+export type BookListSort = "newest" | "title" | "most_sold" | "least_sold";
+/** Filters for the staff Books list (owner 2026-11-14). `stock` counts printed editions only. */
+export type BookListFilters = { category_id?: number; format?: BookFormat; stock?: "in" | "low" | "out"; author_id?: number; publisher_id?: number };
 
 export interface StaffBook {
   id: number;
@@ -435,7 +437,7 @@ export const staffApi = {
   readNotification: (id: string) => api.post(`/staff/notifications/${id}/read`, {}),
   readAllNotifications: () => api.post("/staff/notifications/read-all", {}),
 
-  books: (params: { q?: string; status?: BookStatus; trashed?: boolean; sort?: BookListSort; page?: number; per_page?: number } = {}) =>
+  books: (params: { q?: string; status?: BookStatus; trashed?: boolean; sort?: BookListSort; page?: number; per_page?: number } & BookListFilters = {}) =>
     api.get<Paginated<StaffBook>>("/staff/books", { params: toQueryParams(params) }),
   book: (id: number) => api.get<Resource<StaffBook>>(`/staff/books/${id}`).then((r) => r.data),
   createBook: (input: BookInput) => api.post<Resource<StaffBook>>("/staff/books", input).then((r) => r.data),

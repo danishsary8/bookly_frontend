@@ -3,6 +3,7 @@ import { useReducedMotion } from "motion/react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import type { OrderStatus } from "@/api/types";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
+import { AnimatedNumber } from "./AnimatedNumber";
 
 /*
  * Orders placed by status as a donut with the total in the middle (owner's sample). The legend beside it is the full
@@ -60,7 +61,7 @@ export function StatusDonut({ counts }: { counts: Record<string, number> }) {
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 grid place-content-center text-center">
-          <span className="text-[2rem] font-semibold leading-none tabular-nums">{current ? current.n : total}</span>
+          <AnimatedNumber value={current ? current.n : total} format={(n) => String(Math.round(n))} duration={0.45} className="text-[2rem] font-semibold leading-none tabular-nums" />
           <span className="mt-1 text-xs font-semibold text-muted-foreground">{current ? `${name(current.status)} · ${total ? Math.round((current.n / total) * 100) : 0}%` : "orders"}</span>
         </div>
       </div>

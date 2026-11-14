@@ -26,9 +26,9 @@ const itemClass =
 function Wordmark({ onRail = false }: { onRail?: boolean }) {
   return (
     <Link to="/admin" className={cn("flex items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring", onRail && "admin-rail-brand")}>
-      <span className={cn("grid size-9 shrink-0 place-items-center rounded-[10px]", onRail ? "bg-gold text-[#0E1335]" : "bg-primary text-primary-foreground")}><BookOpen className="size-5" aria-hidden="true" /></span>
-      <span className={cn("admin-brand-label font-display text-[1.55rem] leading-none", !onRail && "text-primary")}>Bookly</span>
-      <span className={cn("admin-brand-label rounded-md px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.18em] max-sm:sr-only", onRail ? "border border-gold/60 text-gold" : "bg-lapis text-on-lapis")}>Staff</span>
+      <span className={cn("grid size-9 shrink-0 place-items-center rounded-[10px]", onRail ? "bg-primary text-gold shadow-[0_6px_14px_-8px_rgb(20_32_122/0.7)]" : "bg-primary text-primary-foreground")}><BookOpen className="size-5" aria-hidden="true" /></span>
+      <span className="admin-brand-label admin-brand-word font-display text-[1.55rem] leading-none text-primary">Bookly</span>
+      <span className={cn("admin-brand-label rounded-md px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.18em] max-sm:sr-only", "bg-lapis text-on-lapis")}>Staff</span>
     </Link>
   );
 }
