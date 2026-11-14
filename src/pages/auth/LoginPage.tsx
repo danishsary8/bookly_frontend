@@ -169,7 +169,7 @@ export default function LoginPage() {
               )}
             </Stepper>
             {step === 0 ? (
-              <Link to="/books" className="group mx-auto mt-1 flex min-h-9 w-max short:mt-0 short:min-h-8 items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground">
+              <Link to="/books" className="group mx-auto mt-1 flex min-h-11 w-max short:mt-0 short:min-h-10 items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground">
                 {s.guest}
                 <ArrowRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
               </Link>
@@ -186,7 +186,7 @@ export default function LoginPage() {
                   setFormError(null);
                   setMode("phone");
                 }}
-                className="mx-auto inline-flex min-h-9 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold text-foreground/80 underline-offset-4 transition-colors duration-150 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="mx-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold text-foreground/80 underline-offset-4 transition-colors duration-150 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <Smartphone className="size-4" aria-hidden="true" />
                 {s.signInWithPhone}
