@@ -478,7 +478,7 @@ export default function ReaderPage() {
           <div className="flex flex-col truncate">
             <span className="truncate text-sm font-semibold">{title}</span>
             {isPreview ? (
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-(--reader-ring)">
+              <span className="text-xs font-semibold uppercase tracking-wide text-(--reader-ring)">
                 {e.previewTitle} ({totalPages} {dict.ebook.pages})
               </span>
             ) : null}

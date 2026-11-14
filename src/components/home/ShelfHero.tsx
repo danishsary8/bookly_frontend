@@ -191,11 +191,11 @@ export function ShelfHero() {
       </div>
 
       {/* Row tabs (blue pill behind the active one) and, on the right, a link to the whole list. */}
-      <div className="relative z-10 mx-auto mt-4 flex max-w-[1440px] flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 md:justify-between">
-        <span className="hidden w-44 md:block" aria-hidden="true" />
+      <div className="relative z-10 mx-auto mt-4 flex max-w-[1440px] flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 lg:justify-between">
+        <span className="hidden w-44 lg:block" aria-hidden="true" />
         {available.length > 1 ? (
           <nav aria-label={h.browse}>
-            <ul className="flex max-w-[calc(100vw-2rem)] overflow-x-auto rounded-full border border-border bg-card/70 p-1 backdrop-blur-sm">
+            <ul className="no-scrollbar flex max-w-[calc(100vw-2rem)] overflow-x-auto rounded-full border border-border bg-card/70 p-1 backdrop-blur-sm">
               {available.map((id) => (
                 <li key={id}>
                   <button
@@ -203,7 +203,7 @@ export function ShelfHero() {
                     aria-pressed={id === current}
                     onClick={() => setRow(id)}
                     className={cn(
-                      "relative min-h-9 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-colors duration-300",
+                      "relative min-h-11 whitespace-nowrap rounded-full px-4 text-sm font-semibold lg:min-h-9 transition-colors duration-300",
                       id === current ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
                     )}
                   >
@@ -215,7 +215,7 @@ export function ShelfHero() {
             </ul>
           </nav>
         ) : <span />}
-        <Link to={ROW_LINK[current]} className="group/all inline-flex min-h-11 w-44 items-center justify-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline md:justify-end">
+        <Link to={ROW_LINK[current]} className="group/all inline-flex min-h-11 items-center justify-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline lg:w-44 lg:justify-end">
           {h.seeAllRow(dict.shopExtras.rows[current])} <ArrowRight className="size-4 transition-transform duration-200 group-hover/all:translate-x-0.5" aria-hidden="true" />
         </Link>
       </div>

@@ -145,12 +145,12 @@ function Countdown({ endsAt }: { endsAt: string }) {
   ];
   return (
     <div className="grid justify-items-center gap-2" aria-hidden="true">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-on-lapis-muted">{t.endsIn}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-on-lapis-muted">{t.endsIn}</p>
       <ol className="flex gap-2">
         {parts.map(([value, label]) => (
           <li key={label} className="grid w-[4.1rem] justify-items-center rounded-xl bg-black/25 py-2 ring-1 ring-inset ring-gold/25">
             <span className="font-display text-[1.7rem] leading-none tabular-nums text-on-lapis">{String(value).padStart(2, "0")}</span>
-            <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-on-lapis-muted">{label}</span>
+            <span className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-on-lapis-muted">{label}</span>
           </li>
         ))}
       </ol>

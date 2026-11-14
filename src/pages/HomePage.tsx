@@ -188,14 +188,14 @@ export default function HomePage() {
                 {h.why}
               </h2>
             </div>
-            <ul className="grid gap-x-8 gap-y-6 sm:grid-cols-2 xl:grid-cols-4">
+            <ul className="grid gap-x-5 gap-y-6 min-[360px]:grid-cols-2 sm:gap-x-8 xl:grid-cols-4">
               {promises.map(({ Icon, title, text }, i) => (
                 <li key={title} className={cn("group grid content-start gap-3", i > 0 && "xl:border-l xl:border-gold/25 xl:pl-8")}>
-                  <span className="grid size-12 place-items-center rounded-full text-gold ring-1 ring-gold/50 transition-[transform,background-color] duration-300 group-hover:-translate-y-0.5 group-hover:bg-gold/10 motion-reduce:transform-none">
+                  <span className="grid size-10 place-items-center rounded-full text-gold ring-1 ring-gold/50 sm:size-12 transition-[transform,background-color] duration-300 group-hover:-translate-y-0.5 group-hover:bg-gold/10 motion-reduce:transform-none">
                     <Icon className="size-[22px]" strokeWidth={1.75} aria-hidden="true" />
                   </span>
                   <span>
-                    <span className="block font-display text-[1.2rem] leading-tight text-on-lapis">{h[title]}</span>
+                    <span className="block text-balance font-display text-[1.05rem] leading-tight text-on-lapis sm:text-[1.2rem]">{h[title]}</span>
                     <span className="mt-1 block text-sm leading-relaxed text-on-lapis-muted">{h[text]}</span>
                   </span>
                 </li>
