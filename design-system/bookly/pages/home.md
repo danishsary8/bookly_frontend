@@ -143,3 +143,11 @@ On `/` the header search hides (fade) while the hero search is on screen, and re
 - Top 10 list: one card sheet next to the showcase (same radius and border), hairlines between rows, rows share the
   height evenly. Each row: rank, cover, title/author, optional "Only N left", one gold star + score, price. The front
   row is tinted `bg-lapis-tint` with the lapis rule. No five-star strip in rows.
+
+## Shelf realism pass — 2026-11-14 (branch `bookshelf-polish`)
+Visual only; motion, sizes and inputs unchanged (every book still the same height and thickness).
+- Spines: rounded cloth shading (dark turns, highlight a third across, two hinge grooves, fine weave), striped
+  headbands top and bottom, foil lettering pressed in with a 1px shadow. Three bindings picked from the book id:
+  gold double rules, a leather title label with a foil border (short titles only), or raised bands lit from above.
+- Bookcase: oak grain on the planks, top board, uprights and lip; the uprights' inner sides and the top board's
+  underside drawn in perspective; a warm light pool from the top; a rounded nosing on the shelf's front edge.
