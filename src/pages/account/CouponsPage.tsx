@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
 import { SkeletonGroup, SkeletonRow } from "@/components/ui/skeleton";
 import { setCoupon } from "@/features/cart/couponStore";
+import { AccountSection } from "@/features/account/AccountSection";
 import { percentLabel } from "@/features/offers/percent";
 import { orderDate } from "@/features/orders/format";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -32,11 +33,7 @@ export default function CouponsPage() {
   const coupons = useQuery(rewardQueries.myCoupons());
 
   return (
-    <div className="grid gap-6">
-      <div className="grid gap-2">
-        <h1 className="font-display text-3xl">{r.pageTitle}</h1>
-        <p className="text-muted-foreground">{r.pageLead}</p>
-      </div>
+    <AccountSection title={r.pageTitle} lead={r.pageLead}>
       {coupons.isPending ? (
         <SkeletonGroup label={r.loading} className="grid gap-4">
           <SkeletonRow />
@@ -83,6 +80,6 @@ export default function CouponsPage() {
           })}
         </ul>
       )}
-    </div>
+    </AccountSection>
   );
 }

@@ -82,6 +82,23 @@ describe("http client", () => {
     const error = await api.post("/auth/login", {}).catch((e: unknown) => e);
     expect(error).toMatchObject({ kind: "unauthenticated", message: "Invalid email or password." });
   });
+
+  it("ignores a delayed rejection of an old token after a new login", async () => {
+    setSession("customer", { token: "old", expiresAt: null, user: {} });
+    let rejectOld: (() => Promise<unknown>) | undefined;
+    http.defaults.adapter = (config) => new Promise((_resolve, reject) => {
+      rejectOld = async () => {
+        const { AxiosError } = await import("axios");
+        reject(new AxiosError("fail", "ERR_BAD_RESPONSE", config, undefined, { status: 401, data: {}, headers: {}, statusText: "", config }));
+      };
+    });
+    const request = api.get("/me").catch((error: unknown) => error);
+    await vi.waitFor(() => expect(rejectOld).toBeDefined());
+    setSession("customer", { token: "new", expiresAt: null, user: {} });
+    await rejectOld!();
+    expect(await request).toBeInstanceOf(ApiError);
+    expect(getToken("customer")).toBe("new");
+  });
 });
 
 describe("newIdempotencyKey", () => {

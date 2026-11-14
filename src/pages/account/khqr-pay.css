@@ -1,0 +1,19 @@
+.khqr-payment-info { align-content: start; }
+.khqr-payment-info h1 { font-size: clamp(2rem, 3vw, 2.75rem); letter-spacing: -.035em; }
+.khqr-payment-info > div:first-child > p:last-child { font-size: .875rem; }
+.khqr-payment-status { padding: 1.25rem; gap: 1.25rem; box-shadow: 0 10px 30px -24px rgb(20 32 122 / .3); }
+.khqr-payment-status [role='tablist'] { border-radius: .75rem; }
+.khqr-payment-status [role='tab'] { padding-inline: 1rem; border-radius: .55rem; font-size: .8rem; }
+.khqr-countdown { padding-left: 1.25rem; border-left: 1px solid var(--border); }
+.khqr-countdown > div { gap: .25rem; }
+.khqr-countdown > div > span { font-size: .625rem; letter-spacing: .1em; }
+.khqr-countdown [role='timer'] { font-size: 1.5rem; line-height: 1.1; }
+.khqr-payment-status [role='status'] { font-size: .8rem; padding-top: 1rem; }
+.khqr-payment-info section[aria-labelledby='how-to-pay'] { padding: 1.25rem; border: 1px solid var(--border); border-radius: 1rem; background: color-mix(in srgb, var(--card) 65%, transparent); gap: 1rem; }
+.khqr-payment-info #how-to-pay { font-size: 1rem; }
+.khqr-payment-info ol { gap: 1rem; }
+.khqr-payment-info ol li { font-size: .85rem; line-height: 1.65; gap: .75rem; }
+.khqr-payment-info ol li > span:first-child { border-radius: .5rem; font-size: .75rem; }
+@media (max-width: 639px) {
+  .khqr-countdown { border-left: 0; border-top: 1px solid var(--border); padding: 1rem 0 0; }
+}

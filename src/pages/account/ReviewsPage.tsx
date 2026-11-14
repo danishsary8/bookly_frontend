@@ -1,3 +1,4 @@
+import { accountPage, useAccountPageBounds } from "@/features/account/pagination";
 import { useQuery } from "@tanstack/react-query";
 import { MessageSquareText, PenLine, Trash2 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -28,11 +29,12 @@ export default function ReviewsPage() {
   const a = dict.account;
   useDocumentTitle(a.reviewsDocTitle);
   const [params] = useSearchParams();
-  const page = Math.max(1, Number(params.get("page")) || 1);
+  const page = accountPage(params.get("page"));
   const reviews = useQuery({ ...orderQueries.myReviews({ page, per_page: PER_PAGE }), placeholderData: (previous) => previous });
   const showSkeleton = useSkeletonVisible(reviews.isPending);
   const { ask, dialog } = useDeleteReview();
   const meta = reviews.data?.meta;
+  useAccountPageBounds(meta, reviews.isPlaceholderData);
   const list = reviews.data?.data ?? [];
 
   return (

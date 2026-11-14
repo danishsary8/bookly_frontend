@@ -29,14 +29,14 @@ export function CheckoutProgress({ current, withPay = false, className }: { curr
           const disc = (
             <span
               className={cn(
-                "grid size-7 shrink-0 place-items-center rounded-full text-[13px] font-bold tabular-nums transition-colors duration-300",
+                "checkout-step-marker grid size-7 shrink-0 place-items-center rounded-full text-[13px] font-bold tabular-nums transition-colors duration-300",
                 state === "done" && "bg-primary text-primary-foreground",
                 state === "current" && "bg-card text-primary shadow-[inset_0_0_0_2px_var(--primary),0_0_0_4px_color-mix(in_srgb,var(--primary)_14%,transparent)]",
                 state === "todo" && "bg-card text-muted-foreground shadow-[inset_0_0_0_1px_var(--input)]",
               )}
               aria-hidden="true"
             >
-              {state === "done" ? <Check className="size-3.5" strokeWidth={3} /> : i + 1}
+              {state === "done" ? <Check className="size-3.5" strokeWidth={3} /> : <span className="checkout-step-number">{i + 1}</span>}
             </span>
           );
           const text = (
@@ -46,7 +46,7 @@ export function CheckoutProgress({ current, withPay = false, className }: { curr
             </span>
           );
           return (
-            <li key={step} className="flex items-center gap-2 sm:gap-3" aria-current={state === "current" ? "step" : undefined}>
+            <li key={step} data-step-state={state} className="flex items-center gap-2 sm:gap-3" aria-current={state === "current" ? "step" : undefined}>
               {step === "cart" && state === "done" && current === "details" ? (
                 <Link to="/cart" className="group flex min-h-11 items-center gap-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   {disc}

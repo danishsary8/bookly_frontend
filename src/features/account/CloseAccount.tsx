@@ -101,7 +101,7 @@ export function CloseAccount({ customer }: { customer: Customer | undefined }) {
 
   return (
     <section aria-labelledby="close-account" className="grid max-w-xl gap-3 rounded-xl border border-destructive/40 bg-card p-5 sm:p-6">
-      <h2 id="close-account" className="font-display text-[1.563rem] leading-tight">
+      <h2 id="close-account" className="account-panel-title"><TriangleAlert aria-hidden="true" />
         {t.title}
       </h2>
       <p className="text-[15px] text-muted-foreground">{t.lead}</p>

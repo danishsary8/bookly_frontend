@@ -31,7 +31,7 @@ export function GiftOption({
   const id = useId();
 
   return (
-    <div className="mt-4 grid gap-3 rounded-xl border border-border bg-card p-4">
+    <div className="checkout-gift-option mt-4 grid gap-3 rounded-xl border border-border bg-card p-4">
       <label htmlFor={`${id}-gift`} className="flex min-h-11 cursor-pointer items-start gap-3">
         <Checkbox
           id={`${id}-gift`}

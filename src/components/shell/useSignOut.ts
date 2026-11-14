@@ -1,3 +1,4 @@
+import { clearCustomerCache } from "@/features/auth/customerCache";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "@/api/endpoints/auth";
@@ -10,11 +11,7 @@ export function useSignOut() {
   const queryClient = useQueryClient();
   return async () => {
     await authApi.logout().catch(() => undefined);
-    queryClient.removeQueries({ queryKey: ["cart"] });
-    queryClient.removeQueries({ queryKey: ["account"] });
-    queryClient.removeQueries({ queryKey: ["support"] });
-    queryClient.removeQueries({ queryKey: ["support-orders"] });
-    queryClient.removeQueries({ queryKey: ["order-rating"] });
+    clearCustomerCache(queryClient);
     toast.info(getDict().shell.signedOut);
     navigate("/");
   };

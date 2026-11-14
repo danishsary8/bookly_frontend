@@ -1,3 +1,4 @@
+import "./cart-page.css";
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, ArrowLeft, ArrowRight, BadgePercent, ShieldCheck, ShoppingBag, TicketPercent } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -85,7 +86,7 @@ function Summary({ check, setCheck, ctaRef }: { check: CouponCheck | null; setCh
         <CoverStack items={(data.items ?? []).map((l) => ({ src: l.cover_image_url, title: l.book?.title }))} size="sm" />
       </div>
 
-      <div className="grid gap-3 px-5 pb-1 pt-4 short:gap-2 short:pt-2.5 sm:px-6">
+      <div className="cart-summary-body grid gap-3 px-5 pb-1 pt-4 short:gap-2 short:pt-2.5 sm:px-6">
         <FreeGiftLine gift={data.free_gift} />
         <OfferNudge nudge={data.pricing?.nudge} className="short:py-1.5" />
         <CartDeliveryEstimate version={cartVersion} coupon={coupon} className="short:gap-2" barClassName="short:gap-1.5 short:p-2.5" />
@@ -125,11 +126,11 @@ function Summary({ check, setCheck, ctaRef }: { check: CouponCheck | null; setCh
         </dl>
       </div>
 
-      <div className="receipt-tear my-1 short:my-0" aria-hidden="true">
+      <div className="cart-summary-divider my-4" aria-hidden="true">
         <span />
       </div>
 
-      <div className="grid gap-3 px-5 pb-5 short:gap-2 short:pb-3 sm:px-6">
+      <div className="cart-summary-footer grid gap-3 px-5 pb-5 short:gap-2 short:pb-3 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
           <div className="grid gap-1">
             <p className="font-semibold">{c.totalBeforeShipping}</p>
@@ -155,7 +156,7 @@ function Summary({ check, setCheck, ctaRef }: { check: CouponCheck | null; setCh
             to="/checkout"
             aria-disabled={blocked || undefined}
             tabIndex={blocked ? -1 : undefined}
-            className={cn(buttonVariants({ variant: "cta", size: "lg" }), "w-full", blocked && "pointer-events-none opacity-40")}
+            className={cn(buttonVariants({ variant: "default", size: "lg" }), "h-12 w-full rounded-xl text-sm font-semibold", blocked && "pointer-events-none opacity-40")}
           >
             {dict.cart.checkout} <ArrowRight aria-hidden="true" />
           </Link>
@@ -288,13 +289,13 @@ function CartContents() {
           </p>
         ) : null}
         {cart.data.reward || cart.data.khqr_discount_percent ? (
-          <div className="mx-5 mt-4 grid gap-2 rounded-lg border border-border bg-surface-1 px-3 py-2.5 sm:mx-7">
+          <div className="cart-benefits mx-5 mt-4 grid gap-2 rounded-xl border border-border bg-surface-1 px-4 py-3 text-xs leading-relaxed sm:mx-7">
             <RewardNudge reward={cart.data.reward} />
             <KhqrHint percent={cart.data.khqr_discount_percent} />
           </div>
         ) : null}
         <PromoReminder className="mx-5 mt-4 sm:mx-7" />
-        <ul className="grid px-5 sm:px-7 [&>li]:py-6 [&>li+li]:border-t [&>li+li]:border-border" aria-label={c.cartItems}>
+        <ul className="cart-products grid px-5 sm:px-7 [&>li]:py-6 [&>li+li]:border-t [&>li+li]:border-border" aria-label={c.cartItems}>
           {items.map((line) => (
             <CartLineItem key={line.id} line={line} busy={mutations.busyLineId === line.id} onQuantity={mutations.setQuantity} onRemove={mutations.remove} />
           ))}
@@ -393,12 +394,12 @@ export default function CartPage() {
   const { cart } = useUsableCart();
   const count = cart.data?.items?.length ? (cart.data.item_count ?? 0) : 0;
   return (
-    <div className="overflow-x-clip pb-20">
+    <div className="cart-page overflow-x-clip pb-20">
       <div className="container-shell">
         <PageHeader
           crumbs={[{ label: dict.cartPage.home, to: "/" }, { label: dict.nav.cart }]}
           title={dict.cart.title}
-          aside={count ? <CheckoutProgress current="cart" /> : undefined}
+          aside={count ? <CheckoutProgress current="cart" className="cart-progress" /> : undefined}
           className="pb-6 sm:pt-6 short:gap-1.5 short:pb-2.5 short:pt-2 short:[&_h1]:text-[2.4rem]"
         />
         <CartGate headingLevel="h2">

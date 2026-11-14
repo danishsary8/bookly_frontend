@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, Laptop, Monitor, Smartphone, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -29,7 +29,7 @@ function deviceIcon(name: string) {
 }
 
 export default function MyEbooksPage() {
-  const { dict } = useT();
+  const { dict, locale } = useT();
   const e = dict.ebook;
   useDocumentTitle(e.myEbooks);
   const queryClient = useQueryClient();
@@ -56,15 +56,17 @@ export default function MyEbooksPage() {
   const devices = devicesQuery.data?.data ?? [];
   const meta = devicesQuery.data?.meta;
 
-  const nextRemovalDate = meta?.next_removal_at
-    ? new Date(meta.next_removal_at).toLocaleDateString(undefined, {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
+  const [now, setNow] = useState(() => Date.now());
+  const removalTime = Date.parse(meta?.next_removal_at ?? "");
+  const canRemove = !Number.isFinite(removalTime) || removalTime <= now;
+  const nextRemovalDate = !canRemove
+    ? new Date(removalTime).toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" })
     : null;
-
-  const canRemove = !nextRemovalDate;
+  useEffect(() => {
+    if (!Number.isFinite(removalTime) || removalTime <= now) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [removalTime, now]);
 
   return (
     <div className="grid gap-12">
@@ -180,13 +182,13 @@ export default function MyEbooksPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {devices.map((device: EbookDeviceItem) => {
               const Icon = deviceIcon(device.name);
-              const addedDate = new Date(device.created_at).toLocaleDateString(undefined, {
+              const addedDate = new Date(device.created_at).toLocaleDateString(locale, {
                 day: "numeric",
                 month: "short",
                 year: "numeric",
               });
               const lastUsedDate = device.last_used_at
-                ? new Date(device.last_used_at).toLocaleDateString(undefined, {
+                ? new Date(device.last_used_at).toLocaleDateString(locale, {
                     day: "numeric",
                     month: "short",
                     year: "numeric",

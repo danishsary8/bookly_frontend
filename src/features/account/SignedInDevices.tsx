@@ -52,7 +52,7 @@ export function SignedInDevices() {
   return (
     <section aria-labelledby="signed-in-devices" className="grid max-w-xl gap-4 shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
       <div className="grid gap-1">
-        <h2 id="signed-in-devices" className="font-display text-[1.563rem] leading-tight">
+        <h2 id="signed-in-devices" className="account-panel-title"><Laptop aria-hidden="true" />
           {t.title}
         </h2>
         <p className="text-[15px] text-muted-foreground">{t.lead}</p>

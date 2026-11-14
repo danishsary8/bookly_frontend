@@ -45,6 +45,7 @@ function GiftCardsContent({ customerId }: { customerId: number | undefined }) {
     buy.mutate({ amount_usd: amount, recipient_name: String(form.get("name")), recipient_email: String(form.get("email")), message: String(form.get("message")) || null, send_on: String(form.get("send_on")) });
   };
   if (flags.isPending) return <p role="status">{t.loading}</p>;
+  if (flags.isError) return <ErrorState error={flags.error} onRetry={() => flags.refetch()} headingLevel="h1" showHomeLink={false} />;
   if (!flags.data?.gift_cards) return <Navigate to="/account" replace />;
   const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Phnom_Penh" }).format(new Date());
   const latest = new Date(`${today}T00:00:00Z`); latest.setUTCDate(latest.getUTCDate() + 90);

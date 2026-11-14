@@ -7,6 +7,24 @@ import ReadingListsPage from "./ReadingListsPage";
 
 const list: ReadingList = { id: 1, slug: "my-reads", title: "Weekend reads", description: "", is_public: false, is_staff_pick: false, owner_first_name: "Danish", books: [{ book: { id: 2, title: "Book title" }, position: 0, note: null }] };
 afterEach(() => vi.restoreAllMocks());
+it("keeps unsaved text and the editor open when public access changes", async () => {
+  const own = vi.spyOn(readingListsApi, "own").mockResolvedValue([list]);
+  vi.spyOn(readingListsApi, "update").mockImplementation(async () => {
+    own.mockResolvedValue([{ ...list, is_public: true }]);
+    return { ...list, is_public: true };
+  });
+  const user = userEvent.setup();
+  renderWithProviders(<ReadingListsPage />);
+  const summary = await screen.findByText("Weekend reads", { selector: "summary" });
+  await user.click(summary);
+  const title = screen.getAllByLabelText("List title")[1];
+  await user.clear(title);
+  await user.type(title, "Unsaved draft");
+  await user.click(screen.getByLabelText("Public list"));
+  await screen.findByRole("link", { name: /Open public/i });
+  expect(screen.getAllByLabelText("List title")[1]).toHaveValue("Unsaved draft");
+  expect(summary.closest("details")).toHaveAttribute("open");
+});
 it("creates private lists and toggles public access explicitly", async () => {
   vi.spyOn(readingListsApi, "own").mockResolvedValue([list]);
   const create = vi.spyOn(readingListsApi, "create").mockResolvedValue(list);

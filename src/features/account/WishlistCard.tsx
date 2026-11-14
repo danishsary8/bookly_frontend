@@ -45,6 +45,7 @@ export function WishlistCard({
 
   const currentStatus: WishlistReadingStatus = book.wishlist_status ?? "want_to_read";
   const [updating, setUpdating] = useState(false);
+  const [failedCover, setFailedCover] = useState<string | null>(null);
 
   const statusLabels: Record<WishlistReadingStatus, string> = {
     want_to_read: a.readingStatusWantToRead,
@@ -92,9 +93,10 @@ export function WishlistCard({
           aria-hidden="true"
           className="group block size-full outline-none"
         >
-          {book.cover_image_url ? (
+          {book.cover_image_url && failedCover !== book.cover_image_url ? (
             <img
               src={book.cover_image_url}
+              onError={() => setFailedCover(book.cover_image_url ?? null)}
               alt=""
               style={{ viewTransitionName: layoutId }}
               className={cn(
@@ -118,7 +120,7 @@ export function WishlistCard({
           variant="outline"
           size="icon"
           onClick={() => onRemove(book)}
-          aria-label={dict.cards.saveToWishlist(book.title ?? "")}
+          aria-label={`${dict.readingLists.remove}: ${book.title ?? ""}`}
           className="absolute right-2 top-2 rounded-full border-transparent bg-card/95 shadow-sm text-accent-text hover:bg-card"
         >
           <Heart className="fill-current size-4" aria-hidden="true" />

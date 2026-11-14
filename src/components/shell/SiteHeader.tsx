@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { m } from "motion/react";
 import { Heart, Menu, ShoppingBag } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router-dom";
@@ -19,7 +19,7 @@ import { useT } from "@/i18n";
 /*
  * Storefront header (pages/header.md). ≥ 900px: wordmark · Browse ▾ · New arrivals · Authors · search ·
  * Language/currency/theme · wishlist · cart · account. Mobile adds a full-width search row.
- * The header stays visible while scrolling; its shadow strengthens once the page has scrolled.
+ * Scrolling down hides the header; a short upward scroll reveals it. Menus and keyboard focus keep it visible.
  */
 
 export function Wordmark({ className }: { className?: string }) {
@@ -35,24 +35,55 @@ export function Wordmark({ className }: { className?: string }) {
   );
 }
 
-/** Add depth to the persistent header after scrolling. */
-function useHeaderScroll() {
+/** Direction thresholds prevent flicker from tiny trackpad movements. */
+function useHeaderScroll(routeKey: string, panelOpen: boolean) {
+  const headerRef = useRef<HTMLElement>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   useEffect(() => {
     let frame = 0;
-    const onScroll = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        setScrolled(window.scrollY > 8);
-      });
+    let lastY = window.scrollY;
+    let direction = 0;
+    let distance = 0;
+    const update = () => {
+      frame = 0;
+      const y = Math.max(0, Math.min(window.scrollY, document.documentElement.scrollHeight - window.innerHeight));
+      const delta = y - lastY;
+      lastY = y;
+      setScrolled(y > 8);
+      const header = headerRef.current;
+      const active = document.activeElement;
+      const interacting = header?.contains(active) && (active?.matches(":focus-visible, input, textarea") ?? false);
+      const menuOpen = header?.querySelector('[data-state="open"], [aria-expanded="true"]');
+      if (panelOpen || interacting || menuOpen || y < (header?.offsetHeight ?? 80) + 32) {
+        setHidden(false);
+        distance = 0;
+        return;
+      }
+      const nextDirection = Math.sign(delta);
+      if (!nextDirection) return;
+      if (direction !== nextDirection) distance = 0;
+      direction = nextDirection;
+      distance += Math.abs(delta);
+      if (direction > 0 && distance >= 24) setHidden(true);
+      if (direction < 0 && distance >= 6) setHidden(false);
     };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    // Reveal after navigation or closing a panel without jumping the page.
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      setHidden(false);
+      setScrolled(window.scrollY > 8);
+    });
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", onScroll);
       cancelAnimationFrame(frame);
     };
-  }, []);
-  return scrolled;
+  }, [routeKey, panelOpen]);
+  return { headerRef, scrolled, hidden, reveal: () => setHidden(false) };
 }
 
 const links = [
@@ -67,15 +98,18 @@ export function SiteHeader() {
   const count = useCartCount();
   const signedIn = Boolean(useSession("customer"));
   const { dict } = useT();
-  // Search remains available while scrolling, including on the home page.
-  const scrolled = useHeaderScroll();
+  const { headerRef, scrolled, hidden, reveal } = useHeaderScroll(location.key, Boolean(panel));
   const sort = location.pathname === "/books" ? new URLSearchParams(location.search).get("sort") : null;
   const activeLink = links.find((item) => (item.sort ? item.sort === sort : isActivePath(location.pathname, item.to)))?.to;
 
   return (
     <header
+      ref={headerRef}
+      onFocusCapture={reveal}
+      data-scroll-hidden={hidden || undefined}
       className={cn(
         "site-header sticky top-0 z-(--z-header) h-(--header-h) border-b bg-card/90 backdrop-blur-md transition-[transform,box-shadow,border-color] duration-300 ease-out supports-[backdrop-filter]:bg-card/80 dark:bg-background/85",
+        hidden ? "-translate-y-full pointer-events-none" : "translate-y-0",
         scrolled ? "border-transparent shadow-[0_8px_24px_-16px_rgb(20_32_122/0.35)]" : "border-border",
       )}
     >

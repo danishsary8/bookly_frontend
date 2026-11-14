@@ -32,7 +32,8 @@ export const SORTS: { value: BookSort; label: string }[] = [
   { value: "title", label: "Title A–Z" },
 ];
 
-export const PER_PAGE = 24;
+// Fill the five-column desktop grid, as well as the two/three/six-column layouts.
+export const PER_PAGE = 30;
 
 /** English learning levels (CEFR) and Khmer school grades the API filters on. */
 export const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;

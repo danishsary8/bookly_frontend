@@ -1,3 +1,4 @@
+import { clearCustomerCache } from "./customerCache";
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
@@ -44,9 +45,7 @@ export function SessionWatcher() {
         return;
       }
       if (kind !== "customer") return;
-      queryClient.removeQueries({ queryKey: ["cart"] });
-      queryClient.removeQueries({ queryKey: ["account"] });
-      queryClient.removeQueries({ queryKey: ["order-rating"] });
+      clearCustomerCache(queryClient);
       if (repeat) return;
       shownAt = Date.now();
       toast.info({

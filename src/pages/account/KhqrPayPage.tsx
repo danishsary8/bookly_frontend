@@ -1,3 +1,4 @@
+import "./khqr-pay.css";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock, Download, FlaskConical, Loader2, QrCode, ShieldCheck, XCircle } from "lucide-react";
@@ -44,18 +45,18 @@ function useSecondsLeft(data: KhqrPayment | undefined, updatedAt: number) {
 }
 
 function QrImage({ qr, label }: { qr: string; label: string }) {
-  const [svg, setSvg] = useState<string | null>(null);
+  const [image, setImage] = useState<{ qr: string; svg: string } | null>(null);
   useEffect(() => {
     let cancelled = false;
     qrLib.toString(qr, { type: "svg", margin: 0, errorCorrectionLevel: "M", color: { dark: "#000000", light: "#FFFFFF" } }, (err, out) => {
-      if (!cancelled && !err) setSvg(out);
+      if (!cancelled && !err) setImage({ qr, svg: out });
     });
     return () => {
       cancelled = true;
     };
   }, [qr]);
-  return svg ? (
-    <img src={`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`} alt={label} className="aspect-square w-full" />
+  return image?.qr === qr ? (
+    <img src={`data:image/svg+xml;utf8,${encodeURIComponent(image.svg)}`} alt={label} className="aspect-square w-full" />
   ) : (
     <Skeleton className="aspect-square w-full" />
   );
@@ -208,7 +209,7 @@ export default function KhqrPayPage() {
         </p>
       </div>
 
-      <div className="grid min-w-0 gap-6">
+      <div className="khqr-payment-info grid min-w-0 gap-5">
         <div className="grid gap-2">
           <p className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
             <span className="h-px w-12 bg-current" aria-hidden="true" />
@@ -228,7 +229,7 @@ export default function KhqrPayPage() {
         ) : null}
 
         {/* Currency and the time left, side by side (the amount is on the KHQR card). */}
-        <div className="shop-card grid gap-5 rounded-2xl border border-border bg-card p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+        <div className="khqr-payment-status shop-card grid gap-5 rounded-2xl border border-border bg-card p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
           <div className="grid gap-2">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">{t.currency}</p>
             <div role="tablist" aria-label={t.currency} className="inline-flex justify-self-start rounded-full border border-border bg-surface-2/60 p-1">
@@ -252,8 +253,8 @@ export default function KhqrPayPage() {
               ))}
             </div>
           </div>
-          <div className="flex items-center gap-4 sm:flex-col sm:gap-2 sm:text-center">
-            <span className="relative grid size-[4.5rem] place-items-center">
+          <div className="khqr-countdown flex items-center gap-3">
+            <span className="relative grid size-12 shrink-0 place-items-center">
               <svg viewBox="0 0 60 60" className="absolute inset-0 size-full -rotate-90" aria-hidden="true">
                 <circle cx="30" cy="30" r="26" fill="none" strokeWidth="4" className="stroke-surface-2" />
                 <circle
@@ -298,11 +299,11 @@ export default function KhqrPayPage() {
           </ol>
         </section>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Button variant="outline" onClick={() => void download()} disabled={!qr?.qr}>
+        <div className="khqr-payment-actions grid gap-3 sm:grid-cols-2">
+          <Button variant="default" className="h-12 rounded-xl text-sm" onClick={() => void download()} disabled={!qr?.qr}>
             <Download aria-hidden="true" /> {t.download}
           </Button>
-          <Link to={`/account/orders/${orderId}`} className={buttonVariants({ variant: "ghost" })}>
+          <Link to={`/account/orders/${orderId}`} className={buttonVariants({ variant: "outline", className: "h-12 rounded-xl text-sm" })}>
             {t.viewOrder}
           </Link>
         </div>

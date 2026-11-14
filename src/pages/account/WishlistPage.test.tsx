@@ -99,6 +99,12 @@ beforeEach(() => {
   setLanguage("en");
 });
 
+it("does not announce an empty wishlist while the initial request is still loading", () => {
+  vi.spyOn(accountApi, "wishlist").mockImplementation(() => new Promise(() => {}));
+  renderPage();
+  expect(screen.queryByRole("link", { name: /Discover books/i })).not.toBeInTheDocument();
+});
+
 afterEach(() => {
   vi.restoreAllMocks();
   dismissToast();
@@ -188,7 +194,7 @@ describe("WishlistPage with Reading Statuses", () => {
     await screen.findByRole("heading", { name: "The Great Gatsby" });
 
     // Click remove heart button
-    const removeBtn = screen.getByRole("button", { name: "Save The Great Gatsby to your wishlist" });
+    const removeBtn = screen.getByRole("button", { name: "Remove book: The Great Gatsby" });
     await user.click(removeBtn);
 
     expect(removeSpy).toHaveBeenCalledWith(101);

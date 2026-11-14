@@ -73,7 +73,7 @@ describe("BooksPage", () => {
       { route: "/books?category_id=2&in_stock=1&sort=title" },
     );
     expect(await screen.findByRole("link", { name: "Emma" })).toBeInTheDocument();
-    expect(books).toHaveBeenCalledWith(expect.objectContaining({ category_id: 2, in_stock: true, sort: "title", per_page: 24 }));
+    expect(books).toHaveBeenCalledWith(expect.objectContaining({ category_id: 2, in_stock: true, sort: "title", per_page: 30 }));
     expect(screen.getByText("Showing 1–2 of 2 books")).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: "Remove filter: Classics" })).toBeInTheDocument();
   });

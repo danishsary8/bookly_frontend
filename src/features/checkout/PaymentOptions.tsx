@@ -1,4 +1,5 @@
-import { Banknote, CreditCard, QrCode } from "lucide-react";
+import { FaMoneyBillWave } from "react-icons/fa";
+import { SiVisa } from "react-icons/si";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n";
 
@@ -29,21 +30,20 @@ export function PaymentOptions({
   const { dict } = useT();
   const k = dict.checkoutPage;
   const methods = [
-    { id: "cod", label: k.cod, detail: codBlocked ?? k.codDetail, Icon: Banknote, available: !codBlocked },
+    { id: "cod", label: k.cod, detail: codBlocked ?? k.codDetail, available: !codBlocked },
     {
       id: "khqr",
       label: k.khqr,
       detail: khqr ? `${k.khqrReady(khqr.pay_minutes ?? 15)}${khqr.mode === "test" ? ` ${k.khqrTestNote}` : ""}` : k.khqrDetail,
-      Icon: QrCode,
       available: Boolean(khqr),
     },
-    { id: "card", label: k.card, detail: k.cardDetail, Icon: CreditCard, available: false },
+    { id: "card", label: k.card, detail: k.cardDetail, available: false },
   ] as const;
 
   return (
-    <fieldset className="grid gap-3">
+    <fieldset className="checkout-payments grid gap-3">
       <legend className="sr-only">{k.paymentMethod}</legend>
-      {methods.map(({ id, label, detail, Icon, available }) => {
+      {methods.map(({ id, label, detail, available }) => {
         const checked = available && value === id;
         const saving = id === "khqr" && available && khqrSaving ? khqrSaving : null;
         return (
@@ -64,13 +64,17 @@ export function PaymentOptions({
               onChange={() => (id === "cod" || id === "khqr") && onChange(id)}
               className="size-[18px] shrink-0 accent-primary"
             />
-            <span
-              className={cn(
-                "grid size-11 shrink-0 place-items-center rounded-xl transition-colors duration-200",
-                checked ? "bg-primary text-primary-foreground" : available ? "bg-lapis-tint text-primary" : "bg-surface-2 text-muted-foreground",
+            <span className={`payment-brand payment-brand-${id}`} aria-hidden="true">
+              {id === "cod" ? (
+                <span className="payment-cash-art"><FaMoneyBillWave /><span>$</span></span>
+              ) : id === "khqr" ? (
+                <img src="/images/payments/khqr.svg" alt="" width={166} height={40} />
+              ) : (
+                <span className="payment-card-brands">
+                  <SiVisa />
+                  <svg viewBox="0 0 48 30" fill="none"><circle cx="17" cy="15" r="13" fill="#EB001B" /><circle cx="31" cy="15" r="13" fill="#F79E1B" /><path d="M24 4.05a12.97 12.97 0 0 1 0 21.9 12.97 12.97 0 0 1 0-21.9Z" fill="#FF5F00" /></svg>
+                </span>
               )}
-            >
-              <Icon className="size-5" aria-hidden="true" />
             </span>
             <span className="grid min-w-0 flex-1">
               <span className={cn("font-semibold", !available && "text-muted-foreground")}>{label}</span>

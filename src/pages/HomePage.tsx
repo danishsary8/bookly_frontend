@@ -8,6 +8,7 @@ import { collectionQueries, collectionText } from "@/api/endpoints/collections";
 import { CategoryTiles } from "@/components/home/CategoryTiles";
 import { HomeHero } from "@/components/home/HomeHero";
 import { HomePageSkeleton } from "@/components/home/HomePageSkeleton";
+import { SkeletonGroup, Skeleton } from "@/components/ui/skeleton";
 import { ContinueStrip } from "@/components/home/ContinueStrip";
 import { TopRated } from "@/components/home/TopRated";
 import { ComingSoon } from "@/components/home/ComingSoon";
@@ -61,49 +62,33 @@ export default function HomePage() {
   const { dict, lang } = useT();
   const h = dict.homePage;
   const queryClient = useQueryClient();
-  // Seasonal collections (owner 2026-11-01): up to 2 live ones, above New arrivals. None, or an older API: no row.
-  const collections = useQuery(collectionQueries.live());
   // Hero carousel (owner 2026-11-11): 20 books dealt in turns from staff picks + the most popular books, and from the
   // best sellers of each big category (self-help, comics, kids …), so the slides mix genres.
-  const picks = useQuery({ queryKey: ["reading-lists", "picks"], queryFn: readingListsApi.picks });
   const popular = useQuery(catalogQueries.books({ sort: "best_selling", per_page: 15 }));
   const spotlight = useQuery(catalogQueries.books({ ids: HERO_SPOTLIGHT_IDS.join(","), per_page: HERO_SPOTLIGHT_IDS.length }));
+  // Give the hero's two requests priority on the single-worker local PHP server. Optional sections and category
+  // enrichment must neither queue ahead of them nor keep usable books hidden until the slowest request finishes.
+  const sectionsEnabled = Boolean(popular.data || spotlight.data) || (!popular.isPending && !spotlight.isPending);
+  const [revealed, setRevealed] = useState(false);
+  if (!revealed && sectionsEnabled) setRevealed(true);
+  useEffect(() => {
+    // Start the deadline on mount, including time spent waiting for the API.
+    const timer = window.setTimeout(() => setRevealed(true), 8000);
+    return () => window.clearTimeout(timer);
+  }, []);
+  const picks = useQuery({ queryKey: ["reading-lists", "picks"], queryFn: readingListsApi.picks, enabled: sectionsEnabled });
+  const collections = useQuery({ ...collectionQueries.live(), enabled: sectionsEnabled });
   const picked = (picks.data ?? []).flatMap((list) => list.books.flatMap((entry) => (entry.book ? [entry.book] : [])));
-  const mixed = useCategoryLanes();
-  const newest = useQuery(catalogQueries.books({ sort: "newest", per_page: 12 }));
+  const mixed = useCategoryLanes({ enabled: sectionsEnabled });
+  const newest = useQuery({ ...catalogQueries.books({ sort: "newest", per_page: 12 }), enabled: sectionsEnabled });
   const spotlightBooks = HERO_SPOTLIGHT_IDS.flatMap((id) => spotlight.data?.data.find((book) => book.id === id) ?? []);
   const featured = [...spotlightBooks, ...interleave([[...picked, ...(popular.data?.data ?? [])], ...mixed.lanes], 20)]
     .filter((book, index, books) => books.findIndex((other) => other.id === book.id) === index)
     .slice(0, 20);
-  const heroLoading = (popular.isPending && picks.isPending) || mixed.pending || spotlight.isPending;
-  const categories = useQuery(catalogQueries.categories());
+  const heroLoading = featured.length === 0 && (popular.isPending || spotlight.isPending || picks.isPending || mixed.pending);
+  const categories = useQuery({ ...catalogQueries.categories(), enabled: sectionsEnabled });
   const recent = useRecentlyViewed();
-  const [homeReady, setHomeReady] = useState(false);
-  const initialDataPending = heroLoading || newest.isPending || categories.isPending;
-  const initialError = !initialDataPending && featured.length === 0 && popular.isError ? popular.error : null;
-  const firstCoverUrls = featured.slice(0, 3).flatMap((book) => book.cover_image_url ? [book.cover_image_url] : []).join("\n");
-
-  useEffect(() => {
-    if (homeReady || initialDataPending) return;
-    let cancelled = false;
-    const images: HTMLImageElement[] = [];
-    const reveal = () => { if (!cancelled) setHomeReady(true); };
-    // A stalled image host must not trap visitors behind a page skeleton forever.
-    const timeout = window.setTimeout(reveal, 8000);
-    const urls = firstCoverUrls ? firstCoverUrls.split("\n") : [];
-    Promise.all(urls.map((url) => new Promise<void>((resolve) => {
-      const image = new Image();
-      images.push(image);
-      image.onload = image.onerror = () => resolve();
-      image.src = url;
-      if (image.complete) resolve();
-    }))).then(reveal);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timeout);
-      images.forEach((image) => { image.onload = image.onerror = null; });
-    };
-  }, [homeReady, initialDataPending, firstCoverUrls]);
+  const heroError = featured.length === 0 && popular.isError && spotlight.isError ? popular.error : null;
 
   const websiteJsonLd = {
     "@context": "https://schema.org",
@@ -124,12 +109,19 @@ export default function HomePage() {
 
   return (
     <>
-    {!homeReady ? <HomePageSkeleton /> : null}
-    {homeReady && initialError ? <div className="container-shell py-12"><ErrorState error={initialError} showHomeLink={false} onRetry={() => { setHomeReady(false); void queryClient.invalidateQueries({ queryKey: ["catalog"] }); }} /></div> : null}
-    {/* Keep section queries mounted in parallel, while the initial page is visually and accessibly hidden. */}
-    <div hidden={!homeReady || Boolean(initialError)} className={cn("home-paper overflow-x-clip pb-16", (!homeReady || initialError) && "hidden")}>
+    {!revealed ? <HomePageSkeleton /> : null}
+    <div hidden={!revealed} className={cn("home-paper overflow-x-clip pb-16", !revealed && "hidden")}>
       <JsonLd data={websiteJsonLd} />
       <HomeHero featured={heroLoading ? undefined : featured} label={dict.home.popularBooks} />
+      {heroError ? (
+        <div className="container-shell">
+          <ErrorState error={heroError} showHomeLink={false} onRetry={() => {
+            void queryClient.invalidateQueries({ queryKey: ["catalog"] });
+            void queryClient.invalidateQueries({ queryKey: ["reading-lists", "picks"] });
+          }} />
+        </div>
+      ) : null}
+      {sectionsEnabled ? <>
       {/* The 3D shelf sits on the same page colour as everything else (one calm background, no band). */}
       <ShelfHero />
       <div className="container-shell grid gap-24 pb-10 pt-16">
@@ -212,6 +204,14 @@ export default function HomePage() {
           </div>
         </section>
       </div>
+      </> : (
+        <div className="container-shell py-12">
+          <SkeletonGroup label={dict.ui.loadingPage}>
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="mt-6 h-64 w-full" />
+          </SkeletonGroup>
+        </div>
+      )}
     </div>
     </>
   );

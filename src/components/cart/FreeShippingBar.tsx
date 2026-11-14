@@ -56,8 +56,8 @@ export function FreeShippingBar({ subtotalUsd, thresholdUsd, free = false, class
           style={{ transform: `scaleX(${ratio})` }}
         />
         {unlocked ? null : (
-          // The rider: a full-width layer slid by transform, carrying the truck at its left edge.
-          <span className="absolute inset-0 transition-transform duration-700 ease-out motion-reduce:transition-none" style={{ transform: `translateX(${Math.max(4, ratio * 100)}%)` }}>
+          // A zero-width marker stays inside the track instead of translating a full-width layer beyond the drawer.
+          <span className="absolute inset-y-0 w-0 transition-[left] duration-700 ease-out motion-reduce:transition-none" style={{ left: `${Math.min(96, Math.max(4, ratio * 100))}%` }}>
             <span className="absolute left-0 top-1/2 grid size-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_4px_10px_-4px_rgb(20_32_122/0.7)]">
               <Truck className="size-3" />
             </span>

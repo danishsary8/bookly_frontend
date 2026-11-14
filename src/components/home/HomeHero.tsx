@@ -23,10 +23,10 @@ import { useT } from "@/i18n";
 const SLIDE_MS = 4000;
 
 const iconButton =
-  "inline-flex size-9 items-center justify-center rounded-full border border-on-lapis-muted/40 text-on-lapis transition-[background-color,transform] duration-150 hover:bg-on-lapis/10 active:scale-95";
+  "inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-on-lapis-muted/40 text-on-lapis transition-[background-color,transform] duration-150 hover:bg-on-lapis/10 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold";
 
 export function HomeHero({ featured, label }: { featured: BookCard[] | undefined; label?: string }) {
-  const tree = useQuery(catalogQueries.categoryTree());
+  const tree = useQuery({ ...catalogQueries.categoryTree(), enabled: featured !== undefined });
   const topCategories = [...(tree.data ?? [])].filter((c) => c.slug && (c.total_books ?? 0) > 0).sort((a, b) => (b.total_books ?? 0) - (a.total_books ?? 0)).slice(0, 3);
   const currency = useCurrency();
   const { dict, lang } = useT();
@@ -74,6 +74,18 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
     // An inset card: its edges line up with the sections below, with a strip of page showing around it.
     <div className="container-shell pb-6 pt-3 sm:pb-8 sm:pt-4">
     <section ref={sectionRef} className="hero-lapis relative isolate overflow-hidden rounded-[1.75rem] shadow-[0_30px_60px_-40px_rgb(20_32_122/0.6)]" aria-labelledby="home-hero-title">
+      {!reduceMotion && books.length > 1 ? (
+        <button
+          type="button"
+          onClick={() => setPaused((value) => !value)}
+          className={`${iconButton} absolute right-3 top-3 z-30 backdrop-blur-sm sm:right-6 sm:top-6`}
+          style={{ backgroundColor: "var(--lapis)" }}
+          aria-label={paused ? h.playSlides : h.pauseSlides}
+          aria-pressed={paused}
+        >
+          {paused ? <Play className="size-4" aria-hidden="true" /> : <Pause className="size-4" aria-hidden="true" />}
+        </button>
+      ) : null}
       {/* The current cover, hugely blurred, tints the band so each slide brings its own colour. */}
       {current?.cover_image_url ? (
         <img
@@ -86,10 +98,10 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
       ) : null}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(100deg,rgb(20_32_122/0.9)_0%,rgb(20_32_122/0.7)_45%,rgb(24_38_130/0.55)_100%)]" aria-hidden="true" />
 
-      <div className="grid grid-cols-1 items-center gap-12 px-6 py-12 sm:px-10 [--hero-panel-height:min(920px,calc(100svh-var(--header-h)-4rem))] lg:h-[var(--hero-panel-height)] lg:grid-cols-12 lg:gap-x-8 lg:px-14 lg:py-6 short:py-5">
+      <div className="grid grid-cols-1 items-center gap-12 px-6 pb-12 pt-16 sm:px-10 sm:py-12 [--hero-panel-height:min(920px,calc(100svh-var(--header-h)-4rem))] lg:h-[var(--hero-panel-height)] lg:grid-cols-12 lg:gap-x-8 lg:px-14 lg:py-6 short:py-5">
         <div className="relative z-10 lg:col-span-6">
           <p className="eyebrow">{h.heroEyebrow}</p>
-          <h1 id="home-hero-title" className="mt-4 font-display text-[clamp(2.4rem,3.9vw,3.4rem)] leading-[1.03] tracking-[-0.02em] text-on-lapis short:mt-3 short:text-[clamp(2rem,3.4vw,3rem)]">
+          <h1 id="home-hero-title" className="mt-6 font-display text-[clamp(2.4rem,3.9vw,3.4rem)] leading-[1.12] tracking-[-0.02em] text-on-lapis short:mt-4 short:text-[clamp(2rem,3.4vw,3rem)]">
             <BlurText
               key={lang}
               as="span"
@@ -102,17 +114,17 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
               easing={[0.16, 1, 0.3, 1]}
             />
           </h1>
-          <p className="mt-4 max-w-xl text-[17px] leading-[1.6] text-on-lapis-muted short:mt-3 short:text-base">{dict.home.heroSubtitle}</p>
+          <p className="mt-5 max-w-[44ch] text-[17px] leading-[1.7] text-on-lapis-muted short:mt-4 short:text-base">{dict.home.heroSubtitle}</p>
 
 
           {topCategories.length ? (
-            <nav aria-label={h.popularCategories} className="mt-7 flex flex-wrap items-center gap-2 text-sm short:mt-5">
-              <span className="mr-1 text-[13px] text-on-lapis-muted">{h.popularCategories}</span>
+            <nav aria-label={h.popularCategories} className="mt-8 flex flex-wrap items-center gap-3 text-sm short:mt-6">
+              <span className="w-full text-[13px] text-on-lapis-muted sm:mr-1 sm:w-auto">{h.popularCategories}</span>
               {topCategories.map((c) => (
                 <Link
                   key={c.id}
                   to={`/categories/${c.slug}`}
-                  className="inline-flex min-h-9 items-center rounded-full bg-on-lapis/[0.07] px-3.5 font-medium text-on-lapis ring-1 ring-inset ring-on-lapis/15 transition-[background-color,box-shadow] duration-200 hover:bg-on-lapis/[0.14] hover:ring-gold/50"
+                  className="inline-flex min-h-11 items-center rounded-full bg-on-lapis/[0.07] px-4 py-2 font-medium text-on-lapis ring-1 ring-inset ring-on-lapis/15 transition-[background-color,box-shadow] duration-200 hover:bg-on-lapis/[0.14] hover:ring-gold/50"
                 >
                   {c.name}
                 </Link>
@@ -120,7 +132,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
             </nav>
           ) : null}
           {/* One calm call to action (cream on lapis, the arrow in its own lapis disc) and the shop's two promises. */}
-          <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4 short:mt-5">
+          <div className="mt-8 flex flex-col items-start gap-6 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-8 short:mt-6">
               <Link
                 to="/books"
                 className="hero-catalogue-cta relative isolate inline-flex h-[3.25rem] shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap rounded-full bg-[#FBF6EC] py-1.5 pl-6 pr-1.5 text-[15px] font-semibold leading-none text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
@@ -130,7 +142,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </span>
               </Link>
-            <ul className="grid gap-1.5 text-[13px] text-on-lapis-muted">
+            <ul className="grid gap-2 text-[13px] leading-5 text-on-lapis-muted">
               <li className="inline-flex items-center gap-2"><Wallet className="size-4 text-gold" aria-hidden="true" /> {h.cod}</li>
               <li className="inline-flex items-center gap-2"><QrCode className="size-4 text-gold" aria-hidden="true" /> {h.khqr}</li>
             </ul>
@@ -139,8 +151,8 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
 
         <div className="lg:col-span-6">
           {books.length === 0 ? (
-            <div className="mx-auto grid w-full max-w-[440px] justify-items-center gap-4" aria-hidden="true">
-              <Skeleton className="aspect-[2/3] w-[min(290px,64%)] bg-on-lapis/10" />
+            <div className="home-loading-hero mx-auto grid w-full max-w-[440px] justify-items-center gap-4" aria-hidden="true">
+              <Skeleton className="aspect-[2/3] w-[min(240px,60%)] bg-on-lapis/10 lg:w-[min(280px,60%,calc((var(--hero-panel-height)-14rem)*0.6))]" />
               <Skeleton className="mt-6 h-3 w-1/3 bg-on-lapis/10" />
               <Skeleton className="h-8 w-3/5 bg-on-lapis/10" />
               <Skeleton className="h-4 w-2/5 bg-on-lapis/10" />
@@ -161,6 +173,15 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
             >
               {/* The stack: the current cover in front, its neighbours peeking out behind on each side; every cover stands
                   on a glossy floor with a soft mirror image. Click a neighbour to bring it forward. */}
+              <div className="relative isolate">
+                {books.length > 1 ? <>
+                  <button type="button" onClick={() => step(-1)} className={`${iconButton} absolute left-0 top-[43%] z-20 -translate-y-1/2 shadow-lg backdrop-blur-sm hover:border-gold/60`} style={{ backgroundColor: "var(--lapis)" }} aria-label={h.prevBook}>
+                    <ChevronLeft className="size-5" aria-hidden="true" />
+                  </button>
+                  <button type="button" onClick={() => step(1)} className={`${iconButton} absolute right-0 top-[43%] z-20 -translate-y-1/2 shadow-lg backdrop-blur-sm hover:border-gold/60`} style={{ backgroundColor: "var(--lapis)" }} aria-label={h.nextBook}>
+                    <ChevronRight className="size-5" aria-hidden="true" />
+                  </button>
+                </> : null}
               <div
                 onPointerMove={(e) => {
                   if (reduceMotion || e.pointerType !== "mouse") return;
@@ -206,6 +227,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                 <span className="pointer-events-none absolute left-1/2 top-[90%] block h-px w-[200%] -translate-x-1/2 bg-[linear-gradient(90deg,transparent,rgb(255_255_255/0.22),transparent)]" aria-hidden="true" />
                 <div className="aspect-[6/1]" aria-hidden="true" />
               </div>
+              </div>
 
               {current ? (
                 <div className="text-center">
@@ -235,24 +257,13 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                   </div>
 
                   <div className="mt-5 flex items-center justify-center gap-3">
-                    <button type="button" onClick={() => step(-1)} className={iconButton} aria-label={h.prevBook}>
-                      <ChevronLeft className="size-4" aria-hidden="true" />
-                    </button>
-                    <Link to={`/books/${current.id}`} className="group/vb relative inline-flex h-10 items-center gap-1.5 overflow-hidden rounded-full border border-on-lapis-muted/45 px-5 text-sm font-semibold text-on-lapis transition-colors hover:bg-on-lapis/10">
+                    <Link to={`/books/${current.id}`} className="group/vb relative inline-flex h-11 min-w-36 items-center justify-center gap-3 overflow-hidden rounded-full border border-on-lapis-muted/40 bg-on-lapis/5 px-6 text-sm font-semibold text-on-lapis transition-colors hover:border-on-lapis-muted/70 hover:bg-on-lapis/10 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold">
                       {h.viewBook} <ArrowRight className="size-4 transition-transform duration-200 group-hover/vb:translate-x-0.5" aria-hidden="true" />
                       {/* the slide timer runs along the bottom edge of the button */}
                       <span className="absolute inset-x-4 bottom-0 h-0.5 overflow-hidden rounded-full" aria-hidden="true">
                         <span key={`${index}-${autoplaying}`} className="hero-timer block h-full origin-left bg-gold" style={autoplaying ? { animationDuration: `${SLIDE_MS}ms` } : { animation: "none", transform: "scaleX(0)" }} />
                       </span>
                     </Link>
-                    <button type="button" onClick={() => step(1)} className={iconButton} aria-label={h.nextBook}>
-                      <ChevronRight className="size-4" aria-hidden="true" />
-                    </button>
-                    {!reduceMotion && books.length > 1 ? (
-                      <button type="button" onClick={() => setPaused((p) => !p)} className={iconButton} aria-label={paused ? h.playSlides : h.pauseSlides}>
-                        {paused ? <Play className="size-3.5" aria-hidden="true" /> : <Pause className="size-3.5" aria-hidden="true" />}
-                      </button>
-                    ) : null}
                   </div>
                 </div>
               ) : null}

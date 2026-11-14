@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { BadgeCheck, CircleAlert, KeyRound, Mail, Phone } from "lucide-react";
+import { BadgeCheck, CircleAlert, KeyRound, Mail, Phone, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { accountKeys } from "@/api/endpoints/account";
 import { authApi } from "@/api/endpoints/auth";
@@ -73,7 +73,7 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
   return (
     <section aria-labelledby="sign-in-methods" className="grid max-w-xl gap-4 shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
       <div className="grid gap-1">
-        <h2 id="sign-in-methods" className="font-display text-[1.563rem] leading-tight">
+        <h2 id="sign-in-methods" className="account-panel-title"><ShieldCheck aria-hidden="true" />
           {t.waysIn}
         </h2>
         <p className="text-[15px] text-muted-foreground">{t.waysInLead}</p>

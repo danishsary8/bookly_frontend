@@ -953,3 +953,32 @@ no page errors, no sideways scroll.
 Polish pass (same branch): hover tooltips on every chart (trend lines, income, donut, payment bar), grow/reveal/draw-in
 motion (off with reduced motion), revenue card gross/refunds/delivered chips, insights widgets toned with icons.
 Browser: each hover exercised at 1440 (tooltip text read back); 1366/1440/dark/390 no errors, no sideways scroll.
+
+## Education shelf filter (2026-11-13)
+- Added the Education shelf tab and matching Khmer label. Resolve the live category by its education slug and load up to 30 category-filtered titles using the shared query cache; the current catalogue returns 17 real books.
+- Link the Education See all action to /categories/education. Preserve shelf dimensions, book proportions, controls and animation.
+- Verified real Education selection, 17-book API response, category destination and responsive layout at 1440/1024/390px without browser errors. Lint/build and 11 targeted tests passed.
+
+## Top rated compact panels (2026-11-13)
+- Reduced desktop panels to a responsive 480-512px height and tightened the carousel stage, retaining cover animation and selection behavior.
+- Simplified the ranked list to rank, cover, title, author and a quiet active/hover arrow. Removed repeated ratings, prices and stock badges from the list; the selected book keeps its rating, price and cart action in the showcase.
+- Verified ten rows, desktop panel height, mobile reflow, no horizontal overflow, and row-to-carousel selection in the browser. Lint and production build passed.
+
+## Cart drawer cleanup (2026-11-13)
+- Gave the cart a full-width mobile/440px desktop panel, clearer header, quieter delivery card, product-first body ordering and compact fixed checkout summary. Reward details remain available below the items.
+- Tightened compact cart lines, bounded grid/text widths and removed duplicate unit-price text for single-quantity lines. Preserved quantity, removal, issues and checkout behavior.
+- Fixed horizontal overflow at its source: the shipping truck now uses a bounded zero-width marker instead of shifting a full-width overlay past the progress track.
+- Verified drawer/body width and visible footer at 320/390/768/1440px, removal-to-empty and Escape with isolated API fixtures. Lint/build and 14 targeted shell/cart tests passed. Reviewed the mobile screenshot.
+
+## Account functional audit (2026-11-14)
+- Reviewed account overview, orders/detail/payment, profile/security, addresses, wishlist, reviews, ebooks/devices, reading lists, coupons, gifts/referrals and support. Returns policy work is owned separately and was not changed in this audit.
+- Cleared private account/order/library/payment/support caches and applied coupons across sign-in/sign-out/session rejection. A delayed 401 from an older token no longer ends a newer login.
+- Corrected review CTA destinations, KHQR payment labels and stale pay-again actions; recovered invalid/out-of-range account pagination, including after last-page removal.
+- Fixed false empty wishlist loading, wishlist removal labels and broken-cover fallback, ebook device cooldown expiry, reading-list draft loss on visibility changes, password device-list refresh, pending profile edits, and feature-flag failure handling.
+- Added regression tests and an isolated Chromium laptop smoke across 15 account routes, with all API requests intercepted. Account/shared test pass: 147 tests, plus 2 dashboard review tests; supplemental authentication/session tests passed. Browser smoke passed without runtime errors, duplicate IDs or horizontal overflow.
+
+## Account UI redesign (2026-11-14)
+- Applied ui-ux-pro-max guidance to the existing Bookly editorial design system. Added account-scoped surfaces, type, form, icon, focus and reduced-motion rules; shared page headers and compact empty states.
+- Refined grouped sidebar navigation and active states. Rebuilt profile into personal-details and communication-preference panels. Reorganized security into sign-in/password, full-width devices and separate export/closure panels. Added proper Google/Facebook SVG marks.
+- Unified dashboard shortcuts, order rows, addresses, coupons, support, reading lists and library presentation. Preserved endpoint behaviour and the earlier functional fixes; returns-policy files were left to their separate owner.
+- Verified 149 regression tests; Chromium smoke across 15 account routes, selected routes at 390/768px and profile/security in both themes. Account-scoped axe WCAG checks passed in light and dark. Lint and TypeScript checks passed; production build passed. Screenshots in overnight-screenshots/account-redesign-*.png.

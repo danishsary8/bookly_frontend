@@ -116,6 +116,12 @@ afterEach(() => {
 });
 
 describe("OrdersPage", () => {
+  it("does not offer payment again for a paid KHQR order with an old deadline", async () => {
+    vi.mocked(ordersApi.orders).mockResolvedValue(page([{ ...pending, status: "processing", payment_method: "khqr", payment_status: "succeeded", payment_due_at: "2026-10-01T09:00:00Z" }]));
+    app("/account/orders");
+    await screen.findByRole("list", { name: "Your orders" });
+    expect(screen.queryByText("Pay now")).not.toBeInTheDocument();
+  });
   it("lists orders and filters by status through the URL", async () => {
     const user = userEvent.setup();
     app("/account/orders");
@@ -127,6 +133,13 @@ describe("OrdersPage", () => {
     await waitFor(() => expect(within(screen.getByRole("list", { name: "Your orders" })).getAllByRole("listitem")).toHaveLength(1));
     expect(ordersApi.orders).toHaveBeenLastCalledWith(expect.objectContaining({ status: "delivered" }));
   });
+});
+
+it("labels a KHQR order correctly and hides stale payment actions", async () => {
+  vi.mocked(ordersApi.order).mockResolvedValue({ ...pending, status: "processing", payment_method: "khqr", payment_status: "succeeded", payment_due_at: "2026-10-01T09:00:00Z" });
+  app("/account/orders/7");
+  expect(await screen.findByText("Bakong KHQR")).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "Pay now" })).not.toBeInTheDocument();
 });
 
 describe("OrderDetailPage", () => {

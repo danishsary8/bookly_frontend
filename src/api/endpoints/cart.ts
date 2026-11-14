@@ -29,6 +29,7 @@ export interface PlaceOrderInput {
   payment_method: "cod" | "khqr";
   coupon_code?: string;
   delivery_note?: string;
+  delivery_phone?: string;
   /** Free gift option; the message (max 200) is printed on the packing sheet. */
   is_gift?: boolean;
   gift_message?: string;

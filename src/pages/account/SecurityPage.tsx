@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { LockKeyhole } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -34,11 +35,13 @@ export default function SecurityPage() {
   const hasPassword = customer?.has_password !== false;
   return (
     <AccountSection title={dict.account.security} lead={dict.account.securityLead}>
+      <div className="account-security-grid">
       <SignInMethods customer={customer} />
       <PasswordForm key={String(hasPassword)} hasPassword={hasPassword} />
       <SignedInDevices />
       <DownloadMyData />
       <CloseAccount customer={customer} />
+      </div>
     </AccountSection>
   );
 }
@@ -66,6 +69,7 @@ function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
       });
       reset();
       if (!hasPassword) void queryClient.invalidateQueries({ queryKey: accountKeys.me() });
+      void queryClient.invalidateQueries({ queryKey: accountKeys.sessions() });
       toast.success({ title: hasPassword ? a.passwordChanged : a.passwordSet, description: a.passwordToastLead });
     } catch (error) {
       const message = applyApiErrors(error, setError, ["current_password", "password", "password_confirmation"]);
@@ -82,7 +86,8 @@ function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
   return (
     <section id="password" aria-labelledby="password-title" className="grid scroll-mt-24 gap-3">
       <div className="grid gap-1">
-        <h2 id="password-title" className="font-display text-[1.563rem] leading-tight">
+        <h2 id="password-title" className="account-panel-title">
+          <LockKeyhole aria-hidden="true" />
           {hasPassword ? a.changePassword : a.setPassword}
         </h2>
         <p className="text-[15px] text-muted-foreground">

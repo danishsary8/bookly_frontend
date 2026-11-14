@@ -99,7 +99,7 @@ export default function OrderDetailPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            {o.payment_due_at ? (
+            {o.payment_method === "khqr" && o.payment_status === "pending" && o.status === "pending" && o.payment_due_at ? (
               <Link to={`/account/orders/${o.id}/pay`} className={buttonVariants()}>
                 <QrCode aria-hidden="true" /> {t.payNow}
               </Link>
@@ -129,9 +129,9 @@ export default function OrderDetailPage() {
             itemAction={
               delivered
                 ? (item) => (
-                    <Link to={`/books/${item.book_id}#your-review`} className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-4 hover:underline">
+                    item.book_id ? <Link to={`/books/${item.book_id}#your-review`} className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-4 hover:underline">
                       <Star className="size-4" aria-hidden="true" /> {t.reviewBook}
-                    </Link>
+                    </Link> : null
                   )
                 : undefined
             }
@@ -160,7 +160,7 @@ export default function OrderDetailPage() {
             <h2 id="order-payment" className="flex items-center gap-2 font-display text-[1.563rem] leading-tight">
               <Banknote className="size-5 text-primary" aria-hidden="true" /> {t.payment}
             </h2>
-            <p className="font-semibold">{t.cashOnDelivery}</p>
+            <p className="font-semibold">{o.payment_method === "khqr" ? dict.checkoutPage.khqr : o.payment_method === "card" ? dict.checkoutPage.card : t.cashOnDelivery}</p>
             <p className="text-muted-foreground">{payKey ? t[payKey] : o.payment_status}</p>
           </section>
         </div>

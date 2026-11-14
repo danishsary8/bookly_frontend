@@ -24,6 +24,7 @@ export default function ReferralsPage() {
   const [copyResult, setCopyResult] = useState("");
   const referral = useQuery({ queryKey: ["account", "referrals", session?.user.id, page], queryFn: () => creditApi.referrals(referralDevice(), page), enabled: flags.data?.referrals === true, retry: false });
   if (flags.isPending) return <p role="status">{t.loading}</p>;
+  if (flags.isError) return <ErrorState error={flags.error} onRetry={() => flags.refetch()} headingLevel="h1" showHomeLink={false} />;
   if (!flags.data?.referrals) return <Navigate to="/account" replace />;
   const data = referral.data;
   const link = data ? `${window.location.origin}/?ref=${encodeURIComponent(data.code)}` : "";

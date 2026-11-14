@@ -50,8 +50,12 @@ http.interceptors.response.use(
 
     if (apiError.kind === "unauthenticated" && sentToken) {
       const kind = sessionKindFor(error.config?.url);
-      clearSession(kind);
-      window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT, { detail: { kind } }));
+      // A late failure from an old request must not sign out a newly authenticated customer.
+      const currentToken = getToken(kind);
+      if (currentToken && error.config?.headers?.Authorization === `Bearer ${currentToken}`) {
+        clearSession(kind);
+        window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT, { detail: { kind } }));
+      }
     }
 
     return Promise.reject(apiError);

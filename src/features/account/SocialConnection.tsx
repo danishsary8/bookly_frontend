@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link2Off } from "lucide-react";
+import { FcGoogle } from "react-icons/fc";
+import { FaFacebook } from "react-icons/fa";
 import { accountApi, accountKeys } from "@/api/endpoints/account";
 import { ApiError } from "@/api/errors";
 import type { Customer } from "@/api/types";
@@ -20,7 +22,6 @@ import { useT } from "@/i18n";
  */
 
 const NAMES: Record<Provider, string> = { google: "Google", facebook: "Facebook" };
-const ICONS: Record<Provider, string> = { google: "G", facebook: "f" };
 
 export function SocialConnection({ provider, customer }: { provider: Provider; customer: Customer | undefined }) {
   const queryClient = useQueryClient();
@@ -122,7 +123,7 @@ export function SocialConnection({ provider, customer }: { provider: Provider; c
 
   return (
     <Row
-      icon={<span className="text-sm font-bold" aria-hidden="true">{ICONS[provider]}</span>}
+      icon={provider === "google" ? <FcGoogle className="size-5" aria-hidden="true" /> : <FaFacebook className="size-5" aria-hidden="true" />}
       label={name}
       value={connected ? t.connected : <span className="text-muted-foreground">{t.notConnected}</span>}
       action={action}

@@ -54,6 +54,8 @@ afterEach(() => {
 
 describe("social sign-in", () => {
   it("stays 'coming soon' below the form while no provider is set up", () => {
+    vi.stubEnv("VITE_GOOGLE_CLIENT_ID", "");
+    vi.stubEnv("VITE_FACEBOOK_APP_ID", "");
     app();
     expect(screen.getByRole("button", { name: "Continue with Google" })).toBeDisabled();
     expect(screen.getByText("Google and Facebook sign-in are coming soon.")).toBeInTheDocument();

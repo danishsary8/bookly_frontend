@@ -1,3 +1,4 @@
+import { accountPage, useAccountPageBounds } from "@/features/account/pagination";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookMarked, BookOpen, CheckCircle2, Heart } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -30,7 +31,7 @@ export default function WishlistPage() {
   const cart = useAddToCart();
 
   const [params, setParams] = useSearchParams();
-  const page = Math.max(1, Number(params.get("page")) || 1);
+  const page = accountPage(params.get("page"));
   const rawStatus = params.get("status") as WishlistReadingStatus | null;
   const currentStatus: WishlistReadingStatus | "all" =
     rawStatus === "want_to_read" || rawStatus === "reading" || rawStatus === "finished"
@@ -50,6 +51,7 @@ export default function WishlistPage() {
   const data = wishlistQuery.data;
   const books = data?.data ?? [];
   const meta = data?.meta;
+  useAccountPageBounds(meta, wishlistQuery.isPlaceholderData);
   const counts = meta?.counts;
 
   const handleTabChange = (val: string) => {
@@ -149,7 +151,8 @@ export default function WishlistPage() {
             headingLevel="h2"
             showHomeLink={false}
           />
-        ) : wishlistQuery.isPending && showSkeleton ? (
+        ) : wishlistQuery.isPending ? (
+          showSkeleton ? (
           <SkeletonGroup
             label={dict.cards.loadingBooks}
             className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-3"
@@ -158,6 +161,7 @@ export default function WishlistPage() {
               <BookCardSkeleton key={i} />
             ))}
           </SkeletonGroup>
+          ) : null
         ) : books.length === 0 ? (
           <EmptyState
             icon={Heart}

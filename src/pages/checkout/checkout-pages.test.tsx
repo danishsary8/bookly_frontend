@@ -134,6 +134,21 @@ describe("CheckoutPage", () => {
     await user.click(screen.getByRole("button", { name: "Place order" }));
     await waitFor(() => expect(place).toHaveBeenCalledWith(expect.objectContaining({ use_credit: true, expected_payment_due_usd: "22.48" }), expect.any(String)));
   });
+  it("lets the courier phone be edited separately and blocks an invalid number", async () => {
+    const user = userEvent.setup();
+    const place = vi.spyOn(cartApi, "placeOrder").mockResolvedValue(order);
+    app("/checkout");
+    const phone = await screen.findByRole("textbox", { name: "Delivery phone number" });
+    expect(phone).toHaveValue(home.phone);
+    await user.clear(phone);
+    await user.type(phone, "abc");
+    expect(screen.getByRole("button", { name: "Place order" })).toBeDisabled();
+    await user.clear(phone);
+    await user.type(phone, "+855 87 123 456");
+    await user.click(screen.getByRole("button", { name: "Place order" }));
+    expect(place).toHaveBeenCalledWith(expect.objectContaining({ delivery_phone: "+855 87 123 456" }), expect.any(String));
+  });
+
   it("preselects the default address and places a cash-on-delivery order", async () => {
     const user = userEvent.setup();
     setCoupon("WELCOME10");
@@ -146,7 +161,7 @@ describe("CheckoutPage", () => {
     expect(screen.getByRole("radio", { name: /Cash on delivery/ })).toBeChecked();
     expect(screen.getByRole("radio", { name: /Card/ })).toBeDisabled();
     await user.click(screen.getByRole("button", { name: "Place order" }));
-    expect(place).toHaveBeenCalledWith({ address_id: 11, payment_method: "cod", coupon_code: "WELCOME10" }, expect.any(String));
+    expect(place).toHaveBeenCalledWith({ address_id: 11, payment_method: "cod", delivery_phone: "012345678", coupon_code: "WELCOME10" }, expect.any(String));
     expect(await screen.findByRole("heading", { level: 1, name: /Thank you/ })).toBeInTheDocument();
     expect(screen.getByText(/BK-000042/)).toBeInTheDocument();
     expect(getCoupon()).toBeNull();

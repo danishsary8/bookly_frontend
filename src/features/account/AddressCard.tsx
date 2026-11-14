@@ -23,7 +23,7 @@ export function AddressCard({ address, onEdit, onDelete, onMakeDefault, busy, cl
   return (
     <article
       aria-label={`${title}${address.is_default ? t.defaultSuffix : ""}`}
-      className={cn("grid h-full content-between gap-4 rounded-xl border bg-card p-5", address.is_default ? "border-primary" : "border-border", className)}
+      className={cn("account-address-card grid h-full content-between gap-4 rounded-xl border bg-card p-5", address.is_default ? "border-primary" : "border-border", className)}
     >
       <div className="grid gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">

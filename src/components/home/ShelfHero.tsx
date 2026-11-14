@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useReducedMotion } from "motion/react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { catalogApi, catalogQueries } from "@/api/endpoints/catalog";
+import { catalogApi, catalogQueries, type BookFilters } from "@/api/endpoints/catalog";
 import type { BookCard } from "@/api/types";
 import { ReaderScore } from "@/components/ReaderScore";
 import { cn } from "@/lib/utils";
@@ -22,11 +22,12 @@ import { useT } from "@/i18n";
  * stops while the shelf is off screen. Reduced motion: books snap, no autoplay, no tilt, no entrance slide.
  */
 
-type RowId = "best_sellers" | "new_arrivals" | "coming_soon" | "ebook_deals";
-const ROWS: RowId[] = ["best_sellers", "new_arrivals", "coming_soon", "ebook_deals"];
+type RowId = "best_sellers" | "new_arrivals" | "coming_soon" | "education" | "ebook_deals";
+const ROWS: RowId[] = ["best_sellers", "new_arrivals", "coming_soon", "education", "ebook_deals"];
 const ROW_LINK: Record<RowId, string> = {
   best_sellers: "/books?sort=best_selling",
   new_arrivals: "/books?sort=newest",
+  education: "/categories/education",
   coming_soon: "/books?coming_soon=1&sort=release_soon",
   ebook_deals: "/books?has_ebook=1&format=ebook&max_price=4.99&sort=price_asc",
 };
@@ -34,8 +35,16 @@ const ROW_LINK: Record<RowId, string> = {
 const CLOTH = ["#14207A", "#7A2E2A", "#2F5D4A", "#C9A24B", "#4C5378", "#8A5A3B", "#1E4E5C", "#5B2A4E", "#E9E1CF", "#A0522D"];
 const AUTOPLAY_MS = 3200;
 /** A slightly wider shelf with slimmer cloth spines around the open book. */
-const SHELF_MAX = 1440;
-const SPINES = 20;
+const SHELF_MAX = 1520;
+const VISIBLE_SPINES = 24;
+const SHELF_BOOKS = 30;
+const ROW_FILTERS: Record<RowId, BookFilters> = {
+  best_sellers: { sort: "best_selling" },
+  new_arrivals: { sort: "newest" },
+  education: { sort: "newest" },
+  coming_soon: { coming_soon: true, sort: "release_soon" },
+  ebook_deals: { has_ebook: true, format: "ebook", max_price: 4.99, sort: "price_asc" },
+};
 /** The bookcase frame: thickness of the top board and of each upright, in px. */
 const CASE_TOP = 18;
 const CASE_POST = 16;
@@ -133,14 +142,25 @@ export function ShelfHero() {
   const h = dict.homePage;
   const rows = useQuery({ queryKey: ["catalog", "rows", null], queryFn: () => catalogApi.rows(), staleTime: 15 * 60 * 1000 });
   // The compact /catalog/rows preview is too short for this endless shelf.
-  const bestSellers = useQuery(catalogQueries.books({ sort: "best_selling", per_page: 24 }));
   const [row, setRow] = useState<RowId>("best_sellers");
+  const tree = useQuery(catalogQueries.categoryTree());
+  const education = tree.data?.find((category) => category.slug === "education");
+  const educationBooks = useQuery({
+    ...catalogQueries.books({ category_id: education?.id, sort: "newest", per_page: SHELF_BOOKS }),
+    enabled: Boolean(education?.id),
+    placeholderData: undefined,
+  });
+  const selectedBooks = useQuery({
+    ...catalogQueries.books({ ...ROW_FILTERS[row], ...(row === "education" ? { category_id: education?.id } : {}), per_page: SHELF_BOOKS }),
+    enabled: row !== "education" || Boolean(education?.id),
+    placeholderData: undefined,
+  });
 
-  const booksOf = (id: RowId) => id === "best_sellers"
-    ? (bestSellers.data?.data ?? (bestSellers.isError ? rows.data?.find((r) => r.id === id)?.books : undefined) ?? [])
-    : (rows.data?.find((r) => r.id === id)?.books ?? []).slice(0, 12);
+  const booksOf = (id: RowId) => id === "education" ? educationBooks.data?.data ?? [] : id === row
+    ? (selectedBooks.data?.data ?? rows.data?.find((r) => r.id === id)?.books ?? [])
+    : (rows.data?.find((r) => r.id === id)?.books ?? []);
   const available = ROWS.filter((id) => booksOf(id).length >= 3);
-  const current = available.includes(row) ? row : bestSellers.isPending || rows.isPending ? row : (available[0] ?? "best_sellers");
+  const current = available.includes(row) ? row : selectedBooks.isPending || rows.isPending ? row : (available[0] ?? "best_sellers");
   const books = booksOf(current);
   const tones = useCoverTones(books.flatMap((b) => (b.cover_image_url ? [b.cover_image_url] : [])));
   const list = books.length >= 3 ? books : Array.from({ length: 9 }, () => null);
@@ -244,7 +264,7 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
     let last = performance.now();
     let idle = performance.now();
     const { H, ws, d, gap } = dims;
-    const half = Math.min(window.innerWidth, SHELF_MAX, SPINES * (ws + gap) + d * 1.4) / 2;
+    const half = Math.min(window.innerWidth - 32, SHELF_MAX, VISIBLE_SPINES * (ws + gap) + d * 1.4) / 2;
     const loop = (now: number) => {
       const m = st.current;
       if (m.lift.length !== total) m.lift = new Float32Array(total);
@@ -401,7 +421,7 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
   const stageH = Math.round(H * 1.12 + 44);
   /** The shelf board: its front edge sits just in front of the spines; the floor runs back from there. */
   const front = d / 2 + H * 0.05;
-  const width = Math.min(SHELF_MAX, SPINES * (ws + dims.gap) + d * 1.4);
+  const width = Math.min(SHELF_MAX, VISIBLE_SPINES * (ws + dims.gap) + d * 1.4);
   // Where the lip lands on screen: perspective 2200px from the stage centre, at depth `front`.
   // The bookcase (owner 2026-11-12): a top board and two uprights frame the row; the case ends at the shelf's lip, and
   // the rail below is its base. The eye stays where it was (viewY), so the books look the same as before.

@@ -19,7 +19,7 @@ interface EmptyStateProps {
 export const EmptyState = ({ icon: Icon, title, description, action, secondaryAction, headingLevel = "h2", className }: EmptyStateProps) => {
   const Heading = headingLevel;
   return (
-    <div className={cn("mx-auto grid max-w-md justify-items-center gap-3 px-4 py-12 text-center", className)}>
+    <div className={cn("account-empty mx-auto grid max-w-md justify-items-center gap-3 px-4 py-12 text-center", className)}>
       <div className="mb-2 grid h-24 w-24 place-items-center rounded-full bg-lapis-tint text-primary">
         <Icon className="h-11 w-11" strokeWidth={1.5} aria-hidden={true} />
       </div>

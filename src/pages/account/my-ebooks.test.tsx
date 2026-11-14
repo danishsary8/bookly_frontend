@@ -41,6 +41,18 @@ describe("MyEbooksPage", () => {
       { route: "/account/ebooks" },
     );
 
+  it.each([[-60_000, true], [86_400_000, false]])("applies the device cooldown using its timestamp (%s ms)", async (offset, enabled) => {
+    vi.spyOn(ebookApi, "library").mockResolvedValue([]);
+    vi.spyOn(ebookApi, "devices").mockResolvedValue({
+      data: [{ id: 99, name: "Old laptop", created_at: "2026-01-01T00:00:00Z", last_used_at: null, is_current: false }],
+      meta: { max_devices: 3, next_removal_at: new Date(Date.now() + offset).toISOString() },
+    });
+    renderPage();
+    const button = await screen.findByRole("button", { name: /Remove device/i });
+    if (enabled) expect(button).toBeEnabled();
+    else expect(button).toBeDisabled();
+  });
+
   it("shows empty state when customer owns no ebooks", async () => {
     vi.spyOn(ebookApi, "library").mockResolvedValue([]);
     vi.spyOn(ebookApi, "devices").mockResolvedValue({

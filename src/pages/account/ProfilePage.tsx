@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Bell, Mail, ShoppingBag, TrendingDown, UserRound } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -62,11 +63,14 @@ function ProfileForm({ customer }: { customer: Customer }) {
 
   return (
     <AccountSection title={a.profile} lead={a.profileLead}>
-      <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid max-w-xl gap-5 shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
+      <div className="account-profile-grid">
+      <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="account-panel account-profile-form">
+        <h2 className="account-panel-title"><UserRound aria-hidden="true" />{dict.accountUi.personalDetails}</h2>
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
-        <TextField label={a.fullName} autoComplete="name" error={errors.name?.message} {...register("name")} />
+        <TextField disabled={isSubmitting} label={a.fullName} autoComplete="name" error={errors.name?.message} {...register("name")} />
         <TextField
           label={a.phone}
+          disabled={isSubmitting}
           optional
           type="tel"
           inputMode="tel"
@@ -97,37 +101,41 @@ function ProfileForm({ customer }: { customer: Customer }) {
             .
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="account-profile-actions">
           <Button type="submit" loading={isSubmitting} disabled={!isDirty}>
             {isSubmitting ? dict.ui.saving : a.saveChanges}
           </Button>
           {isDirty ? (
-            <Button type="button" variant="ghost" onClick={() => reset()}>
+            <Button type="button" variant="ghost" disabled={isSubmitting} onClick={() => reset()}>
               {a.discardChanges}
             </Button>
           ) : null}
         </div>
       </form>
 
-      <div className="mt-8 max-w-xl shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
-        <NewsletterToggle customer={customer} />
+      <aside className="account-panel account-preferences" aria-labelledby="account-preferences-title">
+        <header><h2 id="account-preferences-title" className="account-panel-title"><Bell aria-hidden="true" />{dict.accountUi.preferences}</h2><p className="text-sm leading-6 text-muted-foreground">{dict.accountUi.preferencesLead}</p></header>
+      <div className="account-preference account-preference-heading">
+        <Mail aria-hidden="true" /><div><NewsletterToggle customer={customer} /></div>
       </div>
 
       {/* Only when the API knows the setting (an older API leaves it out). */}
       {typeof customer.price_drop_alerts === "boolean" ? (
-        <div className="mt-4 max-w-xl shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
-          <PriceDropToggle customer={customer} />
+        <div className="account-preference account-preference-heading">
+          <TrendingDown aria-hidden="true" /><div><PriceDropToggle customer={customer} /></div>
         </div>
       ) : null}
 
       {typeof customer.cart_reminders === "boolean" ? (
-        <div className="mt-4 max-w-xl shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
-          <CartReminderToggle customer={customer} />
+        <div className="account-preference account-preference-heading">
+          <ShoppingBag aria-hidden="true" /><div><CartReminderToggle customer={customer} /></div>
         </div>
       ) : null}
 
-      <div className="mt-4 max-w-xl shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
+      <div className="account-preference">
         <TelegramOrderUpdatesCard customer={customer} />
+      </div>
+      </aside>
       </div>
     </AccountSection>
   );

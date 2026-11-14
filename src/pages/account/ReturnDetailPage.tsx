@@ -93,7 +93,7 @@ export default function ReturnDetailPage() {
             </Button>
           ) : null}
         </div>
-        {r.status && r.status in WHAT_NEXT ? <p className="max-w-2xl text-[15px]">{t[WHAT_NEXT[r.status as keyof typeof WHAT_NEXT]]}</p> : null}
+        {r.status && r.status in WHAT_NEXT ? <section className="rounded-xl border border-border bg-lapis-tint/30 p-4" aria-labelledby="return-next-step"><h2 id="return-next-step" className="text-sm font-semibold">{t.nextStep}</h2><p className="mt-2 max-w-2xl text-sm leading-relaxed">{t[WHAT_NEXT[r.status as keyof typeof WHAT_NEXT]]}</p><Link to="/contact" className="mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary underline-offset-4 hover:underline"><MessageSquareText className="size-4" aria-hidden="true" />{t.helpLink}</Link></section> : null}
       </div>
 
       {r.staff_note ? (
@@ -135,6 +135,8 @@ export default function ReturnDetailPage() {
           {r.is_refund_final && Number(r.credit_refund_usd) > 0 ? <><div className="flex justify-between gap-3"><dt>{dict.credit.restored}</dt><dd>{formatUsd(r.credit_refund_usd)}</dd></div><div className="flex justify-between gap-3"><dt>{dict.credit.externalRefund}</dt><dd>{formatUsd(r.external_refund_usd)}</dd></div></> : null}
         </dl>
       </section>
+
+      {!r.is_refund_final ? <p className="text-sm leading-relaxed text-muted-foreground">{t.refundEstimateNote}</p> : null}
 
       <ConfirmDialog
         open={confirm}

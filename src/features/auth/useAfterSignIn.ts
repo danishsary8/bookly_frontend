@@ -1,3 +1,4 @@
+import { clearCustomerCache } from "@/features/auth/customerCache";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import type { VerifyChannel } from "@/api/endpoints/auth";
@@ -23,8 +24,7 @@ export function useAfterSignIn() {
     greeting?: string,
     options: { justRegistered?: boolean; verifyBy?: VerifyChannel | null } = {},
   ) => {
-    queryClient.removeQueries({ queryKey: ["cart"] });
-    queryClient.removeQueries({ queryKey: ["account"] });
+    clearCustomerCache(queryClient);
     if (customer?.locale && (customer.locale === "en" || customer.locale === "km")) {
       setLanguage(customer.locale);
     }

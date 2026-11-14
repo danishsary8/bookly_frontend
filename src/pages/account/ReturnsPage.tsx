@@ -3,9 +3,8 @@ import { ChevronRight, RotateCcw } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { orderQueries } from "@/api/endpoints/orders";
 import type { ReturnRequest } from "@/api/types";
-import { EmptyState } from "@/components/EmptyState";
+import { ReturnGuide } from "@/features/returns/ReturnGuide";
 import { ReturnStatusBadge } from "@/components/orders/ReturnStatusBadge";
-import { buttonVariants } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
 import { Pagination } from "@/components/ui/pagination";
 import { SkeletonGroup, SkeletonRow } from "@/components/ui/skeleton";
@@ -67,6 +66,8 @@ export default function ReturnsPage() {
       title={t.title}
       lead={meta && meta.total ? rangeText(dict, meta.from, meta.to, meta.total, dict.nouns.return(meta.total)) : t.lead}
     >
+      <ReturnGuide />
+      <h2 className="font-display text-xl">{t.requestHistory}</h2>
       {returns.isError && !returns.data ? (
         <ErrorState error={returns.error} onRetry={() => returns.refetch()} headingLevel="h2" showHomeLink={false} />
       ) : returns.isPending ? (
@@ -77,17 +78,10 @@ export default function ReturnsPage() {
           </SkeletonGroup>
         ) : null
       ) : list.length === 0 ? (
-        <EmptyState
-          icon={RotateCcw}
-          title={t.none}
-          description={t.noneLead}
-          action={
-            <Link to="/account/orders?status=delivered" className={buttonVariants({ variant: "outline" })}>
-              {t.deliveredOrders}
-            </Link>
-          }
-          className="rounded-xl border border-dashed border-border"
-        />
+        <section aria-label={t.yours} className="flex items-start gap-4 rounded-2xl border border-border bg-card p-5 sm:p-6">
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-lapis-tint text-primary"><RotateCcw className="size-5" aria-hidden="true" /></span>
+          <div><h3 className="font-semibold">{t.none}</h3><p className="mt-1 max-w-xl text-sm leading-relaxed text-muted-foreground">{t.noneLead}</p></div>
+        </section>
       ) : (
         <ul className={cn("grid gap-3", returns.isPlaceholderData && "opacity-60 transition-opacity")} aria-label={t.yours}>
           {list.map((item) => (

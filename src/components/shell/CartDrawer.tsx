@@ -75,17 +75,17 @@ function CartBody() {
   const totals = cartTotals(cart.data, null);
 
   return (
-    <div className="grid gap-4">
+    <div className="grid min-w-0 gap-4">
       {totals.freeShipping === null ? null : (
-        <FreeShippingBar subtotalUsd={totals.totalBeforeShipping.usd} thresholdUsd={totals.freeShipping?.threshold_usd} free={totals.freeShipping?.is_free} />
+        <FreeShippingBar subtotalUsd={totals.totalBeforeShipping.usd} thresholdUsd={totals.freeShipping?.threshold_usd} free={totals.freeShipping?.is_free} className="border-primary/10 bg-lapis-tint/40 p-3" />
       )}
       <OfferNudge nudge={cart.data.pricing?.nudge} onNavigate={closeShellPanel} />
-      <RewardNudge reward={cart.data.reward} className="px-1" />
-      <ul className="grid [&>li]:py-5 [&>li:first-child]:pt-1 [&>li+li]:border-t [&>li+li]:border-border" aria-label={t.cartItems}>
+      <ul className="grid min-w-0 [&>li]:py-4 [&>li:first-child]:pt-1 [&>li+li]:border-t [&>li+li]:border-border/60" aria-label={t.cartItems}>
         {items.map((line) => (
           <CartLineItem key={line.id} line={line} compact busy={mutations.busyLineId === line.id} onQuantity={mutations.setQuantity} onRemove={mutations.remove} onNavigate={closeShellPanel} />
         ))}
       </ul>
+      <RewardNudge reward={cart.data.reward} className="rounded-xl border border-border/60 bg-surface-2/40 p-3 text-xs leading-relaxed" />
     </div>
   );
 }
@@ -100,7 +100,7 @@ function CartSummary() {
   const blocked = cart.data.can_checkout === false;
 
   return (
-    <DrawerFooter className="grid gap-3">
+    <DrawerFooter className="grid gap-2.5 bg-card px-5 pt-4 shadow-[0_-12px_32px_-24px_rgb(20_32_122/0.25)]">
       <PromoReminder onNavigate={closeShellPanel} />
       {totals.discount?.kind === "offer" ? (
         <div className="flex items-baseline justify-between gap-3 rounded-lg bg-success-tint px-3 py-2 text-sm font-medium text-success">
@@ -108,22 +108,24 @@ function CartSummary() {
           <span className="tabular-nums">−{formatMoney(totals.discount.amount.usd, totals.discount.amount.khr, currency)}</span>
         </div>
       ) : null}
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="font-semibold">{totals.discount ? dict.cartPage.totalBeforeShipping : t.subtotal}</span>
-        <span className="font-display text-[1.75rem] leading-none tabular-nums">{formatMoney(totals.totalBeforeShipping.usd, totals.totalBeforeShipping.khr, currency)}</span>
+      <div className="mb-1 grid gap-2 rounded-xl border border-border/60 bg-surface-2/35 px-4 py-3.5">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm font-semibold">{totals.discount ? dict.cartPage.totalBeforeShipping : t.subtotal}</span>
+          <span className="text-[1.75rem] font-semibold leading-none tracking-tight tabular-nums">{formatMoney(totals.totalBeforeShipping.usd, totals.totalBeforeShipping.khr, currency)}</span>
+        </div>
+        <p className="max-w-[36ch] text-xs leading-relaxed text-muted-foreground">{blocked ? t.fixItems : t.worksOutAtCheckout}</p>
       </div>
-      <p className="-mt-1 text-sm text-muted-foreground">{blocked ? t.fixItems : t.worksOutAtCheckout}</p>
+      <Link to="/cart" onClick={closeShellPanel} className={cn(buttonVariants({ variant: "default", size: "lg" }), "h-12 w-full gap-2.5 rounded-xl text-sm font-semibold shadow-sm")}>
+        <ShoppingBag className="size-4" aria-hidden="true" /> {t.viewCart}
+      </Link>
       <Link
         to="/checkout"
         onClick={closeShellPanel}
         aria-disabled={blocked || undefined}
         tabIndex={blocked ? -1 : undefined}
-        className={cn(buttonVariants({ variant: "cta", size: "lg" }), "w-full", blocked && "pointer-events-none opacity-40")}
+        className={cn(buttonVariants({ variant: "outline", size: "lg" }), "group h-11 w-full gap-2 rounded-xl border-border bg-card text-sm font-semibold text-primary shadow-none hover:border-primary/40 hover:bg-lapis-tint/40", blocked && "pointer-events-none opacity-40")}
       >
-        {t.checkout} <ArrowRight aria-hidden="true" />
-      </Link>
-      <Link to="/cart" onClick={closeShellPanel} className={cn(buttonVariants({ variant: "ghost" }), "w-full text-primary")}>
-        {t.viewCart}
+        {t.checkout} <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transform-none" aria-hidden="true" />
       </Link>
     </DrawerFooter>
   );
@@ -137,14 +139,14 @@ export function CartDrawer() {
 
   return (
     <Drawer open={panel === "cart"} onOpenChange={(open) => (open ? openShellPanel("cart") : closeShellPanel())}>
-      <DrawerContent side="right">
-        <DrawerHeader>
+      <DrawerContent side="right" className="w-full max-w-[440px] overflow-hidden sm:rounded-l-2xl">
+        <DrawerHeader className="px-6 py-4">
           <DrawerTitle>
-            {dict.shell.yourCart}{count > 0 ? <span className="font-sans text-base font-semibold text-muted-foreground"> ({count})</span> : null}
+            {dict.shell.yourCart}{count > 0 ? <span className="ml-2 inline-flex min-w-6 items-center justify-center rounded-full bg-lapis-tint px-2 py-1 align-middle font-sans text-xs font-semibold text-primary">{count}</span> : null}
           </DrawerTitle>
           <DrawerDescription className="sr-only">{dict.shell.cartDescription}</DrawerDescription>
         </DrawerHeader>
-        <DrawerBody>
+        <DrawerBody className="min-w-0 overflow-x-hidden bg-surface-2/20 px-6 py-5">
           <CartGate headingLevel="h3" onNavigate={closeShellPanel}>
             <CartBody />
           </CartGate>

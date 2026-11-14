@@ -12,6 +12,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
+import { ReturnPolicyNote } from "@/features/returns/ReturnGuide";
 import { orderDate } from "@/features/orders/format";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { toast } from "@/stores/toast";
@@ -49,7 +50,7 @@ export default function ReturnRequestPage() {
     mutationFn: (items: ReturnLineInput[]) => ordersApi.requestReturn(id, reason.trim(), items),
     onSuccess: (created) => {
       void queryClient.invalidateQueries({ queryKey: ["returns"] });
-      void queryClient.invalidateQueries({ queryKey: orderKeys.returnable(id) });
+      void queryClient.invalidateQueries({ queryKey: orderKeys.order(id) });
       toast.success({ title: t.requestedToast, description: t.requestedToastLead });
       navigate(`/account/returns/${created.id}`, { replace: true });
     },
@@ -111,13 +112,17 @@ export default function ReturnRequestPage() {
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
+    if (submit.isPending) return;
     const chosen = items.filter((item) => lineFor(item.order_item_id).selected);
     const next = {
-      items: chosen.length ? undefined : t.chooseOne,
+      items: !chosen.length ? t.chooseOne : chosen.some((item) => lineFor(item.order_item_id).quantity > item.returnable_quantity) ? t.quantityChanged : undefined,
       reason: reason.trim() ? undefined : t.tellWhy,
     };
     setErrors(next);
-    if (next.items || next.reason) return;
+    if (next.items || next.reason) {
+      requestAnimationFrame(() => document.getElementById(next.items ? "return-items-error" : "return-reason")?.focus());
+      return;
+    }
     submit.mutate(
       chosen.map((item) => {
         const line = lineFor(item.order_item_id);
@@ -136,6 +141,7 @@ export default function ReturnRequestPage() {
         </p>
       </div>
 
+      <ReturnPolicyNote />
       <form onSubmit={onSubmit} noValidate className="grid gap-6">
         {errors.form ? (
           <FormAlert ref={alertRef} title={t.notRequested}>
@@ -143,7 +149,7 @@ export default function ReturnRequestPage() {
           </FormAlert>
         ) : null}
 
-        <fieldset className="grid gap-3" aria-describedby={errors.items ? "return-items-error" : undefined}>
+        <fieldset disabled={submit.isPending} className="grid gap-3" aria-describedby={errors.items ? "return-items-error" : undefined}>
           <legend className="mb-3 font-display text-[1.563rem] leading-tight">{t.whichBooks}</legend>
           {items.map((item) => {
             const line = lineFor(item.order_item_id);
@@ -153,6 +159,7 @@ export default function ReturnRequestPage() {
                 <label htmlFor={checkboxId} className="flex min-h-11 cursor-pointer items-start gap-3">
                   <Checkbox
                     id={checkboxId}
+                    disabled={submit.isPending}
                     checked={line.selected}
                     onCheckedChange={(checked) => update(item.order_item_id, { selected: checked === true })}
                     className="mt-0.5"
@@ -192,14 +199,16 @@ export default function ReturnRequestPage() {
             );
           })}
           {errors.items ? (
-            <p id="return-items-error" className="text-sm font-medium text-destructive">
+            <p id="return-items-error" tabIndex={-1} className="text-sm font-medium text-destructive">
               {errors.items}
             </p>
           ) : null}
         </fieldset>
 
         <TextAreaField
+          id="return-reason"
           label={t.why}
+          disabled={submit.isPending}
           hint={t.whyHint(MAX_REASON)}
           value={reason}
           maxLength={MAX_REASON}

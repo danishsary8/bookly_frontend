@@ -43,7 +43,7 @@ function LatestOrder({ order }: { order: Order }) {
   const action = awaitingKhqr
     ? { to: `/account/orders/${order.id}/pay`, label: dict.orders.payNow, cta: true }
     : status === "delivered"
-      ? { to: "/account/reviews", label: d.writeReview, cta: false }
+      ? { to: order.items?.length === 1 && order.items[0].book_id ? `/books/${order.items[0].book_id}#your-review` : `/account/orders/${order.id}`, label: d.writeReview, cta: false }
       : { to: `/account/orders/${order.id}`, label: d.viewOrder, cta: false };
   return (
     <section aria-labelledby="latest-order" className={cn(card, "relative isolate overflow-hidden p-5 sm:p-6")}>
@@ -101,6 +101,7 @@ function ContinueReading() {
   const ready = (library.data ?? []).filter((e) => e.status === "ready" && e.book.id);
   const latest = [...ready].sort((a, b) => (b.last_read_at ?? "").localeCompare(a.last_read_at ?? ""))[0];
   if (library.isPending) return <Tile to="/account/ebooks" Icon={BookOpen} title={d.continueReading} loading>{null}</Tile>;
+  if (library.isError) return <Tile to="/account/ebooks" Icon={BookOpen} title={d.startReading}>{dict.common.error}</Tile>;
   if (!latest) return <Tile to="/account/ebooks" Icon={BookOpen} title={d.startReading}>{d.startReadingLead}</Tile>;
   const page = latest.last_page ?? 1;
   const progress = latest.page_count ? Math.min(100, Math.round((page / latest.page_count) * 100)) : 0;
@@ -217,12 +218,12 @@ export default function AccountOverviewPage() {
         </div>
       )}
 
-      <ul className="grid gap-3 md:grid-cols-3">
+      <ul className="account-dashboard-tiles grid gap-3 md:grid-cols-3">
         <Tile to="/account/coupons" Icon={TicketPercent} title={d.couponsReady} loading={coupons.isPending}>
-          {d.couponsLead(usable)}
+          {coupons.isError ? dict.common.error : d.couponsLead(usable)}
         </Tile>
         <Tile to="/account/wishlist" Icon={TrendingDown} title={d.priceDrops} loading={wishlist.isPending}>
-          {d.priceDropsLead(drops)}
+          {wishlist.isError ? dict.common.error : d.priceDropsLead(drops)}
         </Tile>
         <ContinueReading />
       </ul>

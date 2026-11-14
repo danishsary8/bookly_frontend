@@ -26,14 +26,14 @@ export function interleave(lanes: BookCard[][], limit: number): BookCard[] {
   return out;
 }
 
-export function useCategoryLanes({ categories = 6, perCategory = 4 } = {}) {
-  const tree = useQuery(catalogQueries.categoryTree());
+export function useCategoryLanes({ categories = 6, perCategory = 4, enabled = true } = {}) {
+  const tree = useQuery({ ...catalogQueries.categoryTree(), enabled });
   const top = [...(tree.data ?? [])]
     .filter((c) => c.id && (c.total_books ?? 0) > 0)
     .sort((a, b) => (b.total_books ?? 0) - (a.total_books ?? 0))
     .slice(0, categories);
   const results = useQueries({
-    queries: top.map((c) => ({ ...catalogQueries.books({ category_id: c.id, sort: "best_selling", per_page: perCategory }), staleTime: 10 * 60_000 })),
+    queries: top.map((c) => ({ ...catalogQueries.books({ category_id: c.id, sort: "best_selling", per_page: perCategory }), staleTime: 10 * 60_000, enabled })),
   });
   return {
     lanes: results.map((r) => r.data?.data ?? []),

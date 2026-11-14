@@ -1,3 +1,4 @@
+import { accountPage, useAccountPageBounds } from "@/features/account/pagination";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Package, QrCode } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -56,7 +57,7 @@ function OrderRow({ order }: { order: Order }) {
               ))}
             </span>
           ) : null}
-          {order.payment_due_at ? (
+          {order.payment_method === "khqr" && order.payment_status === "pending" && order.status === "pending" && order.payment_due_at ? (
             <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-lapis-tint px-2.5 py-0.5 text-sm font-semibold text-primary">
               <QrCode className="size-4" aria-hidden="true" /> {dict.orders.payNow} · {dict.orders.payBy(new Date(order.payment_due_at).toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" }))}
             </span>
@@ -82,12 +83,13 @@ export default function OrdersPage() {
   const t = dict.orders;
   useDocumentTitle(t.docTitle);
   const [params, setParams] = useSearchParams();
-  const page = Math.max(1, Number(params.get("page")) || 1);
+  const page = accountPage(params.get("page"));
   const statusParam = params.get("status");
   const status = isStatus(statusParam) ? statusParam : undefined;
   const orders = useQuery({ ...orderQueries.orders({ page, per_page: PER_PAGE, status }), placeholderData: (previous) => previous });
   const showSkeleton = useSkeletonVisible(orders.isPending);
   const meta = orders.data?.meta;
+  useAccountPageBounds(meta, orders.isPlaceholderData);
   const list = orders.data?.data ?? [];
 
   const hrefFor = (p: number) => {
@@ -146,7 +148,7 @@ export default function OrdersPage() {
           className="rounded-xl border border-dashed border-border"
         />
       ) : (
-        <ul className={cn("grid gap-3", orders.isPlaceholderData && "opacity-60 transition-opacity")} aria-label={t.yours}>
+        <ul className={cn("account-orders-list", "grid gap-3", orders.isPlaceholderData && "opacity-60 transition-opacity")} aria-label={t.yours}>
           {list.map((order) => (
             <OrderRow key={order.id} order={order} />
           ))}
