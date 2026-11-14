@@ -13,7 +13,7 @@ import { useSignOut } from "./useSignOut";
 import { useT } from "@/i18n";
 
 /*
- * MASTER §6.10 mobile drawer (below 900px): search → main links (48px rows,
+ * MASTER §6.10 mobile drawer (below 1024px): search → main links (48px rows,
  * Gloock, active one in --primary with a 2px leading rule) → divider → account
  * links → currency + theme → Sign in / Sign out. Radix Dialog underneath, so
  * focus is trapped and Esc or the scrim closes it and returns focus.
@@ -88,10 +88,13 @@ export function MobileMenu() {
             </ul>
           </nav>
 
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <LanguageSwitch />
-            <CurrencySwitch />
-            <ThemeToggle />
+          {/* Language on its own row; currency and the theme switch share the next, so nothing wraps alone. */}
+          <div className="grid gap-3">
+            <LanguageSwitch className="w-full [&>*]:flex-1" />
+            <div className="flex items-center gap-3">
+              <CurrencySwitch className="min-w-0 flex-1 [&>*]:flex-1" />
+              <ThemeToggle />
+            </div>
           </div>
         </DrawerBody>
         <DrawerFooter>

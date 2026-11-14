@@ -34,25 +34,26 @@ export function AnnouncementBar() {
       className="relative z-30 border-b border-primary/20 bg-primary text-primary-foreground select-none"
     >
       {/* Slim utility strip: what the shop promises on the left, the two things people look for on the right. */}
-      <div className="container-shell flex min-h-9 items-center justify-between gap-4 py-1.5 text-xs sm:text-[13px]">
+      {/* Phones: the whole strip is the "Shop books" link (one tap target) and the message gets the full width. */}
+      <div className="container-shell relative flex min-h-9 items-center justify-between gap-2 py-1.5 text-xs lg:py-1 sm:gap-4 sm:text-[13px]">
         <div className="flex min-w-0 flex-1 items-center justify-center gap-2 text-center lg:justify-start lg:text-left">
-          <Truck className="size-4 shrink-0 text-amber-300" aria-hidden="true" />
+          <Truck className="size-4 shrink-0 text-amber-300 max-[359px]:hidden" aria-hidden="true" />
           <p className="font-medium tracking-tight">
             <span>{dict.shell.announcementDelivery}</span>{" "}
             <Link
               to="/books"
-              className="inline-flex items-center gap-1 font-semibold underline decoration-amber-300 underline-offset-4 hover:text-amber-200 transition-colors"
+              className="inline-flex items-center gap-1 font-semibold underline decoration-amber-300 underline-offset-4 transition-colors after:absolute after:inset-0 hover:text-amber-200 max-sm:no-underline sm:after:hidden"
             >
-              {dict.shell.announcementAction}
-              <ArrowRight className="size-3.5" aria-hidden="true" />
+              <span className="max-sm:sr-only">{dict.shell.announcementAction}</span>
+              <ArrowRight className="size-3.5 shrink-0" aria-hidden="true" />
             </Link>
           </p>
         </div>
         <nav aria-label={dict.homePage.helpLinks} className="hidden shrink-0 items-center gap-5 font-medium lg:flex">
-          <Link to="/account/orders" className="inline-flex items-center gap-1.5 text-primary-foreground/85 underline-offset-4 transition-colors hover:text-primary-foreground hover:underline">
+          <Link to="/account/orders" className="inline-flex min-h-9 items-center gap-1.5 text-primary-foreground/85 underline-offset-4 transition-colors hover:text-primary-foreground hover:underline">
             <PackageSearch className="size-4" aria-hidden="true" /> {dict.homePage.trackOrder}
           </Link>
-          <Link to="/faq" className="text-primary-foreground/85 underline-offset-4 transition-colors hover:text-primary-foreground hover:underline">
+          <Link to="/faq" className="inline-flex min-h-9 items-center text-primary-foreground/85 underline-offset-4 transition-colors hover:text-primary-foreground hover:underline">
             {dict.homePage.help}
           </Link>
         </nav>
@@ -60,7 +61,7 @@ export function AnnouncementBar() {
           type="button"
           onClick={handleDismiss}
           aria-label={dict.shell.dismissAnnouncement}
-          className="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-primary-foreground/80 hover:bg-white/10 hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 transition-colors"
+          className="relative z-10 -my-1.5 -mr-2 inline-flex size-10 shrink-0 items-center justify-center rounded-md text-primary-foreground/80 hover:bg-white/10 hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 transition-colors"
         >
           <X className="size-3.5" aria-hidden="true" />
         </button>

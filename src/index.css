@@ -32,7 +32,7 @@
     --z-toast: 80;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1024px) {
     :root {
         --header-h: 4.5rem;
     }
