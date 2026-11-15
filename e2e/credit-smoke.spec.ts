@@ -8,7 +8,7 @@ for (const view of [{ width: 1280, theme: "light", lang: "en" }, { width: 390, t
     await page.setViewportSize({ width: view.width, height: 900 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.addInitScript((settings) => {
-      localStorage.setItem("bookly-theme", settings.theme);
+      localStorage.setItem("bookly-theme-choice", settings.theme);
       localStorage.setItem("bookly-language", settings.lang);
       localStorage.setItem("bookly.session.customer", JSON.stringify({ token: "local-browser-fixture", expiresAt: null, user: { id: 100, name: "Reader", email: "reader@example.test", verified: true, email_verified: true, locale: settings.lang } }));
       localStorage.setItem("bookly.session.staff", JSON.stringify({ token: "local-staff-fixture", expiresAt: null, user: { id: 200, name: "Staff", email: "staff@example.test", role: "admin", two_factor_enabled: true } }));

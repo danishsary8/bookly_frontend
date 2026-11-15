@@ -6,8 +6,8 @@
   try {
     if (sessionStorage.getItem("bookly-splash-seen")) return;
     var root = document.documentElement;
-    var theme = localStorage.getItem("bookly-theme");
-    var dark = theme ? theme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    // Light unless the visitor picked dark with the theme switch (src/contexts/ThemeContext.tsx).
+    var dark = localStorage.getItem("bookly-theme-choice") === "dark";
     root.setAttribute("data-splash", dark ? "dark" : "light");
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) root.setAttribute("data-splash-still", "");
   } catch (e) {
