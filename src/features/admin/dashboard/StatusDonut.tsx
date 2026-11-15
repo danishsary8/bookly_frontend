@@ -11,13 +11,14 @@ import { AnimatedNumber } from "./AnimatedNumber";
  */
 
 const COLOURS: Record<string, string> = {
-  pending: "var(--warning)",
-  paid: "var(--chart-2)",
-  processing: "var(--chart-5)", // slate: chart-3 was a green too close to "delivered"
-  shipped: "var(--primary)",
-  delivered: "var(--success)",
-  cancelled: "color-mix(in oklab, var(--muted-foreground) 40%, transparent)", // light grey, apart from processing
-  returned: "var(--destructive)",
+  // The sample's palette (owner 2026-11-15): saffron waiting, sky moving, sea done, coral back; cancelled stays grey.
+  pending: "var(--tone-saffron-fill)",
+  paid: "var(--tone-violet-ink)",
+  processing: "var(--tone-sky-fill)",
+  shipped: "var(--tone-blue-ink)",
+  delivered: "var(--tone-sea-fill)",
+  cancelled: "color-mix(in oklab, var(--muted-foreground) 40%, transparent)",
+  returned: "var(--tone-coral-fill)",
 };
 
 export function StatusDonut({ counts }: { counts: Record<string, number> }) {

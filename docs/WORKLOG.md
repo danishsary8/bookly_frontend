@@ -1020,3 +1020,8 @@ interactions: header search, cart drawer, phone menu, switch to Khmer.
   author, rating and price are on the first screen; tighter gaps.
 - iPhone zoom: checkout delivery note at 16px; profile email field `type="email"`.
 Walked the phone flow (book → cart → checkout → confirmation → KHQR → orders) at 390px with a fake customer.
+
+### 2026-11-15 — Admin dashboard v3 (branch `admin-dashboard-v3`, built on `mobile-flow-polish`)
+Owner's sample (tour-trip admin) style: warm canvas, four coloured KPI cards with smooth sparklines, coral income
+chart, sample-palette donut, React Bits MagicBento "At a glance" (added @hugeicons/react + core-free-icons, the
+component's own dependencies). Values still glide between periods. Rules: design-system/bookly/pages/admin.md.
