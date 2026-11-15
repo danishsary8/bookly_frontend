@@ -1363,37 +1363,35 @@
 .dark .shelf-floor { background: linear-gradient(to top, #4a3a2c 0%, #3d3026 18%, rgb(40 32 26 / 0.6) 45%, rgb(40 32 26 / 0) 100%); }
 .dark .shelf-lip { background: linear-gradient(to bottom, #6b5440 0, #4f3d2e 2px, #3b2d22 100%); }
 .shelf-spine {
-  /* a rounded cloth spine: dark at both turns, a soft highlight a third across, two hinge grooves, fine cloth weave */
+  /* A clean cloth hardback (2026-11-15): one soft rounded highlight, darker turns at both edges, a faint weave,
+     and slightly darker caps at the head and foot. No stripes or ornaments. */
   background-image:
-    linear-gradient(90deg, rgb(0 0 0 / 0.42) 0, rgb(0 0 0 / 0.12) 7%, rgb(0 0 0 / 0.28) 9%, rgb(255 255 255 / 0.02) 11%, rgb(255 255 255 / 0.2) 30%, rgb(255 255 255 / 0.05) 48%, transparent 62%, rgb(0 0 0 / 0.16) 86%, rgb(0 0 0 / 0.3) 91%, rgb(0 0 0 / 0.1) 93%, rgb(0 0 0 / 0.46) 100%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='2'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E");
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 -2px 2px rgb(0 0 0 / 0.25);
+    linear-gradient(90deg, rgb(0 0 0 / 0.34) 0, rgb(0 0 0 / 0.06) 9%, rgb(255 255 255 / 0.16) 32%, rgb(255 255 255 / 0.04) 52%, rgb(0 0 0 / 0.06) 80%, rgb(0 0 0 / 0.32) 100%),
+    linear-gradient(to bottom, rgb(0 0 0 / 0.22), transparent 4px, transparent calc(100% - 4px), rgb(0 0 0 / 0.26)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='2'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E");
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.16);
+  padding-block: 0.85rem 0.9rem;
   --ink: #E8C766;
 }
 .shelf-spine[data-ink="dark"] { --ink: #1B1A2E; }
 .shelf-spine > * { position: relative; }
-/* headbands: the little striped silk caps at the top and bottom of a hardback */
-.shelf-headband { position: absolute !important; left: 12%; right: 12%; height: 2px; border-radius: 2px;
-  background: repeating-linear-gradient(90deg, rgb(246 239 223 / 0.75) 0 1.5px, rgb(0 0 0 / 0.35) 1.5px 3px); box-shadow: 0 1px 1px rgb(0 0 0 / 0.3); }
-.shelf-headband-top { top: 0; border-radius: 0 0 2px 2px; }
-.shelf-headband-bottom { bottom: 0; border-radius: 2px 2px 0 0; }
-.shelf-rules { width: 62%; height: 6px; border-block: 1.5px solid color-mix(in srgb, var(--ink) 75%, transparent); flex-shrink: 0; }
-.shelf-rule-thin { width: 60%; height: 1px; background: color-mix(in srgb, var(--ink) 70%, transparent); }
-.shelf-ornament { width: 5px; height: 5px; rotate: 45deg; border: 1px solid color-mix(in srgb, var(--ink) 75%, transparent); }
-.shelf-label { flex: 1 1 auto; min-height: 0; max-height: 63%; padding-block: 0.5rem; }
-/* the gold foil lettering sits slightly into the cloth */
-.shelf-title, .shelf-surname { text-shadow: 0 1px 0 rgb(0 0 0 / 0.35), 0 -0.5px 0 rgb(255 255 255 / 0.08); }
-.shelf-spine[data-ink="dark"] :is(.shelf-title, .shelf-surname) { text-shadow: 0 1px 0 rgb(255 255 255 / 0.35); }
-/* binding "label": a darker leather title label with a foil border */
-.shelf-label-panel { width: 78%; margin-block: 0.25rem; border-radius: 2px; padding: 0.55rem 0;
-  background: linear-gradient(90deg, rgb(0 0 0 / 0.38), rgb(0 0 0 / 0.22) 40%, rgb(0 0 0 / 0.4));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #E8C766 70%, transparent), inset 0 0 0 3px rgb(0 0 0 / 0.25), 0 1px 0 rgb(255 255 255 / 0.12); }
-.shelf-spine[data-ink="dark"] .shelf-label-panel { background: linear-gradient(90deg, rgb(27 26 46 / 0.12), rgb(27 26 46 / 0.05) 40%, rgb(27 26 46 / 0.14)); box-shadow: inset 0 0 0 1px rgb(27 26 46 / 0.45), inset 0 0 0 3px rgb(27 26 46 / 0.06); }
-.shelf-spine[data-binding="label"] .shelf-title { color: #F6E7B8; }
-.shelf-spine[data-binding="label"][data-ink="dark"] .shelf-title { color: #1B1A2E; }
-/* binding "bands": raised ribs across the spine, lit from above */
-.shelf-band { width: 100%; height: 5px; flex-shrink: 0;
-  background: linear-gradient(to bottom, rgb(255 255 255 / 0.28), rgb(255 255 255 / 0.05) 40%, rgb(0 0 0 / 0.38)); }
+.shelf-label { flex: 1 1 auto; min-height: 0; width: 100%; padding-block: 0.9rem 0.6rem; }
+.shelf-foot { gap: 0.6rem; padding-top: 0.15rem; }
+/* the lettering is foil pressed into the cloth: a hairline shadow, no glow */
+.shelf-title, .shelf-surname { text-shadow: 0 1px 0 rgb(0 0 0 / 0.28); }
+.shelf-spine[data-ink="dark"] :is(.shelf-title, .shelf-surname) { text-shadow: 0 1px 0 rgb(255 255 255 / 0.3); }
+.shelf-surname { opacity: 0.92; }
+/* binding "rules": one short foil rule at the head and one above the author */
+.shelf-mark { display: block; flex-shrink: 0; }
+.shelf-spine[data-binding="rules"] .shelf-mark { width: 38%; height: 1.5px; border-radius: 1px; background: color-mix(in srgb, var(--ink) 80%, transparent); }
+/* binding "lines": fine double lines right across the spine */
+.shelf-spine[data-binding="lines"] .shelf-mark { width: 100%; height: 5px; border-block: 1px solid color-mix(in srgb, var(--ink) 55%, transparent); }
+/* binding "band": the author sits in a darker band at the foot; a short rule marks the head */
+.shelf-spine[data-binding="band"] .shelf-mark-top { width: 38%; height: 1.5px; border-radius: 1px; background: color-mix(in srgb, var(--ink) 80%, transparent); }
+.shelf-spine[data-binding="band"] .shelf-mark-bottom { display: none; }
+.shelf-spine[data-binding="band"] { padding-bottom: 0; }
+.shelf-spine[data-binding="band"] .shelf-foot { padding: 0.75rem 0 0.9rem; background: linear-gradient(90deg, rgb(0 0 0 / 0.28), rgb(0 0 0 / 0.16) 35%, rgb(0 0 0 / 0.3)); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--ink) 45%, transparent); }
+.shelf-spine[data-binding="band"][data-ink="dark"] .shelf-foot { background: rgb(27 26 46 / 0.1); }
 .shelf-title { overflow-wrap: anywhere; }
 /* A new row slides in from the side. */
 .shelf-enter { animation: shelf-enter 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }

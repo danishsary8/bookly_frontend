@@ -151,3 +151,10 @@ Visual only; motion, sizes and inputs unchanged (every book still the same heigh
   gold double rules, a leather title label with a foil border (short titles only), or raised bands lit from above.
 - Bookcase: oak grain on the planks, top board, uprights and lip; the uprights' inner sides and the top board's
   underside drawn in perspective; a warm light pool from the top; a rounded nosing on the shelf's front edge.
+
+## Clean spines — 2026-11-15
+Supersedes the "Shelf realism pass" spine rules (the bookcase stays). Spines are plain cloth hardbacks: one soft
+rounded highlight, darker turns, faint weave, darker head/foot caps; no striped headbands, ornaments or leather
+labels. Title in display type on the cloth, surname at the foot in spaced caps (tighter tracking past 7 letters).
+Three quiet bindings from the book id: a short foil rule at head and above the author; fine double lines across the
+spine; or the author in a darker band at the foot.
