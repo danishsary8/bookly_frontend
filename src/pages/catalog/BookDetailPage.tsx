@@ -558,7 +558,7 @@ export default function BookDetailPage() {
         ) : null
       ) : (
         <article className="detail-product-grid mt-6 grid gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:items-start lg:grid-cols-12 lg:gap-12" aria-labelledby="book-title">
-          <div className="detail-stage-cell md:sticky md:top-[calc(var(--header-h)+1rem)] lg:static lg:col-span-5">
+          <div className="detail-stage-cell md:sticky md:top-[calc(var(--header-h)+1rem)] lg:static lg:top-auto lg:col-span-5">
             <BookStage cover={shown.cover_image_url} action={<BookFavorite book={shown} />}>
               <MorphCover layoutId={coverLayoutId(bookId)} className="detail-book-front relative w-full overflow-hidden rounded-[4px] shadow-[0_30px_50px_-24px_rgb(20_16_10/0.6)]">
                 <BookCover src={shown.cover_image_url} title={shown.title} alt={b.cover(shown.title ?? "")} eager />
