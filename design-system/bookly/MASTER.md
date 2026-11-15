@@ -345,7 +345,7 @@ Full-bleed lapis everywhere in Daylight · more than one vermilion CTA per view 
 
 ## Responsive pass — 2026-11-14 (branch `responsive-pass`)
 Checked every customer page at 320, 360, 390, 414, 768, 1024, 1280, 1366, 1440 and 1920px against real catalogue data.
-- Breakpoint for the desktop header is 1024px (was 900): below it, logo + cart + menu with a full-width search row.
+- Header: phones (< 768px) logo + cart + menu with a full-width search row; 768–1023px one row (logo · search · cart · menu); desktop nav from 1024px. Phones held sideways (≤ 500px tall) hide the announcement bar.
   The preferences pill shows only the globe below 1280px.
 - Minimum text 12px everywhere in the shop (no 10–11px labels). Tap targets at least 44px below 1280px; text-style
   buttons (`variant="link"`) get an invisible 44px hit area.

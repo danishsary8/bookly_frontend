@@ -1025,3 +1025,6 @@ Walked the phone flow (book → cart → checkout → confirmation → KHQR → 
 Owner's sample (tour-trip admin) style: warm canvas, four coloured KPI cards with smooth sparklines, coral income
 chart, sample-palette donut, React Bits MagicBento "At a glance" (added @hugeicons/react + core-free-icons, the
 component's own dependencies). Values still glide between periods. Rules: design-system/bookly/pages/admin.md.
+- Phone pass, continued (2026-11-15): one-row header from 768px (tablets, phones held sideways: 160px → 72px of
+  header), announcement hidden on screens ≤ 500px tall. Checked phone filters drawer, cart drawer, phone menu,
+  checkout end, 320px cart/checkout, 844×390 home/book: no errors, no sideways scroll.

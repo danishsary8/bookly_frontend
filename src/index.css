@@ -4,6 +4,8 @@
 @custom-variant dark (&:is(.dark *));
 /* Laptop screens with little height (e.g. 1366×768 or 125% Windows scaling): auth pages tighten to fit. */
 @custom-variant short (@media (min-width: 1024px) and (max-height: 820px));
+/* Phones held sideways and other very short screens. */
+@custom-variant landscape-short (@media (max-height: 500px) and (orientation: landscape));
 
 /* Bookly design system v3 "Lapis & Vermilion" — see design-system/bookly/MASTER.md */
 @theme {
@@ -32,7 +34,7 @@
     --z-toast: 80;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
     :root {
         --header-h: 4.5rem;
     }

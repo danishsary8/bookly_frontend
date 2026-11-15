@@ -31,7 +31,7 @@ export function AnnouncementBar() {
   return (
     <aside
       aria-label={dict.shell.announcementDelivery}
-      className="relative z-30 border-b border-primary/20 bg-primary text-primary-foreground select-none"
+      className="relative z-30 border-b border-primary/20 bg-primary text-primary-foreground select-none landscape-short:hidden"
     >
       {/* Slim utility strip: what the shop promises on the left, the two things people look for on the right. */}
       {/* Phones: the whole strip is the "Shop books" link (one tap target) and the message gets the full width. */}
