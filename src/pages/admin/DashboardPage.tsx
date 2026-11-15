@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { AlertTriangle, ArrowRight, BarChart3, BellRing, BookOpen, Boxes, CheckCircle2, ClipboardList, CreditCard, DollarSign, FolderTree, LineChart, MapPin, PieChart as PieIcon, Receipt, ShoppingBag, Star, Tablet, Trophy, UserPlus, Users, type LucideIcon } from "lucide-react";
+import { AlertTriangle, ArrowRight, BarChart3, BellRing, Boxes, CheckCircle2, ClipboardList, CreditCard, DollarSign, FolderTree, LineChart, PieChart as PieIcon, Receipt, ShoppingBag, Trophy, UserPlus, type LucideIcon } from "lucide-react";
 import { m, useReducedMotion } from "motion/react";
 import { staggerDelay, transitions } from "@/lib/motion";
 import { Link, useSearchParams } from "react-router-dom";
@@ -22,16 +22,21 @@ import { Change, CustomRange, Khr, Panel, PeriodPicker } from "@/features/admin/
 import { SystemHealthCard } from "@/features/admin/SystemHealthCard";
 import { StaffDashboard } from "@/features/admin/dashboard/StaffDashboard";
 import { AnimatedNumber } from "@/features/admin/dashboard/AnimatedNumber";
+import { GlanceBento } from "@/features/admin/dashboard/GlanceBento";
 import { useStaff } from "@/features/admin/staffSession";
 import { useT } from "@/i18n";
 import { formatLabel } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
-import { formatKhr, formatUsd } from "@/stores/currency";
+import { formatUsd } from "@/stores/currency";
 import type { ReactNode } from "react";
 
-type Tone = "blue" | "teal" | "violet" | "amber" | "rose" | "green" | "slate";
+type DashTone = "coral" | "saffron" | "sky" | "sea";
 
-/** A KPI tile: tinted icon, label, figure, change vs the previous period, a trend line in the tile's colour and a "View …" link. */
+/**
+ * A KPI card in the sample's style: label and a round tinted icon, the figure gliding to new values, the change
+ * against the period before, a smooth trend line in the card's colour and a "View …" link. A soft spotlight follows
+ * the pointer and the card lifts on hover.
+ */
 function Kpi({ id, label, value, khr, detail, change, trend, labels, format, view, icon: Icon, tone }: {
   id: string;
   label: string;
@@ -44,52 +49,30 @@ function Kpi({ id, label, value, khr, detail, change, trend, labels, format, vie
   format?: (n: number) => string;
   view: { to: string; label: string };
   icon: LucideIcon;
-  tone: Tone;
+  tone: DashTone;
 }) {
   return (
-    <section aria-labelledby={id} data-tone={tone} className="admin-kpi admin-task flex flex-col gap-2.5 desk-card rounded-2xl border border-border bg-card p-5">
-      <div className="admin-kpi-top">
-        <h2 id={id} className="font-sans text-sm font-semibold tracking-normal text-muted-foreground">{label}</h2>
-        <span className="admin-kpi-icon" aria-hidden="true"><Icon className="size-[18px]" /></span>
+    <section
+      aria-labelledby={id}
+      data-tone={tone}
+      onPointerMove={(event) => {
+        const box = event.currentTarget.getBoundingClientRect();
+        event.currentTarget.style.setProperty("--spot-x", `${event.clientX - box.left}px`);
+        event.currentTarget.style.setProperty("--spot-y", `${event.clientY - box.top}px`);
+      }}
+      className="dash-kpi desk-card flex h-full flex-col gap-2 overflow-hidden rounded-[20px] border border-border bg-card p-5"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <h2 id={id} className="pt-1 font-sans text-sm font-semibold tracking-normal text-muted-foreground">{label}</h2>
+        <span className="dash-kpi-icon shrink-0" aria-hidden="true"><Icon className="size-[18px]" /></span>
       </div>
-      <p className="text-[1.875rem] font-semibold leading-none tracking-[-0.02em] tabular-nums">{value}</p>
+      <p className="text-[2rem] font-semibold leading-none tracking-[-0.03em] tabular-nums">{value}</p>
       <Khr value={khr} />
       {change}
       {detail ? <p className="text-sm text-muted-foreground tabular-nums">{detail}</p> : null}
-      {trend ? <Sparkline values={trend} labels={labels} format={format} color="var(--tone-ink)" className="mt-1 h-10" /> : null}
-      <Link to={view.to} className="group mt-auto inline-flex items-center gap-1 pt-1 text-sm font-semibold underline-offset-4 hover:underline" style={{ color: "var(--tone-ink)" }}>
+      {trend ? <Sparkline values={trend} labels={labels} format={format} color="var(--tone-fill)" fill={0.3} className="mt-auto h-12" /> : null}
+      <Link to={view.to} className="group inline-flex items-center gap-1 pt-1 text-sm font-semibold underline-offset-4 hover:underline" style={{ color: "var(--tone-ink)" }}>
         {view.label} <ArrowRight className="admin-arrow size-4" aria-hidden="true" />
-      </Link>
-    </section>
-  );
-}
-
-/** The lead figure: net revenue on the lapis→violet band, with a large trend line. */
-function RevenueHero({ value, khr, change, detail, trend, labels, stats }: { value: ReactNode; khr?: string | null; change?: ReactNode; detail: string; trend?: number[]; labels?: string[]; stats: Array<{ label: string; value: string }> }) {
-  return (
-    <section aria-labelledby="net-revenue" className="admin-hero admin-kpi relative flex flex-col gap-3 overflow-hidden rounded-2xl p-6 sm:p-7">
-      <div className="flex items-center justify-between gap-3">
-        <h2 id="net-revenue" className="flex items-center gap-2 font-sans text-[15px] font-semibold tracking-normal text-white">
-          <span aria-hidden="true" className="admin-hero-chip grid size-9 place-items-center rounded-xl"><DollarSign className="size-[18px]" /></span>
-          Net revenue
-        </h2>
-        <span className="admin-hero-chip rounded-full px-2.5 py-1 text-xs font-semibold">USD</span>
-      </div>
-      <p className="text-[clamp(2.4rem,4vw,3.5rem)] font-semibold leading-none tracking-[-0.03em] tabular-nums text-white">{value}</p>
-      {khr ? <span className="admin-hero-muted block text-[15px] tabular-nums">≈ {formatKhr(khr)}</span> : null}
-      {change}
-      <p className="admin-hero-muted text-sm tabular-nums">{detail}</p>
-      <dl className="grid grid-cols-3 gap-2 pt-1">
-        {stats.map((stat) => (
-          <div key={stat.label} className="admin-hero-chip grid gap-0.5 rounded-xl px-3 py-2.5">
-            <dt className="admin-hero-muted text-xs">{stat.label}</dt>
-            <dd className="text-[15px] font-semibold tabular-nums text-white">{stat.value}</dd>
-          </div>
-        ))}
-      </dl>
-      {trend ? <Sparkline values={trend} labels={labels} format={usd} onDark color="#ffffff" fill={0.28} className="mt-auto h-36" /> : null}
-      <Link to="/admin/reports" className="group inline-flex min-h-11 w-fit items-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold text-[#14207A] outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-[#14207A]">
-        View sales report <ArrowRight className="admin-arrow size-4" aria-hidden="true" />
       </Link>
     </section>
   );
@@ -210,76 +193,36 @@ function AdminDashboard() {
         <div className="relative grid grid-cols-1 gap-6" aria-busy={summary.isPlaceholderData || undefined}>
           {/* A new period loads in place: a slim bar runs along the top while the old figures stay, then everything glides to the new values. */}
           <span aria-hidden="true" className={cn("admin-loadbar pointer-events-none absolute inset-x-0 -top-3 h-0.5 overflow-hidden rounded-full transition-opacity duration-300", summary.isPlaceholderData || insights.isPlaceholderData ? "opacity-100" : "opacity-0")} />
-          {/* 1 · Performance: the lead figure on the left, supporting tiles on the right (bento). */}
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+          {/* 1 · Performance: four KPI cards in the sample's colours (revenue coral, orders saffron, average sky, customers sea). */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <m.div className="grid" {...rise(0)}>
-              <RevenueHero
-                value={<AnimatedNumber value={Number(s.revenue.net_usd)} format={usd} />}
-                khr={s.revenue.net_khr}
-                change={c ? <Change onDark percent={c.change_percent.net_revenue} previous={Number(c.revenue.net_usd)} versus={versus} /> : null}
+              <Kpi id="net-revenue" label="Net revenue" value={<AnimatedNumber value={Number(s.revenue.net_usd)} format={usd} />} khr={s.revenue.net_khr} icon={DollarSign} tone="coral"
                 detail={`${formatUsd(s.revenue.gross_usd)} from ${s.delivered_orders} delivered ${s.delivered_orders === 1 ? "order" : "orders"}${Number(s.revenue.refunds_usd) > 0 ? `, less ${formatUsd(s.revenue.refunds_usd)} refunded` : ""}`}
-                trend={series(trend, (d) => Number(d.net_revenue_usd))}
-                labels={labels}
-                stats={[
-                  { label: h.gross, value: formatUsd(s.revenue.gross_usd) },
-                  { label: h.refunds, value: formatUsd(s.revenue.refunds_usd) },
-                  { label: h.delivered, value: String(s.delivered_orders) },
-                ]}
-              />
+                change={c ? <Change percent={c.change_percent.net_revenue} previous={Number(c.revenue.net_usd)} versus={versus} /> : null}
+                trend={series(trend, (d) => Number(d.net_revenue_usd))} labels={labels} format={usd} view={{ to: "/admin/reports", label: "View sales report" }} />
             </m.div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
-              <m.div className="grid" {...rise(1)}>
-                <Kpi id="orders-placed" label="Orders placed" value={<AnimatedNumber value={s.orders_placed} format={count} />} icon={ShoppingBag} tone="blue"
-                  change={c ? <Change percent={c.change_percent.orders_placed} previous={c.orders_placed} versus={versus} /> : null}
-                  trend={series(trend, (d) => d.orders_placed)} labels={labels} view={{ to: "/admin/orders", label: "View orders" }} />
-              </m.div>
-              <m.div className="grid" {...rise(2)}>
-                <Kpi id="average-order" label="Average order" value={<AnimatedNumber value={Number(s.average_order_value_usd)} format={usd} />} khr={s.average_order_value_khr} detail="delivered orders" icon={Receipt} tone="violet"
-                  change={c ? <Change percent={c.change_percent.average_order_value} previous={Number(c.average_order_value_usd)} versus={versus} /> : null}
-                  trend={series(trend, (d) => Number(d.average_order_usd))} labels={labels} format={usd} view={{ to: "/admin/reports?tab=orders", label: "View order report" }} />
-              </m.div>
-              <m.div className="grid" {...rise(3)}>
-                <Kpi id="new-customers" label="New customers" value={<AnimatedNumber value={s.new_customers} format={count} />} detail="verified their account" icon={UserPlus} tone="teal"
-                  change={c ? <Change percent={c.change_percent.new_customers} previous={c.new_customers} versus={versus} /> : null}
-                  trend={series(trend, (d) => d.new_customers)} labels={labels} view={{ to: "/admin/customers", label: "View customers" }} />
-              </m.div>
-              {s.books_sold !== undefined && s.ebooks_sold !== undefined ? (
-                <>
-                  <m.div className="grid" {...rise(4)}>
-                    <Kpi id="books-sold" label={dict.dashboardCopies.books} value={<AnimatedNumber value={s.books_sold} format={count} />} detail={dict.dashboardCopies.detail} icon={BookOpen} tone="amber"
-                      change={c ? <Change percent={c.change_percent.books_sold} previous={c.books_sold} versus={versus} /> : null}
-                      trend={trend?.every((d) => d.books_sold !== undefined) ? series(trend, (d) => d.books_sold ?? 0) : undefined} labels={labels}
-                      view={{ to: "/admin/reports?tab=products", label: dict.dashboardCopies.view }} />
-                  </m.div>
-                  <m.div className="grid" {...rise(5)}>
-                    <Kpi id="ebooks-sold" label={dict.dashboardCopies.ebooks} value={<AnimatedNumber value={s.ebooks_sold} format={count} />} detail={dict.dashboardCopies.detail} icon={Tablet} tone="rose"
-                      change={c ? <Change percent={c.change_percent.ebooks_sold} previous={c.ebooks_sold} versus={versus} /> : null}
-                      trend={trend?.every((d) => d.ebooks_sold !== undefined) ? series(trend, (d) => d.ebooks_sold ?? 0) : undefined} labels={labels}
-                      view={{ to: "/admin/reports?tab=products", label: dict.dashboardCopies.view }} />
-                  </m.div>
-                </>
-              ) : null}
-              {ins?.order_ratings ? (
-                <m.div className="grid" {...rise(6)}>
-                  <section aria-labelledby="order-rating" data-tone="amber" className="admin-kpi desk-card flex flex-col gap-2.5 rounded-2xl border border-border bg-card p-5">
-                    <div className="admin-kpi-top">
-                      <h2 id="order-rating" className="font-sans text-sm font-semibold tracking-normal text-muted-foreground">{dict.ratings.title}</h2>
-                      <span className="admin-kpi-icon" aria-hidden="true"><Star className="size-[18px]" /></span>
-                    </div>
-                    <p className="text-[1.875rem] font-semibold leading-none tabular-nums">{ins.order_ratings.average ?? "—"}<span className="text-base font-normal text-muted-foreground"> / 5</span></p>
-                    <p className="text-sm text-muted-foreground tabular-nums">{h.ratings.replace("{n}", String(ins.order_ratings.count))}</p>
-                    <Link to="/admin/ratings" className="group mt-auto inline-flex items-center gap-1 pt-1 text-sm font-semibold underline-offset-4 hover:underline" style={{ color: "var(--tone-ink)" }}>{h.viewRatings} <ArrowRight className="admin-arrow size-4" aria-hidden="true" /></Link>
-                  </section>
-                </m.div>
-              ) : null}
-            </div>
+            <m.div className="grid" {...rise(1)}>
+              <Kpi id="orders-placed" label="Orders placed" value={<AnimatedNumber value={s.orders_placed} format={count} />} icon={ShoppingBag} tone="saffron"
+                change={c ? <Change percent={c.change_percent.orders_placed} previous={c.orders_placed} versus={versus} /> : null}
+                trend={series(trend, (d) => d.orders_placed)} labels={labels} view={{ to: "/admin/orders", label: "View orders" }} />
+            </m.div>
+            <m.div className="grid" {...rise(2)}>
+              <Kpi id="average-order" label="Average order" value={<AnimatedNumber value={Number(s.average_order_value_usd)} format={usd} />} khr={s.average_order_value_khr} detail="delivered orders" icon={Receipt} tone="sky"
+                change={c ? <Change percent={c.change_percent.average_order_value} previous={Number(c.average_order_value_usd)} versus={versus} /> : null}
+                trend={series(trend, (d) => Number(d.average_order_usd))} labels={labels} format={usd} view={{ to: "/admin/reports?tab=orders", label: "View order report" }} />
+            </m.div>
+            <m.div className="grid" {...rise(3)}>
+              <Kpi id="new-customers" label="New customers" value={<AnimatedNumber value={s.new_customers} format={count} />} detail="verified their account" icon={UserPlus} tone="sea"
+                change={c ? <Change percent={c.change_percent.new_customers} previous={c.new_customers} versus={versus} /> : null}
+                trend={series(trend, (d) => d.new_customers)} labels={labels} view={{ to: "/admin/customers", label: "View customers" }} />
+            </m.div>
           </div>
 
           {/* 2 · Sales over time and where orders are. */}
           <SectionLabel>{h.sales}</SectionLabel>
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
             {trend?.length ? (
-              <Panel id="sales-chart" title="Income report" icon={LineChart} tone="violet" action={<span className="text-sm text-muted-foreground">this period vs the previous one · by delivery date, less refunds</span>}>
+              <Panel id="sales-chart" title="Income report" icon={LineChart} tone="coral" action={<span className="text-sm text-muted-foreground">this period vs the previous one · by delivery date, less refunds</span>}>
                 <IncomeChart days={trend} />
               </Panel>
             ) : (
@@ -291,7 +234,7 @@ function AdminDashboard() {
               id="order-mix"
               title="Orders placed by status"
               icon={PieIcon}
-              tone="blue"
+              tone="sky"
               action={
                 <Link to="/admin/orders" className="group inline-flex items-center gap-1 text-sm font-semibold text-primary underline-offset-4 hover:underline">
                   {s.open_returns} open {s.open_returns === 1 ? "return" : "returns"} · View orders <ArrowRight className="admin-arrow size-4" aria-hidden="true" />
@@ -302,17 +245,21 @@ function AdminDashboard() {
             </Panel>
           </div>
 
+          {/* 2b · At a glance: the React Bits MagicBento with the shop's own figures (owner 2026-11-15). */}
+          <SectionLabel>{h.glance}</SectionLabel>
+          <GlanceBento s={s} ins={ins} />
+
           {/* 3 · Books: what sells, which shelves, what runs out. */}
           <SectionLabel>{h.catalogue}</SectionLabel>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-[minmax(0,5fr)_minmax(0,4fr)_minmax(0,4fr)]">
-            <Panel id="best-sellers" title="Best sellers" icon={Trophy} tone="amber">
+            <Panel id="best-sellers" title="Best sellers" icon={Trophy} tone="saffron">
               {s.best_sellers.length === 0 ? (
                 <p className="text-[15px] text-muted-foreground">No delivered sales in this period yet.</p>
               ) : (
                 <RankTable head={["Book", "Copies", "Sales"]} rows={s.best_sellers.map((b) => ({ key: b.book_id, copies: b.copies_sold, sales: formatUsd(b.sales_usd), khr: b.sales_khr, name: <Link to={`/admin/books/${b.book_id}`} className="font-semibold underline-offset-4 hover:text-primary hover:underline">{b.title}</Link> }))} />
               )}
             </Panel>
-            <Panel id="top-categories" title="Top categories" icon={FolderTree} tone="violet" action={<span className="text-sm text-muted-foreground">by copies in orders placed</span>}>
+            <Panel id="top-categories" title="Top categories" icon={FolderTree} tone="sky" action={<span className="text-sm text-muted-foreground">by copies in orders placed</span>}>
               {!s.top_categories || s.top_categories.length === 0 ? (
                 <p className="text-[15px] text-muted-foreground">No categorised sales in this period yet.</p>
               ) : (
@@ -323,7 +270,7 @@ function AdminDashboard() {
               id="low-stock"
               title="Low stock"
               icon={Boxes}
-              tone="rose"
+              tone="coral"
               className="lg:col-span-2 2xl:col-span-1"
               action={<Link to="/admin/stock" className="group inline-flex items-center gap-1 text-sm font-semibold text-primary underline-offset-4 hover:underline">{h.allStock} <ArrowRight className="admin-arrow size-4" aria-hidden="true" /></Link>}
             >
@@ -351,7 +298,7 @@ function AdminDashboard() {
           </div>
 
           {/* 4 · Customers and how they pay. */}
-          {ins?.payment_methods || ins?.cart_reminder_recovery || ins?.repeat_customer_rate || ins?.delivery_areas ? (
+          {ins?.payment_methods || ins?.cart_reminder_recovery ? (
             <>
               <SectionLabel>{h.customers}</SectionLabel>
               <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
@@ -361,23 +308,6 @@ function AdminDashboard() {
                   </Panel>
                 ) : null}
                 <div className="grid content-start gap-6">
-                  {ins.repeat_customer_rate ? (
-                    <Panel id="buyers" title={dict.dashboardBuyers.title} icon={Users} tone="teal">
-                      <dl className="grid grid-cols-2 gap-3">
-                        <Stat label={dict.dashboardPrint.firstTime} value={<AnimatedNumber value={ins.repeat_customer_rate.customers - ins.repeat_customer_rate.returning} format={count} />} />
-                        <Stat label={dict.dashboardPrint.returning} value={<AnimatedNumber value={ins.repeat_customer_rate.returning} format={count} />} />
-                      </dl>
-                    </Panel>
-                  ) : null}
-                  {ins.delivery_areas ? (
-                    <Panel id="delivery-areas" title={dict.dashboardAreas.title} icon={MapPin} tone="green" action={<span className="text-sm text-muted-foreground">{dict.dashboardAreas.note}</span>}>
-                      <dl className="grid grid-cols-3 gap-3">
-                        <Stat label={dict.dashboardAreas.phnomPenh} value={<AnimatedNumber value={ins.delivery_areas.phnom_penh} format={count} />} />
-                        <Stat label={dict.dashboardAreas.provinces} value={<AnimatedNumber value={ins.delivery_areas.provinces} format={count} />} />
-                        <Stat label={dict.dashboardAreas.unknown} value={<AnimatedNumber value={ins.delivery_areas.unknown} format={count} />} />
-                      </dl>
-                    </Panel>
-                  ) : null}
                   {ins.cart_reminder_recovery ? (
                     <Panel id="reminder-recovery" title={dict.dashboardAnalysis.reminder} icon={BellRing} tone="violet">
                       <p className="text-sm text-muted-foreground">{dict.dashboardAnalysis.reminderNote}</p>

@@ -8,7 +8,11 @@ interface ThemeContextValue {
   toggleTheme: () => void;
 }
 
-const THEME_STORAGE_KEY = "bookly-theme";
+/*
+ * Light is the default (owner 2026-11-15). Only a theme the visitor picked with the switch is remembered, under a new
+ * key: the old key also held the system setting that was saved automatically, so it is no longer read.
+ */
+const THEME_STORAGE_KEY = "bookly-theme-choice";
 
 const ThemeContext = createContext<ThemeContextValue>({
   theme: "light",
@@ -21,12 +25,13 @@ const getInitialTheme = (): ThemeMode => {
     return "light";
   }
 
-  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  if (storedTheme === "light" || storedTheme === "dark") {
-    return storedTheme;
+  try {
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (storedTheme === "light" || storedTheme === "dark") return storedTheme;
+  } catch {
+    // Storage blocked: light.
   }
-
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return "light";
 };
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
@@ -36,7 +41,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     const root = document.documentElement;
     root.classList.toggle("dark", theme === "dark");
     root.style.colorScheme = theme;
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
 
   const value = useMemo<ThemeContextValue>(() => ({
@@ -44,7 +48,15 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     isDark: theme === "dark",
     toggleTheme: () => {
       startTransition(() => {
-        setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+        setTheme((prev) => {
+          const next = prev === "dark" ? "light" : "dark";
+          try {
+            window.localStorage.setItem(THEME_STORAGE_KEY, next);
+          } catch {
+            // Storage blocked: the choice lasts for this visit.
+          }
+          return next;
+        });
       });
     },
   }), [theme]);

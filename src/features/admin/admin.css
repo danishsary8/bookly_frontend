@@ -12,6 +12,13 @@
   --tone-rose-ink: #AF1F48;   --tone-rose-tint: #FDE5EB;   --tone-rose-rail: #FF9FB6;
   --tone-green-ink: #17694A;  --tone-green-tint: #DCF2E6;  --tone-green-rail: #7EDDB0;
   --tone-slate-ink: #434E6E;  --tone-slate-tint: #E9ECF4;  --tone-slate-rail: #BAC1DE;
+  /* Dashboard data colours (2026-11-15, owner's sample): coral, saffron, sky and sea. `-fill` draws lines and areas;
+     `-ink` is the same hue dark enough for text (≥ 4.5:1 on white and on the tint). */
+  --tone-coral-ink: #B2462F;  --tone-coral-tint: #FBE9E4;  --tone-coral-fill: #D35D45;
+  --tone-saffron-ink: #8A6210; --tone-saffron-tint: #FBF1D9; --tone-saffron-fill: #E5B23F;
+  --tone-sky-ink: #24639F;    --tone-sky-tint: #E3EEF9;    --tone-sky-fill: #3B82C4;
+  --tone-sea-ink: #1E6E64;    --tone-sea-tint: #DDF0EC;    --tone-sea-fill: #2F8F83;
+  --admin-canvas: #F6F2EC;
   /* The rail (2026-11-14): light, one step cooler than the canvas, so the page reads as one surface. */
   --rail-bg: #FFFFFF;
   --rail-bg-2: #F3F5FE;
@@ -30,6 +37,11 @@
   --tone-rose-ink: #FFA7BB;   --tone-rose-tint: #3B1626;
   --tone-green-ink: #84DFB4;  --tone-green-tint: #0F3124;
   --tone-slate-ink: #BFC5E0;  --tone-slate-tint: #1C2342;
+  --tone-coral-ink: #FFA592;  --tone-coral-tint: #3A1C17;  --tone-coral-fill: #F07A60;
+  --tone-saffron-ink: #F3CD72; --tone-saffron-tint: #33290F; --tone-saffron-fill: #EEC055;
+  --tone-sky-ink: #9CC7F0;    --tone-sky-tint: #13263B;    --tone-sky-fill: #5FA0DE;
+  --tone-sea-ink: #82D6CA;    --tone-sea-tint: #0F2E2A;    --tone-sea-fill: #45B3A5;
+  --admin-canvas: var(--background);
   --rail-bg: #0B1030;
   --rail-bg-2: #111840;
   --rail-fg: #D3D7F0;
@@ -43,14 +55,18 @@
 [data-tone="amber"]  { --tone-ink: var(--tone-amber-ink);  --tone-tint: var(--tone-amber-tint);  --tone-rail: var(--tone-amber-rail); }
 [data-tone="rose"]   { --tone-ink: var(--tone-rose-ink);   --tone-tint: var(--tone-rose-tint);   --tone-rail: var(--tone-rose-rail); }
 [data-tone="green"]  { --tone-ink: var(--tone-green-ink);  --tone-tint: var(--tone-green-tint);  --tone-rail: var(--tone-green-rail); }
+[data-tone="coral"] { --tone-ink: var(--tone-coral-ink); --tone-tint: var(--tone-coral-tint); --tone-rail: var(--tone-coral-ink); --tone-fill: var(--tone-coral-fill); }
+[data-tone="saffron"] { --tone-ink: var(--tone-saffron-ink); --tone-tint: var(--tone-saffron-tint); --tone-rail: var(--tone-saffron-ink); --tone-fill: var(--tone-saffron-fill); }
+[data-tone="sky"] { --tone-ink: var(--tone-sky-ink); --tone-tint: var(--tone-sky-tint); --tone-rail: var(--tone-sky-ink); --tone-fill: var(--tone-sky-fill); }
+[data-tone="sea"] { --tone-ink: var(--tone-sea-ink); --tone-tint: var(--tone-sea-tint); --tone-rail: var(--tone-sea-ink); --tone-fill: var(--tone-sea-fill); }
 [data-tone="slate"]  { --tone-ink: var(--tone-slate-ink);  --tone-tint: var(--tone-slate-tint);  --tone-rail: var(--tone-slate-rail); }
 
 /* ---- Frame ---------------------------------------------------------------------------------------------- */
 .admin-workspace {
   font-variant-numeric: tabular-nums;
   background:
-    radial-gradient(60rem 22rem at 70% -8rem, color-mix(in oklab, var(--tone-blue-tint) 70%, transparent), transparent 70%),
-    var(--background);
+    radial-gradient(60rem 22rem at 70% -8rem, color-mix(in oklab, var(--tone-saffron-tint) 55%, transparent), transparent 70%),
+    var(--admin-canvas);
 }
 .admin-main { min-width: 0; }
 .admin-page { align-content: start; }
@@ -229,3 +245,27 @@
 .admin-bar { transition: width 700ms var(--ease-out-expo); }
 @media (prefers-reduced-motion: reduce) { .admin-loadbar::after { animation: none; } .admin-spark path, .admin-bar { transition: none; } }
 .admin-chart-tip { color: #F4F5FB; background: #121633; border: 1px solid rgb(255 255 255 / 0.08); box-shadow: 0 18px 40px -16px rgb(10 12 40 / 0.55); }
+
+/* ---- Dashboard v3 (2026-11-15): sample-style KPI cards -------------------------------------------------------- */
+.dash-kpi { position: relative; isolation: isolate; transition: transform 260ms var(--ease-out-expo), box-shadow 260ms ease, border-color 260ms ease; }
+.dash-kpi::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; opacity: 0; transition: opacity 300ms ease;
+  background: radial-gradient(260px circle at var(--spot-x, 50%) var(--spot-y, 0%), color-mix(in oklab, var(--tone-fill, var(--primary)) 16%, transparent), transparent 70%); }
+.dash-kpi:hover { transform: translateY(-4px); border-color: color-mix(in oklab, var(--tone-fill, var(--primary)) 30%, var(--border)); box-shadow: 0 22px 40px -28px rgb(60 40 20 / 0.45); }
+.dash-kpi:hover::before { opacity: 1; }
+.dash-kpi-icon { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 999px; color: var(--tone-ink); background: var(--tone-tint); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--tone-fill) 25%, transparent); transition: transform 300ms var(--ease-out-expo); }
+.dash-kpi:hover .dash-kpi-icon { transform: rotate(-6deg) scale(1.06); }
+.dash-chip { display: inline-flex; align-items: center; gap: .15rem; border-radius: 999px; padding: .1rem .45rem; font-size: .8125rem; font-weight: 650; }
+.dash-pill { display: inline-flex; gap: .25rem; padding: .25rem; border-radius: 999px; border: 1px solid var(--border); background: color-mix(in oklab, var(--surface-2) 60%, var(--card)); }
+.dash-pill > button { min-height: 2.5rem; padding-inline: 1rem; border-radius: 999px; font-size: .875rem; font-weight: 600; color: var(--muted-foreground); transition: color 200ms, background-color 200ms, box-shadow 200ms; }
+.dash-pill > button[aria-checked="true"] { color: var(--foreground); background: var(--card); box-shadow: 0 1px 2px rgb(30 20 10 / .08), 0 6px 14px -10px rgb(200 85 61 / .45); }
+.dash-pill > button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .dash-kpi, .dash-kpi:hover, .dash-kpi:hover .dash-kpi-icon { transform: none; transition: none; } }
+@keyframes admin-grow-y { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.admin-grow-y { transform-origin: bottom; animation: admin-grow-y 650ms var(--ease-out-expo) both; transition: height 650ms var(--ease-out-expo); }
+.admin-workspace .desk-card { border-radius: 18px; }
+/* MagicBento cards use the workspace surfaces so the grid sits in the page, not on top of it. */
+.dash-bento .magic-bento__card { color: var(--foreground); }
+@media (prefers-reduced-motion: reduce) { .admin-grow-y { animation: none; transition: none; } }
+/* The bento's own surfaces follow the workspace cards (its theme values are inline, so these need !important). */
+.dash-bento { --mb-surface: var(--card) !important; --mb-edge: var(--border) !important; --mb-ink: var(--foreground) !important; --mb-muted: var(--muted-foreground) !important; }
+.dark .dash-bento { --mb-surface: linear-gradient(180deg, #121940 0%, var(--card) 100%) !important; }

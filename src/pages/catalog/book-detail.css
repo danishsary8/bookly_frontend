@@ -58,6 +58,8 @@
 .detail-book-aura { mask-image: radial-gradient(ellipse at center, #000 10%, transparent 65%); }
 /* Cover + favourite share one column: the button is always exactly as wide as the cover. */
 .detail-cover-column { display: flex; flex-direction: column; align-items: stretch; gap: 1.1rem; width: min(80%, 340px); }
+/* Phones: a smaller cover, so the title, price and Add to cart start on the first screen. */
+@media (max-width: 767px) { .detail-book-stage { padding: .25rem 0 0; } .detail-cover-column { width: min(52%, 13rem); gap: .75rem; } .detail-cover-favorite { height: 2.75rem; min-height: 2.75rem; padding-inline: .9rem; } }
 /* Tablets: cover beside the details (sticky), so the title and price are on the first screen. */
 @media (min-width: 768px) and (max-width: 1023px) { .detail-book-stage { padding: .5rem 0; } .detail-cover-column { width: 100%; } }
 .detail-cover-action { display: flex; }
@@ -163,8 +165,8 @@
   .detail-promises li > span { line-height: 1.45; }
 }
 @media (max-width: 639px) {
-  .detail-book-stage { min-height: 0; padding: 1.5rem 1.75rem; }
-  .detail-cover-column { width: min(78%, 270px); }
+  .detail-book-stage { min-height: 0; padding: .25rem 0 0; }
+  .detail-cover-column { width: min(52%, 13rem); }
   .detail-purchase-actions { display: grid; grid-template-columns: minmax(0,1fr) 48px; gap: .625rem; }
   .detail-purchase-actions > div:first-child:not(.detail-cart-glare) { grid-column: 1 / -1; }
   .detail-cart-glare { min-width: 0; width: 100%; }

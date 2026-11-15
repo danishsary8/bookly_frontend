@@ -62,7 +62,7 @@ export function IncomeChart({ days }: { days: TrendDay[] }) {
         <ul className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground" aria-label="Legend">
           <li className="flex items-center gap-2">
             <svg width="24" height="8" aria-hidden="true">
-              <line x1="0" y1="4" x2="24" y2="4" stroke="var(--tone-violet-ink, var(--primary))" strokeWidth="3" strokeLinecap="round" />
+              <line x1="0" y1="4" x2="24" y2="4" stroke="var(--tone-coral-fill, var(--primary))" strokeWidth="3" strokeLinecap="round" />
             </svg>
             This period · <span className="font-semibold text-foreground tabular-nums">{fmt(total("now"))}</span>
           </li>
@@ -78,7 +78,7 @@ export function IncomeChart({ days }: { days: TrendDay[] }) {
         <div role="img" aria-label={summary} className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={points} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-              <defs><linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--tone-violet-ink, var(--primary))" stopOpacity={0.22} /><stop offset="100%" stopColor="var(--tone-blue-ink, var(--primary))" stopOpacity={0} /></linearGradient><linearGradient id={`${fillId}-line`} x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="var(--tone-blue-ink, var(--primary))" /><stop offset="100%" stopColor="var(--tone-violet-ink, var(--primary))" /></linearGradient></defs>
+              <defs><linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--tone-coral-fill, var(--primary))" stopOpacity={0.22} /><stop offset="100%" stopColor="var(--tone-coral-fill, var(--primary))" stopOpacity={0} /></linearGradient><linearGradient id={`${fillId}-line`} x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="var(--tone-coral-fill, var(--primary))" /><stop offset="100%" stopColor="var(--tone-coral-fill, var(--primary))" /></linearGradient></defs>
               <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 5" />
               <XAxis dataKey="label" tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} tickLine={false} axisLine={{ stroke: "var(--border)" }} minTickGap={24} />
               <YAxis
@@ -99,7 +99,7 @@ export function IncomeChart({ days }: { days: TrendDay[] }) {
                     // Ink tooltip (same in both themes): the day, both periods with their colour keys, the difference.
                     <div className="admin-chart-tip min-w-48 rounded-xl px-3.5 py-3 text-sm tabular-nums">
                       <p className="mb-2 font-semibold">{p.label}</p>
-                      <p className="flex items-center justify-between gap-5"><span className="flex items-center gap-2"><span aria-hidden="true" className="size-2.5 rounded-full bg-[#A78BFA]" />This period</span><span className="font-semibold">{fmt(p.now)}</span></p>
+                      <p className="flex items-center justify-between gap-5"><span className="flex items-center gap-2"><span aria-hidden="true" className="size-2.5 rounded-full bg-[#F07A60]" />This period</span><span className="font-semibold">{fmt(p.now)}</span></p>
                       <p className="mt-1 flex items-center justify-between gap-5 text-[#C9CEE6]"><span className="flex items-center gap-2"><span aria-hidden="true" className="size-2.5 rounded-full bg-[#8F97C6]" />{p.previousLabel}</span><span>{fmt(p.before)}</span></p>
                       {diff !== null && diff !== 0 ? <p className={`mt-2 border-t border-white/10 pt-2 text-xs font-semibold ${diff > 0 ? "text-[#86EFAC]" : "text-[#FDA4AF]"}`}>{diff > 0 ? "▲" : "▼"} {Math.abs(diff)}% vs previous</p> : null}
                     </div>
@@ -107,7 +107,7 @@ export function IncomeChart({ days }: { days: TrendDay[] }) {
                 }}
               />
               <Line type="monotone" dataKey="before" stroke="var(--muted-foreground)" strokeWidth={2} strokeDasharray="5 4" dot={false} isAnimationActive={animate} animationDuration={900} />
-              <Area type="monotone" dataKey="now" fill={`url(#${fillId})`} stroke={`url(#${fillId}-line)`} strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 3, stroke: "var(--card)", fill: "var(--tone-violet-ink, var(--primary))" }} isAnimationActive={animate} animationDuration={900} animationEasing="ease-out" />
+              <Area type="monotone" dataKey="now" fill={`url(#${fillId})`} stroke={`url(#${fillId}-line)`} strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 3, stroke: "var(--card)", fill: "var(--tone-coral-fill, var(--primary))" }} isAnimationActive={animate} animationDuration={900} animationEasing="ease-out" />
             </ComposedChart>
           </ResponsiveContainer>
         </div>

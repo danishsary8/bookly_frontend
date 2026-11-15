@@ -3,7 +3,7 @@ import { useT } from "@/i18n";
 import { formatUsd } from "@/stores/currency";
 
 /** One colour per method (admin.css tones); the table always repeats every value as text. */
-const COLOUR: Record<string, string> = { cod: "var(--tone-amber-ink)", khqr: "var(--tone-rose-ink)", card: "var(--tone-blue-ink)", wallet: "var(--tone-teal-ink)" };
+const COLOUR: Record<string, string> = { cod: "var(--tone-saffron-fill)", khqr: "var(--tone-coral-fill)", card: "var(--tone-sky-fill)", wallet: "var(--tone-sea-fill)" };
 const colour = (method: string) => COLOUR[method] ?? "var(--tone-slate-ink)";
 
 export function PaymentMethods({ rows }: { rows: NonNullable<DashboardInsights["payment_methods"]> }) {

@@ -17,7 +17,7 @@ import { useCartCount } from "./useCartCount";
 import { useT } from "@/i18n";
 
 /*
- * Storefront header (pages/header.md). ≥ 1024px: wordmark · Browse ▾ · New arrivals · Authors · search ·
+ * Storefront header (pages/header.md). ≥ 768px: one row (search beside the wordmark). ≥ 1024px: wordmark · Browse ▾ · New arrivals · Authors · search ·
  * Language/currency/theme · wishlist · cart · account. Mobile adds a full-width search row.
  * Scrolling down hides the header; a short upward scroll reveals it. Menus and keyboard focus keep it visible.
  */
@@ -113,7 +113,7 @@ export function SiteHeader() {
         scrolled ? "border-transparent shadow-[0_8px_24px_-16px_rgb(20_32_122/0.35)]" : "border-border",
       )}
     >
-      <div className="container-shell flex h-full flex-wrap items-center gap-x-3 gap-y-2 py-3 lg:flex-nowrap lg:gap-4 lg:py-0 lg:gap-6">
+      <div className="container-shell flex h-full flex-wrap items-center gap-x-3 gap-y-2 py-3 md:flex-nowrap md:gap-4 md:py-0 lg:gap-6">
         <Wordmark />
 
         <nav aria-label={dict.navLinks.main} className="hidden lg:block">
@@ -148,10 +148,10 @@ export function SiteHeader() {
         <LiveSearch
           id="header-search"
           shortcut
-          className="order-last w-full min-w-0 basis-full lg:order-none lg:ml-auto lg:max-w-md lg:flex-1 lg:basis-auto"
+          className="order-last w-full min-w-0 basis-full md:order-none md:ml-auto md:max-w-md md:flex-1 md:basis-auto"
         />
 
-        <div className="ml-auto flex items-center gap-1 lg:ml-0">
+        <div className="ml-auto flex items-center gap-1 md:ml-0">
           <PreferencesMenu compact className="mr-1 hidden lg:inline-flex" />
           <Link
             to={signedIn ? "/account/wishlist" : "/login?next=%2Faccount%2Fwishlist"}

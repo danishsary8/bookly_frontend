@@ -92,7 +92,7 @@ function ProfileForm({ customer }: { customer: Customer }) {
           <label htmlFor="profile-email" className="text-sm font-semibold">
             {a.email}
           </label>
-          <input id="profile-email" value={customer.email ?? ""} readOnly aria-describedby="profile-email-hint" className="h-12 rounded-md border border-border bg-surface-2 px-3.5 text-base text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+          <input id="profile-email" type="email" value={customer.email ?? ""} readOnly aria-describedby="profile-email-hint" className="h-12 rounded-md border border-border bg-surface-2 px-3.5 text-base text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring" />
           <p id="profile-email-hint" className="text-sm text-muted-foreground">
             {a.emailHint}{" "}
             <Link to="/account/security" className="font-medium text-primary underline-offset-4 hover:underline">

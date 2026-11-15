@@ -118,3 +118,17 @@ Bento layout, read top to bottom: performance → sales → books → customers 
 - Dashboard data changes in place: figures glide from old to new (`AnimatedNumber`, 0.8s, reduced motion = instant),
   charts morph, trend lines and bars ease to their new shape, a slim gradient bar runs while the next period loads.
   No skeleton after the first load. Chart tooltip: ink (#121633) in both themes, colour keys, change line.
+
+## Dashboard v3 — 2026-11-15 (branch `admin-dashboard-v3`, owner's tour-trip sample)
+Supersedes the bento/hero layout above. Warm paper canvas (#F6F2EC) for the whole workspace, white 18–20px cards.
+- Data colours: coral #D35D45 (revenue, income chart, returns), saffron #E5B23F (orders, pending), sky #3B82C4
+  (average order, processing), sea #2F8F83 (customers, delivered). Each has an `-ink` for text (≥ 4.5:1).
+- Row 1: four KPI cards (label + round tinted icon, gliding number, change chip, smooth Catmull-Rom sparkline with
+  gradient fill and hover tooltip, coloured "View …" link; pointer spotlight, lift on hover).
+- Row 2: income report (coral line + fill, dashed previous period, ink tooltip, total + change chip) beside the
+  status donut (sample palette, rounded segments, hover = centre figure).
+- Row 3: "At a glance" — React Bits MagicBento (JS-CSS, kept as published in src/components/reactbits) with live
+  tiles: books sold, ebooks sold, order ratings, needs attention, customers who ordered (2 wide), delivery areas
+  (2 wide). columns 4, rowHeight 200, gap 12, radius 20, border glow, spotlight 300, click ripple; surfaces follow
+  the workspace cards; drops to 2/1 columns by itself.
+- Then best sellers / categories / low stock, payments / reminders, activity / recent orders, insights, health.

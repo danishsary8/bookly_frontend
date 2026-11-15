@@ -17,7 +17,7 @@
 .checkout-delivery-phone { max-width: 30rem; }
 .checkout-delivery-phone input { height: 2.75rem; border-radius: .75rem; background: var(--background); }
 .checkout-addresses > button { border-style: dashed; min-height: 2.75rem; border-radius: .75rem; font-size: .8rem; }
-.checkout-section textarea { min-height: 4.5rem; border-radius: .75rem; background: var(--background); font-size: .875rem; }
+.checkout-section textarea { min-height: 4.5rem; border-radius: .75rem; background: var(--background); font-size: 1rem; } /* 16px: iPhones zoom into smaller fields */
 .checkout-payments label { border-radius: .85rem; padding: 1rem; gap: .85rem; box-shadow: none; }
 .checkout-payments label > span:last-child { font-size: .875rem; }
 .checkout-payments label span.text-sm { margin-top: .25rem; font-size: .75rem; line-height: 1.6; }

@@ -1012,3 +1012,19 @@ except four pages that crash only on wrongly shaped mock data. Test: src/pages/a
 Checked with live catalogue data: 27 page/mode runs (light, dark, Khmer × 390/1366) without errors or overflow;
 axe WCAG 2.1 AA on 20 public pages × light/dark × 1440/390 and 17 signed-in pages (fake customer): 0 issues;
 interactions: header search, cart drawer, phone menu, switch to Khmer.
+
+### 2026-11-15 — Light by default + phone flow (branch `mobile-flow-polish`, built on `customer-bug-fixes`)
+- Theme: light on first visit (the old code copied the device's dark setting and saved it as a choice). Only a theme
+  picked with the switch is stored, under `bookly-theme-choice`; the splash script follows. Test: theme-default.test.tsx.
+- Phones: one-line announcement ("Free delivery on orders over $50", EN/KM); book page cover 52% / 13rem so title,
+  author, rating and price are on the first screen; tighter gaps.
+- iPhone zoom: checkout delivery note at 16px; profile email field `type="email"`.
+Walked the phone flow (book → cart → checkout → confirmation → KHQR → orders) at 390px with a fake customer.
+
+### 2026-11-15 — Admin dashboard v3 (branch `admin-dashboard-v3`, built on `mobile-flow-polish`)
+Owner's sample (tour-trip admin) style: warm canvas, four coloured KPI cards with smooth sparklines, coral income
+chart, sample-palette donut, React Bits MagicBento "At a glance" (added @hugeicons/react + core-free-icons, the
+component's own dependencies). Values still glide between periods. Rules: design-system/bookly/pages/admin.md.
+- Phone pass, continued (2026-11-15): one-row header from 768px (tablets, phones held sideways: 160px → 72px of
+  header), announcement hidden on screens ≤ 500px tall. Checked phone filters drawer, cart drawer, phone menu,
+  checkout end, 320px cart/checkout, 844×390 home/book: no errors, no sideways scroll.

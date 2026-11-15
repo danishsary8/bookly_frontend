@@ -33,7 +33,19 @@ export function Sparkline({
   const span = max - min || 1;
   const x = (i: number) => (i / (values.length - 1)) * w;
   const y = (v: number) => h - 2 - ((v - min) / span) * (h - 4);
-  const line = values.map((v, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  // A smooth curve through every point (Catmull-Rom as cubic Béziers, tension 0.5), like the sample's trend lines.
+  const pts = values.map((v, i) => [x(i), y(v)] as const);
+  const line = pts
+    .map(([px, py], i) => {
+      if (i === 0) return `M${px.toFixed(1)},${py.toFixed(1)}`;
+      const [x0, y0] = pts[Math.max(0, i - 2)];
+      const [x1, y1] = pts[i - 1];
+      const [x3, y3] = pts[Math.min(pts.length - 1, i + 1)];
+      const c1 = [x1 + (px - x0) / 6, y1 + (py - y0) / 6];
+      const c2 = [px - (x3 - x1) / 6, py - (y3 - y1) / 6];
+      return `C${c1[0].toFixed(1)},${Math.min(h, Math.max(0, c1[1])).toFixed(1)} ${c2[0].toFixed(1)},${Math.min(h, Math.max(0, c2[1])).toFixed(1)} ${px.toFixed(1)},${py.toFixed(1)}`;
+    })
+    .join(" ");
   const last = values.length - 1;
   const point = hover ?? last;
   const move = (event: PointerEvent<HTMLDivElement>) => {

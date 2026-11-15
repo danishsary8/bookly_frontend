@@ -58,7 +58,7 @@ test("account routes render and remain usable on a laptop", async ({ page, baseU
   }
   await page.setViewportSize({ width: 1440, height: 900 });
   for (const theme of ["light", "dark"]) {
-    await page.evaluate((value) => localStorage.setItem("bookly-theme", value), theme);
+    await page.evaluate((value) => localStorage.setItem("bookly-theme-choice", value), theme);
     for (const route of ["/profile", "/security"]) {
       await page.goto(`/account${route}`);
       await expect(page.locator("main h1").first()).toBeVisible();
