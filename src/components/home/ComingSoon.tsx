@@ -155,7 +155,12 @@ export function ComingSoon() {
         </div>
       ) : (
         // Full-bleed inside the page column, so tickets glide in from the edges of the content area.
-        <div className={cn("marquee -mx-2 -my-6 py-9", moving ? "overflow-hidden" : "no-scrollbar overflow-x-auto")} data-paused={paused || undefined}>
+        <div
+          className={cn("marquee -mx-2 -my-6 py-9", moving ? "overflow-hidden" : "no-scrollbar overflow-x-auto rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-ring")}
+          data-paused={paused || undefined}
+          // When it stops moving (reduced motion) it becomes a strip you scroll, so keyboards can reach it too (WCAG 2.1.1).
+          {...(moving ? {} : { role: "region", "aria-label": h.comingSoon, tabIndex: 0 })}
+        >
           <ul className={cn("flex w-max", moving && "marquee-track")} style={{ "--marquee-duration": `${loop.length * SECONDS_PER_TICKET}s` } as CSSProperties}>
             {/* repeats (to fill a loop) and the second loop are for the eye only */}
             {(moving ? loop : books).map((book, i) => ticket(book, `a-${book.id}-${i}`, i >= books.length))}

@@ -1002,3 +1002,13 @@ Live search on every admin list; Books filters (category, format, stock, sort) u
 light sidebar; dashboard figures/charts animate between periods without reloading; ink chart tooltip with change.
 Sweep of 37 admin routes (admin) + 24 (staff) at 1440 and 390 with a mocked API: no sideways scroll, no crashes
 except four pages that crash only on wrongly shaped mock data. Test: src/pages/admin/books-search.test.tsx.
+
+### 2026-11-15 — Customer bug fixes (branch `customer-bug-fixes`)
+- Hero cover reflection was full height and covered the caption: its fade rule (and the bookcase's dark-mode colours,
+  upright shading, right-upright mirroring and inner-side/underside styles) had been deleted by the shelf update.
+  Restored, with the `-webkit-` mask for Safari.
+- Coming soon (reduced motion): the scrollable strip is now keyboard-focusable (axe scrollable-region-focusable).
+- Top 10 ranks 4–10 were 70% grey (contrast fail); ranks 1–3 gold was 3.8:1 on the dark card → `dark:text-gold`.
+Checked with live catalogue data: 27 page/mode runs (light, dark, Khmer × 390/1366) without errors or overflow;
+axe WCAG 2.1 AA on 20 public pages × light/dark × 1440/390 and 17 signed-in pages (fake customer): 0 issues;
+interactions: header search, cart drawer, phone menu, switch to Khmer.

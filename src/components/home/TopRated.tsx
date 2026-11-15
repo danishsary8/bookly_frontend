@@ -150,7 +150,7 @@ export function TopRated() {
                     )}
                   >
                     <span className={cn("absolute inset-y-2.5 left-0 w-[3px] rounded-full bg-primary transition-opacity duration-300", i === front ? "opacity-100" : "opacity-0")} aria-hidden="true" />
-                    <span className={cn("w-7 shrink-0 text-center font-display text-[1.45rem] leading-none tabular-nums", i < 3 ? "text-[#946C1F]" : "text-muted-foreground/70")}>{i + 1}</span>
+                    <span className={cn("w-7 shrink-0 text-center font-display text-[1.45rem] leading-none tabular-nums", i < 3 ? "text-[#946C1F] dark:text-gold" : "text-muted-foreground")}>{i + 1}</span>
                     <span className="w-6 shrink-0"><BookCover src={book.cover_image_url} title={book.title} className="rounded-[3px] shadow-[0_6px_12px_-8px_rgb(20_16_10/0.6)]" /></span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-display text-[15px] leading-tight">{book.title}</span>
