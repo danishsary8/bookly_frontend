@@ -1031,6 +1031,7 @@ export const en = {
     crashed: "This page hit a problem while loading. Please try again.",
     offline: "You're offline.",
     turnstileFailed: "The security check didn't load. Check your connection, or allow challenges.cloudflare.com if you use a blocker, then reload the page.",
+    announcementShort: "Free delivery on orders over $50",
     announcementDelivery: "Flat $1.50 Delivery in Phnom Penh · Free delivery on orders over $50!",
     announcementAction: "Shop books",
     dismissAnnouncement: "Dismiss announcement",

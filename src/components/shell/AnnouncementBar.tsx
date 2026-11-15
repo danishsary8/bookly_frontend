@@ -39,7 +39,7 @@ export function AnnouncementBar() {
         <div className="flex min-w-0 flex-1 items-center justify-center gap-2 text-center lg:justify-start lg:text-left">
           <Truck className="size-4 shrink-0 text-amber-300 max-[359px]:hidden" aria-hidden="true" />
           <p className="font-medium tracking-tight">
-            <span>{dict.shell.announcementDelivery}</span>{" "}
+            <span className="max-sm:hidden">{dict.shell.announcementDelivery}</span><span className="sm:hidden">{dict.shell.announcementShort}</span>{" "}
             <Link
               to="/books"
               className="inline-flex items-center gap-1 font-semibold underline decoration-amber-300 underline-offset-4 transition-colors after:absolute after:inset-0 hover:text-amber-200 max-sm:no-underline sm:after:hidden"
