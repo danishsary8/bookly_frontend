@@ -5,9 +5,9 @@
 .account-identity { display: flex; align-items: center; gap: 12px; position: relative; overflow: hidden; padding: 16px 10px 22px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
 .account-identity > span:first-child { display: none; }
 .account-avatar { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 52px; border-radius: 7px 14px 14px 7px; background: var(--lapis); color: var(--gold); font-family: var(--font-display); font-size: 25px; box-shadow: inset 3px 0 0 color-mix(in srgb, var(--gold) 65%, transparent); }
-.account-identity-eyebrow { color: var(--muted-foreground); font-size: 11px; font-weight: 700; letter-spacing: .12em; margin-bottom: 3px; }
+.account-identity-eyebrow { color: var(--muted-foreground); font-size: 12px; font-weight: 700; letter-spacing: .12em; margin-bottom: 3px; }
 .account-sidebar [aria-labelledby] { gap: 3px; }
-.account-sidebar p[id^="account-nav"] { font-size: 11px; letter-spacing: .12em; padding-bottom: 8px; }
+.account-sidebar p[id^="account-nav"] { font-size: 12px; letter-spacing: .12em; padding-bottom: 8px; }
 .account-area .account-nav-link { border-radius: 8px; min-height: 44px; font-size: 14px; gap: 11px; }
 .account-area .account-nav-link::after { display: none; }
 .account-area .account-nav-link[aria-current="page"] { background: var(--primary); color: var(--primary-foreground); }
@@ -22,7 +22,7 @@
 .account-page-heading h1 { font-size: clamp(30px, 2.6vw, 42px); line-height: 1.18; letter-spacing: -.025em; overflow-wrap: anywhere; }
 .account-page-heading > div:first-child { min-width: 0; gap: 9px; }
 .account-page-heading > div:first-child > .text-muted-foreground { max-width: 65ch; font-size: 14px; line-height: 1.7; }
-.account-eyebrow { display: inline-flex; align-items: center; gap: 7px; color: var(--primary); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.account-eyebrow { display: inline-flex; align-items: center; gap: 7px; color: var(--primary); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .account-eyebrow svg { width: 15px; height: 15px; stroke-width: 1.8; }
 .account-heading-action { flex-shrink: 0; }
 .account-content .shop-card { box-shadow: none; border-radius: 14px; }

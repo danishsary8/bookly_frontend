@@ -11,7 +11,8 @@ import { LanguageSwitch } from "./LanguageSwitch";
  * One compact "🌐 EN · $" button for settings people set once: language, currency and light/dark.
  * Opens a small panel (radix Popover: focus moves in, Escape closes); motion: .nav-pop.
  */
-export function PreferencesMenu({ className }: { className?: string }) {
+/** `compact`: below 1280px only the globe and the chevron show, so the header search keeps its room. */
+export function PreferencesMenu({ className, compact = false }: { className?: string; compact?: boolean }) {
   const { lang, dict } = useT();
   const currency = useCurrency();
   const { isDark, toggleTheme } = useTheme();
@@ -21,12 +22,12 @@ export function PreferencesMenu({ className }: { className?: string }) {
       <Popover.Trigger
         aria-label={`${lang.toUpperCase()} · ${currency === "USD" ? "$" : "៛"}, ${dict.shell.preferences}`}
         className={cn(
-          "group inline-flex h-10 items-center gap-1.5 rounded-full border border-border px-3 text-sm font-semibold text-foreground outline-none transition-colors duration-150 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-muted",
+          "group inline-flex h-11 items-center gap-1.5 rounded-full border border-border px-3 text-sm font-semibold text-foreground outline-none transition-colors duration-150 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-muted",
           className,
         )}
       >
         <Globe className="size-4 text-muted-foreground" aria-hidden="true" />
-        <span aria-hidden="true" className="whitespace-nowrap">
+        <span aria-hidden="true" className={cn("whitespace-nowrap", compact && "hidden xl:inline")}>
           {lang.toUpperCase()} · {currency === "USD" ? "$" : "៛"}
         </span>
         <ChevronDown className="size-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" aria-hidden="true" />

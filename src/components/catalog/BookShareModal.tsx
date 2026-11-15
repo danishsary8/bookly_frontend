@@ -152,7 +152,7 @@ export function BookShareModal({ open, onOpenChange, book, url: explicitUrl }: B
               loading="lazy"
             />
           ) : (
-            <div className="grid h-14 w-10 place-items-center rounded bg-muted text-[10px] font-bold text-muted-foreground shrink-0">
+            <div className="grid h-14 w-10 place-items-center rounded bg-muted text-xs font-bold text-muted-foreground shrink-0">
               {bookTitle ? bookTitle.slice(0, 2).toUpperCase() : "BK"}
             </div>
           )}

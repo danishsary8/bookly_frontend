@@ -342,3 +342,15 @@ Full-bleed lapis everywhere in Daylight · more than one vermilion CTA per view 
 - `pages/catalogue.md`: catalogue and book pages (cover-fan page headers and panels, filters on a card, series spines, the book page's buy box).
 - `pages/account.md`: the account area (sidebar library card, sheets, order progress meter) and the ebook reader.
 - `pages/admin.md`: the staff area (no page transitions or showpieces, sidebar frame, dense tables, the dashboard chart, staff sign-in).
+
+## Responsive pass — 2026-11-14 (branch `responsive-pass`)
+Checked every customer page at 320, 360, 390, 414, 768, 1024, 1280, 1366, 1440 and 1920px against real catalogue data.
+- Breakpoint for the desktop header is 1024px (was 900): below it, logo + cart + menu with a full-width search row.
+  The preferences pill shows only the globe below 1280px.
+- Minimum text 12px everywhere in the shop (no 10–11px labels). Tap targets at least 44px below 1280px; text-style
+  buttons (`variant="link"`) get an invisible 44px hit area.
+- Phones: horizontal rows (hero categories, category tiles, shelf tabs) scroll in one line and show part of the next
+  item; category tiles 82% wide on phones, two across on tablets, three from 1280px.
+- Book cards use a container query: below 13rem wide the price goes under the rating.
+- Book page on tablets: cover left (sticky), details right; editions as full-width rows below 1024px.
+- Checkout on phones: step marker beside the heading, content full width; smaller payment logos below 380px.

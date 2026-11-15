@@ -69,7 +69,7 @@ function SectionLinks({ visible, onNavigate }: { visible: (key: SectionKey) => b
         const id = `account-nav-${instanceId}-${group.key}`;
         return (
           <div key={group.key} className="grid gap-0.5">
-            <p id={id} className="px-3 pb-1 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+            <p id={id} className="px-3 pb-1 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
               {dict.accountNav.groups[group.key]}
             </p>
             <ul aria-labelledby={id} className="grid gap-0.5">
@@ -148,7 +148,7 @@ export function AccountLayout() {
                 <CurrentIcon className="size-[18px]" aria-hidden="true" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{dict.account.eyebrow}</span>
+                <span className="block text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">{dict.account.eyebrow}</span>
                 <span className="block truncate font-semibold">{label(dict, current.key)}</span>
               </span>
               <span className="text-sm font-semibold text-primary">{dict.accountNav.menu}</span>

@@ -98,7 +98,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
       ) : null}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(100deg,rgb(20_32_122/0.9)_0%,rgb(20_32_122/0.7)_45%,rgb(24_38_130/0.55)_100%)]" aria-hidden="true" />
 
-      <div className="grid grid-cols-1 items-center gap-12 px-6 pb-12 pt-16 sm:px-10 sm:py-12 [--hero-panel-height:min(920px,calc(100svh-var(--header-h)-4rem))] lg:h-[var(--hero-panel-height)] lg:grid-cols-12 lg:gap-x-8 lg:px-14 lg:py-6 short:py-5">
+      <div className="grid grid-cols-1 items-center gap-8 px-6 pb-10 pt-14 sm:gap-12 sm:px-10 sm:py-12 [--hero-panel-height:min(920px,calc(100svh-var(--header-h)-4rem))] lg:h-[var(--hero-panel-height)] lg:grid-cols-12 lg:gap-x-8 lg:px-14 lg:py-6 short:py-5">
         <div className="relative z-10 lg:col-span-6">
           <p className="eyebrow">{h.heroEyebrow}</p>
           <h1 id="home-hero-title" className="mt-6 font-display text-[clamp(2.4rem,3.9vw,3.4rem)] leading-[1.12] tracking-[-0.02em] text-on-lapis short:mt-4 short:text-[clamp(2rem,3.4vw,3rem)]">
@@ -118,17 +118,20 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
 
 
           {topCategories.length ? (
-            <nav aria-label={h.popularCategories} className="mt-8 flex flex-wrap items-center gap-3 text-sm short:mt-6">
-              <span className="w-full text-[13px] text-on-lapis-muted sm:mr-1 sm:w-auto">{h.popularCategories}</span>
-              {topCategories.map((c) => (
-                <Link
-                  key={c.id}
-                  to={`/categories/${c.slug}`}
-                  className="inline-flex min-h-11 items-center rounded-full bg-on-lapis/[0.07] px-4 py-2 font-medium text-on-lapis ring-1 ring-inset ring-on-lapis/15 transition-[background-color,box-shadow] duration-200 hover:bg-on-lapis/[0.14] hover:ring-gold/50"
-                >
-                  {c.name}
-                </Link>
-              ))}
+            <nav aria-label={h.popularCategories} className="mt-8 grid gap-3 text-sm sm:flex sm:flex-wrap sm:items-center short:mt-6">
+              <span className="text-[13px] text-on-lapis-muted sm:mr-1">{h.popularCategories}</span>
+              {/* Phones: one row that scrolls sideways (bleeding to the panel edge) instead of wrapping onto two. */}
+              <span className="no-scrollbar -mx-6 flex gap-3 overflow-x-auto px-6 sm:contents">
+                {topCategories.map((c) => (
+                  <Link
+                    key={c.id}
+                    to={`/categories/${c.slug}`}
+                    className="inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full bg-on-lapis/[0.07] px-4 py-2 font-medium text-on-lapis ring-1 ring-inset ring-on-lapis/15 transition-[background-color,box-shadow] duration-200 hover:bg-on-lapis/[0.14] hover:ring-gold/50"
+                  >
+                    {c.name}
+                  </Link>
+                ))}
+              </span>
             </nav>
           ) : null}
           {/* One calm call to action (cream on lapis, the arrow in its own lapis disc) and the shop's two promises. */}
@@ -232,7 +235,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
               {current ? (
                 <div className="text-center">
                   <div aria-live={autoplaying ? "off" : "polite"} aria-atomic="true">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-on-lapis-muted">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-on-lapis-muted">
                       {label ?? h.topRated} <span className="ml-1.5 tabular-nums opacity-80">{h.nOfM(index + 1, books.length)}</span>
                     </p>
                     <div key={current.id} className="hero-caption">

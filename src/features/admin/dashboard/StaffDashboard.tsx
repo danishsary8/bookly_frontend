@@ -8,6 +8,7 @@ import { AdminPage } from "@/features/admin/AdminPage";
 import type { AdminTone } from "@/features/admin/adminNav";
 import { RecentOrders } from "@/features/admin/dashboard/RecentOrders";
 import { useMenuCounts } from "@/features/admin/menuCounts";
+import { AnimatedNumber } from "@/features/admin/dashboard/AnimatedNumber";
 import { useT } from "@/i18n";
 
 /*
@@ -108,7 +109,7 @@ export function StaffDashboard({ user }: { user?: StaffUser }) {
                         {counts.isPending ? (
                           <Skeleton className="h-11 w-14" />
                         ) : (
-                          <span className="text-[2.75rem] font-semibold leading-none tracking-[-0.02em] tabular-nums">{value ?? "—"}</span>
+                          value == null ? <span className="text-[2.75rem] font-semibold leading-none">—</span> : <AnimatedNumber value={value} format={(n) => String(Math.round(n))} className="text-[2.75rem] font-semibold leading-none tracking-[-0.02em] tabular-nums" />
                         )}
                         <span className="text-sm text-muted-foreground">{hint}</span>
                       </span>

@@ -120,7 +120,7 @@ export default function MyEbooksPage() {
                             {current > 0 ? e.progressPercent(percent) : e.startReading}
                           </span>
                         ) : (
-                          <Badge tone="warning" shape="tint" className="text-[11px]">
+                          <Badge tone="warning" shape="tint" className="text-xs">
                             {e.processingTitle}
                           </Badge>
                         )}
@@ -211,7 +211,7 @@ export default function MyEbooksPage() {
                       </div>
                     </div>
                     {device.is_current ? (
-                      <Badge tone="success" shape="tint" className="text-[11px] shrink-0">
+                      <Badge tone="success" shape="tint" className="text-xs shrink-0">
                         {e.thisDevice}
                       </Badge>
                     ) : null}

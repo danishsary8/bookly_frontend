@@ -68,12 +68,12 @@ export function Stepper({ steps, current, label, status, children, footer, befor
           ))}
         </div>
       ) : null}
-      <ol aria-label={label} className={cn("flex items-center gap-3", hideIndicator && "sr-only")}>
+      <ol aria-label={label} className={cn("flex min-w-0 items-center gap-2 sm:gap-3", hideIndicator && "sr-only")}>
         {steps.map((title, i) => {
           const done = i < current;
           const active = i === current;
           return (
-            <li key={title} aria-current={active ? "step" : undefined} className={cn("flex min-w-0 items-center gap-3", i < steps.length - 1 && "flex-1")}>
+            <li key={title} aria-current={active ? "step" : undefined} className={cn("flex items-center gap-2 sm:gap-3", i < steps.length - 1 && "flex-1")}>
               {/* The current step is a soft tinted pill (disc + name); the others are plain discs. */}
               <span
                 className={cn(
@@ -83,7 +83,7 @@ export function Stepper({ steps, current, label, status, children, footer, befor
               >
                 <span
                   className={cn(
-                    "grid size-6 place-items-center rounded-full text-[11px] font-semibold tabular-nums transition-all duration-300",
+                    "grid size-6 place-items-center rounded-full text-xs font-semibold tabular-nums transition-all duration-300",
                     done && "bg-primary text-primary-foreground",
                     active && "bg-primary text-primary-foreground",
                     !done && !active && "bg-muted text-muted-foreground",
@@ -106,7 +106,7 @@ export function Stepper({ steps, current, label, status, children, footer, befor
                 </span>
               </span>
               {i < steps.length - 1 ? (
-                <span className="relative h-px min-w-6 flex-1 bg-border" aria-hidden="true">
+                <span className="relative h-px min-w-1 flex-1 bg-border sm:min-w-6" aria-hidden="true">
                   <m.span
                     className="absolute inset-0 origin-left bg-primary"
                     initial={false}

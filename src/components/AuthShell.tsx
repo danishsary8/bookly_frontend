@@ -16,7 +16,7 @@ import { useT } from "@/i18n";
 const Wordmark = ({ onLapis = false }: { onLapis?: boolean }) => {
   const { dict } = useT();
   return (
-    <Link to="/" className="group inline-flex items-center gap-2.5 rounded-lg transition-opacity duration-150 hover:opacity-80" aria-label={dict.signin.home}>
+    <Link to="/" className="group inline-flex min-h-11 items-center gap-2.5 rounded-lg transition-opacity duration-150 hover:opacity-80" aria-label={dict.signin.home}>
       <span className={`grid h-9 w-9 place-items-center rounded-md ${onLapis ? "border border-gold/60 text-gold" : "bg-primary text-primary-foreground"}`}>
         <BookOpen className="h-[18px] w-[18px]" aria-hidden="true" />
       </span>
@@ -57,7 +57,7 @@ export const AuthShell = ({ children, panel, legal = false }: AuthShellProps) =>
               <ArrowLeft className="size-[18px]" aria-hidden="true" />
             </Link>
           </div>
-          <div className="flex flex-1 items-start justify-center py-6 lg:items-stretch lg:py-0">
+          <div className="flex flex-1 items-start justify-center py-6 md:items-center md:pb-16 lg:items-stretch lg:py-0">
             <div className="w-full max-w-[34rem] lg:flex lg:max-w-[36rem] lg:flex-col">
               {children}
               {legal ? <div className="mt-4 lg:hidden"><AgreeNote /></div> : null}

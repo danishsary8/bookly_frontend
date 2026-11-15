@@ -122,7 +122,7 @@ export function CategoryTiles({ categories, loading }: { categories: Category[] 
       </div>
       <ul
         ref={track}
-        className="shelf-row-more no-scrollbar -mx-2 grid snap-x grid-flow-col grid-rows-2 gap-4 overflow-x-auto px-2 pb-3 pt-1 [grid-auto-columns:calc((100%-2rem)/3)]"
+        className="shelf-row-more no-scrollbar -mx-2 grid snap-x grid-flow-col grid-rows-2 gap-4 overflow-x-auto px-2 pb-3 pt-1 [grid-auto-columns:82%] sm:[grid-auto-columns:calc((100%-1rem)/2)] xl:[grid-auto-columns:calc((100%-2rem)/3)]"
       >
         {sorted.map((category, index) => (
           <li key={category.id} className="snap-start">

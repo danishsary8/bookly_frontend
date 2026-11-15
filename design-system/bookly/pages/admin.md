@@ -107,3 +107,14 @@ Bento layout, read top to bottom: performance → sales → books → customers 
   highlight each other and the centre shows the hovered status and share; payment bar segments show
   method · share · total on hover. Bars grow in (700ms, staggered), trend lines reveal left to right (1.1s),
   charts draw in (900ms); all off with reduced motion. Panels tint their border on hover.
+
+## Admin polish — 2026-11-14 (branch `admin-polish`)
+- Rail is now a light sheet (white → #F3F5FE, hairline right edge) so it belongs to the canvas; group dots and icons
+  in their area's ink; the current page sits on its area's tint with a 3px bar in the same ink; counts in the area ink.
+  Dark mode keeps a navy rail. Supersedes the "deep navy rail" rule above.
+- Lists search as you type (350ms after the last key; Enter for at once; × clears); the URL stays the source of
+  truth. Matches are marked in gold. Books add Category (with sub-shelves), Format, Stock and Sort dropdowns
+  (`FilterSelect`, label above value, tinted when active) and Clear filters.
+- Dashboard data changes in place: figures glide from old to new (`AnimatedNumber`, 0.8s, reduced motion = instant),
+  charts morph, trend lines and bars ease to their new shape, a slim gradient bar runs while the next period loads.
+  No skeleton after the first load. Chart tooltip: ink (#121633) in both themes, colour keys, change line.

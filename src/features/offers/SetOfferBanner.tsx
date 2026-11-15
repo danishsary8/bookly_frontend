@@ -50,7 +50,7 @@ export function SetOfferBanner({ offer, onAdd, pending, className }: { offer: Se
         </div>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3 sm:justify-end">
           <p className="grid gap-0.5">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-on-lapis-muted">{o.setPrice}</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-on-lapis-muted">{o.setPrice}</span>
             <span className="flex items-baseline gap-2">
               <span className="font-display text-[1.7rem] leading-none tabular-nums text-on-lapis">{formatMoney(offer.set_price_usd, offer.set_price_khr, currency)}</span>
               <s className="text-sm tabular-nums text-on-lapis-muted">{formatMoney(offer.full_price_usd, offer.full_price_khr, currency)}</s>

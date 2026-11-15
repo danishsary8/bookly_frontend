@@ -17,7 +17,7 @@ import { useCartCount } from "./useCartCount";
 import { useT } from "@/i18n";
 
 /*
- * Storefront header (pages/header.md). ≥ 900px: wordmark · Browse ▾ · New arrivals · Authors · search ·
+ * Storefront header (pages/header.md). ≥ 1024px: wordmark · Browse ▾ · New arrivals · Authors · search ·
  * Language/currency/theme · wishlist · cart · account. Mobile adds a full-width search row.
  * Scrolling down hides the header; a short upward scroll reveals it. Menus and keyboard focus keep it visible.
  */
@@ -28,7 +28,7 @@ export function Wordmark({ className }: { className?: string }) {
     <Link
       to="/"
       aria-label={dict.navLinks.homeLabel}
-      className={cn("rounded-md font-display text-[1.75rem] leading-none text-primary outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4", className)}
+      className={cn("inline-flex min-h-11 items-center rounded-md font-display text-[1.75rem] leading-none text-primary outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4", className)}
     >
       Bookly
     </Link>
@@ -113,10 +113,10 @@ export function SiteHeader() {
         scrolled ? "border-transparent shadow-[0_8px_24px_-16px_rgb(20_32_122/0.35)]" : "border-border",
       )}
     >
-      <div className="container-shell flex h-full flex-wrap items-center gap-x-3 gap-y-2 py-3 min-[900px]:flex-nowrap min-[900px]:gap-4 min-[900px]:py-0 lg:gap-6">
+      <div className="container-shell flex h-full flex-wrap items-center gap-x-3 gap-y-2 py-3 lg:flex-nowrap lg:gap-4 lg:py-0 lg:gap-6">
         <Wordmark />
 
-        <nav aria-label={dict.navLinks.main} className="hidden min-[900px]:block">
+        <nav aria-label={dict.navLinks.main} className="hidden lg:block">
           <ul className="flex items-center gap-0.5">
             <li>
               <BrowseMenu />
@@ -148,16 +148,16 @@ export function SiteHeader() {
         <LiveSearch
           id="header-search"
           shortcut
-          className="order-last w-full min-w-0 basis-full min-[900px]:order-none min-[900px]:ml-auto min-[900px]:max-w-sm min-[900px]:basis-auto xl:max-w-md"
+          className="order-last w-full min-w-0 basis-full lg:order-none lg:ml-auto lg:max-w-md lg:flex-1 lg:basis-auto"
         />
 
-        <div className="ml-auto flex items-center gap-1 min-[900px]:ml-0">
-          <PreferencesMenu className="mr-1 hidden min-[900px]:inline-flex" />
+        <div className="ml-auto flex items-center gap-1 lg:ml-0">
+          <PreferencesMenu compact className="mr-1 hidden lg:inline-flex" />
           <Link
             to={signedIn ? "/account/wishlist" : "/login?next=%2Faccount%2Fwishlist"}
             aria-label={dict.navLinks.wishlist}
             title={dict.navLinks.wishlist}
-            className="hidden size-11 place-items-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-[900px]:grid"
+            className="hidden size-11 place-items-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:grid"
           >
             <Heart className="size-5" aria-hidden="true" />
           </Link>
@@ -177,7 +177,7 @@ export function SiteHeader() {
               <CountBadge count={count} aria-hidden="true" />
             </span>
           </Button>
-          <div className="ml-1 hidden min-[900px]:block">
+          <div className="ml-1 hidden lg:block">
             <AccountMenu />
           </div>
           <Button
@@ -187,7 +187,7 @@ export function SiteHeader() {
             aria-expanded={panel === "menu"}
             aria-controls={MOBILE_MENU_ID}
             aria-label={dict.nav.menu}
-            className="min-[900px]:hidden"
+            className="lg:hidden"
           >
             <Menu aria-hidden="true" />
           </Button>

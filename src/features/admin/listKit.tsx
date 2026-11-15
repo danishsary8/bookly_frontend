@@ -1,5 +1,5 @@
-import { useId, useState, type ComponentType, type FormEvent, type ReactNode } from "react";
-import { Search } from "lucide-react";
+import { useEffect, useId, useRef, useState, type ComponentType, type FormEvent, type ReactNode } from "react";
+import { ChevronDown, LoaderCircle, Search, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ui/error-state";
@@ -12,11 +12,37 @@ import { cn } from "@/lib/utils";
  * itself on phones, and one loading / error / empty switch.
  */
 
-export function SearchBox({ label, value, onSearch, placeholder, className }: { label: string; value: string; onSearch: (q: string) => void; placeholder?: string; className?: string }) {
+/**
+ * Search that updates the list as you type (350ms after the last key), plus Enter for at once. The URL stays the
+ * source of truth: a value changed elsewhere (back button, a "Clear" link) flows back into the box.
+ */
+export function SearchBox({ label, value, onSearch, placeholder, className, busy }: { label: string; value: string; onSearch: (q: string) => void; placeholder?: string; className?: string; busy?: boolean }) {
   const inputId = useId();
   const [draft, setDraft] = useState(value);
+  const last = useRef(value);
+  // The latest callback, so a parent re-render never restarts the typing timer.
+  const searchRef = useRef(onSearch);
+  useEffect(() => {
+    searchRef.current = onSearch;
+  });
+  useEffect(() => {
+    if (value !== last.current) {
+      last.current = value;
+      setDraft(value);
+    }
+  }, [value]);
+  useEffect(() => {
+    const next = draft.trim();
+    if (next === last.current) return;
+    const timer = window.setTimeout(() => {
+      last.current = next;
+      searchRef.current(next);
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [draft]);
   const submit = (event: FormEvent) => {
     event.preventDefault();
+    last.current = draft.trim();
     onSearch(draft.trim());
   };
   return (
@@ -24,16 +50,69 @@ export function SearchBox({ label, value, onSearch, placeholder, className }: { 
       <label className="sr-only" htmlFor={inputId}>
         {label}
       </label>
-      <Search className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+      {busy ? (
+        <LoaderCircle className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 animate-spin text-primary motion-reduce:animate-none" aria-hidden="true" />
+      ) : (
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+      )}
       <input
         id={inputId}
         type="search"
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
         placeholder={placeholder}
-        className="admin-search h-11 w-full rounded-md border border-input bg-card pl-10 pr-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        autoComplete="off"
+        className="admin-search h-11 w-full rounded-md border border-input bg-card pl-10 pr-11 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-search-cancel-button]:hidden"
       />
+      {draft ? (
+        <button
+          type="button"
+          onClick={() => {
+            setDraft("");
+            last.current = "";
+            onSearch("");
+          }}
+          aria-label="Clear search"
+          className="absolute right-1 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-md text-muted-foreground outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <X className="size-4" aria-hidden="true" />
+        </button>
+      ) : null}
     </form>
+  );
+}
+
+/** A compact labelled dropdown for list filters; the label stays visible above the value. */
+export function FilterSelect({ label, value, onChange, options, className }: { label: string; value: string; onChange: (v: string) => void; options: Array<{ value: string; label: string; indent?: boolean }>; className?: string }) {
+  const id = useId();
+  const active = value !== "";
+  return (
+    <label htmlFor={id} className={cn("admin-filter relative grid min-w-0 cursor-pointer rounded-md border bg-card px-3 pb-1.5 pt-1 transition-colors", active ? "border-primary/60 bg-lapis-tint/40" : "border-input hover:border-primary/50", className)}>
+      <span className="text-xs font-semibold text-muted-foreground">{label}</span>
+      <select id={id} value={value} onChange={(event) => onChange(event.target.value)} className="min-w-0 cursor-pointer appearance-none truncate bg-transparent pr-6 text-[15px] font-semibold text-foreground outline-none">
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.indent ? `\u00a0\u00a0\u00a0${o.label}` : o.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute bottom-2.5 right-2.5 size-4 text-muted-foreground" aria-hidden="true" />
+    </label>
+  );
+}
+
+/** Marks the searched words inside a title so a match is easy to spot. */
+export function Highlight({ text, query }: { text: string; query: string }) {
+  const q = query.trim();
+  if (!q) return <>{text}</>;
+  const at = text.toLowerCase().indexOf(q.toLowerCase());
+  if (at < 0) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, at)}
+      <mark className="rounded-[3px] bg-gold/35 px-0.5 text-inherit">{text.slice(at, at + q.length)}</mark>
+      {text.slice(at + q.length)}
+    </>
   );
 }
 

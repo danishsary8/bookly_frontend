@@ -208,7 +208,7 @@ export default function CircularCarousel({ items, cardWidth = 180, aspectRatio =
             </span>
             {captions ? (
               <span className="circular-caption absolute inset-x-0 top-full mt-7 text-center">
-                {item.subtitle ? <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{item.subtitle}</span> : null}
+                {item.subtitle ? <span className="block text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">{item.subtitle}</span> : null}
                 <span className="mt-0.5 block truncate font-display text-[15px] leading-tight text-foreground">{item.title}</span>
               </span>
             ) : null}

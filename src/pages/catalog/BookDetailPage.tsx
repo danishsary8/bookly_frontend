@@ -302,7 +302,7 @@ function Purchase({ book }: { book: BookDetail }) {
         </div>
       ) : null}
 
-      <ul className="detail-promises grid gap-4 border-t border-border pt-5 text-sm sm:grid-cols-3">
+      <ul className="detail-promises grid gap-4 border-t border-border pt-5 text-sm sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3">
         <li className="flex items-start gap-2.5">
           <Wallet className="mt-0.5 size-[18px] shrink-0 text-primary" aria-hidden="true" />
           <span>
@@ -557,8 +557,8 @@ export default function BookDetailPage() {
           </div>
         ) : null
       ) : (
-        <article className="detail-product-grid mt-6 grid gap-8 lg:grid-cols-12 lg:gap-12" aria-labelledby="book-title">
-          <div className="detail-stage-cell lg:col-span-5">
+        <article className="detail-product-grid mt-6 grid gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:items-start lg:grid-cols-12 lg:gap-12" aria-labelledby="book-title">
+          <div className="detail-stage-cell md:sticky md:top-[calc(var(--header-h)+1rem)] lg:static lg:col-span-5">
             <BookStage cover={shown.cover_image_url} action={<BookFavorite book={shown} />}>
               <MorphCover layoutId={coverLayoutId(bookId)} className="detail-book-front relative w-full overflow-hidden rounded-[4px] shadow-[0_30px_50px_-24px_rgb(20_16_10/0.6)]">
                 <BookCover src={shown.cover_image_url} title={shown.title} alt={b.cover(shown.title ?? "")} eager />
@@ -652,7 +652,7 @@ export default function BookDetailPage() {
           <TabsContent value="description">
             <div className="detail-story grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
               <div><p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{dict.bookDetail.description}</p><h2 className="font-display text-[clamp(1.6rem,2.5vw,2.2rem)] leading-tight tracking-tight">{b.about}</h2></div>
-              <div><div className="max-w-[65ch] whitespace-pre-line text-[17px] leading-[1.9] text-foreground">{book.description || b.noDescription}</div><dl className="detail-story-facts mt-8 grid gap-5 border-t border-border pt-6 sm:grid-cols-3"><div><dt>{b.language}</dt><dd>{displayLanguage(book.language, locale)}</dd></div>{book.page_count ? <div><dt>{b.pages}</dt><dd>{book.page_count}</dd></div> : null}{book.publisher ? <div><dt>{b.publisher}</dt><dd>{book.publisher.name}</dd></div> : null}</dl></div>
+              <div><div className="max-w-[65ch] whitespace-pre-line text-[17px] leading-[1.9] text-foreground">{book.description || b.noDescription}</div><dl className="detail-story-facts mt-8 grid grid-cols-3 gap-5 border-t border-border pt-6"><div><dt>{b.language}</dt><dd>{displayLanguage(book.language, locale)}</dd></div>{book.page_count ? <div><dt>{b.pages}</dt><dd>{book.page_count}</dd></div> : null}{book.publisher ? <div><dt>{b.publisher}</dt><dd>{book.publisher.name}</dd></div> : null}</dl></div>
             </div>
           </TabsContent>
           <TabsContent value="details">

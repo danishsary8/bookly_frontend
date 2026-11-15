@@ -958,6 +958,7 @@ export const en = {
     cardReaderName: "Bookly reader",
   },
   navLinks: {
+    bestSellers: "Best sellers",
     browse: "Browse",
     books: "Books",
     authors: "Authors",
