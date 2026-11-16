@@ -1,3 +1,4 @@
+import { AdminFormDialogContent as DialogContent } from "@/features/admin/AdminFormDialog";
 import { useState, type ChangeEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, Download, FileUp, RefreshCw } from "lucide-react";
@@ -13,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,

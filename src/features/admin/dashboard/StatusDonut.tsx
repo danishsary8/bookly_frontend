@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import type { OrderStatus } from "@/api/types";
@@ -21,28 +21,30 @@ const COLOURS: Record<string, string> = {
   returned: "var(--tone-coral-fill)",
 };
 
+const EMPTY = [{ status: "none", n: 1 }];
+
 export function StatusDonut({ counts }: { counts: Record<string, number> }) {
   // Only real counts: an API answer damaged by a cache bug (fixed 2026-11-01) must never print as text here.
-  const rows = Object.entries(counts ?? {})
+  const rows = useMemo(() => Object.entries(counts ?? {})
     .filter(([status, n]) => /^[a-z_]+$/.test(status) && typeof n === "number" && Number.isFinite(n))
-    .map(([status, n]) => ({ status, n }));
+    .map(([status, n]) => ({ status, n })), [counts]);
   const total = rows.reduce((s, r) => s + r.n, 0);
-  const shown = rows.filter((r) => r.n > 0);
+  const shown = useMemo(() => rows.filter((r) => r.n > 0), [rows]);
   const [active, setActive] = useState<string | null>(null);
   const reducedMotion = useReducedMotion();
   const current = rows.find((r) => r.status === active);
   const name = (status: string) => status.charAt(0).toUpperCase() + status.slice(1);
 
   return (
-    <div className="grid items-center gap-6 sm:grid-cols-[12rem_minmax(0,1fr)] xl:grid-cols-1 2xl:grid-cols-[12rem_minmax(0,1fr)]">
-      <div className="relative mx-auto size-48" aria-hidden="true" onMouseLeave={() => setActive(null)}>
+    <div className="dash-status-summary grid items-center gap-6 sm:grid-cols-[12rem_minmax(0,1fr)] xl:grid-cols-1 2xl:grid-cols-[12rem_minmax(0,1fr)]">
+      <div className="dash-status-chart relative mx-auto size-48" aria-hidden="true" onMouseLeave={() => setActive(null)}>
         <ResponsiveContainer width="100%" height="100%">
           {/* Nothing in this aria-hidden picture may take focus (axe aria-hidden-focus): Recharts makes the chart and the
               pie focusable by default. The list beside it is the accessible version. */}
           <PieChart accessibilityLayer={false}>
             <Pie
               rootTabIndex={-1}
-              data={shown.length ? shown : [{ status: "none", n: 1 }]}
+              data={shown.length ? shown : EMPTY}
               dataKey="n"
               nameKey="status"
               innerRadius="72%" cornerRadius={6}
@@ -66,7 +68,7 @@ export function StatusDonut({ counts }: { counts: Record<string, number> }) {
           <span className="mt-1 text-xs font-semibold text-muted-foreground">{current ? `${name(current.status)} · ${total ? Math.round((current.n / total) * 100) : 0}%` : "orders"}</span>
         </div>
       </div>
-      <ul className="grid gap-2" aria-label={`Orders placed by status, ${total} in total`}>
+      <ul className="dash-status-legend grid gap-2" aria-label={`Orders placed by status, ${total} in total`}>
         {rows.map((r) => (
           <li key={r.status} onMouseEnter={() => setActive(r.n > 0 ? r.status : null)} onMouseLeave={() => setActive(null)} className={`-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-0.5 text-[15px] tabular-nums transition-[background-color,opacity] duration-200 ${active === r.status ? "bg-secondary" : active ? "opacity-50" : ""}`}>
             <span className="flex items-center gap-2">

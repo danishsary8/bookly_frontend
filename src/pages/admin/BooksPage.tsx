@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, BookCopy, BookPlus, Download, FileUp, Layers, Sliders, X } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, BookCopy, BookPlus, Download, Eye, FileUp, Layers, Pencil, Sliders, X } from "lucide-react";
+import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AdminFormDialogContent } from "@/features/admin/AdminFormDialog";
+import "@/features/admin/catalogue.css";
 import { Link, useSearchParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { staffApi, staffQueries, type BookListSort, type BookStatus, type StaffBook } from "@/api/endpoints/staff";
@@ -51,6 +54,7 @@ function FormatsCell({ book }: { book: StaffBook }) {
  * "Deleted" view lists soft-deleted books for restoring. Search, status filter, and page are in the URL.
  */
 export default function BooksPage() {
+  const [preview, setPreview] = useState<StaffBook | null>(null);
   const queryClient = useQueryClient();
   const staffSession = useStaff();
   const isAdmin = staffSession?.user?.role === "admin";
@@ -273,8 +277,8 @@ export default function BooksPage() {
           className="rounded-xl border border-dashed border-border"
         />
       ) : (
-        <div className={cn("admin-table relative overflow-x-auto desk-card rounded-xl border border-border bg-card", books.isPlaceholderData && "opacity-60 transition-opacity")}>
-          <table className="w-full min-w-[720px] text-left text-[15px]">
+        <div className={cn("catalogue-books desk-card rounded-xl border border-border bg-card", books.isPlaceholderData && "opacity-60 transition-opacity")}>
+          <table className="w-full text-left text-[15px]">
             <thead className="border-b border-border bg-surface-2 text-sm text-muted-foreground">
               <tr>
                 <th scope="col" className="w-10 px-4 py-3">
@@ -293,12 +297,13 @@ export default function BooksPage() {
                     title={sort === "newest" ? "Sort by most sold" : sort === "most_sold" ? "Sort by least sold" : "Back to newest first"}
                     className="inline-flex min-h-9 items-center gap-1 rounded-md px-1 font-semibold underline-offset-4 hover:underline"
                   >
-                    Sold (90 days)
+                    <span>Sold<span className="block text-xs font-normal">90 days</span></span>
                     {sort === "most_sold" ? <ArrowDown className="size-3.5" aria-hidden="true" /> : sort === "least_sold" ? <ArrowUp className="size-3.5" aria-hidden="true" /> : <ArrowUpDown className="size-3.5 text-muted-foreground" aria-hidden="true" />}
                   </button>
                 </th>
                 <th scope="col" className="px-4 py-3 font-semibold">Status</th>
                 <th scope="col" className="px-4 py-3 font-semibold">Updated</th>
+                <th scope="col" className="catalogue-actions-heading px-4 py-3 font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -306,32 +311,33 @@ export default function BooksPage() {
                 const isChecked = selectedIds.includes(book.id);
                 return (
                   <tr key={book.id} className={cn("hover:bg-surface-2/60", isChecked && "bg-primary/5")}>
-                    <td className="w-10 px-4 py-3">
+                    <td className="catalogue-select w-10 px-4 py-3">
                       <Checkbox
                         checked={isChecked}
                         onCheckedChange={(checked) => toggleSelectRow(book.id, Boolean(checked))}
                         aria-label={`Select ${book.title}`}
                       />
                     </td>
-                    <th scope="row" className="px-4 py-3 font-normal">
+                    <th scope="row" className="catalogue-book-name px-4 py-3 font-normal">
                       <div className="flex items-center gap-3">
                         <CoverThumb src={book.variants.find((v) => v.cover_image_url)?.cover_image_url} className="w-10 shrink-0" />
                         <span className="grid min-w-0 gap-0.5">
                           <Link to={`/admin/books/${book.id}`} className="font-semibold underline-offset-4 hover:text-primary hover:underline">
                             <Highlight text={book.title} query={q} />
                           </Link>
-                          <span className="truncate text-sm text-muted-foreground"><Highlight text={book.authors.map((a) => a.name).join(", ") || "No author"} query={q} /></span>
+                          <span className="text-sm text-muted-foreground"><Highlight text={book.authors.map((a) => a.name).join(", ") || "No author"} query={q} /></span>
                         </span>
                       </div>
                     </th>
-                    <td className="px-4 py-3 text-sm">
+                    <td data-label="Formats & stock" className="catalogue-formats px-4 py-3 text-sm">
                       <FormatsCell book={book} />
                     </td>
-                    <td className={cn("px-4 py-3 text-right tabular-nums", book.sold_recent ? "font-semibold" : "text-muted-foreground")}>{book.sold_recent ?? "—"}</td>
-                    <td className="px-4 py-3">
+                    <td data-label="Sold · 90 days" className={cn("catalogue-sold px-4 py-3 text-right tabular-nums", book.sold_recent ? "font-semibold" : "text-muted-foreground")}>{book.sold_recent ?? "—"}</td>
+                    <td data-label="Status" className="catalogue-state px-4 py-3">
                       <BookState book={book} />
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">{orderDate(book.updated_at)}</td>
+                    <td data-label="Updated" className="catalogue-updated px-4 py-3 text-sm text-muted-foreground">{orderDate(book.updated_at)}</td>
+                    <td className="catalogue-row-actions px-4 py-3"><div className="catalogue-actions"><Button size="sm" variant="outline" aria-label={`View details for ${book.title}`} onClick={() => setPreview(book)}><Eye aria-hidden="true" />Details</Button><Link aria-label={`Edit ${book.title}`} to={`/admin/books/${book.id}`} className={buttonVariants({ variant: "ghost", size: "sm" })}><Pencil aria-hidden="true" />Edit</Link></div></td>
                   </tr>
                 );
               })}
@@ -340,6 +346,7 @@ export default function BooksPage() {
         </div>
       )}
       <Pagination page={meta?.current_page ?? 1} lastPage={meta?.last_page ?? 1} hrefFor={hrefFor} />
+      <Dialog open={preview !== null} onOpenChange={(open) => { if (!open) setPreview(null); }}><AdminFormDialogContent>{preview ? <><DialogHeader><DialogTitle>{preview.title}</DialogTitle><DialogDescription>Book details at a glance. Open the editor to manage this book and its formats.</DialogDescription></DialogHeader><div className="catalogue-book-preview"><CoverThumb src={preview.variants.find((v) => v.cover_image_url)?.cover_image_url} className="w-24" /><div className="grid min-w-0 gap-3"><p className="text-sm text-muted-foreground">{preview.authors.map((a) => a.name).join(", ") || "No author"}</p><BookState book={preview} /><FormatsCell book={preview} /><p className="text-sm text-muted-foreground">Updated {orderDate(preview.updated_at)} · {preview.sold_recent ?? 0} sold in 90 days</p></div></div><DialogFooter><DialogClose asChild><Button variant="outline">Close</Button></DialogClose><Link to={`/admin/books/${preview.id}`} className={buttonVariants()}><Pencil aria-hidden="true" />Edit book</Link></DialogFooter></> : null}</AdminFormDialogContent></Dialog>
 
       {/* Bulk actions modal */}
       <BulkActionsDialog

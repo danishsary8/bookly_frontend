@@ -1,0 +1,108 @@
+/* Dashboard clarity pass: retain the v3 palette, cards and effects; give the data a steadier reading rhythm. */
+.dash-overview { container: bookly-dashboard / inline-size; }
+.dash-overview > .admin-page { gap: 20px; }
+.dash-overview .admin-page-header { gap: 10px; }
+.dash-overview .admin-page-header > div { align-items: center; }
+.dash-overview .admin-page-header h1 { font-size: clamp(1.85rem, 2.6vw, 2.25rem); }
+.dash-overview .admin-page-actions { align-self: center; }
+.dash-purchase-link { border: 1px solid var(--border); background: var(--card); }
+.dash-purchase-link:hover { background: var(--secondary); }
+
+.dash-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  min-width: 0;
+  padding-block: 12px;
+  border-block: 1px solid var(--border);
+}
+.dash-period-control { display: flex; min-width: 0; max-width: 100%; align-items: center; gap: 12px; }
+.dash-toolbar-label { flex-shrink: 0; font-size: 13px; font-weight: 600; color: var(--muted-foreground); }
+.dash-toolbar .admin-segmented { min-width: 0; background: var(--surface-2); }
+.dash-comparison { font-size: 13px; line-height: 1.5; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.dash-custom-range { flex-basis: 100%; padding-top: 4px; }
+
+.dash-overview .dash-kpi { gap: 12px; padding: 20px; }
+.dash-overview .dash-kpi-heading { min-height: 36px; align-items: center; }
+.dash-overview .dash-kpi-heading h2 { padding-top: 0; font-size: 14px; line-height: 1.45; font-weight: 600; color: var(--foreground); }
+.dash-overview .dash-kpi-icon { width: 36px; height: 36px; }
+.dash-kpi-amount { display: grid; align-content: start; gap: 6px; min-height: 60px; }
+.dash-kpi-amount > p { font-size: 32px; line-height: 1.1; letter-spacing: -0.025em; }
+.dash-kpi-amount > span { font-size: 13px; line-height: 1.4; }
+.dash-kpi-context { display: grid; flex: 1; align-content: start; gap: 8px; min-height: 60px; }
+.dash-kpi-context > p { font-size: 13px; line-height: 1.55; }
+.dash-kpi-change { display: flex; align-items: center; min-height: 24px; }
+.dash-overview .dash-kpi-trend { height: 36px; margin-top: 0; }
+.dash-overview .dash-kpi-link { justify-content: space-between; min-height: 44px; margin-top: 0; padding-top: 10px; border-top: 1px solid var(--border); font-size: 13px; }
+.dash-overview .dash-kpi:hover { transform: translateY(-2px); }
+
+.dash-section-label { margin-block: 8px -12px; font-size: 12px; letter-spacing: 0.12em; font-weight: 600; }
+.dash-overview .admin-panel { gap: 16px; }
+.dash-overview .admin-panel-header { gap: 8px 16px; padding-bottom: 12px; align-items: start; }
+.dash-overview .admin-panel-header h2 { font-size: 16px; line-height: 1.5; }
+.dash-overview .admin-panel-header > .text-sm { max-width: 36ch; font-size: 13px; line-height: 1.5; }
+.dash-overview .admin-panel-header > a { min-height: 44px; }
+.dash-overview button[aria-label="Refresh system health"] { min-width: 44px; min-height: 44px; }
+.dash-overview .dash-status-summary { gap: 16px; }
+.dash-overview .dash-status-chart { width: 160px; height: 160px; }
+.dash-overview .dash-status-legend { gap: 4px; }
+.dash-overview .dash-status-legend > li { min-height: 28px; }
+.dash-overview .dash-operations-grid { align-items: start; }
+.dash-overview .dash-bento { margin-top: 0; grid-auto-rows: minmax(200px, auto) !important; }
+.dash-overview .dash-bento .magic-bento__card { box-shadow: var(--shadow-lift); }
+.dash-overview .dash-bento h3 { font-size: 14px; line-height: 1.45; }
+.dash-overview .dash-bento p.text-sm { font-size: 13px; line-height: 1.55; }
+.dash-ranking-table { min-width: 0; max-width: 100%; overflow-x: auto; }
+.dash-ranking-table:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; border-radius: 4px; }
+.dash-overview .dash-insight-metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+.dash-overview .dash-reminder-metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr)); }
+
+/* Exact values sit in a portal so rounded card edges never cut off inspection. */
+.dash-data-tooltip { position: fixed; z-index: var(--z-toast); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 16px; width: max-content; max-width: 240px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; color: var(--foreground); background: var(--popover); box-shadow: var(--shadow-overlay); font-family: var(--font-sans); font-size: 13px; line-height: 1.5; font-variant-numeric: tabular-nums; transform: translate(-50%, -100%); pointer-events: auto; }
+.dash-data-tooltip[data-below] { transform: translate(-50%, 0); }
+.dash-data-tooltip > strong { font-weight: 600; }
+.dash-data-tooltip-note { grid-column: 1 / -1; font-size: 12px; color: var(--muted-foreground); }
+.dash-interactive-trend { border-radius: 4px; outline: none; }
+.dash-interactive-trend:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; }
+.dash-overview .dash-interactive-trend svg { animation: none; }
+.dash-overview .dash-interactive-trend path { transition: none; }
+.dash-daily-bars { display: flex; align-items: end; gap: 3px; flex: 1; min-height: 56px; width: 100%; margin-top: 8px; }
+.dash-daily-bar-hit { position: relative; display: flex; flex: 1; align-items: end; height: 56px; min-width: 0; border-bottom: 1px solid var(--border); cursor: crosshair; touch-action: pan-y; }
+.dash-daily-bar { display: block; width: 100%; min-width: 1px; border-radius: 3px 3px 0 0; background: var(--tone-fill); }
+.dash-daily-bar-hit[data-active] .dash-daily-bar { opacity: 1 !important; filter: brightness(1.08); }
+.dash-share-bars { display: grid; width: 100%; min-width: 0; gap: 8px; margin-top: auto; padding-top: 6px; }
+.dash-share-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 10px; min-height: 20px; cursor: crosshair; touch-action: pan-y; }
+.dash-share-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; line-height: 1.5; color: var(--muted-foreground); }
+.dash-share-track { display: block; height: 8px; overflow: hidden; border-radius: 999px; background: var(--surface-2); }
+.dash-share-track > span { display: block; height: 100%; border-radius: inherit; }
+.dash-share-row[data-active] .dash-share-label { color: var(--foreground); }
+
+/* Match the space inside the dashboard, including when enlarged text widens the existing rail. */
+@container bookly-dashboard (max-width: 959px) {
+  .dash-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-sales-grid, .dash-operations-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@container bookly-dashboard (max-width: 599px) {
+  .dash-kpi-grid, .dash-catalogue-grid { grid-template-columns: minmax(0, 1fr); }
+  .dash-catalogue-grid > [aria-labelledby="low-stock"] { grid-column: auto; }
+}
+
+@media (max-width: 639px) {
+  .dash-overview .admin-page-actions { width: auto; }
+  .dash-overview .admin-page-header > div { align-items: start; }
+  .dash-purchase-link { font-size: 13px; }
+  .dash-toolbar { gap: 10px; }
+  .dash-period-control { width: 100%; flex-direction: column; align-items: stretch; gap: 8px; }
+  .dash-toolbar .admin-segmented { display: grid; width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .dash-toolbar .admin-segmented > button { min-width: 0; padding-inline: 8px; }
+  .dash-overview .dash-kpi { padding: 18px; }
+  .dash-kpi-amount { min-height: 0; }
+  .dash-kpi-context { min-height: 0; }
+  .dash-overview .dash-kpi-trend { height: 32px; }
+  .dash-section-label { margin-top: 4px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dash-overview .dash-kpi:hover { transform: none; }
+}

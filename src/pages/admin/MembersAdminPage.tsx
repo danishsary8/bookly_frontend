@@ -1,3 +1,4 @@
+import { AdminFormDialogContent as DialogContent } from "@/features/admin/AdminFormDialog";
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -27,7 +28,7 @@ import { SelectField, TextField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog, Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ConfirmDialog, Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Pagination } from "@/components/ui/pagination";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { ListState, SearchBox, Segmented, TableCard, td, th, thead } from "@/features/admin/listKit";
@@ -36,6 +37,7 @@ import { useListParams } from "@/features/admin/useListParams";
 import { orderDate, orderDateTime } from "@/features/orders/format";
 import { rangeSummary } from "@/lib/pagination";
 import { toast } from "@/stores/toast";
+import { Link } from "react-router-dom";
 
 const ROLES: Record<StaffRole, { label: string; detail: string }> = {
   staff: { label: "Staff", detail: "Orders, returns, reviews, coupons, customers and the catalogue." },
@@ -447,6 +449,7 @@ function MemberActions({
           <DropdownMenu.Item className={itemClass} onSelect={onHistory}>
             <History className="size-[18px] text-muted-foreground" aria-hidden="true" /> View sign-in history
           </DropdownMenu.Item>
+          <DropdownMenu.Item className={itemClass} asChild><Link to={`/admin/audit-log?staff=${member.id}`}><History className="size-[18px] text-muted-foreground" aria-hidden="true" />View activity log</Link></DropdownMenu.Item>
           {member.is_active && !member.two_factor_enabled ? (
             <DropdownMenu.Item className={itemClass} onSelect={() => resend.mutate()}>
               <MailPlus className="size-[18px] text-muted-foreground" aria-hidden="true" /> Send a new setup code
@@ -517,7 +520,7 @@ export default function MembersAdminPage() {
         </Button>
       }
     >
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="work-toolbar">
         <SearchBox label="Search staff members" value={q} placeholder="Name or email" onSearch={(v) => set({ q: v || undefined })} />
         <Segmented label="Show" value={show} options={[...SHOW]} onChange={(v) => set({ show: v === "all" ? undefined : v })} />
       </div>
@@ -555,12 +558,12 @@ export default function MembersAdminPage() {
                     </span>
                     <span className="block text-sm text-muted-foreground">{m.email}</span>
                   </th>
-                  <td className={td}>
+                  <td data-label="Role" className={td}>
                     <Badge tone={m.role === "admin" ? "info" : "neutral"} shape="tint">
                       {ROLES[m.role].label}
                     </Badge>
                   </td>
-                  <td className={`${td} whitespace-nowrap text-sm`}>
+                  <td data-label="Two-step verification" className={`${td} whitespace-nowrap text-sm`}>
                     {m.two_factor_enabled ? (
                       <span className="inline-flex items-center gap-1.5 text-success">
                         <ShieldCheck className="size-4" aria-hidden="true" /> On
@@ -571,8 +574,8 @@ export default function MembersAdminPage() {
                       </span>
                     )}
                   </td>
-                  <td className={`${td} whitespace-nowrap text-sm text-muted-foreground`}>{orderDate(m.created_at)}</td>
-                  <td className={`${td} text-right`}>
+                  <td data-label="Added" className={`${td} whitespace-nowrap text-sm text-muted-foreground`}>{orderDate(m.created_at)}</td>
+                  <td data-label="Actions" className={`${td} text-right`}>
                     <MemberActions
                       member={m}
                       isSelf={isSelf}

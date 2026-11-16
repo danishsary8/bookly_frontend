@@ -35,8 +35,8 @@ function ReviewRow({ review }: { review: StaffReview }) {
     onError: (error) => toast.error({ title: "Couldn't change the review", description: ApiError.from(error).message }),
   });
   return (
-    <li className={cn("grid gap-3 desk-card rounded-xl border border-border bg-card p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:p-5", !review.is_visible && "bg-surface-2/60")}>
-      <div className="grid min-w-0 gap-1.5">
+    <li className={cn("work-feedback", !review.is_visible && "bg-surface-2/60")}>
+      <div className="work-feedback-body">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <StarRating value={review.rating} summary={false} />
           {review.is_visible ? null : (
@@ -95,13 +95,13 @@ export default function ReviewsAdminPage() {
       title="Reviews"
       lead={meta && meta.total ? rangeSummary(meta.from, meta.to, meta.total, meta.total === 1 ? "review" : "reviews") : "What customers say about their books."}
     >
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="work-toolbar">
         <SearchBox label="Search reviews" value={q} placeholder="Words in the review" onSearch={(v) => set({ q: v || undefined })} />
         <Segmented label="Show" value={show} options={[...SHOW]} onChange={(v) => set({ show: v === "all" ? undefined : v })} />
       </div>
-      <p className="text-sm text-muted-foreground">Hide reviews that break the rules in the terms (abuse, personal details, spam, not about the book). The customer still sees it, marked as hidden.</p>
+      <p className="work-note"><MessageSquareText aria-hidden="true" />Hide reviews that break the rules in the terms (abuse, personal details, spam, not about the book). The customer still sees it, marked as hidden.</p>
       <ListState query={reviews} empty={{ when: list.length === 0, icon: MessageSquareText, title: "No reviews match", description: "Try another filter or search." }}>
-        <ul className={cn("grid gap-3", reviews.isPlaceholderData && "opacity-60 transition-opacity")} aria-label="Reviews">
+        <ul className={cn("work-feedback-list", reviews.isPlaceholderData && "opacity-60 transition-opacity")} aria-label="Reviews">
           {list.map((r) => (
             <ReviewRow key={r.id} review={r} />
           ))}

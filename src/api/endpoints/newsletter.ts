@@ -57,7 +57,7 @@ export const newsletterKeys = {
   all: ["newsletter"] as const,
   customer: () => ["newsletter", "customer"] as const,
   summary: () => ["newsletter", "summary"] as const,
-  campaigns: (page?: number) => ["newsletter", "campaigns", page ?? 1] as const,
+  campaigns: (page?: number, q = "", status = "") => ["newsletter", "campaigns", page ?? 1, q, status] as const,
   campaign: (id: number) => ["newsletter", "campaign", id] as const,
 };
 
@@ -82,8 +82,8 @@ export const newsletterApi = {
   // Admin
   getSummary: () =>
     api.get<NewsletterSummary>("/staff/newsletter/summary"),
-  listCampaigns: (page = 1, perPage = 20) =>
-    api.get<NewsletterCampaignsResponse>("/staff/newsletter/campaigns", { params: { page, per_page: perPage } }),
+  listCampaigns: (page = 1, perPage = 20, filters: { q?: string; status?: string } = {}) =>
+    api.get<NewsletterCampaignsResponse>("/staff/newsletter/campaigns", { params: { page, per_page: perPage, ...filters } }),
   getCampaign: (id: number) =>
     api.get<{ campaign: NewsletterCampaign; books: Array<{ id: number; title: string }> }>(
       `/staff/newsletter/campaigns/${id}`
@@ -117,10 +117,10 @@ export const newsletterQueries = {
       queryKey: newsletterKeys.summary(),
       queryFn: newsletterApi.getSummary,
     }),
-  campaigns: (page = 1) =>
+  campaigns: (page = 1, q = "", status = "") =>
     queryOptions({
-      queryKey: newsletterKeys.campaigns(page),
-      queryFn: () => newsletterApi.listCampaigns(page),
+      queryKey: newsletterKeys.campaigns(page, q, status),
+      queryFn: () => newsletterApi.listCampaigns(page, 20, { q: q || undefined, status: status || undefined }),
     }),
   campaign: (id: number) =>
     queryOptions({

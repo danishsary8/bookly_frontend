@@ -1,3 +1,4 @@
+import { AdminFormDialogContent as DialogContent } from "@/features/admin/AdminFormDialog";
 import { formatUsd } from "@/stores/currency";
 import { ResultSummary } from "@/features/admin/reportKit";
 import { useState, type FormEvent } from "react";
@@ -10,7 +11,7 @@ import { SelectField, TextAreaField, TextField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog, Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ConfirmDialog, Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ImageUploadField } from "@/components/ui/ImageUploadField";
 import { Switch } from "@/components/ui/switch";
 import { AdminPage } from "@/features/admin/AdminPage";
@@ -254,14 +255,14 @@ function PromotionDialog({ promotion, onClose, onSaved }: { promotion: StaffProm
             </DialogDescription>
           </DialogHeader>
           {errors.form ? <FormAlert title={errors.form} /> : null}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2"><legend>Message</legend>
             <TextField label="Title (English)" value={v.title_en} onChange={(e) => set({ title_en: e.target.value })} error={errors.title_en} maxLength={120} />
             <TextField label="Title (Khmer)" optional hint="Empty: the English title shows in Khmer too." value={v.title_km} onChange={(e) => set({ title_km: e.target.value })} error={errors.title_km} maxLength={120} />
             <TextAreaField label="Text (English)" optional rows={3} value={v.body_en} onChange={(e) => set({ body_en: e.target.value })} error={errors.body_en} maxLength={500} />
             <TextAreaField label="Text (Khmer)" optional rows={3} value={v.body_km} onChange={(e) => set({ body_km: e.target.value })} error={errors.body_km} maxLength={500} />
-          </div>
+          </fieldset>
           <ImageUploadField label="Picture" optional hint="Wide pictures work best (about 16:7). JPEG, PNG or WebP up to 5 MB." value={v.image_url} onChange={(url) => set({ image_url: url })} error={errors.image_url} />
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2"><legend>Destination & schedule</legend>
             <SelectField label="Offer to announce" value={v.offer_id} onChange={(e) => set({ offer_id: e.target.value })} error={errors.offer_id} hint="The pop-up shows its percent and free delivery while the offer is on.">
               <option value="">No offer</option>
               {(offers.data?.data ?? []).filter((o) => o.type !== "gift").map((o) => (
@@ -273,7 +274,7 @@ function PromotionDialog({ promotion, onClose, onSaved }: { promotion: StaffProm
             <TextField label="Button text (Khmer)" optional value={v.cta_label_km} onChange={(e) => set({ cta_label_km: e.target.value })} error={errors.cta_label_km} maxLength={40} />
             <TextField label="Starts" optional type="datetime-local" value={v.starts_at} onChange={(e) => set({ starts_at: e.target.value })} error={errors.starts_at} />
             <TextField label="Ends" optional type="datetime-local" hint="The pop-up counts down to this time." value={v.ends_at} onChange={(e) => set({ ends_at: e.target.value })} error={errors.ends_at} />
-          </div>
+          </fieldset>
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="ghost" disabled={save.isPending}>Cancel</Button>

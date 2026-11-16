@@ -60,6 +60,7 @@ for (const view of [{ width: 1280, theme: "light", lang: "en" }, { width: 390, t
     await overflow(); await noAxeViolations(page);
     flags = { gift_cards: false, referrals: false };
     await page.goto("/admin/gift-cards");
-    await expect(page.getByText("Turned off: set GIFT_CARDS_ENABLED=true on Render when ready.")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Gift cards are unavailable", exact: true })).toBeVisible();
+    await expect(page.getByText(/GIFT_CARDS_ENABLED|on Render/)).toHaveCount(0);
   });
 }

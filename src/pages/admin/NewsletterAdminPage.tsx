@@ -1,3 +1,4 @@
+import { AdminFormDialogContent as DialogContent } from "@/features/admin/AdminFormDialog";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -25,37 +26,45 @@ import {
 import { ApiError } from "@/api/errors";
 import { catalogApi } from "@/api/endpoints/catalog";
 import { AdminPage } from "@/features/admin/AdminPage";
-import { TableCard, th, td, thead } from "@/features/admin/listKit";
+import { SearchBox, TableCard, th, td, thead } from "@/features/admin/listKit";
+import { useListParams } from "@/features/admin/useListParams";
+import { SelectField } from "@/components/form/Field";
+import { Pagination } from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
+import { ErrorState, InlineError } from "@/components/ui/error-state";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
 import { toast } from "@/stores/toast";
+import { Link } from "react-router-dom";
 
 export default function NewsletterAdminPage() {
   const queryClient = useQueryClient();
-  const [page] = useState(1);
+  const { get, page, set, hrefFor } = useListParams();
+  const campaignQ = get("q");
+  const campaignStatus = ["draft", "sending", "sent"].includes(get("status")) ? get("status") : "";
 
   // Summary
-  const { data: summary, isLoading: isSummaryLoading } = useQuery(
+  const { data: summary, isLoading: isSummaryLoading, error: summaryError, isError: isSummaryError, refetch: retrySummary } = useQuery(
     newsletterQueries.summary(),
   );
 
   // Campaigns list
-  const { data: campaignsData, isLoading: isCampaignsLoading } = useQuery(
-    newsletterQueries.campaigns(page),
+  const { data: campaignsData, isLoading: isCampaignsLoading, error: campaignsError, isError: isCampaignsError, refetch: retryCampaigns } = useQuery(
+    newsletterQueries.campaigns(page, campaignQ, campaignStatus),
   );
 
   // Modal states
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] =
     useState<NewsletterCampaign | null>(null);
+  const [viewingCampaign, setViewingCampaign] = useState<NewsletterCampaign | null>(null);
+  const campaignDetail = useQuery({ ...newsletterQueries.campaign(viewingCampaign?.id ?? 0), enabled: viewingCampaign !== null });
 
   // Send confirm dialog
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
@@ -124,6 +133,8 @@ export default function NewsletterAdminPage() {
       }
     >
       {/* 1. Summary Cards */}
+      {isSummaryError ? <InlineError error={summaryError} onRetry={() => void retrySummary()} /> : null}
+      {!isSummaryError || summary ? (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="desk-card rounded-xl border border-border bg-card p-5 shadow-xs">
           <div className="flex items-center justify-between">
@@ -185,7 +196,9 @@ export default function NewsletterAdminPage() {
           </p>
         </div>
       </div>
+      ) : null}
 
+      <div className="work-toolbar"><SearchBox label="Search campaigns" value={campaignQ} placeholder="Campaign subject in English or Khmer" onSearch={(q) => set({ q: q || undefined })} /><SelectField label="Campaign status" value={campaignStatus} onChange={(e) => set({ status: e.target.value || undefined })}><option value="">All campaigns</option><option value="draft">Draft</option><option value="sending">Sending</option><option value="sent">Sent</option></SelectField>{campaignQ || campaignStatus ? <Button variant="ghost" onClick={() => set({ q: undefined, status: undefined })}>Clear filters</Button> : null}</div>
       {/* 2. Campaign List */}
       <div className="grid gap-3">
         <div className="flex items-center justify-between">
@@ -198,15 +211,16 @@ export default function NewsletterAdminPage() {
           )}
         </div>
 
-        {isCampaignsLoading ? (
+        {isCampaignsError ? (
+          <ErrorState error={campaignsError} onRetry={() => void retryCampaigns()} title="Could not load campaigns" headingLevel="h3" showHomeLink={false} />
+        ) : isCampaignsLoading ? (
           <div className="flex items-center justify-center desk-card rounded-xl border border-border bg-card p-12 text-sm text-muted-foreground">
             <Loader2 className="mr-2 size-4 animate-spin" />
             Loading campaigns…
           </div>
         ) : !campaignsData?.data?.length ? (
           <div className="desk-card rounded-xl border border-border bg-card p-12 text-center text-sm text-muted-foreground">
-            No newsletter campaigns created yet. Click &ldquo;New
-            campaign&rdquo; to draft one.
+            {campaignQ || campaignStatus ? "No campaigns match these filters. Try another subject or status." : <>No newsletter campaigns created yet. Click &ldquo;New campaign&rdquo; to draft one.</>}
           </div>
         ) : (
           <TableCard minWidth={640}>
@@ -232,7 +246,7 @@ export default function NewsletterAdminPage() {
             <tbody className="divide-y divide-border">
               {campaignsData.data.map((c: NewsletterCampaign) => (
                 <tr key={c.id} className="hover:bg-muted/30">
-                  <td className={td}>
+                  <td data-label="Subject" className={td}>
                     <div className="font-medium text-foreground">
                       {c.subject_en}
                     </div>
@@ -242,7 +256,7 @@ export default function NewsletterAdminPage() {
                       </div>
                     )}
                   </td>
-                  <td className={td}>
+                  <td data-label="Status" className={td}>
                     <Badge
                       tone={
                         c.status === "sent"
@@ -256,17 +270,17 @@ export default function NewsletterAdminPage() {
                       {c.status}
                     </Badge>
                   </td>
-                  <td className={td}>
+                  <td data-label="Recipients" className={td}>
                     {c.status === "draft"
                       ? `Est. ${confirmedCount} subscribers`
                       : `${c.sent_count ?? 0} of ${c.recipients_total} sent`}
                   </td>
-                  <td className={td}>
+                  <td data-label="Created" className={td}>
                     <span className="text-xs text-muted-foreground">
                       {new Date(c.created_at).toLocaleDateString()}
                     </span>
                   </td>
-                  <td className={td}>
+                  <td data-label="Actions" className={td}>
                     <div className="flex items-center gap-1.5">
                       {c.status === "draft" && (
                         <>
@@ -276,6 +290,7 @@ export default function NewsletterAdminPage() {
                             onClick={() => testSendMutation.mutate(c.id)}
                             disabled={testSendMutation.isPending}
                             title="Send test to me"
+                            aria-label={`Send test for ${c.subject_en} to me`}
                             className="h-8 gap-1 px-2.5 text-xs"
                           >
                             <Mail className="size-3.5" />
@@ -319,11 +334,7 @@ export default function NewsletterAdminPage() {
                           </Button>
                         </>
                       )}
-                      {c.status !== "draft" && (
-                        <span className="text-xs text-muted-foreground">
-                          Sent
-                        </span>
-                      )}
+                      {c.status !== "draft" ? <Button variant="outline" size="sm" onClick={() => setViewingCampaign(c)} aria-label={`View ${c.subject_en}`}>View campaign</Button> : null}
                     </div>
                   </td>
                 </tr>
@@ -332,6 +343,8 @@ export default function NewsletterAdminPage() {
           </TableCard>
         )}
       </div>
+      <Pagination page={campaignsData?.current_page ?? page} lastPage={campaignsData?.last_page ?? 1} hrefFor={hrefFor} />
+      <Dialog open={viewingCampaign !== null} onOpenChange={(open) => { if (!open) setViewingCampaign(null); }}><DialogContent><DialogHeader><DialogTitle>{viewingCampaign?.subject_en}</DialogTitle><DialogDescription>Campaign content and delivery progress. Sent campaigns are read-only.</DialogDescription></DialogHeader>{viewingCampaign ? <div className="grid gap-4 py-5"><Badge tone={viewingCampaign.status === "sent" ? "success" : "warning"}>{viewingCampaign.status}</Badge><p className="text-sm text-muted-foreground">{viewingCampaign.sent_count ?? 0} of {viewingCampaign.recipients_total} emails sent</p><section className="grid gap-2"><h3 className="font-semibold">English message</h3><p className="whitespace-pre-wrap break-words text-sm">{viewingCampaign.body_en}</p></section>{viewingCampaign.body_km ? <section className="grid gap-2"><h3 className="font-semibold">Khmer message</h3><p lang="km" className="whitespace-pre-wrap break-words text-sm">{viewingCampaign.subject_km}</p><p lang="km" className="whitespace-pre-wrap break-words text-sm">{viewingCampaign.body_km}</p></section> : null}<section className="grid gap-2"><h3 className="font-semibold">Included books</h3>{(viewingCampaign.book_ids ?? []).length ? <ul className="grid gap-2">{(viewingCampaign.book_ids ?? []).map((id) => <li key={id}><Link to={`/admin/books/${id}`} className="inline-flex min-h-11 items-center text-primary underline">{campaignDetail.data?.books?.find((book) => book.id === id)?.title ?? `Book #${id}`}</Link></li>)}</ul> : <p className="text-sm text-muted-foreground">No books attached.</p>}</section></div> : null}<DialogFooter><Button variant="outline" onClick={() => setViewingCampaign(null)}>Close</Button></DialogFooter></DialogContent></Dialog>
 
       {/* 3. Editor Dialog */}
       {editorOpen && (

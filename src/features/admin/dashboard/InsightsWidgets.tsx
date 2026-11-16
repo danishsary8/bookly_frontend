@@ -44,7 +44,7 @@ export function InsightsWidgets({ data }: { data: DashboardInsights }) {
 
   return (
     <div className="grid grid-cols-1 gap-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 [&>*:nth-child(1)]:[--tone-ink:var(--tone-green-ink)] [&>*:nth-child(2)]:[--tone-ink:var(--tone-rose-ink)] [&>*:nth-child(3)]:[--tone-ink:var(--tone-teal-ink)]">
+      <div className="dash-insight-metrics grid grid-cols-1 gap-4 sm:grid-cols-3 [&>*:nth-child(1)]:[--tone-ink:var(--tone-green-ink)] [&>*:nth-child(2)]:[--tone-ink:var(--tone-rose-ink)] [&>*:nth-child(3)]:[--tone-ink:var(--tone-teal-ink)]">
         <Tile label="Stock value" value={formatUsd(data.stock_value.value_usd)} khr={data.stock_value.value_khr} detail={`${count(data.stock_value.copies)} printed copies · at selling price`} />
         <Tile label={`Dead stock (no sale in ${dead.days} days)`} value={formatUsd(dead.value_usd)} khr={dead.value_khr} detail={`${count(dead.copies)} copies of ${count(dead.variants)} ${dead.variants === 1 ? "format" : "formats"}`} />
         <Tile
@@ -127,6 +127,7 @@ export function InsightsWidgets({ data }: { data: DashboardInsights }) {
           {promo.orders === 0 ? (
             <p className="text-[15px] text-muted-foreground">No orders in this period yet.</p>
           ) : (
+            <div className="dash-ranking-table" role="group" aria-label="Orders by discount" tabIndex={0}>
             <table className="w-full text-left text-[15px] tabular-nums">
               <caption className="sr-only">Orders placed in this period by discount</caption>
               <thead className="text-sm text-muted-foreground">
@@ -148,6 +149,7 @@ export function InsightsWidgets({ data }: { data: DashboardInsights }) {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </Panel>
       </div>

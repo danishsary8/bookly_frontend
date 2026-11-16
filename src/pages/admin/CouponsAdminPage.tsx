@@ -1,3 +1,4 @@
+import { AdminFormDialogContent as DialogContent } from "@/features/admin/AdminFormDialog";
 import { ResultSummary } from "@/features/admin/reportKit";
 import { Link } from "react-router-dom";
 import { useState, type FormEvent } from "react";
@@ -26,7 +27,6 @@ import {
   ConfirmDialog,
   Dialog,
   DialogClose,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -197,7 +197,7 @@ function CouponDialog({
             </DialogDescription>
           </DialogHeader>
           {errors.form ? <FormAlert title={errors.form} /> : null}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2"><legend>Code & discount</legend>
             <TextField
               label="Code"
               value={v.code}
@@ -230,6 +230,8 @@ function CouponDialog({
               onChange={(e) => set({ min_order_amount: e.target.value })}
               error={errors.min_order_amount}
             />
+          </fieldset>
+          <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2"><legend>Usage & schedule</legend>
             <TextField
               label="Total uses allowed"
               optional
@@ -239,7 +241,7 @@ function CouponDialog({
               onChange={(e) => set({ max_uses: e.target.value })}
               error={errors.max_uses}
             />
-            <div className="hidden sm:block" />
+            <div className="hidden sm:block" aria-hidden="true" />
             <TextField
               label="Starts"
               optional
@@ -256,7 +258,7 @@ function CouponDialog({
               onChange={(e) => set({ expires_at: e.target.value })}
               error={errors.expires_at}
             />
-          </div>
+          </fieldset>
           <label className="flex min-h-11 items-center justify-between gap-4 rounded-md border border-border px-4 py-2">
             <span className="grid">
               <span className="font-semibold">On</span>
@@ -352,7 +354,7 @@ export default function CouponsAdminPage() {
         { label: "Active codes", value: list.filter((coupon) => couponState(coupon).label === "Live").length },
         { label: "Times used", value: list.reduce((total, coupon) => total + coupon.used_count, 0) },
       ]} /> : null}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="work-toolbar">
         <SearchBox
           label="Search coupons"
           value={q}

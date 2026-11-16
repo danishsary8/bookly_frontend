@@ -29,6 +29,7 @@ import { formatLabel } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { formatUsd } from "@/stores/currency";
 import type { ReactNode } from "react";
+import "@/features/admin/dashboard/dashboard.css";
 
 type DashTone = "coral" | "saffron" | "sky" | "sea";
 
@@ -37,13 +38,14 @@ type DashTone = "coral" | "saffron" | "sky" | "sea";
  * against the period before, a smooth trend line in the card's colour and a "View …" link. A soft spotlight follows
  * the pointer and the card lifts on hover.
  */
-function Kpi({ id, label, value, khr, detail, change, trend, labels, format, view, icon: Icon, tone }: {
+function Kpi({ id, label, value, khr, detail, change, comparisonId, trend, labels, format, view, icon: Icon, tone }: {
   id: string;
   label: string;
   value: ReactNode;
   khr?: string | null;
   detail?: string;
   change?: ReactNode;
+  comparisonId?: string;
   trend?: number[];
   labels?: string[];
   format?: (n: number) => string;
@@ -54,6 +56,7 @@ function Kpi({ id, label, value, khr, detail, change, trend, labels, format, vie
   return (
     <section
       aria-labelledby={id}
+      aria-describedby={comparisonId}
       data-tone={tone}
       onPointerMove={(event) => {
         const box = event.currentTarget.getBoundingClientRect();
@@ -62,16 +65,20 @@ function Kpi({ id, label, value, khr, detail, change, trend, labels, format, vie
       }}
       className="dash-kpi desk-card flex h-full flex-col gap-2 overflow-hidden rounded-[20px] border border-border bg-card p-5"
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="dash-kpi-heading flex items-start justify-between gap-3">
         <h2 id={id} className="pt-1 font-sans text-sm font-semibold tracking-normal text-muted-foreground">{label}</h2>
         <span className="dash-kpi-icon shrink-0" aria-hidden="true"><Icon className="size-[18px]" /></span>
       </div>
-      <p className="text-[2rem] font-semibold leading-none tracking-[-0.03em] tabular-nums">{value}</p>
-      <Khr value={khr} />
-      {change}
-      {detail ? <p className="text-sm text-muted-foreground tabular-nums">{detail}</p> : null}
-      {trend ? <Sparkline values={trend} labels={labels} format={format} color="var(--tone-fill)" fill={0.3} className="mt-auto h-12" /> : null}
-      <Link to={view.to} className="group inline-flex items-center gap-1 pt-1 text-sm font-semibold underline-offset-4 hover:underline" style={{ color: "var(--tone-ink)" }}>
+      <div className="dash-kpi-amount">
+        <p className="text-[2rem] font-semibold leading-none tracking-[-0.03em] tabular-nums">{value}</p>
+        <Khr value={khr} />
+      </div>
+      <div className="dash-kpi-context">
+        {change ? <div className="dash-kpi-change">{change}</div> : null}
+        {detail ? <p className="text-sm text-muted-foreground tabular-nums">{detail}</p> : null}
+      </div>
+      {trend ? <Sparkline values={trend} labels={labels} format={format} name={`${label} trend`} color="var(--tone-fill)" fill={0.18} className="dash-kpi-trend mt-auto h-10" /> : null}
+      <Link to={view.to} className="dash-kpi-link group inline-flex items-center gap-1 pt-1 text-sm font-semibold underline-offset-4 hover:underline" style={{ color: "var(--tone-ink)" }}>
         {view.label} <ArrowRight className="admin-arrow size-4" aria-hidden="true" />
       </Link>
     </section>
@@ -82,6 +89,7 @@ function Kpi({ id, label, value, khr, detail, change, trend, labels, format, vie
 function RankTable({ head, rows }: { head: [string, string, string]; rows: Array<{ key: number; name: ReactNode; copies: number; sales: string; khr?: string | null }> }) {
   const max = Math.max(1, ...rows.map((r) => r.copies));
   return (
+    <div className="dash-ranking-table" role="group" aria-label={`${head[0]} ranking`} tabIndex={0}>
     <table className="w-full text-left text-[15px] tabular-nums">
       <thead className="text-xs uppercase tracking-[0.06em] text-muted-foreground">
         <tr>
@@ -108,11 +116,12 @@ function RankTable({ head, rows }: { head: [string, string, string]; rows: Array
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 
 function SectionLabel({ children }: { children: ReactNode }) {
-  return <p className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground"><span>{children}</span><span aria-hidden="true" className="h-px flex-1 bg-border" /></p>;
+  return <p className="dash-section-label flex items-center gap-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground"><span>{children}</span><span aria-hidden="true" className="h-px flex-1 bg-border" /></p>;
 }
 
 const usd = (n: number) => formatUsd(n.toFixed(2));
@@ -160,12 +169,17 @@ function AdminDashboard() {
   });
 
   return (
+    <div className="dash-overview">
     <AdminPage
       title="Dashboard"
       lead={s ? `${day(s.period.from)}${s.period.from !== s.period.to ? ` to ${day(s.period.to)}` : ""} · Phnom Penh time` : `Hello${firstName ? `, ${firstName}` : ""}`}
       actions={
-        <div className="grid justify-items-end gap-3">
-          <Link to="/admin/purchases" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-primary underline-offset-4 hover:underline"><ClipboardList className="size-4" aria-hidden="true" />{dict.purchaseList.title}</Link>
+        <Link to="/admin/purchases" className="dash-purchase-link inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-primary underline-offset-4 hover:underline"><ClipboardList className="size-4" aria-hidden="true" />{dict.purchaseList.title}</Link>
+      }
+    >
+      <div className="dash-toolbar">
+        <div className="dash-period-control">
+          <span className="dash-toolbar-label">Time period</span>
           <PeriodPicker
             active={active}
             onPick={(value) => {
@@ -174,10 +188,10 @@ function AdminDashboard() {
               setParams(rangeToParams({ period: value }), { replace: true });
             }}
           />
-          {picking ? <CustomRange range={range} shown={s?.period} onApply={(from, to) => setParams(rangeToParams({ period: "custom", from, to }), { replace: true })} /> : null}
         </div>
-      }
-    >
+        {c ? <p id="dashboard-comparison" className="dash-comparison">Changes {versus}</p> : null}
+        {picking ? <div className="dash-custom-range"><CustomRange range={range} shown={s?.period} onApply={(from, to) => setParams(rangeToParams({ period: "custom", from, to }), { replace: true })} /></div> : null}
+      </div>
       {summary.isError && !s ? (
         <ErrorState error={summary.error} onRetry={() => summary.refetch()} headingLevel="h2" showHomeLink={false} />
       ) : !s ? (
@@ -190,37 +204,37 @@ function AdminDashboard() {
           </div>
         </SkeletonGroup>
       ) : (
-        <div className="relative grid grid-cols-1 gap-6" aria-busy={summary.isPlaceholderData || undefined}>
+        <div className="dash-content relative grid grid-cols-1 gap-6" aria-busy={summary.isPlaceholderData || undefined}>
           {/* A new period loads in place: a slim bar runs along the top while the old figures stay, then everything glides to the new values. */}
           <span aria-hidden="true" className={cn("admin-loadbar pointer-events-none absolute inset-x-0 -top-3 h-0.5 overflow-hidden rounded-full transition-opacity duration-300", summary.isPlaceholderData || insights.isPlaceholderData ? "opacity-100" : "opacity-0")} />
           {/* 1 · Performance: four KPI cards in the sample's colours (revenue coral, orders saffron, average sky, customers sea). */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="dash-kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <m.div className="grid" {...rise(0)}>
               <Kpi id="net-revenue" label="Net revenue" value={<AnimatedNumber value={Number(s.revenue.net_usd)} format={usd} />} khr={s.revenue.net_khr} icon={DollarSign} tone="coral"
                 detail={`${formatUsd(s.revenue.gross_usd)} from ${s.delivered_orders} delivered ${s.delivered_orders === 1 ? "order" : "orders"}${Number(s.revenue.refunds_usd) > 0 ? `, less ${formatUsd(s.revenue.refunds_usd)} refunded` : ""}`}
-                change={c ? <Change percent={c.change_percent.net_revenue} previous={Number(c.revenue.net_usd)} versus={versus} /> : null}
+                comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.net_revenue} previous={Number(c.revenue.net_usd)} versus="" /> : null}
                 trend={series(trend, (d) => Number(d.net_revenue_usd))} labels={labels} format={usd} view={{ to: "/admin/reports", label: "View sales report" }} />
             </m.div>
             <m.div className="grid" {...rise(1)}>
               <Kpi id="orders-placed" label="Orders placed" value={<AnimatedNumber value={s.orders_placed} format={count} />} icon={ShoppingBag} tone="saffron"
-                change={c ? <Change percent={c.change_percent.orders_placed} previous={c.orders_placed} versus={versus} /> : null}
+                comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.orders_placed} previous={c.orders_placed} versus="" /> : null}
                 trend={series(trend, (d) => d.orders_placed)} labels={labels} view={{ to: "/admin/orders", label: "View orders" }} />
             </m.div>
             <m.div className="grid" {...rise(2)}>
               <Kpi id="average-order" label="Average order" value={<AnimatedNumber value={Number(s.average_order_value_usd)} format={usd} />} khr={s.average_order_value_khr} detail="delivered orders" icon={Receipt} tone="sky"
-                change={c ? <Change percent={c.change_percent.average_order_value} previous={Number(c.average_order_value_usd)} versus={versus} /> : null}
+                comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.average_order_value} previous={Number(c.average_order_value_usd)} versus="" /> : null}
                 trend={series(trend, (d) => Number(d.average_order_usd))} labels={labels} format={usd} view={{ to: "/admin/reports?tab=orders", label: "View order report" }} />
             </m.div>
             <m.div className="grid" {...rise(3)}>
               <Kpi id="new-customers" label="New customers" value={<AnimatedNumber value={s.new_customers} format={count} />} detail="verified their account" icon={UserPlus} tone="sea"
-                change={c ? <Change percent={c.change_percent.new_customers} previous={c.new_customers} versus={versus} /> : null}
+                comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.new_customers} previous={c.new_customers} versus="" /> : null}
                 trend={series(trend, (d) => d.new_customers)} labels={labels} view={{ to: "/admin/customers", label: "View customers" }} />
             </m.div>
           </div>
 
           {/* 2 · Sales over time and where orders are. */}
           <SectionLabel>{h.sales}</SectionLabel>
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <div className="dash-sales-grid grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
             {trend?.length ? (
               <Panel id="sales-chart" title="Income report" icon={LineChart} tone="coral" action={<span className="text-sm text-muted-foreground">this period vs the previous one · by delivery date, less refunds</span>}>
                 <IncomeChart days={trend} />
@@ -251,7 +265,7 @@ function AdminDashboard() {
 
           {/* 3 · Books: what sells, which shelves, what runs out. */}
           <SectionLabel>{h.catalogue}</SectionLabel>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-[minmax(0,5fr)_minmax(0,4fr)_minmax(0,4fr)]">
+          <div className="dash-catalogue-grid grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-[minmax(0,5fr)_minmax(0,4fr)_minmax(0,4fr)]">
             <Panel id="best-sellers" title="Best sellers" icon={Trophy} tone="saffron">
               {s.best_sellers.length === 0 ? (
                 <p className="text-[15px] text-muted-foreground">No delivered sales in this period yet.</p>
@@ -311,7 +325,7 @@ function AdminDashboard() {
                   {ins.cart_reminder_recovery ? (
                     <Panel id="reminder-recovery" title={dict.dashboardAnalysis.reminder} icon={BellRing} tone="violet">
                       <p className="text-sm text-muted-foreground">{dict.dashboardAnalysis.reminderNote}</p>
-                      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      <dl className="dash-reminder-metrics grid grid-cols-2 gap-3 sm:grid-cols-3">
                         <Stat label={dict.dashboardAnalysis.recovered} value={`${ins.cart_reminder_recovery.recovered} (${ins.cart_reminder_recovery.percent}%)`} />
                         <Stat label={dict.dashboardAnalysis.sent} value={<AnimatedNumber value={ins.cart_reminder_recovery.sent} format={count} />} />
                         {ins.promotions?.gift_orders !== undefined ? <Stat label={dict.dashboardAnalysis.gifts} value={<AnimatedNumber value={ins.promotions.gift_orders} format={count} />} /> : null}
@@ -325,7 +339,7 @@ function AdminDashboard() {
 
           {/* 5 · Operations: what needs attention, latest orders, deeper insights and health. */}
           <SectionLabel>{h.operations}</SectionLabel>
-          <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+          <div className="dash-operations-grid grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
             {ins ? <DashboardActivity data={ins} /> : null}
             <RecentOrders user={session?.user} />
           </div>
@@ -336,6 +350,7 @@ function AdminDashboard() {
         </div>
       )}
     </AdminPage>
+    </div>
   );
 }
 

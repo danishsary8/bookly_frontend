@@ -2,17 +2,16 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import {
-  FigmaIcon,
-  FingerPrintIcon,
-  GitBranchIcon,
-  GithubIcon,
-  Key01Icon,
-  NotionIcon,
-  SlackIcon,
-  SparklesIcon,
-  Tick02Icon
-} from '@hugeicons/core-free-icons';
+// Load only these icons instead of traversing the complete icon catalogue on admin startup.
+import FigmaIcon from '@hugeicons/core-free-icons/FigmaIcon';
+import FingerPrintIcon from '@hugeicons/core-free-icons/FingerPrintIcon';
+import GitBranchIcon from '@hugeicons/core-free-icons/GitBranchIcon';
+import GithubIcon from '@hugeicons/core-free-icons/GithubIcon';
+import Key01Icon from '@hugeicons/core-free-icons/Key01Icon';
+import NotionIcon from '@hugeicons/core-free-icons/Notion01Icon';
+import SlackIcon from '@hugeicons/core-free-icons/SlackIcon';
+import SparklesIcon from '@hugeicons/core-free-icons/SparklesIcon';
+import Tick02Icon from '@hugeicons/core-free-icons/Tick02Icon';
 
 import './MagicBento.css';
 

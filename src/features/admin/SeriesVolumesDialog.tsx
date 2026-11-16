@@ -1,10 +1,11 @@
+import { AdminFormDialogContent as DialogContent } from "@/features/admin/AdminFormDialog";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, BookOpen, Check, Loader2 } from "lucide-react";
 import { staffApi, staffQueries, type StaffSeriesDetail, type StaffSeriesVolumeBook } from "@/api/endpoints/staff";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { toast } from "@/stores/toast";
 import { useT } from "@/i18n";

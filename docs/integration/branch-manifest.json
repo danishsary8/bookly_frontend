@@ -1,0 +1,68 @@
+[
+  {
+    "branch": "origin/admin-polish",
+    "sha": "8d5bd5245576805731656e5ebb5691e61b8da2e9",
+    "resolution": "superseded",
+    "conflicts": []
+  },
+  {
+    "branch": "origin/design/font-preview",
+    "sha": "6adb3f645b4cdea5c1e46a6832045672390e0e1d",
+    "resolution": "superseded",
+    "conflicts": []
+  },
+  {
+    "branch": "origin/design/shopping-pages",
+    "sha": "0c42d892bf4449133353846a0f112f4f927497a2",
+    "resolution": "superseded",
+    "conflicts": []
+  },
+  {
+    "branch": "origin/docs/overnight-batch",
+    "sha": "52bdc35558560fba45d7a980ed0782981470f664",
+    "resolution": "superseded",
+    "conflicts": []
+  },
+  {
+    "branch": "origin/docs/overnight-plan",
+    "sha": "660b7c5b88bd8594ae48ea9d6f6005340706c270",
+    "resolution": "normal",
+    "conflicts": []
+  },
+  {
+    "branch": "origin/docs/worklog-notes",
+    "sha": "fca0171ecfc859dd1d839c9eef825b465ebc9bf6",
+    "resolution": "normal",
+    "conflicts": []
+  },
+  {
+    "branch": "chore/deps-and-setup-node",
+    "sha": "573fd4dbf1d7268c7233344b4f5083ba4cf7f929",
+    "resolution": "superseded",
+    "conflicts": []
+  },
+  {
+    "branch": "chore/pin-setup-node",
+    "sha": "753742ae3653e987b88b3293a45d9e018c94438f",
+    "resolution": "superseded",
+    "conflicts": []
+  },
+  {
+    "branch": "design/catalogue-pages-v2",
+    "sha": "51fbfad6f66d988670adef16480a382f2d5075be",
+    "resolution": "superseded",
+    "conflicts": []
+  },
+  {
+    "branch": "design/splash-screen",
+    "sha": "8d56a63b3fa515d08052043f84a692887d6afac9",
+    "resolution": "superseded",
+    "conflicts": []
+  },
+  {
+    "branch": "tmp/sentry-test-error",
+    "sha": "cd3b8e8b66b60286a2b10c9fe57089bbdefde177",
+    "resolution": "normal",
+    "conflicts": []
+  }
+]

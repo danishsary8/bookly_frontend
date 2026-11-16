@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { RefreshNote } from "./RefreshNote";
+import "./workspace.css";
 
 /** Top of an admin screen: the page's h1, an optional one-line description, and actions on the right. */
 export function AdminPage({ title, lead, actions, back, children }: { title: string; lead?: ReactNode; actions?: ReactNode; back?: ReactNode; children: ReactNode }) {
@@ -13,8 +14,8 @@ export function AdminPage({ title, lead, actions, back, children }: { title: str
   const { pathname } = useLocation();
   const group = groupFor(pathname);
   return (
-    <m.div className="admin-page mx-auto grid w-full max-w-[1440px] grid-cols-[minmax(0,1fr)] gap-6" initial={reducedMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={transitions.page}>
-      <div className="admin-page-header grid gap-3" data-tone={group?.tone ?? "blue"}>
+    <m.div data-work-area={group?.label} className="admin-page mx-auto grid w-full max-w-[1440px] grid-cols-[minmax(0,1fr)] gap-6" initial={reducedMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={transitions.page}>
+      <div className="admin-page-header grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3" data-tone={group?.tone ?? "blue"}>
         <p className="admin-eyebrow inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em]"><span aria-hidden="true" className="size-1.5 rounded-full bg-current" />{group?.label ?? "Workspace"}</p>
         {back}
         <div className="flex flex-wrap items-end justify-between gap-4">
