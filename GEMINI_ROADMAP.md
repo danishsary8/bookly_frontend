@@ -1,6 +1,8 @@
 # Bookly — Roadmap (state on 2026-11-05)
 
 Two repos:
+
+> Historical roadmap imported during consolidation on 2026-11-16. Use docs/WORKLOG.md and the current owner task for present status; this file does not authorize new operations.
 - **Backend** `danishsary8/bookly_backend_v2`: Laravel 13 + PHP 8.4 + PostgreSQL, REST API `/api/v1`, hosted on Render.
 - **Frontend** `danishsary8/bookly_frontend`: React 19 + Vite 7 + TypeScript, hosted on Vercel.
 

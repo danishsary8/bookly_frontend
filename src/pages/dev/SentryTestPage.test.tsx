@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import SentryTestPage, { triggerSentryTestError } from "./SentryTestPage";
+import SentryTestPage from "./SentryTestPage";
+import { triggerSentryTestError } from "./sentryTestError";
 
 describe("SentryTestPage", () => {
   it("renders heading and button", () => {

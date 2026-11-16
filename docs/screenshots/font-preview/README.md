@@ -1,5 +1,7 @@
 # Font preview: Newsreader for headings (2026-11-11, branch `design/font-preview`)
 
+Archived comparison only: the consolidation keeps the current Gloock design system. The original font experiment is available in Git history; these screenshots do not describe the active application typography.
+
 Before (left) = Gloock, after (right) = Newsreader (variable, optical sizes, weight 500), same pages, 1440×900, mocked
 API: `cmp_hero.jpg`, `cmp_newarrivals.jpg` (promises band and footer), `cmp_top10.jpg`, `cmp_book.jpg`, `cmp_books.jpg`.
 

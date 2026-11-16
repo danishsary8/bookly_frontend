@@ -1,9 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
-export function triggerSentryTestError() {
-  throw new Error("Sentry source map test " + new Date().toISOString());
-}
+import { triggerSentryTestError } from "./sentryTestError";
 
 export default function SentryTestPage() {
   useDocumentTitle("Sentry source map test", { noindex: true });

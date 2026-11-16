@@ -1,5 +1,7 @@
 # Overnight work prompt for Gemini (Bookly)
 
+> Historical prompt retained during branch consolidation on 2026-11-16. It is not an active instruction to run this batch. Follow the current owner's task, repository instructions and docs/WORKLOG.md.
+
 You are working **alone overnight** on Bookly, an online bookshop for Cambodia. The owner, Danish, is asleep.
 **Do not stop, do not ask questions, make reasonable decisions yourself, and write down every decision.**
 When something is blocked, note it in PROGRESS.md and move to the next task. Never wait.
