@@ -1113,3 +1113,10 @@ component's own dependencies). Values still glide between periods. Rules: design
 - New `/admin/suppliers` (sidebar: Catalogue → Suppliers, next to Stock): supplier cards with status, contact (tap-to-call / email), restocks, copies bought, money spent, last restock; search, All/Active/Switched off filter, add/edit dialog with an Active switch. Never deleted, only switched off.
 - Restock dialog: pick an active supplier (or "Other" to type a name, or none) with a "Manage suppliers" link; on an API without suppliers it keeps the old text field and sends the same request as before.
 - Text in en.ts and km.ts. Checks: lint, typecheck, 707 tests passed (3 skipped), build OK. Browser (local API with the new migration): edit + add a supplier, restock with the picker, the supplier's totals update; no sideways scroll at 390/320; no console errors.
+
+### 2026-11-16 — Store settings, monthly goal, top authors, customer cards, book sales (branch `admin-settings-goals`, on top of `admin-suppliers`)
+- New `/admin/settings` (sidebar: Admin → Store settings): Delivery (Phnom Penh and provinces fees, free delivery threshold, live example, fixed province fees), Monthly sales goal, link to payment options. Sticky save bar with "unsaved changes", Cancel; read-only note for staff.
+- Dashboard: "Monthly goal" card (progress bar with a today marker, On track / Behind / Goal reached, needed per day) next to the Profit panel (now a 2×2 grid).
+- Reports → Products: Top authors. Reports → Customers: Customers who ordered (first order ever / had ordered before) and Average spend per customer.
+- Book details: Sales panel (best-seller rank, 30/90 days, 90-day sales, by format, last order).
+- All new text in en.ts and km.ts. Checks: lint, typecheck, 712 tests passed (3 skipped), build OK. Browser (local API): save settings, goal card, top authors, customer cards, book sales; no sideways scroll at 390/320; only console errors are external cover images blocked by the sandbox.

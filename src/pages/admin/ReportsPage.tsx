@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { AlertTriangle, ArrowDown, BarChart3, Boxes, CircleDollarSign, Download, FileSpreadsheet, FolderTree, Gift, Hourglass, LineChart, MapPin, PiggyBank, Printer, Receipt, ShoppingBag, ShoppingCart, Tag, Ticket, TrendingUp, Trophy, Truck, Undo2, UserPlus, Users, Wallet, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowDown, BarChart3, Boxes, CircleDollarSign, Download, FileSpreadsheet, FolderTree, Gift, Hourglass, LineChart, MapPin, PenTool, PiggyBank, Printer, Receipt, ShoppingBag, ShoppingCart, Tag, Ticket, TrendingUp, Trophy, Truck, Undo2, UserPlus, Users, Wallet, XCircle } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { inventoryApi, reportsApi, type ReportGroup, type ReportName, type ReportRange } from "@/api/endpoints/reports";
 import { ApiError } from "@/api/errors";
@@ -195,6 +195,7 @@ function OrdersTab({ range, versus }: { range: ReportRange; versus: string }) {
 }
 
 function ProductsTab({ range }: { range: ReportRange }) {
+  const { dict } = useT();
   const query = useReport("products", range);
   return (
     <State query={query}>
@@ -259,6 +260,29 @@ function ProductsTab({ range }: { range: ReportRange }) {
                 )}
               </Panel>
             </div>
+            {r.top_authors ? (
+              <Panel id="products-authors" title={dict.reportsExtra.topAuthors} icon={PenTool} tone="violet" action={<span className="text-sm text-muted-foreground">{dict.reportsExtra.byCopies}</span>}>
+                {r.top_authors.length === 0 ? (
+                  <Empty>{dict.reportsExtra.noSales}</Empty>
+                ) : (
+                  <RankTable
+                    head={[dict.reportsExtra.author, dict.reportsExtra.copies, dict.reportsExtra.sales]}
+                    rows={r.top_authors.map((a) => ({
+                      key: a.author_id,
+                      copies: a.units_sold,
+                      sales: formatUsd(a.revenue_usd),
+                      khr: a.revenue_khr,
+                      name: (
+                        <>
+                          <span className="font-semibold">{a.name}</span>
+                          <span className="block text-sm text-muted-foreground">{a.books} {a.books === 1 ? dict.reportsExtra.book : dict.reportsExtra.books}</span>
+                        </>
+                      ),
+                    }))}
+                  />
+                )}
+              </Panel>
+            ) : null}
             <Panel id="products-slow" title="Slow sellers with stock" icon={Hourglass} tone="slate" action={<span className="text-sm text-muted-foreground">fewest copies sold in this period</span>}>
               {r.worst_sellers.length === 0 ? (
                 <Empty>No books in stock.</Empty>
@@ -298,6 +322,7 @@ function ProductsTab({ range }: { range: ReportRange }) {
 }
 
 function CustomersTab({ range, versus }: { range: ReportRange; versus: string }) {
+  const { dict } = useT();
   const query = useReport("customers", range);
   return (
     <State query={query}>
@@ -307,12 +332,22 @@ function CustomersTab({ range, versus }: { range: ReportRange; versus: string })
         const points = r.new_customers_series.map((p) => ({ label: shortDay.format(new Date(`${p.date}T00:00:00Z`)), value: p.new_customers }));
         return (
           <>
-            <div className="dash-kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className={cn("dash-kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-2", r.customers_ordered !== undefined && "xl:grid-cols-4")}>
               <Kpi id="r-new-customers" label="New customers" icon={UserPlus} tone="sea" value={<AnimatedNumber value={r.total_new_customers} format={count} />} detail="verified their account"
                 change={<Change percent={c.change_percent.total_new_customers} previous={c.total_new_customers} versus={versus} />}
                 trend={points.map((p) => p.value)} labels={points.map((p) => p.label)} format={count} view={{ to: "/admin/customers", label: "View customers" }} />
               <Kpi id="r-came-back" label="Came back" icon={Users} tone="sky" value={<AnimatedNumber value={r.returning_customer_rate} format={percent} />} detail="of customers in this period ordered more than once"
                 change={<Change percent={c.change_percent.returning_customer_rate} previous={c.returning_customer_rate} versus={versus} />} />
+              {r.customers_ordered !== undefined ? (
+                <Kpi id="r-customers-ordered" label={dict.reportsExtra.ordered} icon={ShoppingBag} tone="saffron" value={<AnimatedNumber value={r.customers_ordered} format={count} />}
+                  detail={dict.reportsExtra.orderedDetail.replace("{first}", count(r.first_time_customers ?? 0)).replace("{back}", count(r.returning_customers ?? 0))}
+                  change={<Change percent={c.change_percent.customers_ordered} previous={c.customers_ordered} versus={versus} />} />
+              ) : null}
+              {r.average_spend_usd !== undefined ? (
+                <Kpi id="r-average-spend" label={dict.reportsExtra.spend} icon={Wallet} tone="coral" value={<AnimatedNumber value={Number(r.average_spend_usd)} format={money} />} khr={r.average_spend_khr}
+                  detail={dict.reportsExtra.spendDetail}
+                  change={<Change percent={c.change_percent.average_spend} previous={Number(c.average_spend_usd ?? 0)} versus={versus} />} />
+              ) : null}
             </div>
             <Panel id="customers-new" title="New customers by day" icon={UserPlus} tone="sea">
               {r.total_new_customers === 0 ? <Empty>No new verified customers in this period.</Empty> : <ColumnChart points={points} label="New customers by day" format={count} color="var(--tone-fill)" />}

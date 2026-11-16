@@ -54,7 +54,7 @@
 .dash-overview .dash-bento .magic-bento__card { box-shadow: var(--shadow-lift); }
 .dash-overview .dash-bento h3 { font-size: 14px; line-height: 1.45; }
 .dash-overview .dash-bento p.text-sm { font-size: 13px; line-height: 1.55; }
-.dash-profit-metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); }
+.dash-profit-metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); }
 .report-export { justify-content: flex-end; }
 .inventory-speed .admin-segmented { max-width: 100%; }
 @media (max-width: 479px) { .inventory-speed { width: 100%; } .inventory-speed .admin-segmented { display: grid; width: 100%; grid-template-columns: repeat(5, minmax(0, 1fr)); } .inventory-speed .admin-segmented > button { min-width: 0; padding-inline: 4px; font-size: 13px; } }
@@ -87,7 +87,7 @@
 /* Match the space inside the dashboard, including when enlarged text widens the existing rail. */
 @container bookly-dashboard (max-width: 959px) {
   .dash-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .dash-sales-grid, .dash-operations-grid { grid-template-columns: minmax(0, 1fr); }
+  .dash-sales-grid, .dash-operations-grid, .dash-money-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @container bookly-dashboard (max-width: 599px) {
   .dash-kpi-grid, .dash-catalogue-grid { grid-template-columns: minmax(0, 1fr); }
