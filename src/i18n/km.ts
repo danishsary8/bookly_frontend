@@ -1685,7 +1685,7 @@ export const km: Translations = {
   offers: {
     badge: (n: number, pct: string) => `ទិញ ${n} សន្សំ ${pct}%`,
     bookLine: (n: number, pct: string, label: string | null) =>
-      label ? `ទិញ ${n} ក្បាលពី ${label} សន្សំ ${pct}%។` : `ទិញចាប់ពី ${n} ក្បាលក្នុងការផ្តល់ជូននេះ សន្សំ ${pct}% លើក្បាលនីមួយៗ។`,
+      label ? `ទិញ ${n} ក្បាលណាក៏បានពី ${label} សន្សំ ${pct}%។ អាចលាយគ្នាបាន៖ មិនចាំបាច់ជាសៀវភៅដូចគ្នាទេ។` : `ទិញចាប់ពី ${n} ក្បាលណាក៏បានក្នុងការផ្តល់ជូននេះ សន្សំ ${pct}% លើក្បាលនីមួយៗ។ អាចលាយគ្នាបាន៖ មិនចាំបាច់ជាសៀវភៅដូចគ្នាទេ។`,
     ends: (date: string) => `ផុតកំណត់ ${date}។`,
     offerLine: (n: number, pct: string) => `ការផ្តល់ជូន៖ ទិញ ${n} សន្សំ ${pct}%`,
     inOffer: "ក្នុងការផ្តល់ជូន",

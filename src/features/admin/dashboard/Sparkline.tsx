@@ -32,8 +32,9 @@ export function Sparkline({ values, className, color = "var(--primary)", fill = 
         onFocus={() => show(last)} onBlur={close} onKeyDown={keyDown}>
         <svg aria-hidden="true" viewBox="0 0 120 32" preserveAspectRatio="none" className="size-full overflow-visible" data-testid="sparkline">
           <defs><linearGradient id={gradient} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity={fill} /><stop offset="100%" stopColor={color} stopOpacity={0} /></linearGradient></defs>
-          <m.path data-chart-path="area" initial={false} animate={{ d: shape.area }} transition={transition} fill={`url(#${gradient})`} />
-          <m.path data-chart-path="trend" initial={false} animate={{ d: shape.line }} transition={transition} fill="none" stroke={color} strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" strokeLinecap="round" />
+          {/* First open: the line draws itself in from the left and the area fades up under it (owner 2026-11-16). */}
+          <m.path data-chart-path="area" initial={reduce ? false : { opacity: 0 }} animate={{ d: shape.area, opacity: 1 }} transition={reduce ? transition : { ...chartTransition, opacity: { duration: 0.9, delay: 0.5 } }} fill={`url(#${gradient})`} />
+          <m.path data-chart-path="trend" initial={reduce ? false : { pathLength: 0 }} animate={{ d: shape.line, pathLength: 1 }} transition={reduce ? transition : { ...chartTransition, pathLength: { duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.15 } }} fill="none" stroke={color} strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" strokeLinecap="round" />
           {active !== null ? <line x1={left * 1.2} x2={left * 1.2} y1={0} y2={32} stroke={color} strokeOpacity={0.35} strokeDasharray="2 2" vectorEffect="non-scaling-stroke" /> : null}
         </svg>
         <m.span aria-hidden="true" initial={false} animate={{ left: `${left}%`, top: `${top}%` }} transition={active !== null ? { duration: reduce ? 0 : 0.1 } : transition}

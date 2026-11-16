@@ -50,7 +50,7 @@ export function GoalCard() {
         <div className="grid gap-3">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-[2rem] font-semibold leading-none tracking-[-0.03em] tabular-nums"><AnimatedNumber value={net} format={money} /></p>
+              <p className="text-[2rem] font-semibold leading-none tracking-[-0.03em] tabular-nums"><AnimatedNumber countUp value={net} format={money} /></p>
               <Khr value={g.net_revenue_khr} />
               <p className="mt-1 text-sm text-muted-foreground tabular-nums">{t.of.replace("{goal}", formatUsd(g.goal_usd!))} · {g.percent ?? 0}%</p>
             </div>

@@ -95,14 +95,19 @@ describe("offers admin", () => {
     await user.type(within(dialog).getByLabelText("Name"), "Buy 2 Holmes");
     await user.clear(within(dialog).getByLabelText(/Percent off/));
     await user.type(within(dialog).getByLabelText(/Percent off/), "15");
-    await user.type(within(dialog).getByLabelText("Books, categories or series"), "hol");
-    await user.click(await within(dialog).findByRole("button", { name: /Series\s*Sherlock Holmes/ }));
+    // The picker lists books straight away (no typing needed) and explains that any mix of books counts.
+    expect(await within(dialog).findByRole("checkbox", { name: /The Sign of the Four/ })).not.toBeChecked();
+    expect(within(dialog).getByText(/mix any books in this offer/)).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("tab", { name: "Series" }));
+    await user.type(within(dialog).getByLabelText("Search series"), "hol");
+    await user.click(await within(dialog).findByRole("checkbox", { name: /Sherlock Holmes/ }));
     expect(within(dialog).getByRole("list", { name: "Chosen" })).toHaveTextContent("Series: Sherlock Holmes");
+    expect(within(dialog).getByRole("tab", { name: /Series\s*1/ })).toBeInTheDocument();
 
     // Live preview of what customers see.
     const preview = within(dialog).getByRole("region", { name: "What customers see" });
     expect(within(preview).getByText("Buy 2, save 15%")).toBeInTheDocument();
-    expect(within(preview).getByText("Buy 2 from Sherlock Holmes, save 15%.")).toBeInTheDocument();
+    expect(within(preview).getByText("Buy any 2 from Sherlock Holmes, save 15%. Mix and match: they don't have to be the same book.")).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "Create offer" }));
     await waitFor(() => expect(create).toHaveBeenCalled());
@@ -139,8 +144,9 @@ describe("offers admin", () => {
     await user.type(within(dialog).getByLabelText("Name"), "X");
     await user.click(within(dialog).getByRole("radio", { name: "All books" }));
     await user.click(within(dialog).getByRole("radio", { name: "Chosen books" }));
-    await user.type(within(dialog).getByLabelText("Books, categories or series"), "phil");
-    await user.click(await within(dialog).findByRole("button", { name: /Category\s*Philosophy/ }));
+    await user.click(within(dialog).getByRole("tab", { name: "Categories" }));
+    await user.type(within(dialog).getByLabelText("Search categories"), "phil");
+    await user.click(await within(dialog).findByRole("checkbox", { name: /Philosophy/ }));
     await user.click(within(dialog).getByRole("button", { name: "Create offer" }));
     expect(await within(dialog).findByText("Not found (or in the trash): series 1.")).toBeInTheDocument();
   });

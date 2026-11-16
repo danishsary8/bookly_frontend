@@ -1,4 +1,5 @@
 import { ArrowRight, type LucideIcon } from "lucide-react";
+import { m, useReducedMotion } from "motion/react";
 import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
 import { Khr } from "@/features/admin/reportKit";
@@ -105,3 +106,22 @@ export function SectionLabel({ children }: { children: ReactNode }) {
   return <p className="dash-section-label flex items-center gap-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground"><span>{children}</span><span aria-hidden="true" className="h-px flex-1 bg-border" /></p>;
 }
 
+
+/**
+ * A dashboard section that rises into place the first time it scrolls into view (owner 2026-11-16: motion when the
+ * dashboard opens). Once only; reduced motion shows it at once.
+ */
+export function Reveal({ children, className, delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
+  const reduce = useReducedMotion();
+  return (
+    <m.div
+      className={className}
+      initial={reduce ? false : { opacity: 0, y: 22 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.12 }}
+      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay }}
+    >
+      {children}
+    </m.div>
+  );
+}
