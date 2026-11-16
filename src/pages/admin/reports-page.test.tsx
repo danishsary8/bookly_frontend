@@ -2,7 +2,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes, useLocation } from "react-router-dom";
-import { reportsApi, type CouponsReport, type OffersReport, type OrdersReport, type ReportName, type SalesReport } from "@/api/endpoints/reports";
+import { reportsApi, type CouponsReport, type OffersReport, type OrdersReport, type ProfitReport, type ProfitTotals, type ReportName, type SalesReport } from "@/api/endpoints/reports";
 import { ApiError } from "@/api/errors";
 import { clearSession, setSession } from "@/api/session";
 import type { StaffUser } from "@/api/endpoints/staff";
@@ -51,7 +51,24 @@ const offers: OffersReport = {
   offers: [{ offer_id: 1, name: "Buy 2 Holmes", min_quantity: 2, percent_off: "15.00", ...row(2, 5, 4, "67.00", "6.00", "33.50", "2.50") }],
   without_offer: row(1, 1, 0, "31.50", "0.00", "31.50", "1.00"),
 };
-const reports: Partial<Record<ReportName, unknown>> = { sales, orders, coupons, offers };
+const profitZero: ProfitTotals = { restock_spend_usd: "0.00", restock_spend_khr: null, restock_units: 0, restock_units_without_cost: 0, sales_usd: "0.00", sales_khr: null, cost_of_goods_usd: "0.00", cost_of_goods_khr: null, gross_profit_usd: "0.00", gross_profit_khr: null, margin_percent: null, units_sold_costed: 0, sales_cost_unknown_usd: "0.00", sales_cost_unknown_khr: null, units_sold_cost_unknown: 0, refunds_usd: "0.00", refunds_khr: null, returned_cost_usd: "0.00", returned_cost_khr: null, profit_after_refunds_usd: "0.00", profit_after_refunds_khr: null };
+const profit: ProfitReport = {
+  period: { ...period, group: "day" },
+  totals: { ...profitZero, restock_spend_usd: "180.00", restock_units: 25, restock_units_without_cost: 5, sales_usd: "55.00", cost_of_goods_usd: "27.00", gross_profit_usd: "28.00", gross_profit_khr: "114800", margin_percent: 50.9, units_sold_costed: 3, sales_cost_unknown_usd: "30.00", units_sold_cost_unknown: 2, refunds_usd: "20.00", returned_cost_usd: "12.00", profit_after_refunds_usd: "20.00" },
+  comparison: { period, totals: { ...profitZero, gross_profit_usd: "14.00" }, change_percent: { restock_spend: 100, sales: 100, cost_of_goods: 100, gross_profit: 100, profit_after_refunds: 100 } },
+  series: [
+    { date: "2026-10-14", restock_spend_usd: "180.00", sales_usd: "0.00", cost_of_goods_usd: "0.00", gross_profit_usd: "0.00", margin_percent: null },
+    { date: "2026-10-15", restock_spend_usd: "0.00", sales_usd: "55.00", cost_of_goods_usd: "27.00", gross_profit_usd: "28.00", margin_percent: 50.9 },
+  ],
+  by_supplier: [
+    { supplier: "Monument Books", restocks: 2, units: 20, units_without_cost: 0, spend_usd: "180.00", spend_khr: null, average_unit_cost_usd: "9.00" },
+    { supplier: null, restocks: 1, units: 5, units_without_cost: 5, spend_usd: "0.00", spend_khr: null, average_unit_cost_usd: null },
+  ],
+  by_category: [{ category_id: 1, name: "Classics", units_sold: 3, sales_usd: "55.00", cost_of_goods_usd: "27.00", gross_profit_usd: "28.00", gross_profit_khr: null, margin_percent: 50.9 }],
+  top_books: [{ book_id: 7, variant_id: 70, title: "Dune", format: "paperback", unit_cost_usd: "9.00", units_sold: 3, sales_usd: "55.00", cost_of_goods_usd: "27.00", gross_profit_usd: "28.00", gross_profit_khr: null, margin_percent: 50.9 }],
+  cost_unknown: [{ book_id: 8, variant_id: 80, title: "Emma", format: "hardcover", units_sold: 2, sales_usd: "30.00" }],
+};
+const reports: Partial<Record<ReportName, unknown>> = { sales, orders, coupons, offers, profit };
 
 function Where() {
   const { pathname, search } = useLocation();
@@ -176,8 +193,8 @@ describe("reports page", () => {
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
     open("/admin/reports?tab=offers&period=custom&from=2026-09-01&to=2026-09-30");
 
-    expect((await screen.findByText("Books per order with an offer")).parentElement).toHaveTextContent("2.50");
-    expect(screen.getByText("Average order with an offer").parentElement).toHaveTextContent("$33.50");
+    expect((await screen.findByText("Books per order with an offer")).closest("section")).toHaveTextContent("2.50");
+    expect(screen.getByText("Average order with an offer").closest("section")).toHaveTextContent("$33.50");
     expect(screen.getByText("Without an offer: 1.00")).toBeInTheDocument();
     expect(screen.getByText("Without an offer: $31.50")).toBeInTheDocument();
     expect(screen.getByText("66.7% of 3 orders")).toBeInTheDocument();
@@ -189,6 +206,38 @@ describe("reports page", () => {
     expect(within(table).getByRole("rowheader", { name: /Orders without an offer/ }).closest("tr")).toHaveTextContent("$31.50");
     await userEvent.click(screen.getByRole("button", { name: "Export CSV" }));
     await waitFor(() => expect(csv).toHaveBeenCalledWith("offers", { from: "2026-09-01", to: "2026-09-30" }));
+  });
+
+  it("shows profit: spending, cost and margin, suppliers, top books and sales without a cost, and exports it by day", async () => {
+    setSession("staff", { token: "t", expiresAt: null, user: admin });
+    const get = stubReports();
+    const csv = vi.spyOn(reportsApi, "csv").mockResolvedValue(new Blob(["a,b"]));
+    URL.createObjectURL = vi.fn(() => "blob:report");
+    URL.revokeObjectURL = vi.fn();
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+    open("/admin/reports?tab=profit&period=custom&from=2026-10-09&to=2026-10-15");
+
+    const profitCard = (await screen.findByRole("heading", { name: "Gross profit" })).closest("section")!;
+    expect(profitCard).toHaveTextContent("$28.00");
+    expect(profitCard).toHaveTextContent("50.9% margin");
+    expect(get).toHaveBeenLastCalledWith("profit", { from: "2026-10-09", to: "2026-10-15", group: "day" });
+    expect(screen.getByRole("heading", { name: "Restock spending" }).closest("section")).toHaveTextContent("5 restocked without a cost");
+    expect(screen.getByRole("note")).toHaveTextContent("$30.00 of sales (2 copies) have no restock cost yet");
+    expect(screen.getByRole("heading", { name: "Profit after refunds" }).closest("section")).toHaveTextContent("less $20.00 refunded, plus $12.00 of copies back on the shelf");
+    expect(screen.getByText("Monument Books")).toBeInTheDocument();
+    expect(screen.getByText("No supplier given")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Dune" })).toHaveAttribute("href", "/admin/books/7");
+    expect(screen.getByRole("link", { name: /Emma/ })).toHaveAttribute("href", "/admin/books/8");
+
+    await userEvent.click(screen.getByRole("button", { name: "Export CSV" }));
+    await waitFor(() => expect(csv).toHaveBeenCalledWith("profit", { from: "2026-10-09", to: "2026-10-15", group: "day" }));
+  });
+
+  it("says the profit report is not available yet on an API without it", async () => {
+    setSession("staff", { token: "t", expiresAt: null, user: admin });
+    vi.spyOn(reportsApi, "get").mockRejectedValue(new ApiError({ kind: "not_found", status: 404, message: "Not found" }));
+    open("/admin/reports?tab=profit&period=7d");
+    expect(await screen.findByText(/profit report is not available on this server yet/)).toBeInTheDocument();
   });
 
   it("says the offers report is not available yet on an API without offers", async () => {

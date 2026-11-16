@@ -2,8 +2,8 @@ import { useId, type ReactNode } from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 /*
- * Report charts (dataviz rules, pages/admin.md §4): one series per chart in the theme's --primary (dark mode
- * has its own step), so no legend: the panel heading names it. Hairline grid, muted axis text, a 2px line or
+ * Report charts (dataviz rules, pages/admin.md §4): one series per chart in the panel's tone colour (default the
+ * theme's --primary; dark mode has its own step), so no legend: the panel heading names it. Hairline grid, muted axis text, a 2px line or
  * thin bars with 4px rounded ends, one tooltip on hover or keyboard (Recharts' accessibility layer), and every
  * value again in a data table below the chart. Colours are CSS variables, never fixed hex.
  */
@@ -53,7 +53,7 @@ export function DataTable({ caption, head, rows }: { caption: string; head: [str
 }
 
 /** One measure over time as a soft area under a 2px line. */
-export function TrendChart({ points, label, format, axisFormat = format }: { points: Point[]; label: string; format: (n: number) => string; axisFormat?: (n: number) => string }) {
+export function TrendChart({ points, label, format, axisFormat = format, color = "var(--primary)" }: { points: Point[]; label: string; format: (n: number) => string; axisFormat?: (n: number) => string; color?: string }) {
   const gradient = `trend-${useId().replace(/:/g, "")}`;
   const total = points.reduce((sum, p) => sum + p.value, 0);
   const peak = points.reduce<Point | null>((best, p) => (!best || p.value > best.value ? p : best), null);
@@ -65,15 +65,15 @@ export function TrendChart({ points, label, format, axisFormat = format }: { poi
           <AreaChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id={gradient} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.22} />
-                <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.02} />
+                <stop offset="0%" stopColor={color} stopOpacity={0.22} />
+                <stop offset="100%" stopColor={color} stopOpacity={0.02} />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} stroke="var(--border)" />
             <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: "var(--border)" }} minTickGap={24} />
             <YAxis tick={axisTick} tickLine={false} axisLine={false} width={56} tickFormatter={axisFormat} allowDecimals={false} />
             <Tooltip content={(props) => <Tip {...props} format={format} />} cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "3 3" }} />
-            <Area type="monotone" dataKey="value" stroke="var(--primary)" strokeWidth={2} fill={`url(#${gradient})`} activeDot={{ r: 5, strokeWidth: 2, stroke: "var(--card)" }} isAnimationActive={false} />
+            <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2} fill={`url(#${gradient})`} activeDot={{ r: 5, strokeWidth: 2, stroke: "var(--card)" }} isAnimationActive={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -83,7 +83,7 @@ export function TrendChart({ points, label, format, axisFormat = format }: { poi
 }
 
 /** Ranked amounts as thin horizontal bars with the value at the end (best sellers, categories, funnel). */
-export function BarList({ points, label, format }: { points: Point[]; label: string; format: (n: number) => string }) {
+export function BarList({ points, label, format, color = "var(--primary)" }: { points: Point[]; label: string; format: (n: number) => string; color?: string }) {
   const height = Math.max(120, points.length * 40 + 16);
   const summary = `${label}: ${points.map((p) => `${p.label} ${format(p.value)}`).join("; ")}.`;
   return (
@@ -93,7 +93,7 @@ export function BarList({ points, label, format }: { points: Point[]; label: str
           <XAxis type="number" hide />
           <YAxis type="category" dataKey="label" width={150} tick={axisTick} tickLine={false} axisLine={false} interval={0} />
           <Tooltip content={(props) => <Tip {...props} format={format} />} cursor={{ fill: "var(--secondary)" }} />
-          <Bar dataKey="value" fill="var(--primary)" radius={[0, 4, 4, 0]} maxBarSize={20} isAnimationActive={false}>
+          <Bar dataKey="value" fill={color} radius={[0, 4, 4, 0]} maxBarSize={20} isAnimationActive={false}>
             <LabelList dataKey="value" position="right" formatter={(v: unknown) => format(Number(v))} style={{ fill: "var(--foreground)", fontSize: 13, fontVariantNumeric: "tabular-nums" }} />
           </Bar>
         </BarChart>
@@ -103,7 +103,7 @@ export function BarList({ points, label, format }: { points: Point[]; label: str
 }
 
 /** Column per period (new customers). */
-export function ColumnChart({ points, label, format }: { points: Point[]; label: string; format: (n: number) => string }) {
+export function ColumnChart({ points, label, format, color = "var(--primary)" }: { points: Point[]; label: string; format: (n: number) => string; color?: string }) {
   const total = points.reduce((sum, p) => sum + p.value, 0);
   const summary = `${label}: ${format(total)} over ${points.length} days.`;
   return (
@@ -114,7 +114,7 @@ export function ColumnChart({ points, label, format }: { points: Point[]; label:
           <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={{ stroke: "var(--border)" }} minTickGap={24} />
           <YAxis tick={axisTick} tickLine={false} axisLine={false} width={40} allowDecimals={false} />
           <Tooltip content={(props) => <Tip {...props} format={format} />} cursor={{ fill: "var(--secondary)" }} />
-          <Bar dataKey="value" fill="var(--primary)" radius={[4, 4, 0, 0]} maxBarSize={24} isAnimationActive={false} />
+          <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} maxBarSize={24} isAnimationActive={false} />
         </BarChart>
       </ResponsiveContainer>
     </div>

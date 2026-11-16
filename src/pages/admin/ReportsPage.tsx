@@ -1,19 +1,22 @@
 import { useState, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowDown, Download, FileSpreadsheet } from "lucide-react";
+import { AlertTriangle, ArrowDown, BarChart3, Boxes, CircleDollarSign, Download, FileSpreadsheet, FolderTree, Gift, Hourglass, LineChart, MapPin, PiggyBank, Printer, Receipt, ShoppingBag, ShoppingCart, Tag, Ticket, TrendingUp, Trophy, Truck, Undo2, UserPlus, Users, Wallet, XCircle } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
-import { reportQueries, reportsApi, type ReportGroup, type ReportName, type ReportRange } from "@/api/endpoints/reports";
+import { reportsApi, type ReportGroup, type ReportName, type ReportRange } from "@/api/endpoints/reports";
 import { ApiError } from "@/api/errors";
 import type { OrderStatus } from "@/api/types";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { Button } from "@/components/ui/button";
-import { ErrorState } from "@/components/ui/error-state";
-import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { day, daysIn, rangeDays, rangeFromParams, rangeToParams } from "@/features/admin/dashboardRange";
 import { BarList, ColumnChart, DataTable, TrendChart, type Point } from "@/features/admin/reports/charts";
-import { Change, CustomRange, Khr, Panel, PeriodPicker, Tile } from "@/features/admin/reportKit";
+import { Change, CustomRange, Khr, Panel, PeriodPicker } from "@/features/admin/reportKit";
+import { AnimatedNumber } from "@/features/admin/dashboard/AnimatedNumber";
+import { Kpi, RankTable } from "@/features/admin/dashboard/DashKit";
+import { ProfitTab } from "@/features/admin/reports/ProfitTab";
+import { Empty, GroupPicker, State } from "@/features/admin/reports/reportParts";
+import { GROUPS, autoGroup, useReport } from "@/features/admin/reports/reportData";
+import "@/features/admin/dashboard/dashboard.css";
 import { formatLabel } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { formatUsd } from "@/stores/currency";
@@ -24,6 +27,8 @@ import { useT } from "@/i18n";
  * /admin/reports (admin only): the shop's numbers for a period, one subject per tab, each with a CSV export.
  * Same period picker and money rules as the dashboard (cash basis: delivered orders less refunds; riel at
  * today's rate). Charts use one colour; every chart has its numbers in a table too.
+ * Owner 2026-11-16: same look as the dashboard - tinted KPI cards with trend lines, panels with a coloured icon,
+ * ranked tables with bars, and the dashboard's toolbar.
  */
 
 const TABS: Array<{ value: ReportName; label: string }> = [
@@ -34,17 +39,14 @@ const TABS: Array<{ value: ReportName; label: string }> = [
   { value: "funnel", label: "Funnel" },
   { value: "coupons", label: "Coupons & refunds" },
   { value: "offers", label: "Offers" },
-];
-const GROUPS: Array<{ value: ReportGroup; label: string }> = [
-  { value: "day", label: "Day" },
-  { value: "week", label: "Week" },
-  { value: "month", label: "Month" },
+  { value: "profit", label: "Profit" },
 ];
 
 const isTab = (value: string | null): value is ReportName => TABS.some((t) => t.value === value);
 const usd = (n: number) => formatUsd(n);
 const usdAxis = (n: number) => (n >= 1000 ? `$${(n / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 })}k` : `$${n}`);
-const count = (n: number) => n.toLocaleString("en-US");
+const count = (n: number) => Math.round(n).toLocaleString("en-US");
+const money = (n: number) => formatUsd(n.toFixed(2));
 const percent = (n: number) => `${n.toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
 const shortDay = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 const monthName = new Intl.DateTimeFormat("en-GB", { month: "short", year: "numeric", timeZone: "UTC" });
@@ -52,35 +54,6 @@ const bucketLabel = (date: string, group: ReportGroup) => {
   const d = new Date(`${date}T00:00:00Z`);
   return group === "month" ? monthName.format(d) : group === "week" ? `Week of ${shortDay.format(d)}` : shortDay.format(d);
 };
-/** Days for up to 2 months, weeks up to 6 months, months beyond. */
-const autoGroup = (range: ReportRange): ReportGroup => {
-  const n = daysIn(range.from, range.to);
-  return n <= 62 ? "day" : n <= 183 ? "week" : "month";
-};
-
-function Loading() {
-  return (
-    <SkeletonGroup label="Loading report…" className="grid gap-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Skeleton className="h-28 rounded-xl" />
-        <Skeleton className="h-28 rounded-xl" />
-        <Skeleton className="h-28 rounded-xl" />
-      </div>
-      <Skeleton className="h-72 rounded-xl" />
-    </SkeletonGroup>
-  );
-}
-
-/** A report's data with its loading and error states. */
-function useReport<N extends ReportName>(name: N, range: ReportRange, group?: ReportGroup) {
-  return useQuery(reportQueries.report(name, group ? { ...range, group } : range));
-}
-
-function State({ query, children }: { query: { isError: boolean; error: unknown; data: unknown; refetch: () => unknown; isPlaceholderData: boolean }; children: () => ReactNode }) {
-  if (query.isError && !query.data) return <ErrorState error={query.error} onRetry={() => void query.refetch()} headingLevel="h2" showHomeLink={false} />;
-  if (!query.data) return <Loading />;
-  return <div className={cn("grid gap-6", query.isPlaceholderData && "opacity-60 transition-opacity")}>{children()}</div>;
-}
 
 /** Rows with a thin bar each: a count and its share of the total (order statuses, areas, payment methods). */
 function ShareList({ rows, label }: { rows: Array<{ key: string; name: ReactNode; value: number }>; label: string }) {
@@ -98,7 +71,7 @@ function ShareList({ rows, label }: { rows: Array<{ key: string; name: ReactNode
               </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-secondary" aria-hidden="true">
-              <div className="h-full rounded-full bg-primary" style={{ width: `${share}%` }} />
+              <div className="admin-bar h-full rounded-full" style={{ width: `${share}%`, background: "var(--tone-fill, var(--primary))" }} />
             </div>
           </li>
         );
@@ -107,9 +80,6 @@ function ShareList({ rows, label }: { rows: Array<{ key: string; name: ReactNode
   );
 }
 
-function Empty({ children }: { children: ReactNode }) {
-  return <p className="text-[15px] text-muted-foreground">{children}</p>;
-}
 
 function SalesTab({ range, versus }: { range: ReportRange; versus: string }) {
   const [params, setParams] = useSearchParams();
@@ -127,13 +97,22 @@ function SalesTab({ range, versus }: { range: ReportRange; versus: string }) {
           value: Number(p.net_revenue_usd),
           tooltip: `${p.orders_count} delivered · ${formatUsd(p.gross_revenue_usd)} before refunds`,
         }));
+        const labels = points.map((p) => p.label);
         return (
           <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Tile label="Net revenue" value={formatUsd(t.net_revenue_usd)} khr={t.net_revenue_khr} change={<Change percent={c.change_percent.net_revenue} previous={Number(c.totals.net_revenue_usd)} versus={versus} />} />
-              <Tile label="Delivered orders" value={count(t.orders_count)} detail={`${count(t.orders_placed)} placed`} change={<Change percent={c.change_percent.orders_count} previous={c.totals.orders_count} versus={versus} />} />
-              <Tile label="Average order" value={formatUsd(t.average_order_value_usd)} khr={t.average_order_value_khr} change={<Change percent={c.change_percent.average_order_value} previous={Number(c.totals.average_order_value_usd)} versus={versus} />} />
-              <Tile label="Books sold" value={count(t.items_sold)} change={<Change percent={c.change_percent.items_sold} previous={c.totals.items_sold} versus={versus} />} />
+            <div className="dash-kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <Kpi id="r-net-revenue" label="Net revenue" icon={CircleDollarSign} tone="coral" value={<AnimatedNumber value={Number(t.net_revenue_usd)} format={money} />} khr={t.net_revenue_khr}
+                change={<Change percent={c.change_percent.net_revenue} previous={Number(c.totals.net_revenue_usd)} versus={versus} />}
+                trend={r.series.map((p) => Number(p.net_revenue_usd))} labels={labels} format={money} />
+              <Kpi id="r-delivered" label="Delivered orders" icon={Truck} tone="saffron" value={<AnimatedNumber value={t.orders_count} format={count} />} detail={`${count(t.orders_placed)} placed`}
+                change={<Change percent={c.change_percent.orders_count} previous={c.totals.orders_count} versus={versus} />}
+                trend={r.series.map((p) => p.orders_count)} labels={labels} format={count} />
+              <Kpi id="r-average" label="Average order" icon={Receipt} tone="sky" value={<AnimatedNumber value={Number(t.average_order_value_usd)} format={money} />} khr={t.average_order_value_khr}
+                change={<Change percent={c.change_percent.average_order_value} previous={Number(c.totals.average_order_value_usd)} versus={versus} />}
+                trend={r.series.map((p) => Number(p.average_order_value_usd))} labels={labels} format={money} />
+              <Kpi id="r-books-sold" label="Books sold" icon={ShoppingBag} tone="sea" value={<AnimatedNumber value={t.items_sold} format={count} />}
+                change={<Change percent={c.change_percent.items_sold} previous={c.totals.items_sold} versus={versus} />}
+                trend={r.series.map((p) => p.items_sold)} labels={labels} format={count} />
             </div>
             <p className="text-sm text-muted-foreground tabular-nums">
               {formatUsd(t.gross_revenue_usd)} from delivered orders, less {formatUsd(t.refunds_usd)} refunded · discounts given {formatUsd(t.discount_usd)} · delivery fees {formatUsd(t.shipping_usd)}
@@ -141,28 +120,20 @@ function SalesTab({ range, versus }: { range: ReportRange; versus: string }) {
             <Panel
               id="sales-trend"
               title={`Net revenue by ${group}`}
+              icon={LineChart}
+              tone="coral"
               action={
-                <div role="radiogroup" aria-label="Group by" className="inline-flex rounded-md border border-border p-1">
-                  {GROUPS.map((g) => (
-                    <button
-                      key={g.value}
-                      type="button"
-                      role="radio"
-                      aria-checked={group === g.value}
-                      onClick={() => {
-                        const next = new URLSearchParams(params);
-                        next.set("group", g.value);
-                        setParams(next, { replace: true });
-                      }}
-                      className={cn("min-h-8 rounded-[4px] px-2.5 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring", group === g.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
-                    >
-                      {g.label}
-                    </button>
-                  ))}
-                </div>
+                <GroupPicker
+                  value={group}
+                  onChange={(value) => {
+                    const next = new URLSearchParams(params);
+                    next.set("group", value);
+                    setParams(next, { replace: true });
+                  }}
+                />
               }
             >
-              {points.every((p) => p.value === 0) ? <Empty>No delivered orders or refunds in this period.</Empty> : <TrendChart points={points} label={`Net revenue by ${group}`} format={usd} axisFormat={usdAxis} />}
+              {points.every((p) => p.value === 0) ? <Empty>No delivered orders or refunds in this period.</Empty> : <TrendChart points={points} label={`Net revenue by ${group}`} format={usd} axisFormat={usdAxis} color="var(--tone-fill)" />}
               <DataTable caption={`Net revenue by ${group}`} head={[group === "day" ? "Day" : group === "week" ? "Week" : "Month", "Net revenue"]} rows={points.map((p) => [p.label, usd(p.value)])} />
             </Panel>
           </>
@@ -181,25 +152,28 @@ function OrdersTab({ range, versus }: { range: ReportRange; versus: string }) {
         const c = r.comparison;
         return (
           <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <Tile label="Orders placed" value={count(r.total_orders)} change={<Change percent={c.change_percent.total_orders} previous={c.total_orders} versus={versus} />} />
-              <Tile label="Cancelled" value={percent(r.cancellation_rate)} detail="of orders placed" change={<Change percent={c.change_percent.cancellation_rate} previous={c.cancellation_rate} versus={versus} moreIsBetter={false} />} />
-              <Tile
+            <div className="dash-kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <Kpi id="r-orders" label="Orders placed" icon={ShoppingBag} tone="saffron" value={<AnimatedNumber value={r.total_orders} format={count} />} change={<Change percent={c.change_percent.total_orders} previous={c.total_orders} versus={versus} />} view={{ to: "/admin/orders", label: "View orders" }} />
+              <Kpi id="r-cancelled" label="Cancelled" icon={XCircle} tone="coral" value={<AnimatedNumber value={r.cancellation_rate} format={percent} />} detail="of orders placed" change={<Change percent={c.change_percent.cancellation_rate} previous={c.cancellation_rate} versus={versus} moreIsBetter={false} />} />
+              <Kpi
+                id="r-delivery-time"
                 label="Average time to deliver"
+                icon={Hourglass}
+                tone="sky"
                 value={r.average_delivery_hours == null ? "–" : r.average_delivery_hours >= 48 ? `${(r.average_delivery_hours / 24).toFixed(1)} days` : `${r.average_delivery_hours} hours`}
                 detail="placed → delivered"
                 change={<Change percent={c.change_percent.average_delivery_hours} previous={c.average_delivery_hours ?? 0} versus={versus} moreIsBetter={false} />}
               />
             </div>
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <Panel id="orders-status" title="Orders placed by status">
+              <Panel id="orders-status" title="Orders placed by status" icon={BarChart3} tone="sky">
                 {r.total_orders === 0 ? <Empty>No orders placed in this period.</Empty> : <ShareList label="Orders by status" rows={Object.entries(r.orders_by_status).map(([status, n]) => ({ key: status, name: <OrderStatusBadge status={status as OrderStatus} />, value: n }))} />}
               </Panel>
               <div className="grid content-start gap-6">
-                <Panel id="orders-area" title="Delivery area">
+                <Panel id="orders-area" title="Delivery area" icon={MapPin} tone="sea">
                   {r.total_orders === 0 ? <Empty>No orders placed in this period.</Empty> : <ShareList label="Orders by delivery area" rows={[{ key: "pp", name: "Phnom Penh", value: r.orders_by_delivery_area.phnom_penh }, { key: "prov", name: "Provinces", value: r.orders_by_delivery_area.provinces }]} />}
                 </Panel>
-                <Panel id="orders-payment" title="Payment method">
+                <Panel id="orders-payment" title="Payment method" icon={Wallet} tone="saffron">
                   {r.total_orders === 0 ? (
                     <Empty>No orders placed in this period.</Empty>
                   ) : (
@@ -228,67 +202,52 @@ function ProductsTab({ range }: { range: ReportRange }) {
         const categories = r.revenue_by_category.map((c) => ({ label: c.name, value: Number(c.revenue_usd), tooltip: `${c.units_sold} sold` }));
         return (
           <>
-            <Panel id="products-top" title="Best sellers by sales" action={<span className="text-sm text-muted-foreground">orders placed, not cancelled</span>}>
-              {top.length === 0 ? <Empty>No sales in this period.</Empty> : <BarList points={top} label="Best sellers by sales" format={usd} />}
+            <Panel id="products-top" title="Best sellers by sales" icon={TrendingUp} tone="coral" action={<span className="text-sm text-muted-foreground">orders placed, not cancelled</span>}>
+              {top.length === 0 ? <Empty>No sales in this period.</Empty> : <BarList points={top} label="Best sellers by sales" format={usd} color="var(--tone-fill)" />}
               <DataTable caption="Best sellers by sales" head={["Book", "Sales"]} rows={top.map((t) => [t.label, usd(t.value)])} />
             </Panel>
-            <Panel id="products-copies" title="Best sellers by copies">
+            <Panel id="products-copies" title="Best sellers by copies" icon={Trophy} tone="saffron">
               {r.best_sellers_by_units.length === 0 ? (
                 <Empty>No sales in this period.</Empty>
               ) : (
-              <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Best sellers table">
-                <table className="w-full min-w-[32rem] text-left text-[15px] tabular-nums">
-                  <thead className="text-sm text-muted-foreground">
-                    <tr>
-                      <th scope="col" className="pb-2 font-normal">#</th>
-                      <th scope="col" className="pb-2 font-normal">Book</th>
-                      <th scope="col" className="pb-2 pl-4 text-right font-normal">Copies</th>
-                      <th scope="col" className="pb-2 pl-4 text-right font-normal">Sales</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {r.best_sellers_by_units.map((b, i) => (
-                      <tr key={b.variant_id}>
-                        <td className="py-2 pr-3 text-muted-foreground">{i + 1}</td>
-                        <th scope="row" className="py-2 pr-3 font-normal">
-                          <Link to={`/admin/books/${b.book_id}`} className="font-semibold underline-offset-4 hover:text-primary hover:underline">
-                            {b.title}
-                          </Link>
-                          <span className="block text-sm text-muted-foreground">{formatLabel(b.format)}</span>
-                        </th>
-                        <td className="py-2 pl-4 text-right">{count(b.units_sold)}</td>
-                        <td className="whitespace-nowrap py-2 pl-4 text-right">
-                          {formatUsd(b.revenue_usd)}
-                          <Khr value={b.revenue_khr} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                <RankTable
+                  head={["Book", "Copies", "Sales"]}
+                  rows={r.best_sellers_by_units.map((b) => ({
+                    key: b.variant_id,
+                    copies: b.units_sold,
+                    sales: formatUsd(b.revenue_usd),
+                    khr: b.revenue_khr,
+                    name: (
+                      <>
+                        <Link to={`/admin/books/${b.book_id}`} className="font-semibold underline-offset-4 hover:text-primary hover:underline">{b.title}</Link>
+                        <span className="block text-sm text-muted-foreground">{formatLabel(b.format)}</span>
+                      </>
+                    ),
+                  }))}
+                />
               )}
             </Panel>
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <Panel id="products-categories" title="Sales by category">
-                {categories.length === 0 ? <Empty>No categorised sales in this period.</Empty> : <BarList points={categories} label="Sales by category" format={usd} />}
+              <Panel id="products-categories" title="Sales by category" icon={FolderTree} tone="sky">
+                {categories.length === 0 ? <Empty>No categorised sales in this period.</Empty> : <BarList points={categories} label="Sales by category" format={usd} color="var(--tone-fill)" />}
                 <DataTable caption="Sales by category" head={["Category", "Sales"]} rows={categories.map((c) => [c.label, usd(c.value)])} />
               </Panel>
-              <Panel id="products-low" title="Low stock" action={<Link to="/admin/books" className="text-sm font-semibold text-primary underline-offset-4 hover:underline">All books</Link>}>
+              <Panel id="products-low" title="Low stock" icon={Boxes} tone="coral" action={<Link to="/admin/books" className="text-sm font-semibold text-primary underline-offset-4 hover:underline">All books</Link>}>
                 {r.low_stock.length === 0 ? (
                   <Empty>Every printed format is above its low-stock level.</Empty>
                 ) : (
-                  <ul className="divide-y divide-border">
+                  <ul className="grid gap-2">
                     {r.low_stock.map((v) => (
                       <li key={v.book_variant_id}>
-                        <Link to={`/admin/books/${v.book_id}`} className="flex items-center justify-between gap-3 py-2 text-[15px] outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-ring">
+                        <Link to={`/admin/books/${v.book_id}`} className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5 text-[15px] outline-none transition-colors hover:bg-[var(--tone-tint)] focus-visible:ring-2 focus-visible:ring-ring">
                           <span className="min-w-0">
                             <span className="block truncate font-semibold">{v.title}</span>
                             <span className="block text-sm text-muted-foreground">
                               {formatLabel(v.format)} · {v.sku}
                             </span>
                           </span>
-                          <span className={cn("flex shrink-0 items-center gap-1.5 text-sm font-semibold tabular-nums", v.stock_quantity === 0 ? "text-destructive" : "text-warning")}>
-                            <AlertTriangle className="size-4" aria-hidden="true" />
+                          <span className={cn("flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums", v.stock_quantity === 0 ? "bg-destructive-tint text-destructive" : "bg-warning-tint text-warning")}>
+                            <AlertTriangle className="size-3.5" aria-hidden="true" />
                             {v.stock_quantity === 0 ? "Out of stock" : `${v.stock_quantity} left`}
                           </span>
                         </Link>
@@ -298,7 +257,7 @@ function ProductsTab({ range }: { range: ReportRange }) {
                 )}
               </Panel>
             </div>
-            <Panel id="products-slow" title="Slow sellers with stock" action={<span className="text-sm text-muted-foreground">fewest copies sold in this period</span>}>
+            <Panel id="products-slow" title="Slow sellers with stock" icon={Hourglass} tone="slate" action={<span className="text-sm text-muted-foreground">fewest copies sold in this period</span>}>
               {r.worst_sellers.length === 0 ? (
                 <Empty>No books in stock.</Empty>
               ) : (
@@ -346,46 +305,37 @@ function CustomersTab({ range, versus }: { range: ReportRange; versus: string })
         const points = r.new_customers_series.map((p) => ({ label: shortDay.format(new Date(`${p.date}T00:00:00Z`)), value: p.new_customers }));
         return (
           <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Tile label="New customers" value={count(r.total_new_customers)} detail="verified their account" change={<Change percent={c.change_percent.total_new_customers} previous={c.total_new_customers} versus={versus} />} />
-              <Tile label="Came back" value={percent(r.returning_customer_rate)} detail="of customers in this period ordered more than once" change={<Change percent={c.change_percent.returning_customer_rate} previous={c.returning_customer_rate} versus={versus} />} />
+            <div className="dash-kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Kpi id="r-new-customers" label="New customers" icon={UserPlus} tone="sea" value={<AnimatedNumber value={r.total_new_customers} format={count} />} detail="verified their account"
+                change={<Change percent={c.change_percent.total_new_customers} previous={c.total_new_customers} versus={versus} />}
+                trend={points.map((p) => p.value)} labels={points.map((p) => p.label)} format={count} view={{ to: "/admin/customers", label: "View customers" }} />
+              <Kpi id="r-came-back" label="Came back" icon={Users} tone="sky" value={<AnimatedNumber value={r.returning_customer_rate} format={percent} />} detail="of customers in this period ordered more than once"
+                change={<Change percent={c.change_percent.returning_customer_rate} previous={c.returning_customer_rate} versus={versus} />} />
             </div>
-            <Panel id="customers-new" title="New customers by day">
-              {r.total_new_customers === 0 ? <Empty>No new verified customers in this period.</Empty> : <ColumnChart points={points} label="New customers by day" format={count} />}
+            <Panel id="customers-new" title="New customers by day" icon={UserPlus} tone="sea">
+              {r.total_new_customers === 0 ? <Empty>No new verified customers in this period.</Empty> : <ColumnChart points={points} label="New customers by day" format={count} color="var(--tone-fill)" />}
               <DataTable caption="New customers by day" head={["Day", "New customers"]} rows={points.map((p) => [p.label, count(p.value)])} />
             </Panel>
-            <Panel id="customers-top" title="Top customers" action={<span className="text-sm text-muted-foreground">by spend on orders placed</span>}>
+            <Panel id="customers-top" title="Top customers" icon={Trophy} tone="saffron" action={<span className="text-sm text-muted-foreground">by spend on orders placed</span>}>
               {r.top_customers.length === 0 ? (
                 <Empty>No orders in this period.</Empty>
               ) : (
-                <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Top customers table">
-                  <table className="w-full min-w-[32rem] text-left text-[15px] tabular-nums">
-                    <thead className="text-sm text-muted-foreground">
-                      <tr>
-                        <th scope="col" className="pb-2 font-normal">Customer</th>
-                        <th scope="col" className="pb-2 pl-4 text-right font-normal">Orders</th>
-                        <th scope="col" className="pb-2 pl-4 text-right font-normal">Spent</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {r.top_customers.map((cu) => (
-                        <tr key={cu.customer_id}>
-                          <th scope="row" className="py-2 pr-3 font-normal">
-                            <Link to={`/admin/customers/${cu.customer_id}`} className="font-semibold underline-offset-4 hover:text-primary hover:underline">
-                              {cu.name ?? "Closed account"}
-                            </Link>
-                            {cu.email ? <span className="block text-sm text-muted-foreground [overflow-wrap:anywhere]">{cu.email}</span> : null}
-                          </th>
-                          <td className="py-2 pl-4 text-right">{count(cu.orders_count)}</td>
-                          <td className="whitespace-nowrap py-2 pl-4 text-right">
-                            {formatUsd(cu.total_spent_usd)}
-                            <Khr value={cu.total_spent_khr} />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <RankTable
+                  head={["Customer", "Orders", "Spent"]}
+                  rows={r.top_customers.map((cu) => ({
+                    key: cu.customer_id,
+                    copies: cu.orders_count,
+                    bar: Number(cu.total_spent_usd),
+                    sales: formatUsd(cu.total_spent_usd),
+                    khr: cu.total_spent_khr,
+                    name: (
+                      <>
+                        <Link to={`/admin/customers/${cu.customer_id}`} className="font-semibold underline-offset-4 hover:text-primary hover:underline">{cu.name ?? "Closed account"}</Link>
+                        {cu.email ? <span className="block text-sm text-muted-foreground [overflow-wrap:anywhere]">{cu.email}</span> : null}
+                      </>
+                    ),
+                  }))}
+                />
               )}
             </Panel>
           </>
@@ -403,7 +353,7 @@ function FunnelTab({ range }: { range: ReportRange }) {
         const steps = query.data!.steps;
         const first = steps[0]?.count ?? 0;
         return (
-          <Panel id="funnel" title="From cart to delivery" action={<span className="text-sm text-muted-foreground">carts are an estimate; visits are not tracked</span>}>
+          <Panel id="funnel" title="From cart to delivery" icon={ShoppingCart} tone="sky" action={<span className="text-sm text-muted-foreground">carts are an estimate; visits are not tracked</span>}>
             {first === 0 ? (
               <Empty>No carts or orders in this period.</Empty>
             ) : (
@@ -415,7 +365,7 @@ function FunnelTab({ range }: { range: ReportRange }) {
                         <ArrowDown className="size-4" aria-hidden="true" /> {percent(step.step_conversion_rate)} of the step before
                       </p>
                     ) : null}
-                    <div className="grid gap-1.5 rounded-lg border border-border p-3">
+                    <div className="grid gap-1.5 rounded-xl border border-border p-3.5">
                       <div className="flex items-baseline justify-between gap-3">
                         <span className="font-semibold">{step.name}</span>
                         <span className="tabular-nums">
@@ -423,7 +373,7 @@ function FunnelTab({ range }: { range: ReportRange }) {
                         </span>
                       </div>
                       <div className="h-2 overflow-hidden rounded-full bg-secondary" aria-hidden="true">
-                        <div className="h-full rounded-full bg-primary" style={{ width: `${first ? (step.count / first) * 100 : 0}%` }} />
+                        <div className="admin-bar h-full rounded-full" style={{ width: `${first ? (step.count / first) * 100 : 0}%`, background: "var(--tone-fill)" }} />
                       </div>
                     </div>
                   </li>
@@ -445,7 +395,7 @@ function CouponsTab({ range }: { range: ReportRange }) {
         const r = query.data!;
         return (
           <>
-            <Panel id="coupons" title="Coupons used" action={<span className="text-sm text-muted-foreground">orders placed, not cancelled</span>}>
+            <Panel id="coupons" title="Coupons used" icon={Ticket} tone="saffron" action={<span className="text-sm text-muted-foreground">orders placed, not cancelled</span>}>
               {r.coupons.length === 0 ? (
                 <Empty>No coupons used in this period.</Empty>
               ) : (
@@ -480,8 +430,8 @@ function CouponsTab({ range }: { range: ReportRange }) {
               )}
             </Panel>
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-              <Tile label="Refunded" value={formatUsd(r.refunds.amount_usd)} khr={r.refunds.amount_khr} detail={`${count(r.refunds.count)} ${r.refunds.count === 1 ? "return" : "returns"} paid back in this period`} />
-              <Panel id="refund-reasons" title="Refunds by reason">
+              <Kpi id="r-refunded" label="Refunded" icon={Undo2} tone="coral" value={<AnimatedNumber value={Number(r.refunds.amount_usd)} format={money} />} khr={r.refunds.amount_khr} detail={`${count(r.refunds.count)} ${r.refunds.count === 1 ? "return" : "returns"} paid back in this period`} view={{ to: "/admin/returns", label: "View returns" }} />
+              <Panel id="refund-reasons" title="Refunds by reason" icon={Receipt} tone="coral">
                 {r.refunds.by_reason.length === 0 ? (
                   <Empty>No refunds in this period.</Empty>
                 ) : (
@@ -513,7 +463,7 @@ function OffersTab({ range }: { range: ReportRange }) {
   // Before the backend with offers is deployed the report is a 404: say so instead of an error page.
   if (query.isError && ApiError.from(query.error).status === 404) {
     return (
-      <Panel id="offers-not-yet" title="Offers">
+      <Panel id="offers-not-yet" title="Offers" icon={Tag} tone="sea">
         <Empty>The offers report is not available on this server yet. It appears once the backend update is deployed.</Empty>
       </Panel>
     );
@@ -540,21 +490,13 @@ function OffersTab({ range }: { range: ReportRange }) {
         ];
         return (
           <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <Tile
-                label="Books per order with an offer"
-                value={orders ? (units / orders).toFixed(2) : "–"}
-                detail={`Without an offer: ${w.orders ? w.books_per_order : "–"}`}
-              />
-              <Tile
-                label="Average order with an offer"
-                value={orders ? usd(Math.round(revenue / orders)) : "–"}
-                detail={`Without an offer: ${w.orders ? formatUsd(w.average_order_usd) : "–"}`}
-              />
-              <Tile label="Orders with an offer" value={count(orders)} detail={all ? `${percent((orders / all) * 100)} of ${count(all)} orders` : "No orders in this period"} />
-              <Tile label="Discount given by offers" value={usd(discount)} detail={`On ${usd(revenue)} of orders`} />
+            <div className="dash-kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <Kpi id="r-offer-books" label="Books per order with an offer" icon={ShoppingBag} tone="saffron" value={orders ? (units / orders).toFixed(2) : "–"} detail={`Without an offer: ${w.orders ? w.books_per_order : "–"}`} />
+              <Kpi id="r-offer-average" label="Average order with an offer" icon={Receipt} tone="sky" value={orders ? usd(Math.round(revenue / orders)) : "–"} detail={`Without an offer: ${w.orders ? formatUsd(w.average_order_usd) : "–"}`} />
+              <Kpi id="r-offer-orders" label="Orders with an offer" icon={Tag} tone="sea" value={<AnimatedNumber value={orders} format={count} />} detail={all ? `${percent((orders / all) * 100)} of ${count(all)} orders` : "No orders in this period"} />
+              <Kpi id="r-offer-discount" label="Discount given by offers" icon={Gift} tone="coral" value={usd(discount)} detail={`On ${usd(revenue)} of orders`} view={{ to: "/admin/offers", label: "View offers" }} />
             </div>
-            <Panel id="offers-table" title="What each offer sold" action={<span className="text-sm text-muted-foreground">orders placed, not cancelled</span>}>
+            <Panel id="offers-table" title="What each offer sold" icon={Tag} tone="sea" action={<span className="text-sm text-muted-foreground">orders placed, not cancelled</span>}>
               {r.offers.length === 0 ? <Empty>No order used an offer in this period.</Empty> : null}
               <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Offers table">
                 <table className="w-full min-w-[44rem] text-left text-[15px] tabular-nums">
@@ -621,11 +563,18 @@ export default function ReportsPage() {
     setParams(merged, { replace: true });
   };
 
+  const chosenGroup = params.get("group");
+  const profitGroup: ReportGroup = GROUPS.some((g) => g.value === chosenGroup) ? (chosenGroup as ReportGroup) : autoGroup(days);
+  const setGroup = (value: ReportGroup) => {
+    const next = new URLSearchParams(params);
+    next.set("group", value);
+    setParams(next, { replace: true });
+  };
+
   const exportCsv = async () => {
     setExporting(true);
     try {
-      const chosen = params.get("group");
-      const group = tab === "sales" ? ((GROUPS.some((g) => g.value === chosen) ? chosen : autoGroup(days)) as ReportGroup) : undefined;
+      const group = tab === "sales" || tab === "profit" ? profitGroup : undefined;
       const blob = await reportsApi.csv(tab, group ? { ...days, group } : days);
       const url = URL.createObjectURL(blob);
       const a = Object.assign(document.createElement("a"), { href: url, download: `report-${tab}-${days.from}-to-${days.to}.csv` });
@@ -660,38 +609,50 @@ export default function ReportsPage() {
   };
 
   return (
+    <div className="dash-overview">
     <AdminPage
       title="Reports"
       lead={`${day(days.from)}${days.from !== days.to ? ` to ${day(days.to)}` : ""} · Phnom Penh time · revenue counts delivered orders, less refunds`}
       actions={
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] justify-items-end gap-3">
-          <div className="flex min-w-0 max-w-full flex-wrap items-center justify-end gap-2">
-            <Button asChild variant="outline"><Link to={`/admin/reports/print?${new URLSearchParams(rangeToParams(range)).toString()}`}>{dict.dashboardPrint.open}</Link></Button>
-            <PeriodPicker
-              active={active}
-              onPick={(value) => {
-                if (value === "custom") return setPicking(true);
-                setPicking(false);
-                update(rangeToParams({ period: value }), "tab");
-              }}
-            />
-            <Button variant="outline" onClick={() => void exportCsv()} loading={exporting}>
-              <Download aria-hidden="true" /> Export CSV
-            </Button>
-            <Button variant="outline" onClick={() => void exportExcel()} loading={exportingExcel}>
-              <FileSpreadsheet aria-hidden="true" /> Excel, all reports
-            </Button>
-          </div>
-          {picking ? <CustomRange range={range} shown={days} onApply={(from, to) => update(rangeToParams({ period: "custom", from, to }), "tab")} /> : null}
-        </div>
+        <Link to={`/admin/reports/print?${new URLSearchParams(rangeToParams(range)).toString()}`} className="dash-purchase-link inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+          <Printer className="size-4" aria-hidden="true" />
+          {dict.dashboardPrint.open}
+        </Link>
       }
     >
-      <Tabs value={tab} onValueChange={(value) => update(value === "sales" ? {} : { tab: value }, "period")}>
+      <div className="dash-toolbar">
+        <div className="dash-period-control">
+          <span className="dash-toolbar-label">Time period</span>
+          <PeriodPicker
+            active={active}
+            onPick={(value) => {
+              if (value === "custom") return setPicking(true);
+              setPicking(false);
+              update(rangeToParams({ period: value }), "tab");
+            }}
+          />
+        </div>
+        <div className="report-export flex flex-wrap items-center gap-2">
+          <p className="dash-comparison">Changes {versus}</p>
+          <Button variant="outline" onClick={() => void exportCsv()} loading={exporting}>
+            <Download aria-hidden="true" /> Export CSV
+          </Button>
+          <Button variant="outline" onClick={() => void exportExcel()} loading={exportingExcel}>
+            <FileSpreadsheet aria-hidden="true" /> Excel, all reports
+          </Button>
+        </div>
+        {picking ? <div className="dash-custom-range"><CustomRange range={range} shown={days} onApply={(from, to) => update(rangeToParams({ period: "custom", from, to }), "tab")} /></div> : null}
+      </div>
+      <Tabs value={tab} onValueChange={(value) => update(value === "sales" ? {} : { tab: value }, "period")} className="report-tabs">
         <div className="-mx-1 overflow-x-auto px-1">
           <TabsList aria-label="Reports">
             {TABS.map((t) => (
               <TabsTrigger key={t.value} value={t.value}>
-                {t.label}
+                {t.value === "profit" ? (
+                  <span className="inline-flex items-center gap-1.5"><PiggyBank className="size-4" aria-hidden="true" />{dict.profitReport.tab}</span>
+                ) : (
+                  t.label
+                )}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -703,7 +664,9 @@ export default function ReportsPage() {
         <TabsContent value="funnel">{tab === "funnel" ? <FunnelTab range={days} /> : null}</TabsContent>
         <TabsContent value="coupons">{tab === "coupons" ? <CouponsTab range={days} /> : null}</TabsContent>
         <TabsContent value="offers">{tab === "offers" ? <OffersTab range={days} /> : null}</TabsContent>
+        <TabsContent value="profit">{tab === "profit" ? <ProfitTab range={days} versus={versus} group={profitGroup} onGroup={setGroup} /> : null}</TabsContent>
       </Tabs>
     </AdminPage>
+    </div>
   );
 }
