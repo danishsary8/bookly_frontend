@@ -2,7 +2,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes, useLocation } from "react-router-dom";
-import { reportsApi, type CouponsReport, type OffersReport, type OrdersReport, type ProfitReport, type ProfitTotals, type ReportName, type SalesReport } from "@/api/endpoints/reports";
+import { inventoryApi, reportsApi, type InventoryReport, type CouponsReport, type OffersReport, type OrdersReport, type ProfitReport, type ProfitTotals, type ReportName, type SalesReport } from "@/api/endpoints/reports";
 import { ApiError } from "@/api/errors";
 import { clearSession, setSession } from "@/api/session";
 import type { StaffUser } from "@/api/endpoints/staff";
@@ -231,6 +231,28 @@ describe("reports page", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Export CSV" }));
     await waitFor(() => expect(csv).toHaveBeenCalledWith("profit", { from: "2026-10-09", to: "2026-10-15", group: "day" }));
+  });
+
+  it("shows inventory health for today without the time period, with what runs out and what is not selling", async () => {
+    setSession("staff", { token: "t", expiresAt: null, user: admin });
+    const report: InventoryReport = {
+      as_of: "2026-10-15T03:00:00Z", sales_days: 30, dead_days: 90, cover_days: 30,
+      totals: { formats_in_stock: 2, copies: 14, copies_without_cost: 4, value_cost_usd: "120.00", value_cost_khr: null, value_retail_usd: "260.00", value_retail_khr: null, potential_profit_usd: "80.00", potential_profit_khr: null, low_stock: 1, out_of_stock: 0, runs_out_soon: 1, dead_formats: 1, dead_copies: 4, dead_value_usd: "60.00", dead_value_khr: null },
+      runs_out: [{ book_variant_id: 1, book_id: 7, title: "Dune", format: "paperback", sku: "D-1", stock_quantity: 10, sold: 30, per_day: 1, days_left: 10, suggested_buy: 20 }],
+      not_selling: [{ book_variant_id: 2, book_id: 8, title: "Emma", format: "hardcover", sku: "E-1", stock_quantity: 4, value_usd: "60.00", last_sold_at: null }],
+      by_category: [{ category_id: 1, name: "Classics", copies: 14, value_retail_usd: "260.00", value_cost_usd: "120.00" }],
+    };
+    const get = vi.spyOn(inventoryApi, "get").mockResolvedValue(report);
+    open("/admin/reports?tab=inventory&period=7d");
+
+    expect((await screen.findByRole("heading", { name: "Stock value at cost" })).closest("section")).toHaveTextContent("$120.00");
+    expect(screen.getByText("Stock today · the time period does not apply")).toBeInTheDocument();
+    expect(screen.queryByRole("radiogroup", { name: "Period" })).not.toBeInTheDocument();
+    expect(screen.getByText("10 days left")).toBeInTheDocument();
+    expect(screen.getByText("Buy 20")).toBeInTheDocument();
+    expect(screen.getByText(/Never sold/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("radio", { name: "7 days" }));
+    await waitFor(() => expect(get).toHaveBeenLastCalledWith(7));
   });
 
   it("says the profit report is not available yet on an API without it", async () => {

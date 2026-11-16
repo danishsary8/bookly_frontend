@@ -7,7 +7,7 @@ import { api } from "../client";
  * the day they were delivered, less refunds on the day they were paid back.
  */
 
-export type ReportName = "sales" | "orders" | "products" | "customers" | "funnel" | "coupons" | "offers" | "profit";
+export type ReportName = "sales" | "orders" | "products" | "customers" | "funnel" | "coupons" | "offers" | "profit" | "inventory";
 export type ReportGroup = "day" | "week" | "month";
 export type ReportRange = { from: string; to: string };
 
@@ -192,7 +192,39 @@ export interface ProfitReport {
   cost_unknown: Array<{ book_id: number; variant_id: number; title: string; format: string; units_sold: number; sales_usd: Usd }>;
 }
 
-type Reports = { profit: ProfitReport; sales: SalesReport; orders: OrdersReport; products: ProductsReport; customers: CustomersReport; funnel: FunnelReport; coupons: CouponsReport; offers: OffersReport };
+/** Inventory health today (GET /staff/reports/inventory), printed active formats only. */
+export interface InventoryStockRow { book_variant_id: number; book_id: number; title: string; format: string; sku: string; stock_quantity: number }
+export interface InventoryReport {
+  as_of: string;
+  sales_days: number;
+  dead_days: number;
+  cover_days: number;
+  totals: {
+    formats_in_stock: number;
+    copies: number;
+    copies_without_cost: number;
+    value_cost_usd: Usd;
+    value_cost_khr: Khr;
+    value_retail_usd: Usd;
+    value_retail_khr: Khr;
+    potential_profit_usd: Usd;
+    potential_profit_khr: Khr;
+    low_stock: number;
+    out_of_stock: number;
+    runs_out_soon: number;
+    dead_formats: number;
+    dead_copies: number;
+    dead_value_usd: Usd;
+    dead_value_khr: Khr;
+  };
+  runs_out: Array<InventoryStockRow & { sold: number; per_day: number; days_left: number; suggested_buy: number }>;
+  not_selling: Array<InventoryStockRow & { value_usd: Usd; last_sold_at: string | null }>;
+  by_category: Array<{ category_id: number; name: string; copies: number; value_retail_usd: Usd; value_cost_usd: Usd }>;
+}
+
+export type InventoryDays = 7 | 14 | 30 | 60 | 90;
+
+type Reports = { inventory: InventoryReport; profit: ProfitReport; sales: SalesReport; orders: OrdersReport; products: ProductsReport; customers: CustomersReport; funnel: FunnelReport; coupons: CouponsReport; offers: OffersReport };
 
 type Params = ReportRange & { group?: ReportGroup };
 
@@ -203,6 +235,14 @@ export const reportsApi = {
   excel: (params: Params) => api.get<Blob>("/staff/reports/export", { params: { from: params.from, to: params.to }, responseType: "blob" }),
   csv: (name: ReportName, params: Params) => api.get<Blob>(`/staff/reports/${name}`, { params: { ...params, format: "csv" }, responseType: "blob" }),
 };
+
+export const inventoryApi = {
+  get: (days: InventoryDays) => api.get<{ data: InventoryReport }>("/staff/reports/inventory", { params: { days } }).then((r) => r.data),
+  csv: (days: InventoryDays) => api.get<Blob>("/staff/reports/inventory", { params: { days, format: "csv" }, responseType: "blob" }),
+};
+
+export const inventoryQuery = (days: InventoryDays) =>
+  queryOptions({ queryKey: ["staff", "reports", "inventory", days] as const, queryFn: () => inventoryApi.get(days), placeholderData: keepPreviousData, staleTime: 60_000 });
 
 export const reportKeys = {
   report: (name: ReportName, params: Params) => ["staff", "reports", name, params] as const,

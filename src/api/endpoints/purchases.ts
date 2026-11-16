@@ -12,6 +12,10 @@ export interface PurchaseRow {
   low_stock_threshold: number;
   waiting_quantity: number;
   quantity_to_buy: number;
+  /** Copies in orders placed in the last 30 days (API with the inventory report). */
+  sold_last_30_days?: number;
+  /** Days until it runs out at that speed; null when it did not sell. */
+  days_left?: number | null;
 }
 
 export const purchaseApi = {
