@@ -1,7 +1,16 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { prepareDashboard, summary, insights } from "./fixtures/dashboard";
 
 test.use({ hasTouch: true });
+
+async function scrollToChart(chart: Locator) {
+  // Tooltip inspection intentionally dismisses on scroll. Finish scrolling before moving the pointer,
+  // including its queued scroll event; hover's automatic scroll can dispatch that event after pointermove.
+  await chart.evaluate(async (node) => {
+    node.scrollIntoView({ behavior: "instant", block: "center" });
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  });
+}
 
 function periodData(count: number) {
   const date = (index: number) => new Date(Date.UTC(2026, 10, 17 - count + index)).toISOString().slice(0, 10);
@@ -73,6 +82,7 @@ test("dashboard charts morph between periods and expose exact hover, keyboard an
   await expect.poll(() => curve.getAttribute("d")).toBe(sevenDayCurve);
   await expect(page.locator(".dash-kpi-amount > p").first()).toHaveText("$35.00");
   const books = page.getByRole("region", { name: "Books sold", exact: true });
+  await scrollToChart(books);
   await books.locator(".dash-daily-bar-hit").first().hover();
   await expect(page.getByRole("tooltip")).toContainText("0 copies");
   await expect(books.locator(".dash-daily-bar").first()).toHaveCSS("height", "0px");
@@ -83,6 +93,7 @@ test("dashboard charts morph between periods and expose exact hover, keyboard an
   await page.keyboard.press("Escape");
   await expect(page.getByRole("tooltip")).toHaveCount(0);
   const bookLink = page.locator(".magic-bento__card").filter({ has: page.getByRole("heading", { name: "Books sold", exact: true }) });
+  await scrollToChart(bookLink);
   await bookLink.focus();
   await page.keyboard.press("Home");
   await expect(page.getByRole("tooltip")).toContainText("0 copies");
@@ -90,11 +101,13 @@ test("dashboard charts morph between periods and expose exact hover, keyboard an
   await expect(page.getByRole("tooltip")).toContainText("1 copy");
   await page.keyboard.press("Escape");
   const areas = page.getByRole("region", { name: "Delivery areas", exact: true });
+  await scrollToChart(areas);
   await areas.locator(".dash-share-row").last().hover();
   await expect(page.getByRole("tooltip")).toContainText("Unknown location");
   await expect(page.getByRole("tooltip")).toContainText("4");
   await page.keyboard.press("Escape");
   await page.setViewportSize({ width: 390, height: 844 });
+  await scrollToChart(books);
   await books.locator(".dash-daily-bar-hit").first().tap();
   await expect(page.getByRole("tooltip")).toContainText("0 copies");
   await expect(page).toHaveURL(/\/admin\?period=7d$/);
