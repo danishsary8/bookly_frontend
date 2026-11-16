@@ -1,3 +1,4 @@
+import { AdminFormDialogContent as DialogContent } from "@/features/admin/AdminFormDialog";
 import { useRef, useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { staffApi, type RestockInput } from "@/api/endpoints/staff";
@@ -5,7 +6,7 @@ import { ApiError } from "@/api/errors";
 import { TextAreaField, TextField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatLabel } from "@/lib/catalog";
 import { toast } from "@/stores/toast";
 

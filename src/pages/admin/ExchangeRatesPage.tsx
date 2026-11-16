@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeftRight, Clock } from "lucide-react";
 import { opsApi, opsQueries } from "@/api/endpoints/staffOps";
@@ -12,6 +12,7 @@ import { ListState, TableCard, td, th, thead } from "@/features/admin/listKit";
 import { useListParams } from "@/features/admin/useListParams";
 import { orderDateTime } from "@/features/orders/format";
 import { toast } from "@/stores/toast";
+import { Link } from "react-router-dom";
 
 const riel = new Intl.NumberFormat("en-US", { maximumFractionDigits: 6 });
 const showRate = (rate: string | number) => `${riel.format(Number(rate))}\u00A0៛`;
@@ -58,6 +59,7 @@ function AddRateForm({ current }: { current: string | null }) {
       <h2 id="add-rate" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
         Set a new rate
       </h2>
+      <p className="text-sm leading-relaxed text-muted-foreground">Save a new rate now or schedule its start. Previous rates remain in the history.</p>
       <TextField
         label="Riel per US dollar"
         inputMode="decimal"
@@ -100,10 +102,11 @@ export default function ExchangeRatesPage() {
   const meta = rates.data?.meta;
   const list = rates.data?.data ?? [];
   const current = meta?.current_rate ?? null;
-  const [now] = useState(() => Date.now());
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 60_000); return () => window.clearInterval(timer); }, []);
 
   return (
-    <AdminPage title="Exchange rate" lead="Riel prices in the shop are worked out from US dollar prices with this rate.">
+    <AdminPage title="Exchange rate" lead="Riel prices in the shop are worked out from US dollar prices with this rate." actions={<Link className="inline-flex min-h-11 items-center text-sm font-semibold text-primary underline" to="/admin/audit-log?entity_type=exchange_rate">View rate activity</Link>}>
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="grid content-start gap-6">
           <section aria-labelledby="current-rate" className="hero-lapis grid gap-1 rounded-xl p-6">
@@ -140,9 +143,9 @@ export default function ExchangeRatesPage() {
                 <tbody className="divide-y divide-border">
                   {list.map((r) => (
                     <tr key={r.id}>
-                      <td className={`${td} text-right font-semibold tabular-nums`}>{showRate(r.rate)}</td>
-                      <td className={`${td} whitespace-nowrap text-sm`}>{orderDateTime(r.effective_at)}</td>
-                      <td className={td}>
+                      <td data-label="Riel per dollar" className={`${td} text-right font-semibold tabular-nums`}>{showRate(r.rate)}</td>
+                      <td data-label="Effective from" className={`${td} whitespace-nowrap text-sm`}>{orderDateTime(r.effective_at)}</td>
+                      <td data-label="State" className={td}>
                         {r.is_current ? (
                           <Badge tone="success" shape="tint">
                             In use

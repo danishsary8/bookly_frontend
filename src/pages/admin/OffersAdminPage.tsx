@@ -1,3 +1,4 @@
+import { AdminFormDialogContent as DialogContent } from "@/features/admin/AdminFormDialog";
 import { ResultSummary } from "@/features/admin/reportKit";
 import { useDeferredValue, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,7 +15,7 @@ import { FormAlert } from "@/components/form/FormAlert";
 import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog, Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ConfirmDialog, Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Pagination } from "@/components/ui/pagination";
 import { Switch } from "@/components/ui/switch";
 import { AdminPage } from "@/features/admin/AdminPage";
@@ -421,7 +422,7 @@ export default function OffersAdminPage() {
             { label: "Live offers", value: list.filter((offer) => offer.status === "live").length },
             { label: "Orders with offers", value: list.reduce((total, offer) => total + offer.used_count, 0) },
           ]} /> : null}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="work-toolbar">
             <SearchBox label="Search offers" value={q} placeholder="Name" onSearch={(val) => set({ q: val || undefined })} />
             <Segmented
               label="Show"

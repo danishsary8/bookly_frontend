@@ -264,10 +264,14 @@ describe("dashboard", () => {
     expect(await screen.findByText("$50.50")).toBeInTheDocument();
     const hero = screen.getByRole("region", { name: "Net revenue" });
     expect(hero).toHaveTextContent("≈ 207,050");
-    expect(hero).toHaveTextContent("up 13.7% vs 5 Aug – 3 Sept");
-    expect(screen.getByRole("region", { name: "Orders placed" })).toHaveTextContent("down 20% vs 5 Aug – 3 Sept");
+    expect(hero).toHaveTextContent("up 13.7%");
+    expect(hero).toHaveAccessibleDescription("Changes vs 5 Aug – 3 Sept");
+    expect(screen.getByText("Changes vs 5 Aug – 3 Sept")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Orders placed" })).toHaveTextContent("down 20%");
+    expect(screen.getByRole("region", { name: "Orders placed" })).toHaveAccessibleDescription("Changes vs 5 Aug – 3 Sept");
     expect(screen.getByRole("region", { name: "Average order" })).toHaveTextContent("≈ 75,850");
-    expect(screen.getByRole("region", { name: "New customers" })).toHaveTextContent("New vs 5 Aug – 3 Sept");
+    expect(screen.getByRole("region", { name: "New customers" })).toHaveTextContent("New");
+    expect(screen.getByRole("region", { name: "New customers" })).toHaveAccessibleDescription("Changes vs 5 Aug – 3 Sept");
     const categories = screen.getByRole("region", { name: "Top categories" });
     expect(within(categories).getByRole("rowheader", { name: "Mystery" })).toBeInTheDocument();
     expect(categories).toHaveTextContent("≈ 90,118");

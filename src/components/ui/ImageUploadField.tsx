@@ -13,6 +13,7 @@ interface Props {
   hint?: string;
   optional?: boolean;
   className?: string;
+  onUploadingChange?: (uploading: boolean) => void;
 }
 
 export function ImageUploadField({
@@ -23,6 +24,7 @@ export function ImageUploadField({
   hint = "JPEG, PNG, or WebP up to 5 MB (min 100×100, max 4000×4000).",
   optional = false,
   className = "",
+  onUploadingChange,
 }: Props) {
   const [isUploading, setIsUploading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -39,26 +41,20 @@ export function ImageUploadField({
   };
 
   const uploadFile = async (file: File) => {
-
+    if (isUploading) return;
     setLocalError(null);
-
-    // 1. Client-side pre-validation
-    const check = await validateImageFile(file);
-    if (!check.ok) {
-      setLocalError(check.error);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      return;
-    }
-
-    // 2. Upload via staff API
+    setIsUploading(true);
+    onUploadingChange?.(true);
     try {
-      setIsUploading(true);
+      const check = await validateImageFile(file);
+      if (!check.ok) { setLocalError(check.error); return; }
       const res = await staffApi.uploadMedia(file);
       onChange(res.url);
     } catch (err) {
       setLocalError(ApiError.from(err).message);
     } finally {
       setIsUploading(false);
+      onUploadingChange?.(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -78,7 +74,8 @@ export function ImageUploadField({
 
   return (
     // grid-cols-1 + min-w-0: a long image address is cut with "…" instead of widening the page.
-    <div className={`grid min-w-0 grid-cols-1 gap-2 ${className}`}>
+    <div className={`image-upload-field grid min-w-0 grid-cols-1 gap-2 ${className}`}>
+      <input id={`${id}-file`} aria-describedby={displayError ? `${id}-error` : !value && !isUploading ? `${id}-hint` : undefined} ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} className="sr-only" disabled={isUploading} />
       <div className="flex items-center justify-between text-sm">
         <label htmlFor={`${id}-file`} className="font-medium text-foreground">
           {label}
@@ -86,6 +83,7 @@ export function ImageUploadField({
         </label>
         <button
           type="button"
+          disabled={isUploading}
           onClick={() => setShowUrlInput(!showUrlInput)}
           className="text-xs text-primary underline-offset-4 hover:underline"
         >
@@ -100,12 +98,16 @@ export function ImageUploadField({
           </div>
           <div className="min-w-0 flex-1 text-xs">
             <p className="truncate font-mono text-muted-foreground">{value}</p>
-            <p className="mt-1 text-success font-medium">Image uploaded</p>
+            <p className="mt-1 text-success font-medium" role="status">{isUploading ? "Uploading image…" : "Image selected"}</p>
           </div>
+          <Button
+            type="button" variant="outline" size="sm" disabled={isUploading} onClick={() => fileInputRef.current?.click()}
+          >Replace</Button>
           <Button
             type="button"
             variant="ghost"
             size="sm"
+            disabled={isUploading}
             onClick={() => {
               onChange("");
               setLocalError(null);
@@ -131,16 +133,6 @@ export function ImageUploadField({
           }}
           className={`group relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:border-primary/50 hover:bg-surface-1 focus-within:ring-2 focus-within:ring-ring ${dragging ? "border-primary bg-surface-1" : "border-border"}`}
         >
-          <input
-            id={`${id}-file`}
-            aria-describedby={displayError ? `${id}-error` : `${id}-hint`}
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={handleFileChange}
-            className="sr-only"
-            disabled={isUploading}
-          />
           {isUploading ? (
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="size-6 animate-spin text-primary" />
@@ -164,6 +156,9 @@ export function ImageUploadField({
         <div className="mt-1 flex items-center gap-2">
           <ImageIcon className="size-4 shrink-0 text-muted-foreground" />
           <input
+            aria-label={`${label} URL`}
+            aria-invalid={displayError ? true : undefined}
+            aria-describedby={displayError ? `${id}-error` : undefined}
             type="url"
             value={value}
             onChange={(e) => onChange(e.target.value)}

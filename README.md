@@ -111,6 +111,13 @@ cp .env.example .env      # then set VITE_API_BASE_URL
 npm run dev               # http://localhost:5173
 ```
 
+After pulling changes, run `npm install` again when dependencies have changed. If Vite reports
+`Failed to resolve import "@hugeicons/react"` on `/admin`, the local packages are out of date:
+run `npm install`, then restart `npm run dev` if the overlay remains.
+
+The isolated admin audit runs with `npx playwright test e2e/admin-smoke.spec.ts` against local Vite.
+It intercepts every API request and uses synthetic sessions, including newsletter failure/retry checks.
+
 | Variable | What it's for |
 | --- | --- |
 | `VITE_API_BASE_URL` | The API, including `/api/v1`. Local: `http://localhost:8000/api/v1`. Live: `https://bookly-api-zasc.onrender.com/api/v1`. |

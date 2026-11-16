@@ -132,3 +132,46 @@ Supersedes the bento/hero layout above. Warm paper canvas (#F6F2EC) for the whol
   (2 wide). columns 4, rowHeight 200, gap 12, radius 20, border glow, spotlight 300, click ripple; surfaces follow
   the workspace cards; drops to 2/1 columns by itself.
 - Then best sellers / categories / low stock, payments / reminders, activity / recent orders, insights, health.
+
+## Dashboard clarity — 2026-11-16 (branch `design/dashboard-clarity`)
+Applies only to the admin sales dashboard at `/admin`, through `.dash-overview` and
+`features/admin/dashboard/dashboard.css`. The sidebar, top bar, staff dashboard and other admin pages keep their styling.
+- Retain v3's warm paper, Gloock title, Hanken UI, coral/saffron/sky/sea data palette, rounded white cards,
+  sparklines, gliding figures, bento spotlight/ripple, tooltips and every existing section/action.
+- Header: readable title/date/refresh block and the existing stock-purchase action. Put the six period choices
+  in a separate, quiet toolbar; on phones all six are visible in a 3-by-2 grid. Custom dates expand below it.
+- Show the shared comparison dates once in the toolbar. Each KPI retains its change badge and describes that
+  shared period through `aria-describedby`; keep amounts, KHR, explanations, trends and destination links.
+- KPI rhythm: consistent 14px labels, 32px values, 13px supporting metadata, smaller circular icons, aligned
+  amount blocks and 44px footer links. Retain the existing hover light and use a restrained 2px lift.
+- Place section rules closer to their content, with more separation from the preceding group. Use 16px panel
+  titles and consistent explanatory text. Keep the status donut/legend compact; pair activity with recent orders
+  at desktop widths. No data or sections are collapsed or removed.
+- Layouts respond to the dashboard's available width as well as viewport breakpoints. Ranking and discount
+  tables scroll within named, keyboard-focusable wrappers when needed. Metric grids and bento row heights can
+  grow with enlarged text. Reduced motion retains the final state.
+
+## Dashboard chart inspection — 2026-11-16
+- Keep chart instances and previous observations visible while another period loads. Interpolate KPI paths across a fixed geometry; use actual observations for tooltip values. Suppress movement under reduced motion.
+- Small charts support hover, focus with arrows/Home/End, touch inspection and Escape. Tooltips render above clipped cards and remain hoverable. Bento links preserve Enter navigation.
+- Show all selected dates in copy charts (group long ranges); missing values are not zero. Label operational/customer/delivery bars and preserve unknown delivery areas as their own group.
+
+## Customer care, Marketing and staff forms — 2026-11-16
+- Keep warm workspace paper, Gloock page/form titles and Hanken controls. Customer care uses the existing teal group tint; Marketing uses violet. Sidebar, top bar, dashboard and storefront remain outside the page style scope.
+- Use compact, labelled filter toolbars; readable feedback cards with real star icons, order/book links and a distinct moderation action. Support uses a conversation list beside the customer/message workspace, stacking on phones; preserve assignment/status, replies, internal notes and quick replies.
+- Knowledge presents FAQs and unanswered questions side by side, with Add/Edit/Teach in the shared staff form dialog. Gifts and staff picks use compact cards with clear availability/selection states. Marketing summaries report loaded rows only; preserve tables, filters and every action.
+- Staff create/edit dialogs use AdminFormDialogContent: a 46rem maximum surface with a bounded inner scroll, reachable corner close, sticky action footer, distinct header, rounded controls and grouped fields. On phones fields stack and the header scrolls to leave more room for content. Native date controls follow the dark theme. Retain Radix focus trapping/Escape/return focus and existing validation, pending state and request payloads. Storefront dialogs retain their existing component.
+
+## Catalogue management — 2026-11-16
+- Books keep a fixed-width table when there is room and reflow into labelled records on smaller containers. Details and Edit have visible icons and labels in every record; the detail dialog preserves the full title/authors, prices, stock and state, with a direct editor link. Keep selection, sort, filters, CSV and bulk actions visible. Avoid nested horizontal scrolling.
+- Author rows show portraits or a neutral person icon, readable names and a short biography excerpt. The author form starts with an image upload/preview/replace/remove control; an uploaded URL is saved through the existing photo_url field. Prevent author submission/dismissal while its image upload is pending.
+- Categories retain the API's two levels: parents and children. Indent and tint children, name their parent, show group counts, support parent-shelf filtering/search and Add sub-category on each parent. A parent with children stays top-level; a new child opens with the correct parent selected. Icon radios support arrow/Home/End navigation.
+- Refine all shared staff forms with a quiet tinted introduction, stronger field grouping, readable controls and consistent action spacing. Bulk catalogue forms use the same surface. Preserve focus/dismissal, validation and existing payloads.
+- At 320px the header uses the existing book mark with its accessible name and tighter spacing; every 44px action remains available. Wider header/sidebar layouts retain their styling.
+
+## Administration workflows and activity — 2026-11-16
+- Scope: the six pages in the Admin navigation group. Retain the Bookly workspace, serif page titles and existing slate group accent. Use consistent filter cards, compact record summaries and responsive tables that reflow into labelled records without horizontal scrolling.
+- Audit: search and source choices lead; staff/system actor, record type, action, record ID and shop-day dates refine the result. Restock/order/return/adjustment shortcuts select real event types. Show staff changes, inventory movements and order history as distinct sources; identify records by (source,id). Preserve recorded snapshots and distinguish current SKU/title context. Source metadata drives choices, including future event codes; unsupported older APIs show a limited-capability explanation.
+- Expand changed fields inline. Null-only values on one-sided events are omitted; a change to null remains visible. Stock delta, SKU and related book/order links remain readable. The audit log stays read-only.
+- Newsletter: URL search/status/pagination; draft test/send/edit/delete actions and read-only content viewing for sent/sending campaigns. Label actual sending progress correctly. Gift cards/referrals have recipient/customer/order links and in-app confirmations, including visible failure feedback; feature-off screens explain availability without exposing hosting variables or enabling features.
+- Staff actions link to sign-in history and the actor's audit history. Exchange rates keep append-only history, explicit immediate/scheduled starts and a link to their audit history. Native calendar controls follow dark mode.

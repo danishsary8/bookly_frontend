@@ -44,7 +44,8 @@ it("staff inbox shows unread conversations and keeps support permission separate
   vi.spyOn(supportApi, "list").mockResolvedValue({ value: { data: [{ ...conversation, unread_count: 2 }], meta: { total: 1, last_page: 1 } } as Paginated<Conversation> });
   vi.spyOn(supportApi, "templates").mockResolvedValue([]);
   renderWithProviders(<SupportInboxPage />);
-  await screen.findByRole("button", { name: /#1.*\(2\)/ });
+  const unreadConversation = await screen.findByRole("button", { name: /2 unread/ });
+  expect(unreadConversation).toHaveTextContent("#1");
   expect(screen.getByLabelText(en.support.unreadOnly)).toBeInTheDocument();
   expect(screen.queryByText(en.support.binding)).not.toBeInTheDocument();
 });

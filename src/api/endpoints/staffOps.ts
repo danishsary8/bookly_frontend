@@ -220,6 +220,8 @@ export interface ExchangeRate {
 
 export interface AuditEntry {
   id: number;
+  source?: "audit" | "inventory" | "orders";
+  context?: { book_id: number; book_title: string | null; sku: string | null } | null;
   staff: { id: number; name: string; email: string } | null;
   action: string;
   entity_type: string;
@@ -237,7 +239,7 @@ export type ReviewFilters = { visible?: boolean | null; q?: string; max_rating?:
 export type CouponFilters = { q?: string; active?: boolean | null; page?: number; per_page?: number };
 export type CustomerFilters = { q?: string; tag?: string; active?: boolean | null; verified?: boolean | null; closed?: boolean; page?: number; per_page?: number };
 export type MemberFilters = { q?: string; role?: StaffRole; active?: boolean | null; page?: number; per_page?: number };
-export type AuditFilters = { staff_user_id?: number; action?: string; entity_type?: string; entity_id?: number; from?: string; to?: string; page?: number; per_page?: number };
+export type AuditFilters = { q?: string; source?: "audit" | "inventory" | "orders" | "all"; actor?: "system" | "staff"; staff_user_id?: number; action?: string; entity_type?: string; entity_id?: number; from?: string; to?: string; page?: number; per_page?: number };
 
 /** Booleans that may be "not filtered" (null): 1 / 0 for the API, omitted when null. */
 const bool = (v: boolean | null | undefined) => (v === true ? 1 : v === false ? 0 : undefined);
@@ -348,7 +350,7 @@ export const opsApi = {
   addRate: (rate: string, effective_at?: string) => api.post<Resource<ExchangeRate>>("/staff/exchange-rates", { rate, ...(effective_at ? { effective_at } : {}) }).then((r) => r.data),
 
   audit: (f: AuditFilters = {}) =>
-    api.get<{ data: AuditEntry[]; meta: Meta & { entity_types: string[] } }>("/staff/audit-logs", { params: toQueryParams(f) }),
+    api.get<{ data: AuditEntry[]; meta: Meta & { entity_types: string[]; actions?: string[]; actors?: { id: number; name: string }[]; sources?: string[]; timezone?: string } }>("/staff/audit-logs", { params: toQueryParams(f) }),
 };
 
 export const opsQueries = {

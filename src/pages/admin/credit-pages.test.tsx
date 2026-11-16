@@ -11,13 +11,13 @@ it("explains manual gift enablement and does not call the disabled money API", a
   vi.spyOn(creditApi, "features").mockResolvedValue({ gift_cards: false, referrals: false });
   const list = vi.spyOn(staffCreditApi, "gifts");
   renderWithProviders(<GiftCardsPage />);
-  await screen.findByText("Turned off: set GIFT_CARDS_ENABLED=true on Render when ready.");
+  await screen.findByRole("heading", { name: "Gift cards are unavailable" });
   expect(list).not.toHaveBeenCalled();
 });
 it("explains manual referral enablement without changing any settings", async () => {
   vi.spyOn(creditApi, "features").mockResolvedValue({ gift_cards: false, referrals: false });
   const list = vi.spyOn(staffCreditApi, "referrals");
   renderWithProviders(<ReferralsPage />);
-  await screen.findByText("Turned off: set REFERRALS_ENABLED=true on Render when ready.");
+  await screen.findByRole("heading", { name: "Referrals are unavailable" });
   expect(list).not.toHaveBeenCalled();
 });

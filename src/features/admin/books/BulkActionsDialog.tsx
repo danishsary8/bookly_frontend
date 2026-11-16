@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AdminFormDialogContent as DialogContent } from "@/features/admin/AdminFormDialog";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import {
@@ -14,7 +15,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogClose,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,

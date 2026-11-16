@@ -1,3 +1,4 @@
+import { AdminFormDialogContent as DialogContent } from "@/features/admin/AdminFormDialog";
 import { useDeferredValue, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -32,7 +33,6 @@ import {
   ConfirmDialog,
   Dialog,
   DialogClose,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -575,7 +575,7 @@ export default function CollectionsAdminPage() {
         />
       ) : (
         <>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="work-toolbar">
             <SearchBox
               label="Search collections"
               value={q}

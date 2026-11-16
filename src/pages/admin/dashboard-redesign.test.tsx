@@ -81,7 +81,7 @@ describe("dashboard redesign", () => {
     expect(await screen.findByRole("rowheader", { name: "Cash on delivery" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Cart reminder recovery" })).toHaveTextContent("1 (25%)");
     expect(screen.getByText(/may not have been caused by the reminder/)).toBeInTheDocument();
-    expect(screen.getByText("First-time customers").nextElementSibling).toHaveTextContent("2");
+    expect(screen.getByRole("img", { name: /Customers who ordered: First-time customers 2, Returning customers 1/ })).toBeInTheDocument();
   });
 
   it("shows attention counts and staff activity in accessible tabs", async () => {
@@ -103,8 +103,7 @@ describe("dashboard redesign", () => {
     vi.spyOn(insightsApi, "get").mockResolvedValue({ ...insights, delivery_areas: { phnom_penh: 2, provinces: 3, unknown: 1 } });
     app();
     const area = await screen.findByRole("region", { name: "Delivery areas" });
-    expect(within(area).getByText("Unknown location").nextElementSibling).toHaveTextContent("1");
-    expect(within(area).getByText("Provinces").nextElementSibling).toHaveTextContent("3");
+    expect(within(area).getByRole("img", { name: /Phnom Penh 2, Provinces 3, Unknown location 1/ })).toBeInTheDocument();
   });
 
   it("shows KPI cards with a trend line and a View link each", async () => {

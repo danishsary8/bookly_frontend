@@ -664,8 +664,8 @@ export default function ReportsPage() {
       title="Reports"
       lead={`${day(days.from)}${days.from !== days.to ? ` to ${day(days.to)}` : ""} · Phnom Penh time · revenue counts delivered orders, less refunds`}
       actions={
-        <div className="grid justify-items-end gap-3">
-          <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] justify-items-end gap-3">
+          <div className="flex min-w-0 max-w-full flex-wrap items-center justify-end gap-2">
             <Button asChild variant="outline"><Link to={`/admin/reports/print?${new URLSearchParams(rangeToParams(range)).toString()}`}>{dict.dashboardPrint.open}</Link></Button>
             <PeriodPicker
               active={active}

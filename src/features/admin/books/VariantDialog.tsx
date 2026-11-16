@@ -1,3 +1,4 @@
+import { AdminFormDialogContent as DialogContent } from "@/features/admin/AdminFormDialog";
 import { useRef, useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { staffApi, type StaffVariant, type VariantInput } from "@/api/endpoints/staff";
@@ -6,7 +7,7 @@ import type { BookFormat } from "@/api/types";
 import { SelectField, TextField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ImageUploadField } from "@/components/ui/ImageUploadField";
 import { Switch } from "@/components/ui/switch";
 import { FORMATS } from "@/lib/catalog";

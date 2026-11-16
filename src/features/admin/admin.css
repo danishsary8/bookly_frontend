@@ -269,3 +269,13 @@
 /* The bento's own surfaces follow the workspace cards (its theme values are inline, so these need !important). */
 .dash-bento { --mb-surface: var(--card) !important; --mb-edge: var(--border) !important; --mb-ink: var(--foreground) !important; --mb-muted: var(--muted-foreground) !important; }
 .dark .dash-bento { --mb-surface: linear-gradient(180deg, #121940 0%, var(--card) 100%) !important; }
+
+/* Keep every header action reachable on 320px phones. */
+@media (max-width: 360px) {
+  .admin-topbar { padding-inline: .25rem; }
+  .admin-topbar > .ml-auto { gap: 0; }
+  .admin-topbar > .ml-auto button { width: 44px; padding-inline: 0; }
+  .admin-topbar a:has(.admin-brand-word) { position: relative; width: 44px; min-height: 44px; justify-content: center; gap: 0; }
+  .admin-topbar a > span:first-child { display: grid; width: 32px; height: 32px; }
+  .admin-topbar .admin-brand-word { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden; }
+}

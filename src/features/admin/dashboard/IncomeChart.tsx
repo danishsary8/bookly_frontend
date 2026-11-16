@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { TrendDay } from "@/api/endpoints/dashboardInsights";
@@ -24,12 +24,13 @@ export function IncomeChart({ days }: { days: TrendDay[] }) {
   const animate = !useReducedMotion();
   const isIncome = metric === "income";
   const fmt = (n: number) => (isIncome ? formatUsd(n.toFixed(2)) : String(n));
-  const points = days.map((d) => ({
+  // Stable data keeps table, tooltip and background-query renders from restarting the chart animation.
+  const points = useMemo(() => days.map((d) => ({
     label: label(d.date),
     previousLabel: label(d.previous_date),
-    now: isIncome ? Number(d.net_revenue_usd) : d.orders_placed,
-    before: isIncome ? Number(d.previous_net_revenue_usd) : d.previous_orders_placed,
-  }));
+    now: metric === "income" ? Number(d.net_revenue_usd) : d.orders_placed,
+    before: metric === "income" ? Number(d.previous_net_revenue_usd) : d.previous_orders_placed,
+  })), [days, metric]);
   const total = (key: "now" | "before") => points.reduce((s, p) => s + p[key], 0);
   const name = isIncome ? "Net revenue" : "Orders placed";
   const summary = `${name} by day: this period ${fmt(total("now"))}, previous period ${fmt(total("before"))}.`;
@@ -106,8 +107,8 @@ export function IncomeChart({ days }: { days: TrendDay[] }) {
                   );
                 }}
               />
-              <Line type="monotone" dataKey="before" stroke="var(--muted-foreground)" strokeWidth={2} strokeDasharray="5 4" dot={false} isAnimationActive={animate} animationDuration={900} />
-              <Area type="monotone" dataKey="now" fill={`url(#${fillId})`} stroke={`url(#${fillId}-line)`} strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 3, stroke: "var(--card)", fill: "var(--tone-coral-fill, var(--primary))" }} isAnimationActive={animate} animationDuration={900} animationEasing="ease-out" />
+              <Line type="monotone" dataKey="before" stroke="var(--muted-foreground)" strokeWidth={2} strokeDasharray="5 4" dot={false} animationMatchBy="index" isAnimationActive={animate} animationDuration={700} animationEasing="ease-out" />
+              <Area type="monotone" dataKey="now" fill={`url(#${fillId})`} stroke={`url(#${fillId}-line)`} strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 3, stroke: "var(--card)", fill: "var(--tone-coral-fill, var(--primary))" }} animationMatchBy="index" isAnimationActive={animate} animationDuration={700} animationEasing="ease-out" />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
