@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { TrendingUp, Trophy } from "lucide-react";
-import { shopSettingsQueries } from "@/api/endpoints/shopSettings";
+import { isBookSales, shopSettingsQueries } from "@/api/endpoints/shopSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Panel } from "@/features/admin/reportKit";
 import { useT } from "@/i18n";
@@ -14,7 +14,7 @@ export function BookSalesPanel({ bookId }: { bookId: number }) {
   const { dict } = useT();
   const t = dict.bookSales;
   const query = useQuery(shopSettingsQueries.bookSales(bookId));
-  if (query.isError) return null;
+  if (query.isError || (query.data !== undefined && !isBookSales(query.data))) return null;
   const s = query.data;
 
   return (

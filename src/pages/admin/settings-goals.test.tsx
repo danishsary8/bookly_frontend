@@ -67,3 +67,11 @@ it("shows how one book sells with its best-seller rank", async () => {
   expect(screen.getByText("Paperback · 7")).toBeInTheDocument();
   expect(screen.getByText(/20 copies sold in total/)).toBeInTheDocument();
 });
+
+it("hides the goal card and book sales instead of crashing on an unexpected answer", async () => {
+  vi.spyOn(shopSettingsApi, "goal").mockResolvedValue([] as never);
+  vi.spyOn(shopSettingsApi, "bookSales").mockResolvedValue([] as never);
+  const { container } = renderWithProviders(<><GoalCard /><BookSalesPanel bookId={1} /></>);
+  await waitFor(() => expect(container.querySelector("#dash-goal")).toBeNull());
+  await waitFor(() => expect(container.querySelector("#book-sales")).toBeNull());
+});

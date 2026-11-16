@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Info, Target, Truck, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ApiError } from "@/api/errors";
-import { shopSettingsApi, shopSettingsQueries, type ShopSettings } from "@/api/endpoints/shopSettings";
+import { isShopSettings, shopSettingsApi, shopSettingsQueries, type ShopSettings } from "@/api/endpoints/shopSettings";
 import { TextField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ export default function SettingsPage() {
   const { dict } = useT();
   const t = dict.storeSettings;
   const query = useQuery(shopSettingsQueries.get());
-  const missing = query.isError && ApiError.from(query.error).status === 404;
+  const missing = (query.isError && ApiError.from(query.error).status === 404) || (query.data !== undefined && !isShopSettings(query.data));
 
   return (
     <div className="dash-overview">
@@ -47,7 +47,7 @@ export default function SettingsPage() {
           <Panel id="settings-missing" title={t.title} icon={Info} tone="slate"><p className="text-[15px] text-muted-foreground">{t.missing}</p></Panel>
         ) : query.isPending ? (
           <SkeletonGroup label={t.title} className="grid gap-6 xl:grid-cols-2"><Skeleton className="h-80 rounded-xl" /><Skeleton className="h-80 rounded-xl" /></SkeletonGroup>
-        ) : query.isError ? (
+        ) : query.isError || !isShopSettings(query.data) ? (
           <ErrorState error={query.error} onRetry={() => void query.refetch()} headingLevel="h2" showHomeLink={false} />
         ) : (
           <SettingsForm key={JSON.stringify(query.data)} settings={query.data} />

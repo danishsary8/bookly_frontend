@@ -21,7 +21,8 @@ export function ProfitGlance({ from, to, link }: { from: string; to: string; lin
   const t = dict.profitReport;
   const range = { from, to };
   const query = useQuery(reportQueries.report("profit", { ...range, group: autoGroup(range) }));
-  if (query.isError) return null;
+  // Hidden when unavailable or answered with an unexpected shape (older API, proxy), never blocking the dashboard.
+  if (query.isError || (query.data !== undefined && (typeof query.data !== "object" || !("totals" in query.data) || !query.data.totals))) return null;
   const r = query.data;
   const now = r?.totals;
   const c = r?.comparison;

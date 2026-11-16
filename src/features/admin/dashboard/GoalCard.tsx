@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle2, Target, TrendingDown, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
-import { shopSettingsQueries } from "@/api/endpoints/shopSettings";
+import { isGoalProgress, shopSettingsQueries } from "@/api/endpoints/shopSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedNumber } from "@/features/admin/dashboard/AnimatedNumber";
 import { Khr, Panel } from "@/features/admin/reportKit";
@@ -21,7 +21,7 @@ export function GoalCard() {
   const { dict } = useT();
   const t = dict.goalCard;
   const query = useQuery(shopSettingsQueries.goal());
-  if (query.isError) return null;
+  if (query.isError || (query.data !== undefined && !isGoalProgress(query.data))) return null;
   const g = query.data;
   const month = g ? monthName.format(new Date(`${g.month}-01T00:00:00Z`)) : "";
   const net = g ? Number(g.net_revenue_usd) : 0;
