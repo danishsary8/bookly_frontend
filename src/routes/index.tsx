@@ -104,6 +104,7 @@ const CategoryPage = lazy(() => import("../pages/catalog/CategoryPage"));
 const PublisherPage = lazy(() => import("../pages/catalog/PublisherPage"));
 // Development-only reference page for the UI kit; not part of production builds.
 const UiKit = import.meta.env.DEV ? lazy(() => import("../pages/dev/UiKit")) : null;
+const SentryTestPage = lazy(() => import("../pages/dev/SentryTestPage"));
 
 // The staff area and printed documents stay in English whatever language the shop is shown in.
 const EnglishArea = () => (
