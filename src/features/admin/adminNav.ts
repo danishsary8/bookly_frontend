@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { ArrowLeftRight, BarChart3, Bot, BookCopy, BookMarked, Boxes, Building2, CreditCard, FolderTree, Gift, Headset, LayoutDashboard, Library, Mail, Megaphone, MessageSquareText, Package, PenTool, RotateCcw, ScrollText, ShieldCheck, Sparkles, Star, Tag, TicketPercent, Trash2, UserPlus, Users, Wallet } from "lucide-react";
+import { ArrowLeftRight, BarChart3, Bot, BookCopy, BookMarked, Boxes, Building2, CreditCard, FolderTree, Gift, Headset, LayoutDashboard, Library, Mail, Megaphone, MessageSquareText, Package, PenTool, RotateCcw, ScrollText, ShieldCheck, Sparkles, Star, Tag, TicketPercent, Trash2, UserPlus, Users, Wallet, Truck } from "lucide-react";
 import type { StaffRole } from "@/api/endpoints/staff";
 
 export type AdminNavItem = { to: string; label: string; Icon: ComponentType<{ className?: string }>; end?: boolean; roles?: StaffRole[] };
@@ -58,6 +58,7 @@ export const adminNav: AdminNavGroup[] = [
     items: [
       { to: "/admin/books", label: "Books", Icon: BookCopy },
       { to: "/admin/stock", label: "Stock", Icon: Boxes },
+      { to: "/admin/suppliers", label: "Suppliers", Icon: Truck },
       { to: "/admin/authors", label: "Authors", Icon: PenTool },
       { to: "/admin/categories", label: "Categories", Icon: FolderTree },
       { to: "/admin/publishers", label: "Publishers", Icon: Building2 },
