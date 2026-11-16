@@ -7,7 +7,7 @@ import { closeShellPanel, openShellPanel, useShellPanel } from "@/stores/shell";
 import { CurrencySwitch } from "./CurrencySwitch";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { LiveSearch } from "./LiveSearch";
-import { ThemeToggle } from "./ThemeToggle";
+import { ThemeSwitch } from "./ThemeToggle";
 import { MOBILE_MENU_ID, accountNav, isActivePath, primaryNav } from "./nav";
 import { useSignOut } from "./useSignOut";
 import { useT } from "@/i18n";
@@ -40,6 +40,12 @@ export function MobileMenu() {
         </DrawerHeader>
         <DrawerBody className="grid content-start gap-6">
           <LiveSearch id="mobile-search" onNavigate={closeShellPanel} inputClassName="h-12" />
+
+          {/* Light / Dark near the top, labelled, so it is easy to find (owner 2026-11-16). */}
+          <div className="grid gap-2">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">{dict.shell.appearance}</p>
+            <ThemeSwitch />
+          </div>
 
           <nav aria-label={dict.navLinks.main}>
             <ul className="grid gap-1">
@@ -88,13 +94,10 @@ export function MobileMenu() {
             </ul>
           </nav>
 
-          {/* Language on its own row; currency and the theme switch share the next, so nothing wraps alone. */}
+          {/* Language and currency, each on its own full-width row. */}
           <div className="grid gap-3">
             <LanguageSwitch className="w-full [&>*]:flex-1" />
-            <div className="flex items-center gap-3">
-              <CurrencySwitch className="min-w-0 flex-1 [&>*]:flex-1" />
-              <ThemeToggle />
-            </div>
+            <CurrencySwitch className="w-full [&>*]:flex-1" />
           </div>
         </DrawerBody>
         <DrawerFooter>

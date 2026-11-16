@@ -1133,3 +1133,15 @@ component's own dependencies). Values still glide between periods. Rules: design
   (edges measured per frame), forward lift goes up / new row rises and settles, back lift the other way, reduced
   motion swaps instantly with no animations, no sideways scroll at 1440 and 390, dark mode checked. Not checked:
   real frame rate (this sandbox renders without a GPU) and real cover images (the image host is blocked here).
+
+### 2026-11-16 — Phone polish (branch `mobile-polish`, on top of `home-shelf-motion`)
+- Owner: phone review of every page, easy-to-find Light/Dark, profile icon in the phone header, hero carousel on the
+  first phone screen (laptop unchanged), 3 s autoplay for hero and shelf, a clearer "See all best sellers" under the
+  shelf, fix mobile bugs. Details in design-system/bookly/pages/home.md.
+- Bugs found and fixed: shelf tab pill short on phones; catalogue toolbar gap when the header hides.
+- New text: shell.appearance / lightMode / darkMode / profile (en + km).
+- Checks: lint, typecheck, 714 tests passed (3 skipped), build OK; e2e a11y + home-loading + smoke: 10 passed (5 need
+  the CI staff session). Phone sweep (360 and 390, signed out: 22 pages, signed in: 13 account/checkout pages): no
+  sideways scroll, nothing off screen, no page errors. Screens checked: home 390×844 and 375×667, menu light/dark,
+  shelf, books list scrolled, book, cart, account, orders, checkout. Pill matched to the active tab at 375 and 1440.
+  Not checked: real devices, real cover images (blocked in this sandbox).

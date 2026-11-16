@@ -159,7 +159,11 @@ describe("Header and cart drawer", () => {
         <CartDrawer />
       </>,
     );
-    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
+    // Two Sign in links: the desktop button and the phone header's profile icon. CSS shows only one per screen size
+    // (the test DOM applies no CSS), and both go to the login page.
+    const signIns = screen.getAllByRole("link", { name: "Sign in" });
+    expect(signIns).toHaveLength(2);
+    for (const link of signIns) expect(link).toHaveAttribute("href", "/login");
     await user.click(screen.getByRole("button", { name: "Cart" }));
     expect(await screen.findByRole("heading", { name: "Sign in to see your cart" })).toBeInTheDocument();
   });

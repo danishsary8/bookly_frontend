@@ -20,7 +20,8 @@ import { useT } from "@/i18n";
  * 2026-11-11): the cover gets that room instead. Autoplay (4 s) stops for pause, hover, focus, reduced motion, off screen.
  */
 
-const SLIDE_MS = 4000;
+/** A new cover every 3 s (owner 2026-11-16), like the shelf. */
+const SLIDE_MS = 3000;
 
 const iconButton =
   "inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-on-lapis-muted/40 text-on-lapis transition-[background-color,transform] duration-150 hover:bg-on-lapis/10 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold";
@@ -98,10 +99,10 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
       ) : null}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(100deg,rgb(20_32_122/0.9)_0%,rgb(20_32_122/0.7)_45%,rgb(24_38_130/0.55)_100%)]" aria-hidden="true" />
 
-      <div className="grid grid-cols-1 items-center gap-8 px-6 pb-10 pt-14 sm:gap-12 sm:px-10 sm:py-12 [--hero-panel-height:min(920px,calc(100svh-var(--header-h)-4rem))] lg:h-[var(--hero-panel-height)] lg:grid-cols-12 lg:gap-x-8 lg:px-14 lg:py-6 short:py-5">
+      <div className="grid grid-cols-1 items-center gap-5 px-5 pb-8 pt-6 sm:gap-12 sm:px-10 sm:py-12 [--hero-panel-height:min(920px,calc(100svh-var(--header-h)-4rem))] lg:h-[var(--hero-panel-height)] lg:grid-cols-12 lg:gap-x-8 lg:px-14 lg:py-6 short:py-5">
         <div className="relative z-10 lg:col-span-6">
           <p className="eyebrow">{h.heroEyebrow}</p>
-          <h1 id="home-hero-title" className="mt-6 font-display text-[clamp(2.4rem,3.9vw,3.4rem)] leading-[1.12] tracking-[-0.02em] text-on-lapis short:mt-4 short:text-[clamp(2rem,3.4vw,3rem)]">
+          <h1 id="home-hero-title" className="mt-3 font-display text-[clamp(1.95rem,8.6vw,2.4rem)] sm:mt-6 sm:text-[clamp(2.4rem,3.9vw,3.4rem)] leading-[1.12] tracking-[-0.02em] text-on-lapis short:mt-4 short:text-[clamp(2rem,3.4vw,3rem)]">
             <BlurText
               key={lang}
               as="span"
@@ -114,12 +115,13 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
               easing={[0.16, 1, 0.3, 1]}
             />
           </h1>
-          <p className="mt-5 max-w-[44ch] text-[17px] leading-[1.7] text-on-lapis-muted short:mt-4 short:text-base">{dict.home.heroSubtitle}</p>
+          {/* Phones: the subtitle is left out so the book carousel shows on the first screen (owner 2026-11-16). */}
+          <p className="mt-5 hidden max-w-[44ch] text-[17px] leading-[1.7] text-on-lapis-muted sm:block short:mt-4 short:text-base">{dict.home.heroSubtitle}</p>
 
 
           {topCategories.length ? (
-            <nav aria-label={h.popularCategories} className="mt-8 grid gap-3 text-sm sm:flex sm:flex-wrap sm:items-center short:mt-6">
-              <span className="text-[13px] text-on-lapis-muted sm:mr-1">{h.popularCategories}</span>
+            <nav aria-label={h.popularCategories} className="mt-4 grid gap-3 text-sm sm:mt-8 sm:flex sm:flex-wrap sm:items-center short:mt-6">
+              <span className="hidden text-[13px] text-on-lapis-muted sm:mr-1 sm:inline">{h.popularCategories}</span>
               {/* Phones: one row that scrolls sideways (bleeding to the panel edge) instead of wrapping onto two. */}
               <span className="no-scrollbar -mx-6 flex gap-3 overflow-x-auto px-6 sm:contents">
                 {topCategories.map((c) => (
@@ -135,19 +137,19 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
             </nav>
           ) : null}
           {/* One calm call to action (cream on lapis, the arrow in its own lapis disc) and the shop's two promises. */}
-          <div className="mt-8 flex flex-col items-start gap-6 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-8 short:mt-6">
+          <div className="mt-4 flex flex-row flex-nowrap items-center justify-between gap-x-3 sm:mt-8 sm:flex-wrap sm:justify-start sm:gap-6 sm:gap-x-8 short:mt-6">
               <Link
                 to="/books"
-                className="hero-catalogue-cta relative isolate inline-flex h-[3.25rem] shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap rounded-full bg-[#FBF6EC] py-1.5 pl-6 pr-1.5 text-[15px] font-semibold leading-none text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
+                className="hero-catalogue-cta relative isolate inline-flex h-12 shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap rounded-full bg-[#FBF6EC] py-1.5 pl-4 pr-1.5 text-[14px] sm:h-[3.25rem] sm:pl-6 sm:text-[15px] font-semibold leading-none text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
               >
                 <span className="relative">{dict.home.browseCatalogue}</span>
                 <span className="relative grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </span>
               </Link>
-            <ul className="grid gap-2 text-[13px] leading-5 text-on-lapis-muted">
-              <li className="inline-flex items-center gap-2"><Wallet className="size-4 text-gold" aria-hidden="true" /> {h.cod}</li>
-              <li className="inline-flex items-center gap-2"><QrCode className="size-4 text-gold" aria-hidden="true" /> {h.khqr}</li>
+            <ul className="grid min-w-0 shrink gap-1.5 text-[12.5px] leading-5 text-on-lapis-muted sm:gap-2 sm:text-[13px]">
+              <li className="inline-flex items-center gap-2 whitespace-nowrap"><Wallet className="size-4 text-gold" aria-hidden="true" /> {h.cod}</li>
+              <li className="inline-flex items-center gap-2 whitespace-nowrap"><QrCode className="size-4 text-gold" aria-hidden="true" /> {h.khqr}</li>
             </ul>
           </div>
         </div>
@@ -196,7 +198,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                   e.currentTarget.style.setProperty("--tilt-y", "0deg");
                   e.currentTarget.style.setProperty("--tilt-x", "0deg");
                 }}
-                className="hero-stack relative mx-auto w-[min(300px,60%)] lg:w-[min(340px,60%,calc((var(--hero-panel-height)-14rem)*0.6))]"
+                className="hero-stack relative mx-auto w-[min(190px,50%,calc((100svh-30rem)*0.5))] min-w-[140px] sm:w-[min(300px,60%)] lg:w-[min(340px,60%,calc((var(--hero-panel-height)-14rem)*0.6))]"
               >
                 <span className="pointer-events-none absolute left-1/2 top-[42%] -z-10 size-[210%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(130_160_255/0.3),transparent)]" aria-hidden="true" />
                 <div className="relative aspect-[2/3] [perspective:1400px]">
