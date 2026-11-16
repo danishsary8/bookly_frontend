@@ -92,6 +92,8 @@ export interface ProductsReport {
   worst_sellers: ProductRow[];
   low_stock: Array<{ book_variant_id: number; book_id: number; title: string; format: string; sku: string; stock_quantity: number; low_stock_threshold: number }>;
   revenue_by_category: Array<{ category_id: number; name: string; units_sold: number; revenue_usd: Usd; revenue_khr: Khr }>;
+  /** API with Phase 4 and later. */
+  top_authors?: Array<{ author_id: number; name: string; books: number; units_sold: number; revenue_usd: Usd; revenue_khr: Khr }>;
 }
 
 export interface CustomersReport {
@@ -100,11 +102,19 @@ export interface CustomersReport {
   returning_customer_rate: number;
   new_customers_series: Array<{ date: string; new_customers: number }>;
   top_customers: Array<{ customer_id: number; name: string | null; email: string | null; orders_count: number; total_spent_usd: Usd; total_spent_khr: Khr }>;
+  /** API with Phase 4 and later. */
+  customers_ordered?: number;
+  first_time_customers?: number;
+  returning_customers?: number;
+  average_spend_usd?: Usd;
+  average_spend_khr?: Khr;
   comparison: {
     period: Period;
     total_new_customers: number;
     returning_customer_rate: number;
-    change_percent: Record<"total_new_customers" | "returning_customer_rate", number>;
+    customers_ordered?: number;
+    average_spend_usd?: Usd;
+    change_percent: Record<"total_new_customers" | "returning_customer_rate", number> & Partial<Record<"customers_ordered" | "average_spend", number>>;
   };
 }
 

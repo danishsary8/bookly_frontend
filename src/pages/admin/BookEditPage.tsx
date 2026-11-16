@@ -20,6 +20,7 @@ import {
   type StaffBook,
   type StaffVariant,
 } from "@/api/endpoints/staff";
+import { BookSalesPanel } from "@/features/admin/books/BookSalesPanel";
 import { ApiError } from "@/api/errors";
 import { NotFoundState } from "@/components/catalog/NotFoundState";
 import { SelectField, TextAreaField, TextField } from "@/components/form/Field";
@@ -763,6 +764,7 @@ export default function BookEditPage() {
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <DetailsForm key={b.updated_at} book={b} />
         <div className="grid content-start gap-6">
+          {!b.deleted_at ? <BookSalesPanel bookId={b.id} /> : null}
           <BookCoverPanel key={`${b.id}-${b.updated_at}-${b.variants.map((v) => v.cover_image_url ?? "").join("|")}`} book={b} />
           <Formats book={b} isAdmin={isAdmin} />
           <EbookPanel book={b} />

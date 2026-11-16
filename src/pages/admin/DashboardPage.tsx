@@ -24,6 +24,7 @@ import { StaffDashboard } from "@/features/admin/dashboard/StaffDashboard";
 import { AnimatedNumber } from "@/features/admin/dashboard/AnimatedNumber";
 import { GlanceBento } from "@/features/admin/dashboard/GlanceBento";
 import { ProfitGlance } from "@/features/admin/dashboard/ProfitGlance";
+import { GoalCard } from "@/features/admin/dashboard/GoalCard";
 import { useStaff } from "@/features/admin/staffSession";
 import { useT } from "@/i18n";
 import { formatLabel } from "@/lib/catalog";
@@ -168,7 +169,11 @@ function AdminDashboard() {
           </div>
 
           {/* 2a · Profit for the same days (Reports → Profit, owner 2026-11-16). */}
-          <ProfitGlance from={s.period.from} to={s.period.to} link={`/admin/reports?${new URLSearchParams({ ...rangeToParams(range), tab: "profit" }).toString()}`} />
+          {/* 2a · This month's goal next to the profit for the chosen days (Phase 4). */}
+          <div className="dash-money-grid grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+            <GoalCard />
+            <ProfitGlance from={s.period.from} to={s.period.to} link={`/admin/reports?${new URLSearchParams({ ...rangeToParams(range), tab: "profit" }).toString()}`} />
+          </div>
 
           {/* 2b · At a glance: the React Bits MagicBento with the shop's own figures (owner 2026-11-15). */}
           <SectionLabel>{h.glance}</SectionLabel>
