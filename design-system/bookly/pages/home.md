@@ -176,3 +176,20 @@ Supersedes "Clean spines" (lettering) and the row `key` remount. The bookcase st
 - Real sizes: height 86–100% and thickness 72–120% of the base from the id (murmur hash), bottoms aligned; books
   touch (a 1.5–2 px gap) because each book's place is the running sum of the widths before it.
 - Reduced motion: rows swap at once, the pill jumps, no autoplay (as before).
+
+## Phone polish — 2026-11-16 (branch `mobile-polish`, on top of `home-shelf-motion`)
+Phone-only (< 640px) unless noted; laptops keep their layout.
+- Hero: subtitle and the "Popular" label hidden on phones; tighter spacing and a smaller title; "Browse catalogue" and
+  the two payment notes share one row (notes on one line each); smaller cover stack
+  (`min(190px, 50%, (100svh − 30rem) · 0.5)`, at least 140px) so the carousel shows on the first screen
+  (390×844: whole front cover; 375×667: most of it).
+- Autoplay every 3 s for the hero carousel and the shelf (all screens).
+- "See all <row>" (all screens): a lapis pill button with a cream arrow disc centred under the bookcase, no longer
+  beside the tabs; the tabs are centred.
+- Header (< 1024px): a profile icon next to the bag (account when signed in, with a small green dot; sign in
+  otherwise).
+- Phone menu: a labelled "Appearance" Light / Dark switch (sun / moon, sliding thumb) right under search; language
+  and currency each take a full row.
+- Bugs fixed: the shelf tab pill was too short when the tab strip scrolls sideways (absolute `right` counts from the
+  visible edge) and was measured before web fonts loaded; the phone catalogue toolbar left a gap above it when the
+  header hid on scroll (the toolbar now slides up with the header via `html[data-header-hidden]`).

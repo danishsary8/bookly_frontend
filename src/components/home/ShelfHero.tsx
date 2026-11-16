@@ -38,7 +38,8 @@ const ROW_LINK: Record<RowId, string> = {
 };
 /** Book-cloth colours for spines until (or unless) a cover's own colour can be read. */
 const CLOTH = ["#14207A", "#7A2E2A", "#2F5D4A", "#C9A24B", "#4C5378", "#8A5A3B", "#1E4E5C", "#5B2A4E", "#E9E1CF", "#A0522D"];
-const AUTOPLAY_MS = 3200;
+/** The shelf takes the next book every 3 s (owner 2026-11-16). */
+const AUTOPLAY_MS = 3000;
 /** A slightly wider shelf with slimmer cloth spines around the open book. */
 const SHELF_MAX = 1520;
 const VISIBLE_SPINES = 24;
@@ -230,9 +231,8 @@ export function ShelfHero() {
         <h2 id="shelf-title" className="mt-2 font-display text-[clamp(1.6rem,2.6vw,2.2rem)] leading-tight">{h.shelfTitle}</h2>
       </div>
 
-      {/* Row tabs (a blue pill glides between them) and, on the right, a link to the whole list. */}
-      <div className="relative z-10 mx-auto mt-4 flex max-w-[1440px] flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 lg:justify-between">
-        <span className="hidden w-44 lg:block" aria-hidden="true" />
+      {/* Row tabs (a blue pill glides between them). The link to the whole list sits under the shelf (owner 2026-11-16). */}
+      <div className="relative z-10 mx-auto mt-4 flex max-w-[1440px] justify-center px-4">
         {available.length > 1 ? (
           <ShelfTabs
             label={h.browse}
@@ -241,14 +241,24 @@ export function ShelfHero() {
             onPick={setRow}
             onPeek={prefetch}
           />
-        ) : <span />}
-        <Link to={ROW_LINK[current]} className="group/all inline-flex min-h-11 items-center justify-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline lg:w-44 lg:justify-end">
-          {h.seeAllRow(dict.shopExtras.rows[current])} <ArrowRight className="size-4 transition-transform duration-200 group-hover/all:translate-x-0.5" aria-hidden="true" />
-        </Link>
+        ) : null}
       </div>
 
       {/* One shelf for the whole visit: rows change inside it (lift out, rise in), it never remounts. */}
       <Shelf items={items} row={current} order={available.indexOf(current)} placeholder={Array.from({ length: 9 }, (_, i) => make(null, i))} />
+
+      {/* "See all <row>": a clear button centred under the bookcase, so the next step after browsing is obvious. */}
+      <div className="relative z-10 flex justify-center px-4 pb-10">
+        <Link
+          to={ROW_LINK[current]}
+          className="shelf-all group/all inline-flex min-h-12 items-center gap-3 rounded-full bg-primary py-1.5 pl-6 pr-1.5 text-[15px] font-semibold text-primary-foreground shadow-[0_14px_30px_-14px_rgb(20_32_122/0.7)] outline-none transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_34px_-14px_rgb(20_32_122/0.8)] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+        >
+          {h.seeAllRow(dict.shopExtras.rows[current])}
+          <span className="grid size-9 place-items-center rounded-full bg-[#FBF6EC] text-primary">
+            <ArrowRight className="size-4 transition-transform duration-200 group-hover/all:translate-x-0.5 motion-reduce:transition-none" aria-hidden="true" />
+          </span>
+        </Link>
+      </div>
     </section>
   );
 }
@@ -273,7 +283,9 @@ function ShelfTabs({ label, tabs, current, onPick, onPeek }: { label: string; ta
       const box = btn.getBoundingClientRect();
       const strip = ul.getBoundingClientRect();
       const l = box.left - strip.left - ul.clientLeft + ul.scrollLeft;
-      const r = ul.scrollWidth - (l + box.width);
+      // `right` on an absolute child of a scrolling box counts from the box's visible (client) edge, not the end of
+      // its scrolled content, so phones where the tabs scroll sideways need clientWidth here.
+      const r = ul.clientWidth - (l + box.width);
       const first = last.current === null;
       const dir = first ? 0 : Math.sign(l - (last.current ?? l));
       last.current = l;
@@ -285,9 +297,16 @@ function ShelfTabs({ label, tabs, current, onPick, onPeek }: { label: string; ta
       }
     };
     measure(true);
+    // Re-measure when any tab changes size (web fonts arriving, language change, text zoom), not only the strip.
     const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => measure(false));
     if (list.current) ro?.observe(list.current);
-    return () => ro?.disconnect();
+    buttons.current.forEach((btn) => ro?.observe(btn));
+    let alive = true;
+    void document.fonts?.ready.then(() => alive && measure(false));
+    return () => {
+      alive = false;
+      ro?.disconnect();
+    };
   }, [current, tabs.length]);
 
   return (
@@ -788,7 +807,7 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
       {/* The shelf's front rail (owner 2026-11-11): an oak plank hung under the board, in the board's own wood. Brass
           knobs at the ends turn the shelf; in the middle a brass label holder carries the book's paper label (cover,
           title, author and how many copies are left), then the price and the actions straight on the wood. */}
-      <div className="relative z-10 mx-auto -mt-1 pb-8" style={{ width: "calc(100% - 2rem)", maxWidth: width }} aria-live="polite">
+      <div className="relative z-10 mx-auto -mt-1 pb-5" style={{ width: "calc(100% - 2rem)", maxWidth: width }} aria-live="polite">
         <div className="shelf-rail grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 rounded-b-[1.4rem] rounded-t-[3px] px-3 py-3 lg:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] lg:gap-x-4 lg:px-4">
           <button type="button" onClick={() => go(-1)} aria-label={h.prevBook} className="shelf-knob">
             <ArrowLeft className="size-[18px]" aria-hidden="true" />

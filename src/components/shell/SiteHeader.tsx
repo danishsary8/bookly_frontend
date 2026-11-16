@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { m } from "motion/react";
-import { Heart, Menu, ShoppingBag } from "lucide-react";
+import { CircleUserRound, Heart, Menu, ShoppingBag } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CountBadge } from "@/components/ui/badge";
@@ -40,6 +40,12 @@ function useHeaderScroll(routeKey: string, panelOpen: boolean) {
   const headerRef = useRef<HTMLElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
+  // Tell the page when the header slides away, so bars that stick under it (the phone catalogue toolbar) move up too
+  // instead of leaving a gap where content shows through.
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-header-hidden", hidden);
+    return () => document.documentElement.removeAttribute("data-header-hidden");
+  }, [hidden]);
   useEffect(() => {
     let frame = 0;
     let lastY = window.scrollY;
@@ -180,6 +186,16 @@ export function SiteHeader() {
           <div className="ml-1 hidden lg:block">
             <AccountMenu />
           </div>
+          {/* Phones and tablets: the account is one tap away next to the bag (owner 2026-11-16). */}
+          <Link
+            to={signedIn ? "/account" : "/login"}
+            aria-label={signedIn ? dict.shell.profile : dict.nav.signIn}
+            title={signedIn ? dict.shell.profile : dict.nav.signIn}
+            className="relative grid size-11 place-items-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+          >
+            <CircleUserRound className="size-[22px]" aria-hidden="true" />
+            {signedIn ? <span aria-hidden="true" className="absolute right-2 top-2 size-2 rounded-full bg-success ring-2 ring-background" /> : null}
+          </Link>
           <Button
             variant="ghost"
             size="icon"
