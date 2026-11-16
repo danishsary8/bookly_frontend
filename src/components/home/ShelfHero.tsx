@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useReducedMotion } from "motion/react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -19,7 +19,12 @@ import { useT } from "@/i18n";
  * every few seconds until someone interacts. The row stands in a wooden bookcase: back panel, uprights, top board, and
  * the rail below as its base. Click the cover or View book to open the book.
  * The whole section is sized to fit one laptop screen. One rAF loop drives every book (pure CSS 3D, no WebGL), and it
- * stops while the shelf is off screen. Reduced motion: books snap, no autoplay, no tilt, no entrance slide.
+ * stops while the shelf is off screen. Reduced motion: books snap, no autoplay, no tilt, no row lift, no pill glide.
+ *
+ * Motion pass (owner 2026-11-16): the bookcase never remounts. Changing the row works like a library lift: the board
+ * with its books slides out of the case and the next row rises into place and settles (transforms only, on the
+ * compositor). The blue tab pill glides and stretches between tabs. Spines carry no lettering any more: five classic
+ * bindings without words, real heights and thicknesses, books packed side by side.
  */
 
 type RowId = "best_sellers" | "new_arrivals" | "coming_soon" | "education" | "ebook_deals";
@@ -49,8 +54,11 @@ const ROW_FILTERS: Record<RowId, BookFilters> = {
 const CASE_TOP = 18;
 const CASE_POST = 16;
 
-/** light: dark ink on the spine. gold: the gold surname still reaches 4.5:1 on this colour (else cream). */
+/** light: a pale cloth (dark tooling); gold: kept for compatibility with the colour reader. */
 type Tone = { bg: string; light: boolean; gold: boolean };
+/** Five bindings without lettering (owner 2026-11-16): raised bands, a blank tooled label, a two-tone jacket, Art Deco gilt, plain cloth. */
+const SPINES = ["bands", "label", "jacket", "deco", "plain"] as const;
+type SpineStyle = (typeof SPINES)[number];
 type ShelfItem = {
   id: string;
   book: BookCard | null;
@@ -58,9 +66,21 @@ type ShelfItem = {
   title: string;
   by: string;
   surname: string;
-  /** Height (all 1: one shelf, one edition size) and thickness relative to the thickest book (from the id, so they never change). */
+  /** Height (0.86–1) and thickness (0.72–1.2) from the id, so a book always looks the same. */
   tall: number;
   thick: number;
+  spine: SpineStyle;
+};
+
+/** A small stable hash of the id: picks each book's size and binding. */
+const hashOf = (id: string) => {
+  let h = [...id].reduce((acc, ch) => Math.imul(acc ^ ch.charCodeAt(0), 0x01000193) >>> 0, 0x811c9dc5);
+  // final mix (murmur3 fmix32), so short ids like "12" and "13" still land far apart
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x85ebca6b) >>> 0;
+  h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35) >>> 0;
+  return (h ^ (h >>> 16)) >>> 0;
 };
 
 const smooth = (x: number) => x * x * (3 - 2 * x);
@@ -140,44 +160,64 @@ function useCoverTones(urls: string[]) {
 export function ShelfHero() {
   const { dict } = useT();
   const h = dict.homePage;
+  const queryClient = useQueryClient();
   const rows = useQuery({ queryKey: ["catalog", "rows", null], queryFn: () => catalogApi.rows(), staleTime: 15 * 60 * 1000 });
-  // The compact /catalog/rows preview is too short for this endless shelf.
+  // The compact /catalog/rows preview decides which tabs exist; the shelf itself waits for the full list (no swap from
+  // the short preview to the long list, which used to make the row jump twice).
   const [row, setRow] = useState<RowId>("best_sellers");
   const tree = useQuery(catalogQueries.categoryTree());
   const education = tree.data?.find((category) => category.slug === "education");
-  const educationBooks = useQuery({
-    ...catalogQueries.books({ category_id: education?.id, sort: "newest", per_page: SHELF_BOOKS }),
-    enabled: Boolean(education?.id),
-    placeholderData: undefined,
-  });
+  const filtersOf = useCallback(
+    (id: RowId): BookFilters => ({ ...ROW_FILTERS[id], ...(id === "education" ? { category_id: education?.id } : {}), per_page: SHELF_BOOKS }),
+    [education?.id],
+  );
   const selectedBooks = useQuery({
-    ...catalogQueries.books({ ...ROW_FILTERS[row], ...(row === "education" ? { category_id: education?.id } : {}), per_page: SHELF_BOOKS }),
+    ...catalogQueries.books(filtersOf(row)),
     enabled: row !== "education" || Boolean(education?.id),
     placeholderData: undefined,
   });
+  /** Fetch a row before it is chosen (hover, focus, and once the shelf is idle), so the lift never waits. */
+  const prefetch = useCallback(
+    (id: RowId) => {
+      if (id === "education" && !education?.id) return;
+      void queryClient.prefetchQuery({ ...catalogQueries.books(filtersOf(id)), staleTime: 15 * 60 * 1000 });
+    },
+    [queryClient, filtersOf, education?.id],
+  );
 
-  const booksOf = (id: RowId) => id === "education" ? educationBooks.data?.data ?? [] : id === row
-    ? (selectedBooks.data?.data ?? rows.data?.find((r) => r.id === id)?.books ?? [])
-    : (rows.data?.find((r) => r.id === id)?.books ?? []);
-  const available = ROWS.filter((id) => booksOf(id).length >= 3);
-  const current = available.includes(row) ? row : selectedBooks.isPending || rows.isPending ? row : (available[0] ?? "best_sellers");
-  const books = booksOf(current);
+  const previewOf = (id: RowId) => rows.data?.find((r) => r.id === id)?.books ?? [];
+  const available = ROWS.filter((id) => (id === "education" ? Boolean(education?.id) : previewOf(id).length >= 3));
+  const current = available.includes(row) || rows.isPending ? row : (available[0] ?? "best_sellers");
+  const loaded = selectedBooks.data?.data;
+  const books = loaded ?? [];
   const tones = useCoverTones(books.flatMap((b) => (b.cover_image_url ? [b.cover_image_url] : [])));
-  const list = books.length >= 3 ? books : Array.from({ length: 9 }, () => null);
-  const items: ShelfItem[] = list.map((book, i) => {
+
+  useEffect(() => {
+    if (!loaded) return;
+    const idle = window.setTimeout(() => available.forEach((id) => id !== current && prefetch(id)), 1500);
+    return () => window.clearTimeout(idle);
+    // once per row: the other rows are fetched quietly after the first one is on the shelf
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [Boolean(loaded), current]);
+
+  const make = (book: BookCard | null, i: number): ShelfItem => {
     const id = book ? String(book.id) : `board-${i}`;
+    const hash = hashOf(id);
     const names = (book?.authors ?? []).map((a) => a.name).filter(Boolean) as string[];
     return {
       id,
       book,
-      tone: (book?.cover_image_url && tones[book.cover_image_url]) || clothTone(CLOTH[i % CLOTH.length]),
+      tone: (book?.cover_image_url && tones[book.cover_image_url]) || clothTone(CLOTH[(book ? hash : i) % CLOTH.length]),
       title: book?.title ?? "Bookly",
       by: names.join(", "),
       surname: names[0]?.split(" ").filter(Boolean).pop() ?? "Bookly",
-      tall: 1,
-      thick: 1,
+      tall: 0.86 + ((hash >> 3) % 15) / 100,
+      thick: 0.72 + ((hash >> 7) % 49) / 100,
+      spine: SPINES[(hash >> 11) % SPINES.length],
     };
-  });
+  };
+  // null = this row is still loading (the case shows the old row until the new one is ready to rise in).
+  const items: ShelfItem[] | null = loaded ? (books.length >= 3 ? books : Array.from({ length: 9 }, () => null)).map(make) : null;
 
   return (
     <section aria-labelledby="shelf-title" className="shelf-hero relative overflow-clip [contain:paint]">
@@ -190,87 +230,233 @@ export function ShelfHero() {
         <h2 id="shelf-title" className="mt-2 font-display text-[clamp(1.6rem,2.6vw,2.2rem)] leading-tight">{h.shelfTitle}</h2>
       </div>
 
-      {/* Row tabs (blue pill behind the active one) and, on the right, a link to the whole list. */}
+      {/* Row tabs (a blue pill glides between them) and, on the right, a link to the whole list. */}
       <div className="relative z-10 mx-auto mt-4 flex max-w-[1440px] flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 lg:justify-between">
         <span className="hidden w-44 lg:block" aria-hidden="true" />
         {available.length > 1 ? (
-          <nav aria-label={h.browse}>
-            <ul className="no-scrollbar flex max-w-[calc(100vw-2rem)] overflow-x-auto rounded-full border border-border bg-card/70 p-1 backdrop-blur-sm">
-              {available.map((id) => (
-                <li key={id}>
-                  <button
-                    type="button"
-                    aria-pressed={id === current}
-                    onClick={() => setRow(id)}
-                    className={cn(
-                      "relative min-h-11 whitespace-nowrap rounded-full px-4 text-sm font-semibold lg:min-h-9 transition-colors duration-300",
-                      id === current ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    {id === current ? <span className="shelf-tab absolute inset-0 rounded-full bg-primary" aria-hidden="true" /> : null}
-                    <span className="relative">{dict.shopExtras.rows[id]}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <ShelfTabs
+            label={h.browse}
+            tabs={available.map((id) => ({ id, label: dict.shopExtras.rows[id] }))}
+            current={current}
+            onPick={setRow}
+            onPeek={prefetch}
+          />
         ) : <span />}
         <Link to={ROW_LINK[current]} className="group/all inline-flex min-h-11 items-center justify-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline lg:w-44 lg:justify-end">
           {h.seeAllRow(dict.shopExtras.rows[current])} <ArrowRight className="size-4 transition-transform duration-200 group-hover/all:translate-x-0.5" aria-hidden="true" />
         </Link>
       </div>
 
-      {/* Keyed so the shelf starts fresh (centred on the first book, sliding in) whenever the row or its size changes. */}
-      <Shelf key={`${current}-${items.length}-${items[0]?.id}`} items={items} row={current} />
+      {/* One shelf for the whole visit: rows change inside it (lift out, rise in), it never remounts. */}
+      <Shelf items={items} row={current} order={available.indexOf(current)} placeholder={Array.from({ length: 9 }, (_, i) => make(null, i))} />
     </section>
   );
 }
 
-function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
+/**
+ * The row tabs: one blue pill under the active tab that glides to the next one. Its two edges move at different
+ * speeds (the leading edge first), so the pill stretches towards the new tab and gathers there instead of jumping.
+ * Reduced motion: the pill moves at once.
+ */
+function ShelfTabs({ label, tabs, current, onPick, onPeek }: { label: string; tabs: Array<{ id: RowId; label: string }>; current: RowId; onPick: (id: RowId) => void; onPeek: (id: RowId) => void }) {
+  const list = useRef<HTMLUListElement>(null);
+  const buttons = useRef(new Map<RowId, HTMLButtonElement>());
+  const [pill, setPill] = useState<{ l: number; r: number; dir: number; ready: boolean } | null>(null);
+  const last = useRef<number | null>(null);
+
+  useLayoutEffect(() => {
+    const measure = (animate: boolean) => {
+      const ul = list.current;
+      const btn = buttons.current.get(current);
+      if (!ul || !btn) return;
+      // positions inside the (scrollable) tab strip: the button's box relative to the strip's content
+      const box = btn.getBoundingClientRect();
+      const strip = ul.getBoundingClientRect();
+      const l = box.left - strip.left - ul.clientLeft + ul.scrollLeft;
+      const r = ul.scrollWidth - (l + box.width);
+      const first = last.current === null;
+      const dir = first ? 0 : Math.sign(l - (last.current ?? l));
+      last.current = l;
+      setPill((prev) => ({ l, r, dir: animate ? dir : 0, ready: animate && prev !== null }));
+      // keep the chosen tab in view when the tabs scroll sideways on small phones (the strip only, never the page)
+      if (animate && !first) {
+        const end = l + box.width;
+        if (l < ul.scrollLeft || end > ul.scrollLeft + ul.clientWidth) ul.scrollTo({ left: Math.max(0, l - 16), behavior: "smooth" });
+      }
+    };
+    measure(true);
+    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => measure(false));
+    if (list.current) ro?.observe(list.current);
+    return () => ro?.disconnect();
+  }, [current, tabs.length]);
+
+  return (
+    <nav aria-label={label}>
+      <ul ref={list} className="shelf-tabs no-scrollbar relative flex max-w-[calc(100vw-2rem)] overflow-x-auto rounded-full border border-border bg-card/70 p-1 backdrop-blur-sm">
+        {pill ? (
+          <li
+            aria-hidden="true"
+            className="shelf-pill pointer-events-none absolute inset-y-1 rounded-full bg-primary"
+            data-dir={pill.dir > 0 ? "right" : pill.dir < 0 ? "left" : undefined}
+            data-ready={pill.ready || undefined}
+            style={{ left: pill.l, right: pill.r }}
+          />
+        ) : null}
+        {tabs.map((tab) => (
+          <li key={tab.id} className="relative">
+            <button
+              ref={(el) => {
+                if (el) buttons.current.set(tab.id, el);
+                else buttons.current.delete(tab.id);
+              }}
+              type="button"
+              aria-pressed={tab.id === current}
+              onClick={() => onPick(tab.id)}
+              onPointerEnter={() => onPeek(tab.id)}
+              onFocus={() => onPeek(tab.id)}
+              className={cn(
+                "shelf-tab-label relative min-h-11 whitespace-nowrap rounded-full px-4 text-sm font-semibold lg:min-h-9",
+                tab.id === current ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                // before the pill is measured, the active tab paints its own background
+                tab.id === current && !pill && "bg-primary",
+              )}
+            >
+              {tab.label}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+type Shown = { items: ShelfItem[]; row: RowId | "loading" };
+const sameIds = (a: ShelfItem[], b: ShelfItem[]) => a.length === b.length && a.every((item, i) => item.id === b[i].id);
+
+/**
+ * The bookcase with one row of books. `items` is null while the chosen row loads. When the row changes the case stays
+ * put and the row is swapped like a library lift: out (420 ms, ease-in) towards the top for a tab to the right (towards
+ * the bottom for one to the left), then the new row rises in from the other side (680 ms, ease-out) and settles with a
+ * 4px landing. Only `translate` is animated (on the compositor). Changing rows again mid-lift queues the latest one.
+ */
+function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[] | null; row: RowId; order: number; placeholder: ShelfItem[] }) {
   const { dict } = useT();
   const h = dict.homePage;
   const currency = useCurrency();
   const navigate = useNavigate();
   const reduce = useReducedMotion() ?? false;
-  const n = items.length;
-  const [dims, setDims] = useState({ H: 340, ws: 58, d: 227, gap: 9, W: 1440 });
+
+  // What is on the shelf now. The rows the parent asks for wait in `wanted` until the lift can take them.
+  const [shown, setShown] = useState<Shown>(() => (items ? { items, row: current } : { items: placeholder, row: "loading" }));
+  // Same row and the same books: take the latest props (cover colours arrive after the books).
+  const live = items && shown.row === current && sameIds(items, shown.items) ? items : shown.items;
+  const n = live.length;
+  const [dims, setDims] = useState({ H: 340, ws: 50, d: 227, gap: 2, W: 1440 });
+  const { H, ws, d, gap } = dims;
+  // Each book's place along the row: books touch (a 2px gap), so thick and thin books sit side by side as on a real shelf.
+  const widths = live.map((item) => ws * item.thick);
+  const cum = [0];
+  for (const w of widths) cum.push(cum[cum.length - 1] + w + gap);
+  const period = cum[n];
+  const meanW = period / Math.max(1, n);
   // Enough copies of the list to run past both screen edges at any size (the shelf is endless).
-  const copies = Math.max(3, Math.ceil((Math.min(dims.W, SHELF_MAX) + dims.d * 4) / ((dims.ws + dims.gap) * n)) + 1);
+  const copies = Math.max(3, Math.ceil((Math.min(dims.W, SHELF_MAX) + d * 4) / Math.max(1, period)) + 1);
   const total = n * copies;
 
   // Motion state lives in refs; React only renders the caption.
   const stage = useRef<HTMLDivElement>(null);
+  const unit = useRef<HTMLDivElement>(null);
+  const lip = useRef<HTMLDivElement>(null);
   const tapes = useRef<(HTMLDivElement | null)[]>([]);
-  const centre = useRef(-1);
+  /** True while a row is lifting out or rising in (no autoplay then). */
+  const lifting = useRef(false);
   const st = useRef({ s: n, T: n, lift: new Float32Array(Math.max(total, 1)), hover: -1, tx: 0, ty: 0, mx: 0, my: 0, dragging: false, interacted: false });
   const [active, setActive] = useState(0);
   const shownIdx = useRef(0);
   const [dir, setDir] = useState(1);
+  const geo = useRef({ cum, period, widths, n, total, meanW, gap, d, H, reduce, lipScale: 1 });
 
   // Book size from the screen, so heading + tabs + shelf + caption fit one laptop screen under the header.
   useLayoutEffect(() => {
     const measure = () => {
       const H = Math.round(Math.max(190, Math.min((window.innerHeight - 440) / 1.12, window.innerWidth * 0.55, 380)));
-      setDims({ H, ws: H * 0.14, d: H * (2 / 3), gap: H * 0.025, W: window.innerWidth });
+      setDims({ H, ws: H * 0.125, d: H * (2 / 3), gap: Math.max(1.5, H * 0.006), W: window.innerWidth });
     };
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
   }, []);
 
+  /** Centre of book `x` (a real number: a book index, or a position between two books) along the endless row. */
+  const centreAt = (x: number) => {
+    const g = geo.current;
+    const f = Math.floor(x);
+    const q = Math.floor(f / g.n);
+    const i = f - q * g.n;
+    const pos = q * g.period + g.cum[i] + (x - f) * (g.widths[i] + g.gap);
+    return pos + g.widths[i] / 2;
+  };
+
+  /** Writes every book's transform for the current state (the loop calls it each frame; a row swap calls it once). */
+  const paint = useRef<(dt: number) => void>(() => {});
+  const paintFrame = (dt: number) => {
+    const m = st.current;
+    const g = geo.current;
+    const { d, H, reduce } = g;
+    if (m.lift.length !== g.total) m.lift = new Float32Array(g.total);
+    const half = Math.min(window.innerWidth - 32, SHELF_MAX, VISIBLE_SPINES * g.meanW + d * 1.4) / 2;
+    const settled = Math.abs(m.T - m.s) < 0.3;
+    m.tx += ((reduce || !settled ? 0 : m.mx) - m.tx) * (1 - Math.exp(-7 * dt));
+    m.ty += ((reduce || !settled ? 0 : m.my) - m.ty) * (1 - Math.exp(-7 * dt));
+    const here = centreAt(m.s);
+    for (let v = 0; v < g.total; v++) {
+      const el = tapes.current[v];
+      if (!el) continue;
+      let r = (((v - m.s) % g.total) + g.total) % g.total;
+      if (r > g.total / 2) r -= g.total;
+      const x = centreAt(m.s + r) - here + (d - g.meanW + 1.6 * g.gap) * bump(r);
+      // Books past the stage's ends are not drawn at all (no stray faces at the edges).
+      if (Math.abs(x) > half + d * 0.6) {
+        el.style.visibility = "hidden";
+        continue;
+      }
+      el.style.visibility = "visible";
+      const target = m.hover === v && Math.abs(r) > 0.5 ? 1 : 0;
+      m.lift[v] += (target - m.lift[v]) * (1 - Math.exp(-12 * dt));
+      const o = smooth(Math.max(0, 1 - Math.abs(r)));
+      const y = -o * 0.02 * H - m.lift[v] * 0.07 * H;
+      el.style.transform = `translate3d(${x}px, ${y}px, ${o * 0.16 * H}px) rotateX(${m.ty * 6 * o}deg) rotateY(${-90 * o + m.tx * 9 * o}deg)`;
+      el.style.zIndex = String(Math.round(100 - Math.abs(r) * 4));
+      el.style.setProperty("--o", o.toFixed(3));
+    }
+    const idx = ((Math.round(m.s) % g.n) + g.n) % g.n;
+    if (idx !== shownIdx.current) {
+      shownIdx.current = idx;
+      setDir(m.T >= m.s ? 1 : -1);
+      setActive(idx);
+    }
+  };
+
+  // Keep the refs the loop and the lift read in step with this render (before any other layout effect runs).
+  const lipScaleNow = 2200 / (2200 - (d / 2 + H * 0.05));
+  useLayoutEffect(() => {
+    geo.current = { cum, period, widths, n, total, meanW, gap, d, H, reduce, lipScale: lipScaleNow };
+    paint.current = paintFrame;
+    wanted.current = { items, row: current, order };
+    shownRow.current = shown.row;
+  });
+
   // The animation loop.
   useEffect(() => {
     let frame = 0;
     let last = performance.now();
     let idle = performance.now();
-    const { H, ws, d, gap } = dims;
-    const half = Math.min(window.innerWidth - 32, SHELF_MAX, VISIBLE_SPINES * (ws + gap) + d * 1.4) / 2;
     const loop = (now: number) => {
       const m = st.current;
-      if (m.lift.length !== total) m.lift = new Float32Array(total);
+      const total = geo.current.total;
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      if (!reduce && !m.interacted && !m.dragging && m.hover < 0 && now - idle > AUTOPLAY_MS) {
+      if (!reduce && !lifting.current && !m.interacted && !m.dragging && m.hover < 0 && now - idle > AUTOPLAY_MS) {
         m.T = Math.round(m.T) + 1;
         idle = now;
       }
@@ -278,7 +464,7 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
         idle = now;
         m.interacted = false;
       }
-      // a slower spring than before: the book is taken off the shelf, not snapped out
+      // a slow spring: the book is taken off the shelf, not snapped out
       const k = reduce ? 60 : m.dragging ? 18 : 4.2;
       m.s += (m.T - m.s) * (1 - Math.exp(-k * dt));
       if (Math.abs(m.T - m.s) < 1e-4) m.s = m.T;
@@ -291,42 +477,7 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
         m.s += total;
         m.T += total;
       }
-      const settled = Math.abs(m.T - m.s) < 0.3;
-      const tyTarget = reduce || !settled ? 0 : m.my;
-      const txTarget = reduce || !settled ? 0 : m.mx;
-      m.tx += (txTarget - m.tx) * (1 - Math.exp(-7 * dt));
-      m.ty += (tyTarget - m.ty) * (1 - Math.exp(-7 * dt));
-
-      for (let v = 0; v < total; v++) {
-        const el = tapes.current[v];
-        if (!el) continue;
-        let r = (((v - m.s) % total) + total) % total;
-        if (r > total / 2) r -= total;
-        if (Math.abs(r) < 0.5) centre.current = v;
-        const x = r * (ws + gap) + (d - ws + 1.6 * gap) * bump(r);
-        // Books past the stage's faded ends are not drawn at all (no stray faces at the edges).
-        if (Math.abs(x) > half + d * 0.6) {
-          el.style.visibility = "hidden";
-          continue;
-        }
-        el.style.visibility = "visible";
-        const target = m.hover === v && Math.abs(r) > 0.5 ? 1 : 0;
-        m.lift[v] += (target - m.lift[v]) * (1 - Math.exp(-12 * dt));
-        const o = smooth(Math.max(0, 1 - Math.abs(r)));
-        const y = -o * 0.02 * H - m.lift[v] * 0.07 * H;
-        // spines further from the middle sit further back, so the shelf curves away like a bookcase seen up close
-        // A straight, even row (owner 2026-11-11): every spine on one line, no curve back.
-        const depth = 0;
-        el.style.transform = `translate3d(${x}px, ${y}px, ${o * 0.16 * H + depth}px) rotateZ(0deg) rotateX(${m.ty * 6 * o}deg) rotateY(${-90 * o + m.tx * 9 * o}deg)`;
-        el.style.zIndex = String(Math.round(100 - Math.abs(r) * 4));
-        el.style.setProperty("--o", o.toFixed(3));
-      }
-      const idx = ((Math.round(m.s) % n) + n) % n;
-      if (idx !== shownIdx.current) {
-        shownIdx.current = idx;
-        setDir(m.T >= m.s ? 1 : -1);
-        setActive(idx);
-      }
+      paint.current(dt);
       frame = visible ? requestAnimationFrame(loop) : 0;
     };
     // Only animate while the shelf is on screen (and the tab is visible): no work at all once scrolled past.
@@ -355,7 +506,93 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
       observer?.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [dims, n, total, reduce]);
+  }, [reduce]);
+
+  // ---- The library lift --------------------------------------------------------------------------------------------
+  const wanted = useRef<{ items: ShelfItem[] | null; row: RowId; order: number }>({ items, row: current, order });
+  const lastOrder = useRef(order);
+  const travel = useRef(1);
+  const phase = useRef<"idle" | "out" | "empty" | "in">("idle");
+  const pendingIn = useRef(false);
+  const shownRow = useRef(shown.row);
+
+  /** Moves the row (board, books and the board's front lip) to `to` px; the lip is nearer, so it moves a little more. */
+  const shift = (from: number, to: number, ms: number, easing: string, settle = false) => {
+    const lipScale = geo.current.lipScale;
+    const frames = (k: number) =>
+      settle
+        ? [{ translate: `0 ${from * k}px` }, { translate: `0 ${-4 * k}px`, offset: 0.82 }, { translate: "0 0" }]
+        : [{ translate: `0 ${from * k}px` }, { translate: `0 ${to * k}px` }];
+    // no Web Animations (old browsers, test DOMs): the row simply swaps
+    const move = (el: HTMLDivElement | null, k: number) => (typeof el?.animate === "function" ? el.animate(frames(k), { duration: ms, easing, fill: "forwards" }) : undefined);
+    const runs = [move(unit.current, 1), move(lip.current, lipScale)];
+    return Promise.all(runs.map((a) => a?.finished.catch(() => undefined)));
+  };
+  const distance = () => (stage.current?.clientHeight ?? 400) + H * 0.25;
+
+  const swapIn = () => {
+    const w = wanted.current;
+    if (!w.items) {
+      phase.current = "empty";
+      return;
+    }
+    const m = st.current;
+    m.s = w.items.length;
+    m.T = w.items.length;
+    m.hover = -1;
+    shownIdx.current = 0;
+    setActive(0);
+    setDir(1);
+    pendingIn.current = true;
+    phase.current = "in";
+    setShown({ items: w.items, row: w.row });
+  };
+  const liftOut = () => {
+    if (reduce) {
+      swapIn();
+      return;
+    }
+    lifting.current = true;
+    phase.current = "out";
+    const D = distance() * travel.current;
+    void shift(0, -D, 420, "cubic-bezier(0.55, 0, 0.8, 0.25)").then(() => {
+      if (phase.current === "out") swapIn();
+    });
+  };
+
+  // The parent chose a row (or its books arrived).
+  useEffect(() => {
+    if (current !== shownRow.current && order !== lastOrder.current) {
+      // a tab to the right sends the row up and brings the next one from below; to the left, the other way round
+      travel.current = order > lastOrder.current ? 1 : -1;
+      lastOrder.current = order;
+    }
+    if (phase.current === "idle" && items && current !== shownRow.current) liftOut();
+    else if (phase.current === "empty" && items) swapIn();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current, items === null, order]);
+
+  // After a swap rendered: place the new books, then let the row rise in and land.
+  useLayoutEffect(() => {
+    if (!pendingIn.current) return;
+    pendingIn.current = false;
+    paint.current(0);
+    const done = () => {
+      lifting.current = false;
+      phase.current = "idle";
+      // someone picked another row during the lift: take that one now
+      const w = wanted.current;
+      if (w.row !== shownRow.current && w.items) liftOut();
+    };
+    if (reduce) {
+      for (const el of [unit.current, lip.current]) if (typeof el?.getAnimations === "function") el.getAnimations().forEach((a) => a.cancel());
+      done();
+      return;
+    }
+    const D = distance() * travel.current;
+    void shift(D, 0, 680, "cubic-bezier(0.16, 1, 0.3, 1)", true).then(done);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown]);
 
   const go = (delta: number) => {
     const m = st.current;
@@ -364,6 +601,7 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
   };
   const relative = (v: number) => {
     const m = st.current;
+    const total = geo.current.total;
     let r = (((v - m.T) % total) + total) % total;
     if (r > total / 2) r -= total;
     return r;
@@ -380,9 +618,9 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
     if (rect && e.pointerType === "mouse") {
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
-      const onCover = Math.abs(e.clientX - cx) < dims.d * 0.6 && Math.abs(e.clientY - cy) < dims.H * 0.6;
-      st.current.mx = onCover ? Math.max(-1, Math.min(1, (e.clientX - cx) / (dims.d * 0.6))) : ((e.clientX - cx) / rect.width) * 0.5;
-      st.current.my = onCover ? -Math.max(-1, Math.min(1, (e.clientY - cy) / (dims.H / 2))) : 0;
+      const onCover = Math.abs(e.clientX - cx) < d * 0.6 && Math.abs(e.clientY - cy) < H * 0.6;
+      st.current.mx = onCover ? Math.max(-1, Math.min(1, (e.clientX - cx) / (d * 0.6))) : ((e.clientX - cx) / rect.width) * 0.5;
+      st.current.my = onCover ? -Math.max(-1, Math.min(1, (e.clientY - cy) / (H / 2))) : 0;
     }
     const g = drag.current;
     if (!g) return;
@@ -393,7 +631,7 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     }
     if (g.moved) {
-      st.current.T = g.T - dx / (dims.ws + dims.gap);
+      st.current.T = g.T - dx / (meanW + gap);
       st.current.interacted = true;
     }
   };
@@ -413,15 +651,15 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
     st.current.hover = -1;
   };
 
-  const shown = items[active] ?? items[0];
-  const book = shown?.book;
+  const shown0 = live[active] ?? live[0];
+  const book = shown0?.book;
+  const captionRow = shown.row === "loading" ? current : shown.row;
   const price = book ? formatMoney(book.price_from_usd, book.price_from_khr, currency) : null;
-  const href = book ? `/books/${book.id}` : ROW_LINK[current];
-  const { H, ws, d } = dims;
+  const href = book ? `/books/${book.id}` : ROW_LINK[captionRow];
   const stageH = Math.round(H * 1.12 + 44);
   /** The shelf board: its front edge sits just in front of the spines; the floor runs back from there. */
   const front = d / 2 + H * 0.05;
-  const width = Math.min(SHELF_MAX, VISIBLE_SPINES * (ws + dims.gap) + d * 1.4);
+  const width = Math.min(SHELF_MAX, VISIBLE_SPINES * meanW + d * 1.4);
   // Where the lip lands on screen: perspective 2200px from the stage centre, at depth `front`.
   // The bookcase (owner 2026-11-12): a top board and two uprights frame the row; the case ends at the shelf's lip, and
   // the rail below is its base. The eye stays where it was (viewY), so the books look the same as before.
@@ -439,8 +677,9 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
         ref={stage}
         role="group"
         aria-roledescription="carousel"
-        aria-label={dict.shopExtras.rows[current]}
+        aria-label={dict.shopExtras.rows[captionRow]}
         aria-describedby="shelf-hint"
+        aria-busy={items === null || undefined}
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === "ArrowRight") {
@@ -458,10 +697,9 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         onPointerLeave={onLeave}
-        className="shelf-stage shelf-enter relative mx-auto mt-3 cursor-grab select-none overflow-hidden rounded-t-lg peer outline-none [perspective:2200px] [touch-action:pan-y] active:cursor-grabbing"
+        className="shelf-stage relative mx-auto mt-3 cursor-grab select-none overflow-hidden rounded-t-lg peer outline-none [perspective:2200px] [touch-action:pan-y] active:cursor-grabbing"
         style={{ height: caseH, width: "calc(100% - 2rem)", maxWidth: width, perspectiveOrigin: `50% ${viewY}px` } as CSSProperties}
       >
-        {/* the board's front lip: always the nearest thing, so it is drawn flat on top at its projected place */}
         {/* the case: back panel behind the books; top board and uprights (with the shade they cast) in front */}
         <div className="shelf-back pointer-events-none absolute inset-0" aria-hidden="true" />
         <div className="shelf-light pointer-events-none absolute inset-0 z-[190]" aria-hidden="true" />
@@ -471,26 +709,21 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
         <div className="shelf-post pointer-events-none absolute inset-y-0 left-0 z-[205]" style={{ width: CASE_POST }} aria-hidden="true" />
         <div className="shelf-post shelf-post-right pointer-events-none absolute inset-y-0 right-0 z-[205]" style={{ width: CASE_POST }} aria-hidden="true" />
         <div className="shelf-top pointer-events-none absolute inset-x-0 top-0 z-[210]" style={{ height: CASE_TOP }} aria-hidden="true" />
-        <div className="shelf-lip pointer-events-none absolute inset-x-0 z-[200]" style={{ top: lipTop, height: lipH }} aria-hidden="true" />
-        <div className="absolute left-1/2 [transform-style:preserve-3d]" style={{ top: originY }} aria-hidden="true">
-          {/* the oak shelf: a floor that runs back from the front edge, and the board's front lip */}
+        {/* the board's front lip: always the nearest thing, so it is drawn flat on top at its projected place */}
+        <div ref={lip} className="shelf-lip pointer-events-none absolute inset-x-0 z-[200]" style={{ top: lipTop, height: lipH }} aria-hidden="true" />
+        <div ref={unit} className="absolute left-1/2 [transform-style:preserve-3d]" style={{ top: originY }} aria-hidden="true">
+          {/* the oak shelf: a floor that runs back from the front edge */}
           <div className="shelf-floor absolute" style={{ width: width * 1.6, height: H * 2.6, left: -width * 0.8, top: H / 2 - H * 2.6, transformOrigin: "50% 100%", transform: `translateZ(${front}px) rotateX(90deg)` }} />
 
           {Array.from({ length: total }, (_, v) => {
-            const item = items[v % n];
+            const item = live[v % n];
             const bh = H * item.tall;
-            const bw = ws * item.thick;
-            const bd = bh * (2 / 3);
+            const bw = widths[v % n];
+            const bd = H * (2 / 3) * (0.9 + item.tall * 0.1);
             const top = H / 2 - bh;
-            // Keep subtitles on the paper label; the narrow spine carries the main title.
-            const spineTitle = item.title.split(/:\s+/)[0];
-            const long = spineTitle.length > 24;
-            // Three classic bindings, picked from the id so a book always looks the same: gold rules, a leather title
-            // label, or raised bands across the spine.
-            const binding = (["rules", "band", "lines"] as const)[[...item.id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % 3];
             return (
               <div
-                key={`${item.id}-${v}`}
+                key={`${shown.row}-${item.id}-${v}`}
                 ref={(el) => {
                   tapes.current[v] = el;
                 }}
@@ -513,32 +746,15 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
                   className="shelf-contact absolute"
                   style={{ width: bw * 2.2, height: bd * 1.15, left: -bw * 1.1, top: H / 2 - (bd * 1.15) / 2, transform: "rotateX(90deg)" }}
                 />
-                {/* spine (front of the box): a clean cloth hardback. Title on the cloth, author at the foot, and one of
-                    three quiet bindings: a foil rule, a darker author band, or fine double lines. */}
+                {/* spine (front of the box): a binding without lettering, in the book's own cloth colour */}
                 <div
-                  className={cn("shelf-face shelf-spine absolute flex flex-col items-center overflow-hidden rounded-[3px]", item.tone.light ? "text-[#1B1A2E]" : "text-[#F6EFDF]")}
+                  className="shelf-face shelf-spine absolute overflow-hidden rounded-[2px_2px_3px_3px]"
                   data-ink={item.tone.light ? "dark" : "gold"}
-                  data-binding={binding}
+                  data-spine={item.spine}
                   style={{ width: bw, height: bh, left: -bw / 2, top, backgroundColor: item.tone.bg, transform: `translateZ(${bd / 2}px)`, "--shade": "calc(var(--o, 0) * 0.55)" } as CSSProperties}
                 >
-                  <span aria-hidden="true" className="shelf-mark shelf-mark-top" />
-                  <span className="shelf-label grid place-items-center">
-                    <span
-                      className="shelf-title max-h-full overflow-hidden text-center font-display leading-[1.2] tracking-[0.01em] [text-orientation:mixed] [writing-mode:vertical-rl]"
-                      style={{ fontSize: Math.max(10, Math.min(17, bw * (long ? 0.25 : 0.32))), maxWidth: bw * 0.7 }}
-                    >
-                      {spineTitle}
-                    </span>
-                  </span>
-                  <span className="shelf-foot grid w-full justify-items-center">
-                    <span aria-hidden="true" className="shelf-mark shelf-mark-bottom" />
-                    <span
-                      className={cn("shelf-surname max-h-[9em] overflow-hidden whitespace-nowrap font-semibold uppercase [writing-mode:vertical-rl]", item.surname.length > 7 ? "tracking-[0.1em]" : "tracking-[0.2em]", item.tone.light ? "text-[#1B1A2E]" : item.tone.gold ? "text-[#E8C766]" : "text-[#F6EFDF]")}
-                      style={{ fontSize: Math.max(8, Math.min(10, bw * 0.17)) }}
-                    >
-                      {item.surname}
-                    </span>
-                  </span>
+                  <span className="spine-art" />
+                  <span className="spine-mark" />
                 </div>
                 {/* front cover (right side of the box) */}
                 <div
@@ -548,7 +764,7 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
                   {item.book?.cover_image_url ? (
                     <img src={item.book.cover_image_url} alt="" draggable={false} loading={v >= n && v < 2 * n ? "eager" : "lazy"} className="size-full object-cover" />
                   ) : (
-                    <span className="grid size-full place-items-center p-6 text-center font-display text-2xl leading-tight text-[#F6EFDF]">{item.title}</span>
+                    <span className="grid size-full place-items-center p-6 text-center font-display text-2xl leading-tight text-[#F6EFDF]">{item.book ? item.title : ""}</span>
                   )}
                   {/* spine hinge + gloss */}
                   <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgb(0_0_0/0.32)_0_2.5%,rgb(255_255_255/0.2)_3.5%,transparent_9%),linear-gradient(115deg,rgb(255_255_255/0.16),transparent_40%)]" />
@@ -580,21 +796,21 @@ function Shelf({ items, row: current }: { items: ShelfItem[]; row: RowId }) {
           <div className="shelf-holder min-w-0 rounded-[9px] p-[5px]">
             <div className="shelf-card flex min-h-20 min-w-0 flex-wrap items-center gap-x-3 gap-y-2 overflow-hidden rounded-[5px] px-3 py-2 lg:flex-nowrap">
               {book?.cover_image_url ? (
-                <img key={`c-${shown?.id}`} src={book.cover_image_url} alt="" aria-hidden="true" className="hidden h-15 w-10 shrink-0 rounded-[2px] object-cover shadow-[0_8px_14px_-8px_rgb(60_40_20/0.7)] sm:block" />
+                <img key={`c-${shown0?.id}`} src={book.cover_image_url} alt="" aria-hidden="true" className="hidden h-15 w-10 shrink-0 rounded-[2px] object-cover shadow-[0_8px_14px_-8px_rgb(60_40_20/0.7)] sm:block" />
               ) : null}
               <div className="min-w-0 flex-1">
                 <div className="overflow-hidden">
-                <p key={`t-${shown?.id}`} className={cn("shelf-roll line-clamp-2 font-display text-[clamp(1rem,1.4vw,1.25rem)] leading-snug text-[#1B1A2E]", dir < 0 && "shelf-roll-down")}>
-                  {shown?.book ? shown.title : dict.splash.tagline}
+                <p key={`t-${shown0?.id}`} className={cn("shelf-roll line-clamp-2 font-display text-[clamp(1rem,1.4vw,1.25rem)] leading-snug text-[#1B1A2E]", dir < 0 && "shelf-roll-down")}>
+                  {shown0?.book ? shown0.title : dict.splash.tagline}
                 </p>
                 </div>
                 <div className="overflow-hidden">
-                <p key={`a-${shown?.id}`} className={cn("shelf-roll mt-0.5 truncate text-[13px] text-[#5C5547] [animation-delay:60ms]", dir < 0 && "shelf-roll-down")}>
-                  {shown?.book ? (shown.by ? h.by(shown.by) : h.unknownAuthor) : dict.shopExtras.rows[current]}
+                <p key={`a-${shown0?.id}`} className={cn("shelf-roll mt-0.5 truncate text-[13px] text-[#5C5547] [animation-delay:60ms]", dir < 0 && "shelf-roll-down")}>
+                  {shown0?.book ? (shown0.by ? h.by(shown0.by) : h.unknownAuthor) : dict.shopExtras.rows[captionRow]}
                 </p>
                 </div>
               </div>
-              {book ? <div className="w-full lg:w-auto"><StockNote key={`s-${shown?.id}`} book={book} /></div> : null}
+              {book ? <div className="w-full lg:w-auto"><StockNote key={`s-${shown0?.id}`} book={book} /></div> : null}
             </div>
           </div>
           <button type="button" onClick={() => go(1)} aria-label={h.nextBook} className="shelf-knob lg:order-last">

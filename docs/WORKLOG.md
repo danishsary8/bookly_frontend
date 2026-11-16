@@ -1120,3 +1120,16 @@ component's own dependencies). Values still glide between periods. Rules: design
 - Reports → Products: Top authors. Reports → Customers: Customers who ordered (first order ever / had ordered before) and Average spend per customer.
 - Book details: Sales panel (best-seller rank, 30/90 days, 90-day sales, by format, last order).
 - All new text in en.ts and km.ts. Checks: lint, typecheck, 712 tests passed (3 skipped), build OK. Browser (local API): save settings, goal card, top authors, customer cards, book sales; no sideways scroll at 390/320; only console errors are external cover images blocked by the sandbox.
+
+### 2026-11-16 — Home shelf: gliding tabs, library-lift row change, wordless spines (branch `home-shelf-motion`)
+- Owner: smoother tab pill (morph, no jump), rows change with a smooth shelf animation (no refresh/glitch), new spine
+  designs without titles, a more real shelf. Details in design-system/bookly/pages/home.md.
+- Root cause of the old glitch: the shelf was keyed by row (remount and fade of the whole case) and first showed the
+  short preview, then swapped to the full list.
+- `ShelfHero.tsx`: `ShelfTabs` (measured pill, CSS edge transitions), `Shelf` keeps the case mounted and lifts rows with
+  Web Animations; prefetch of the other rows; variable book sizes with packed placement; five CSS-only bindings.
+- Checks: lint, typecheck, 713 tests passed (3 skipped), build OK; e2e a11y home in light/dark × desktop/phone passed
+  (signed-in variants skipped locally, need the CI staff session). Browser (local API): pill glides and stretches
+  (edges measured per frame), forward lift goes up / new row rises and settles, back lift the other way, reduced
+  motion swaps instantly with no animations, no sideways scroll at 1440 and 390, dark mode checked. Not checked:
+  real frame rate (this sandbox renders without a GPU) and real cover images (the image host is blocked here).
