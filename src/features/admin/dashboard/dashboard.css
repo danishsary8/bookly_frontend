@@ -54,6 +54,9 @@
 .dash-overview .dash-bento .magic-bento__card { box-shadow: var(--shadow-lift); }
 .dash-overview .dash-bento h3 { font-size: 14px; line-height: 1.45; }
 .dash-overview .dash-bento p.text-sm { font-size: 13px; line-height: 1.55; }
+.dash-profit-metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); }
+.report-export { justify-content: flex-end; }
+.report-tabs { display: grid; gap: 20px; }
 .dash-ranking-table { min-width: 0; max-width: 100%; overflow-x: auto; }
 .dash-ranking-table:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; border-radius: 4px; }
 .dash-overview .dash-insight-metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
@@ -97,6 +100,8 @@
   .dash-period-control { width: 100%; flex-direction: column; align-items: stretch; gap: 8px; }
   .dash-toolbar .admin-segmented { display: grid; width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .dash-toolbar .admin-segmented > button { min-width: 0; padding-inline: 8px; }
+  .report-export { width: 100%; justify-content: stretch; }
+  .report-export > button { flex: 1 1 100%; }
   .dash-overview .dash-kpi { padding: 18px; }
   .dash-kpi-amount { min-height: 0; }
   .dash-kpi-context { min-height: 0; }

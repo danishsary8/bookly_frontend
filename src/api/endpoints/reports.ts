@@ -7,7 +7,7 @@ import { api } from "../client";
  * the day they were delivered, less refunds on the day they were paid back.
  */
 
-export type ReportName = "sales" | "orders" | "products" | "customers" | "funnel" | "coupons" | "offers";
+export type ReportName = "sales" | "orders" | "products" | "customers" | "funnel" | "coupons" | "offers" | "profit";
 export type ReportGroup = "day" | "week" | "month";
 export type ReportRange = { from: string; to: string };
 
@@ -139,7 +139,60 @@ export interface OffersReport {
   without_offer: OfferReportRow;
 }
 
-type Reports = { sales: SalesReport; orders: OrdersReport; products: ProductsReport; customers: CustomersReport; funnel: FunnelReport; coupons: CouponsReport; offers: OffersReport };
+/**
+ * Profit (GET /staff/reports/profit). Spending = restocks made in the period (copies x unit cost). Sales = book
+ * lines of delivered orders after discounts, no delivery fees. Cost of a sold copy = the average restock cost of
+ * that format; ebooks cost 0. Profit and margin only use books with a known cost; the rest is "cost unknown".
+ */
+export interface ProfitTotals {
+  restock_spend_usd: Usd;
+  restock_spend_khr: Khr;
+  restock_units: number;
+  restock_units_without_cost: number;
+  sales_usd: Usd;
+  sales_khr: Khr;
+  cost_of_goods_usd: Usd;
+  cost_of_goods_khr: Khr;
+  gross_profit_usd: Usd;
+  gross_profit_khr: Khr;
+  margin_percent: number | null;
+  units_sold_costed: number;
+  sales_cost_unknown_usd: Usd;
+  sales_cost_unknown_khr: Khr;
+  units_sold_cost_unknown: number;
+  refunds_usd: Usd;
+  refunds_khr: Khr;
+  returned_cost_usd: Usd;
+  returned_cost_khr: Khr;
+  profit_after_refunds_usd: Usd;
+  profit_after_refunds_khr: Khr;
+}
+
+export interface ProfitRow {
+  units_sold: number;
+  sales_usd: Usd;
+  cost_of_goods_usd: Usd;
+  gross_profit_usd: Usd;
+  gross_profit_khr: Khr;
+  margin_percent: number | null;
+}
+
+export interface ProfitReport {
+  period: Period & { group: ReportGroup };
+  totals: ProfitTotals;
+  comparison: {
+    period: Period;
+    totals: ProfitTotals;
+    change_percent: Record<"restock_spend" | "sales" | "cost_of_goods" | "gross_profit" | "profit_after_refunds", number>;
+  };
+  series: Array<{ date: string; restock_spend_usd: Usd; sales_usd: Usd; cost_of_goods_usd: Usd; gross_profit_usd: Usd; margin_percent: number | null }>;
+  by_supplier: Array<{ supplier: string | null; restocks: number; units: number; units_without_cost: number; spend_usd: Usd; spend_khr: Khr; average_unit_cost_usd: Usd | null }>;
+  by_category: Array<ProfitRow & { category_id: number; name: string }>;
+  top_books: Array<ProfitRow & { book_id: number; variant_id: number; title: string; format: string; unit_cost_usd: Usd }>;
+  cost_unknown: Array<{ book_id: number; variant_id: number; title: string; format: string; units_sold: number; sales_usd: Usd }>;
+}
+
+type Reports = { profit: ProfitReport; sales: SalesReport; orders: OrdersReport; products: ProductsReport; customers: CustomersReport; funnel: FunnelReport; coupons: CouponsReport; offers: OffersReport };
 
 type Params = ReportRange & { group?: ReportGroup };
 
