@@ -158,3 +158,21 @@ rounded highlight, darker turns, faint weave, darker head/foot caps; no striped 
 labels. Title in display type on the cloth, surname at the foot in spaced caps (tighter tracking past 7 letters).
 Three quiet bindings from the book id: a short foil rule at head and above the author; fine double lines across the
 spine; or the author in a darker band at the foot.
+
+## Shelf motion + wordless spines — 2026-11-16 (branch `home-shelf-motion`)
+Supersedes "Clean spines" (lettering) and the row `key` remount. The bookcase stays.
+- Row tabs: one blue pill (`.shelf-pill`) glides between tabs. The edge in the direction of travel moves first (280 ms),
+  the other follows (460 ms, 30 ms later), so the pill stretches towards the new tab and gathers there. Tab text turns
+  white as the pill arrives. The strip scrolls sideways to keep the chosen tab in view (never the page).
+- Changing rows is a library lift: the case never remounts; the board, its front lip and the books move together
+  (`translate` only, Web Animations): out 420 ms ease-in (up for a tab to the right, down for one to the left), then
+  the new row rises in 680 ms ease-out and lands with a 4 px settle. A row change mid-lift is queued. The shelf waits
+  for the full row (no swap from the short preview); other rows are prefetched on tab hover/focus and 1.5 s after
+  the first row is on the shelf, so the lift does not wait. Autoplay pauses during a lift.
+- Spines carry no lettering (the rail label names the book). Five bindings from the book id: raised bands (five lit
+  ridges, tooled lines, a darker panel), a blank tooled label (double frame, diamond, head/foot double rules), a
+  two-tone jacket (pale foot band with a round publisher mark), Art Deco gilt (long frame, diamonds) and plain cloth
+  (fine rules, small foil star). Tooling is gold on dark cloth, deep brown on pale cloth.
+- Real sizes: height 86–100% and thickness 72–120% of the base from the id (murmur hash), bottoms aligned; books
+  touch (a 1.5–2 px gap) because each book's place is the running sum of the widths before it.
+- Reduced motion: rows swap at once, the pill jumps, no autoplay (as before).
