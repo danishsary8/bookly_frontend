@@ -1103,3 +1103,8 @@ component's own dependencies). Values still glide between periods. Rules: design
 - Dashboard: Profit panel under the sales section (`dashboard/ProfitGlance.tsx`), hidden if the API has no profit route.
 - Text: `profitReport` in en.ts and km.ts (the staff area itself stays English via `EnglishOnly`).
 - Checks: lint, typecheck, 703 tests passed (3 skipped), build OK. Browser (Playwright, local Laravel :8000 with DemoSeeder + local-only restock costs, Vite :5173): Profit tab at 1440/390/320 (no sideways scroll after fixing the "cost unknown" list), group switch → URL `group=week`, all 8 report tabs load without errors, dashboard Profit panel + link, no console errors. Not checked: dark mode screenshots, live API (backend not deployed yet).
+
+### 2026-11-16 — Inventory tab + clearer purchase list (branch `reports-inventory`, on top of `reports-profit`)
+- Reports → Inventory (`reports/InventoryTab.tsx`, `GET /staff/reports/inventory`): status chips (low, out, runs out in 14 days, not selling), four KPI cards (value at cost, at selling price, potential profit, not selling), "Runs out soon" with days-left pills and suggested buy, "Not selling for 90 days", stock value by category. Sales-speed switch (7–90 days). The time-period controls are replaced by "Stock today" on this tab.
+- Stock purchase list redesigned in the dashboard style: summary chips, most urgent first, "Runs out in" column with days-left pills and copies sold in 30 days, book links, clear Buy badge.
+- Text in en.ts and km.ts. Checks: lint, typecheck, 705 tests passed (3 skipped), build OK. Browser at 1440/390/320 (local API): no sideways scroll after two fixes (speed switch on 320px, empty panel stretch), no console errors.

@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { AlertTriangle, ArrowDown, BarChart3, Boxes, CircleDollarSign, Download, FileSpreadsheet, FolderTree, Gift, Hourglass, LineChart, MapPin, PiggyBank, Printer, Receipt, ShoppingBag, ShoppingCart, Tag, Ticket, TrendingUp, Trophy, Truck, Undo2, UserPlus, Users, Wallet, XCircle } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
-import { reportsApi, type ReportGroup, type ReportName, type ReportRange } from "@/api/endpoints/reports";
+import { inventoryApi, reportsApi, type ReportGroup, type ReportName, type ReportRange } from "@/api/endpoints/reports";
 import { ApiError } from "@/api/errors";
 import type { OrderStatus } from "@/api/types";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
@@ -14,6 +14,7 @@ import { Change, CustomRange, Khr, Panel, PeriodPicker } from "@/features/admin/
 import { AnimatedNumber } from "@/features/admin/dashboard/AnimatedNumber";
 import { Kpi, RankTable } from "@/features/admin/dashboard/DashKit";
 import { ProfitTab } from "@/features/admin/reports/ProfitTab";
+import { InventoryTab } from "@/features/admin/reports/InventoryTab";
 import { Empty, GroupPicker, State } from "@/features/admin/reports/reportParts";
 import { GROUPS, autoGroup, useReport } from "@/features/admin/reports/reportData";
 import "@/features/admin/dashboard/dashboard.css";
@@ -40,6 +41,7 @@ const TABS: Array<{ value: ReportName; label: string }> = [
   { value: "coupons", label: "Coupons & refunds" },
   { value: "offers", label: "Offers" },
   { value: "profit", label: "Profit" },
+  { value: "inventory", label: "Inventory" },
 ];
 
 const isTab = (value: string | null): value is ReportName => TABS.some((t) => t.value === value);
@@ -575,7 +577,7 @@ export default function ReportsPage() {
     setExporting(true);
     try {
       const group = tab === "sales" || tab === "profit" ? profitGroup : undefined;
-      const blob = await reportsApi.csv(tab, group ? { ...days, group } : days);
+      const blob = tab === "inventory" ? await inventoryApi.csv(30) : await reportsApi.csv(tab, group ? { ...days, group } : days);
       const url = URL.createObjectURL(blob);
       const a = Object.assign(document.createElement("a"), { href: url, download: `report-${tab}-${days.from}-to-${days.to}.csv` });
       a.click();
@@ -621,6 +623,9 @@ export default function ReportsPage() {
       }
     >
       <div className="dash-toolbar">
+        {tab === "inventory" ? (
+          <p className="dash-comparison font-semibold text-foreground">{dict.inventoryReport.today}</p>
+        ) : (
         <div className="dash-period-control">
           <span className="dash-toolbar-label">Time period</span>
           <PeriodPicker
@@ -632,8 +637,9 @@ export default function ReportsPage() {
             }}
           />
         </div>
+        )}
         <div className="report-export flex flex-wrap items-center gap-2">
-          <p className="dash-comparison">Changes {versus}</p>
+          {tab !== "inventory" ? <p className="dash-comparison">Changes {versus}</p> : null}
           <Button variant="outline" onClick={() => void exportCsv()} loading={exporting}>
             <Download aria-hidden="true" /> Export CSV
           </Button>
@@ -641,7 +647,7 @@ export default function ReportsPage() {
             <FileSpreadsheet aria-hidden="true" /> Excel, all reports
           </Button>
         </div>
-        {picking ? <div className="dash-custom-range"><CustomRange range={range} shown={days} onApply={(from, to) => update(rangeToParams({ period: "custom", from, to }), "tab")} /></div> : null}
+        {picking && tab !== "inventory" ? <div className="dash-custom-range"><CustomRange range={range} shown={days} onApply={(from, to) => update(rangeToParams({ period: "custom", from, to }), "tab")} /></div> : null}
       </div>
       <Tabs value={tab} onValueChange={(value) => update(value === "sales" ? {} : { tab: value }, "period")} className="report-tabs">
         <div className="-mx-1 overflow-x-auto px-1">
@@ -650,6 +656,8 @@ export default function ReportsPage() {
               <TabsTrigger key={t.value} value={t.value}>
                 {t.value === "profit" ? (
                   <span className="inline-flex items-center gap-1.5"><PiggyBank className="size-4" aria-hidden="true" />{dict.profitReport.tab}</span>
+                ) : t.value === "inventory" ? (
+                  <span className="inline-flex items-center gap-1.5"><Boxes className="size-4" aria-hidden="true" />{dict.inventoryReport.tab}</span>
                 ) : (
                   t.label
                 )}
@@ -664,6 +672,7 @@ export default function ReportsPage() {
         <TabsContent value="funnel">{tab === "funnel" ? <FunnelTab range={days} /> : null}</TabsContent>
         <TabsContent value="coupons">{tab === "coupons" ? <CouponsTab range={days} /> : null}</TabsContent>
         <TabsContent value="offers">{tab === "offers" ? <OffersTab range={days} /> : null}</TabsContent>
+        <TabsContent value="inventory">{tab === "inventory" ? <InventoryTab /> : null}</TabsContent>
         <TabsContent value="profit">{tab === "profit" ? <ProfitTab range={days} versus={versus} group={profitGroup} onGroup={setGroup} /> : null}</TabsContent>
       </Tabs>
     </AdminPage>

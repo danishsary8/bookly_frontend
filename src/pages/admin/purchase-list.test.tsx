@@ -18,3 +18,17 @@ it("shows reserved demand and lets staff export the purchase list", async () => 
   await userEvent.click(screen.getByRole("button", { name: "Export CSV" }));
   expect(csv).toHaveBeenCalledOnce();
 });
+
+it("puts the most urgent book first and shows when each format runs out", async () => {
+  vi.spyOn(purchaseApi, "list").mockResolvedValue([
+    { book_id: 1, title: "Slow book", variant_id: 1, format: "paperback", sku: "S-1", stock_quantity: 2, low_stock_threshold: 3, waiting_quantity: 0, quantity_to_buy: 2, sold_last_30_days: 0, days_left: null },
+    { book_id: 2, title: "Fast book", variant_id: 2, format: "hardcover", sku: "F-1", stock_quantity: 3, low_stock_threshold: 5, waiting_quantity: 0, quantity_to_buy: 3, sold_last_30_days: 30, days_left: 3 },
+  ]);
+  renderWithProviders(<PurchaseListPage />);
+  const headers = await screen.findAllByRole("rowheader");
+  expect(headers.map((h) => h.textContent)).toEqual(["Fast book", "Slow book"]);
+  expect(screen.getByText("3 days")).toBeInTheDocument();
+  expect(screen.getByText("30 sold in 30 days")).toBeInTheDocument();
+  expect(screen.getByText("Not selling")).toBeInTheDocument();
+  expect(screen.getByText(/Buy 5/)).toBeInTheDocument();
+});

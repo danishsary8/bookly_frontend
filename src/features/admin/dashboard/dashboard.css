@@ -56,6 +56,8 @@
 .dash-overview .dash-bento p.text-sm { font-size: 13px; line-height: 1.55; }
 .dash-profit-metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); }
 .report-export { justify-content: flex-end; }
+.inventory-speed .admin-segmented { max-width: 100%; }
+@media (max-width: 479px) { .inventory-speed { width: 100%; } .inventory-speed .admin-segmented { display: grid; width: 100%; grid-template-columns: repeat(5, minmax(0, 1fr)); } .inventory-speed .admin-segmented > button { min-width: 0; padding-inline: 4px; font-size: 13px; } }
 .report-tabs { display: grid; gap: 20px; }
 .dash-ranking-table { min-width: 0; max-width: 100%; overflow-x: auto; }
 .dash-ranking-table:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; border-radius: 4px; }
