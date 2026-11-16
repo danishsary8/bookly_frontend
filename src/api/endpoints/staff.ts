@@ -370,6 +370,8 @@ export interface InventoryMovementItem {
 export interface RestockInput {
   quantity: number;
   supplier?: string | null;
+  /** An active supplier (API with suppliers); its name is written on the restock too. */
+  supplier_id?: number | null;
   unit_cost_usd?: string | number | null;
   note?: string | null;
 }

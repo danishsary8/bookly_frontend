@@ -1,9 +1,12 @@
 import { AdminFormDialogContent as DialogContent } from "@/features/admin/AdminFormDialog";
 import { useRef, useState, type FormEvent } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { supplierQueries } from "@/api/endpoints/suppliers";
 import { staffApi, type RestockInput } from "@/api/endpoints/staff";
 import { ApiError } from "@/api/errors";
-import { TextAreaField, TextField } from "@/components/form/Field";
+import { SelectField, TextAreaField, TextField } from "@/components/form/Field";
+import { useT } from "@/i18n";
 import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -20,6 +23,8 @@ interface RestockVariantInfo {
 
 interface Values {
   quantity: string;
+  /** "" = none, "other" = typed name, otherwise a supplier id. */
+  supplier_choice: string;
   supplier: string;
   unit_cost_usd: string;
   note: string;
@@ -29,6 +34,7 @@ type Errors = Partial<Record<keyof Values | "form", string>>;
 
 const initialValues: Values = {
   quantity: "",
+  supplier_choice: "",
   supplier: "",
   unit_cost_usd: "",
   note: "",
@@ -46,6 +52,11 @@ export function RestockDialog({
   onRestocked?: () => void;
 }) {
   const queryClient = useQueryClient();
+  const { dict } = useT();
+  const ts = dict.suppliers;
+  // Active suppliers to pick from; on an API without suppliers (404) the free-text field stays.
+  const suppliers = useQuery({ ...supplierQueries.list({ active: "1" }), enabled: open, retry: false });
+  const picker = suppliers.isSuccess;
   const [values, setValues] = useState<Values>(initialValues);
   const [errors, setErrors] = useState<Errors>({});
   const alertRef = useRef<HTMLDivElement>(null);
@@ -71,11 +82,13 @@ export function RestockDialog({
     onError: (error) => {
       const apiError = ApiError.from(error);
       const fields = ["quantity", "supplier", "unit_cost_usd", "note"] as const;
+      const supplierIdError = apiError.field("supplier_id");
       const next: Errors = {};
       for (const f of fields) {
         const m = apiError.field(f);
         if (m) next[f] = m;
       }
+      if (supplierIdError) next.supplier = supplierIdError;
       if (!Object.keys(next).length) next.form = apiError.message;
       setErrors(next);
       if (next.form) requestAnimationFrame(() => alertRef.current?.focus());
@@ -109,9 +122,11 @@ export function RestockDialog({
     setErrors(e);
     if (Object.keys(e).length > 0) return;
 
+    const chosenId = picker && values.supplier_choice && values.supplier_choice !== "other" ? Number(values.supplier_choice) : null;
     restock.mutate({
       quantity: qty,
-      supplier: values.supplier.trim() || null,
+      ...(chosenId ? { supplier_id: chosenId } : {}),
+      supplier: chosenId ? null : picker && values.supplier_choice !== "other" ? null : values.supplier.trim() || null,
       unit_cost_usd: values.unit_cost_usd.trim() || null,
       note: values.note.trim() || null,
     });
@@ -166,14 +181,34 @@ export function RestockDialog({
               hint="Unit purchase cost in USD. Kept private from staff."
             />
 
-            <TextField
-              label="Supplier"
-              optional
-              value={values.supplier}
-              onChange={(e) => set({ supplier: e.target.value })}
-              error={errors.supplier}
-              placeholder="e.g. Phnom Penh Book Distributors"
-            />
+            {picker ? (
+              <div className="grid gap-2">
+                <SelectField
+                  label={ts.picker}
+                  optional
+                  value={values.supplier_choice}
+                  onChange={(e) => set({ supplier_choice: e.target.value })}
+                  error={values.supplier_choice !== "other" ? errors.supplier : undefined}
+                  hint={<Link to="/admin/suppliers" className="font-semibold text-primary underline-offset-4 hover:underline">{ts.manage}</Link>}
+                >
+                  <option value="">{ts.pickerNone}</option>
+                  {suppliers.data.map((s) => <option key={s.id} value={String(s.id)}>{s.name}</option>)}
+                  <option value="other">{ts.pickerOther}</option>
+                </SelectField>
+                {values.supplier_choice === "other" ? (
+                  <TextField label={ts.pickerOtherName} value={values.supplier} onChange={(e) => set({ supplier: e.target.value })} error={errors.supplier} placeholder="e.g. Phnom Penh Book Distributors" />
+                ) : null}
+              </div>
+            ) : (
+              <TextField
+                label="Supplier"
+                optional
+                value={values.supplier}
+                onChange={(e) => set({ supplier: e.target.value })}
+                error={errors.supplier}
+                placeholder="e.g. Phnom Penh Book Distributors"
+              />
+            )}
 
             <TextAreaField
               label="Note"

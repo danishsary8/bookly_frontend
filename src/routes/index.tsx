@@ -56,6 +56,7 @@ const AdminShell = lazy(() => import("../features/admin/AdminShell").then((m) =>
 const DashboardPage = lazy(() => import("../pages/admin/DashboardPage"));
 const ReportsPage = lazy(() => import("../pages/admin/ReportsPage"));
 const PurchaseListPage = lazy(() => import("../pages/admin/PurchaseListPage"));
+const SuppliersPage = lazy(() => import("../pages/admin/SuppliersPage"));
 const DashboardPrintPage = lazy(() => import("../pages/admin/DashboardPrintPage"));
 const AdminBooksPage = lazy(() => import("../pages/admin/BooksPage"));
 const StockAdminPage = lazy(() => import("../pages/admin/StockAdminPage"));
@@ -219,6 +220,7 @@ const AppRoutes = () => {
               <Route index element={<DashboardPage />} />
               <Route path="books" element={<AdminBooksPage />} />
               <Route path="stock" element={<StockAdminPage />} />
+              <Route path="suppliers" element={<SuppliersPage />} />
               <Route path="books/new" element={<BookEditPage />} />
               <Route path="books/:id" element={<BookEditPage key="edit" />} />
               <Route path="authors" element={<LookupPage key="authors" kind="authors" />} />
