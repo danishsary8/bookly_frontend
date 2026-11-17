@@ -1228,3 +1228,13 @@ component's own dependencies). Values still glide between periods. Rules: design
 - Checks: lint, typecheck, 720 tests passed (3 skipped, new test for the breakdown), build OK. Browser with the local
   API (30 days): $191.35 − $7.89 = $183.46 book sales, + $15.00 delivery − $0.00 refunds = $198.46 net revenue;
   Profit $123.87 known cost + $59.59 without cost = $183.46. No page errors. Not checked: the live API, phone width.
+
+### 2026-11-17 — Profit tab: one profit, returns inside the cards (branch `profit-cards-net`)
+- Top row is now an income statement that adds up left to right: Net book sales (sales − refunds), Cost of books
+  sold (cost − returned copies' cost), Gross profit (= the old "profit after refunds"), Margin (profit ÷ net sales,
+  change in percentage points). Restock spending moved beside the chart ("stock bought, not a loss"); the separate
+  "Profit after refunds" card is gone. The chart is titled "before returns". Frontend only, from fields the API
+  already sends. English + Khmer.
+- Checks: lint, typecheck, 720 tests (profit test updated: 55 − 20 = 35, 27 − 12 = 15, profit 20, margin 57.1%),
+  build OK. Browser (local API, 30 days, 1440 and 390): $123.87 − $68.60 = $55.27, 44.6%; axe 0 violations, no
+  page errors. Not checked: a period with refunds in the browser (covered by the unit test), the live API.

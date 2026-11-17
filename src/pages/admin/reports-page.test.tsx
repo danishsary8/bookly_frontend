@@ -232,13 +232,18 @@ describe("reports page", () => {
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
     open("/admin/reports?tab=profit&period=custom&from=2026-10-09&to=2026-10-15");
 
-    const profitCard = (await screen.findByRole("heading", { name: "Gross profit" })).closest("section")!;
-    expect(profitCard).toHaveTextContent("$28.00");
-    expect(profitCard).toHaveTextContent("50.9% margin");
+    // Returns are counted inside the cards: sales 55 − refunds 20 = 35; cost 27 − returned 12 = 15; profit 20.
+    const card = (name: string) => screen.getByRole("heading", { name }).closest("section")!;
+    await screen.findByRole("heading", { name: "Gross profit" });
+    expect(card("Net book sales")).toHaveTextContent("$35.00");
+    expect(card("Net book sales")).toHaveTextContent("$55.00 sold, less $20.00 refunded");
+    expect(card("Cost of books sold")).toHaveTextContent("$15.00");
+    expect(card("Cost of books sold")).toHaveTextContent("$27.00 sold, less $12.00 of books back on the shelf");
+    expect(card("Gross profit")).toHaveTextContent("$20.00");
+    expect(card("Margin")).toHaveTextContent("57.1%");
     expect(get).toHaveBeenLastCalledWith("profit", { from: "2026-10-09", to: "2026-10-15", group: "day" });
-    expect(screen.getByRole("heading", { name: "Restock spending" }).closest("section")).toHaveTextContent("5 restocked without a cost");
+    expect(card("Restock spending")).toHaveTextContent("5 restocked without a cost");
     expect(screen.getByRole("note")).toHaveTextContent("$30.00 of sales (2 copies) have no restock cost yet");
-    expect(screen.getByRole("heading", { name: "Profit after refunds" }).closest("section")).toHaveTextContent("less $20.00 refunded, plus $12.00 of copies back on the shelf");
     expect(screen.getByText("Monument Books")).toBeInTheDocument();
     expect(screen.getByText("No supplier given")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Dune" })).toHaveAttribute("href", "/admin/books/7");
