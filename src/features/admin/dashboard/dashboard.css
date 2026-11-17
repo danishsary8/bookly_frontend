@@ -49,7 +49,8 @@
 .dash-overview .dash-status-chart { width: 160px; height: 160px; }
 .dash-overview .dash-status-legend { gap: 4px; }
 .dash-overview .dash-status-legend > li { min-height: 28px; }
-.dash-overview .dash-operations-grid { align-items: start; }
+/* Side-by-side panels share one height (owner 2026-11-17). */
+.dash-money-grid > *, .dash-customers-grid > * { height: 100%; }
 .dash-overview .dash-bento { margin-top: 0; grid-auto-rows: minmax(200px, auto) !important; }
 .dash-overview .dash-bento .magic-bento__card { box-shadow: var(--shadow-lift); }
 .dash-overview .dash-bento h3 { font-size: 14px; line-height: 1.45; }
@@ -92,7 +93,7 @@
 /* Match the space inside the dashboard, including when enlarged text widens the existing rail. */
 @container bookly-dashboard (max-width: 959px) {
   .dash-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .dash-sales-grid, .dash-operations-grid, .dash-money-grid { grid-template-columns: minmax(0, 1fr); }
+  .dash-sales-grid, .dash-money-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @container bookly-dashboard (max-width: 599px) {
   .dash-kpi-grid, .dash-catalogue-grid { grid-template-columns: minmax(0, 1fr); }

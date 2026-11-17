@@ -85,18 +85,6 @@ describe("dashboard redesign", () => {
     expect(screen.queryByRole("region", { name: "Customers who ordered" })).not.toBeInTheDocument();
   });
 
-  it("shows attention counts and staff activity in accessible tabs", async () => {
-    setSession("staff", { token: "t", expiresAt: null, user: admin });
-    vi.spyOn(staffApi, "summary").mockResolvedValue(summary);
-    vi.spyOn(staffApi, "sales").mockResolvedValue(sales);
-    vi.spyOn(insightsApi, "get").mockResolvedValue({ ...insights, attention: { pending_orders: 2, open_returns: 1, low_stock: 3, waiting_orders: 1, recent_reviews: 4, open_chats: 2 }, activity: [{ id: 9, action: "order.updated", entity_type: "order", entity_id: 12, staff_name: "Dara", created_at: "2026-10-10T10:00:00Z" }] });
-    app();
-    expect(await screen.findByRole("link", { name: /New orders 2/ })).toHaveAttribute("href", "/admin/orders?status=pending");
-    await userEvent.click(screen.getByRole("tab", { name: "Activity" }));
-    expect(screen.getByText(/Dara/)).toBeInTheDocument();
-    expect(screen.getByText(/order.updated/)).toBeInTheDocument();
-  });
-
   it("does not repeat delivery areas or attention counts in the glance grid", async () => {
     setSession("staff", { token: "t", expiresAt: null, user: admin });
     vi.spyOn(staffApi, "summary").mockResolvedValue(summary);
