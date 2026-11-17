@@ -27,7 +27,7 @@ const ENTITIES: Record<string, { label: string; href?: (id: number) => string }>
   series: { label: "Series" },
   staff_user: { label: "Staff member" },
   exchange_rate: { label: "Exchange rate" },
-  gift_card: { label: "Gift card", href: () => "/admin/gift-cards" },
+  gift_card: { label: "Gift card (removed)" },
   referral: { label: "Referral", href: () => "/admin/referrals" },
   newsletter_campaign: { label: "Campaign", href: () => "/admin/newsletter" },
   offer: { label: "Offer", href: () => "/admin/offers" },
