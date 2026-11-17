@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, BadgeCheck, BookOpen, Heart, KeyRound, MapPin, Package, TicketPercent, TrendingDown, UserRound, type LucideIcon } from "lucide-react";
+import { ArrowRight, BadgeCheck, BookOpen, Package, TicketPercent, TrendingDown, type LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { accountQueries } from "@/api/endpoints/account";
 import { ebookQueries } from "@/api/endpoints/ebooks";
@@ -14,7 +14,9 @@ import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { buttonVariants } from "@/components/ui/button";
 import { InlineError } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
+import { AccountMenuList } from "@/features/account/AccountLayout";
 import { AccountSection } from "@/features/account/AccountSection";
+import { SecurityChecklist } from "@/features/account/SecurityChecklist";
 import { priceDropSince } from "@/features/account/priceDrop";
 import { StockAlertsCard } from "@/features/account/StockAlertsCard";
 import { StoreCreditsCard } from "@/features/account/StoreCreditsCard";
@@ -54,7 +56,7 @@ function LatestOrder({ order }: { order: Order }) {
             {d.latestOrder}
           </h2>
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <Link to={`/account/orders/${order.id}`} className="font-display text-[1.75rem] leading-tight tabular-nums underline-offset-4 hover:underline">
+            <Link to={`/account/orders/${order.id}`} className="account-latest-number font-display text-[1.75rem] leading-tight tabular-nums underline-offset-4 hover:underline">
               {order.order_number}
             </Link>
             <OrderStatusBadge status={order.status} />
@@ -159,7 +161,6 @@ export default function AccountOverviewPage() {
   const session = useSession<Customer>("customer");
   const me = useQuery(accountQueries.me());
   const orders = useQuery(orderQueries.orders({ per_page: 4 }));
-  const addresses = useQuery(accountQueries.addresses());
   // The same page of saved books the catalogue's hearts use, so it is usually cached already.
   const wishlist = useQuery(accountQueries.wishlist({ per_page: 100 }));
   const coupons = useQuery(rewardQueries.myCoupons());
@@ -169,13 +170,6 @@ export default function AccountOverviewPage() {
   const usable = (coupons.data ?? []).filter((c) => c.is_usable).length;
   const drops = (wishlist.data?.data ?? []).filter((b) => priceDropSince(b)).length;
   const [latest, ...older] = orders.data?.data ?? [];
-
-  const quick = [
-    { to: "/account/profile", label: a.profile, Icon: UserRound },
-    { to: "/account/addresses", label: addresses.data ? `${a.addresses} · ${addresses.data.length}` : a.addresses, Icon: MapPin },
-    { to: "/account/wishlist", label: wishlist.data ? `${a.wishlist} · ${wishlist.data.meta?.total ?? 0}` : a.wishlist, Icon: Heart },
-    { to: "/account/security", label: a.security, Icon: KeyRound },
-  ];
 
   return (
     <AccountSection
@@ -191,6 +185,7 @@ export default function AccountOverviewPage() {
         </p>
       }
     >
+      <SecurityChecklist />
       {orders.isPending ? (
         <SkeletonGroup label={a.loadingOrders} className={cn(card, "grid gap-3 p-6")}>
           <Skeleton className="h-3 w-32" />
@@ -228,24 +223,15 @@ export default function AccountOverviewPage() {
         <ContinueReading />
       </ul>
 
-      <nav aria-label={d.quickLinks} className="lg:hidden">
-        <ul className="flex flex-wrap gap-2">
-          {quick.map(({ to, label, Icon }) => (
-            <li key={to}>
-              <Link to={to} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium outline-none transition-colors hover:border-primary/40 hover:bg-lapis-tint hover:text-primary focus-visible:ring-2 focus-visible:ring-ring">
-                <Icon className="size-4 text-primary" aria-hidden="true" />
-                {label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      {/* Phones: the menu comes right after the shortcuts, like an app's "Me" tab (owner 2026-11-17). */}
+      <AccountMenuList />
+
 
       <StoreCreditsCard />
       <StockAlertsCard />
 
       {older.length > 0 ? (
-        <section aria-labelledby="recent-orders" className={cn(card, "p-5 sm:p-6")}>
+        <section aria-labelledby="recent-orders" className={cn(card, "p-5 max-lg:hidden sm:p-6")}>
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <h2 id="recent-orders" className="font-display text-[1.563rem] leading-tight">
               {a.recentOrders}

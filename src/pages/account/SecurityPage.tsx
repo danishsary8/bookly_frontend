@@ -1,4 +1,6 @@
-import { useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { SecurityChecklist } from "@/features/account/SecurityChecklist";
+import { useRef, useState, useEffect } from "react";
 import { LockKeyhole } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,8 +35,17 @@ export default function SecurityPage() {
   const me = useQuery(accountQueries.me());
   const customer = me.data ?? session?.user;
   const hasPassword = customer?.has_password !== false;
+  // Links from the security checklist (#password, #sign-in-methods) land on the right card once it has rendered.
+  const { hash } = useLocation();
+  const loaded = Boolean(customer);
+  useEffect(() => {
+    if (!hash || !loaded) return;
+    const id = window.setTimeout(() => document.getElementById(hash.slice(1))?.scrollIntoView({ block: "start", behavior: "smooth" }), 120);
+    return () => window.clearTimeout(id);
+  }, [hash, loaded]);
   return (
     <AccountSection title={dict.account.security} lead={dict.account.securityLead}>
+      <SecurityChecklist compact />
       <div className="account-security-grid">
       <SignInMethods customer={customer} />
       <PasswordForm key={String(hasPassword)} hasPassword={hasPassword} />
@@ -84,7 +95,7 @@ function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
   };
 
   return (
-    <section id="password" aria-labelledby="password-title" className="grid scroll-mt-24 gap-3">
+    <section id="password" aria-labelledby="password-title" className="grid scroll-mt-28 gap-3">
       <div className="grid gap-1">
         <h2 id="password-title" className="account-panel-title">
           <LockKeyhole aria-hidden="true" />

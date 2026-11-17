@@ -16,10 +16,10 @@ for (const width of [1440, 390]) {
       await expect(page.getByTestId("home-loading")).toBeVisible();
       await expect(page.locator("#home-hero-title")).toBeHidden();
       await expect(page.locator("#home-hero-title")).toBeVisible();
-      await expect(page.getByRole("link", { name: "Browse catalogue", exact: true })).toBeVisible();
+      await expect(page.getByRole("link", { name: "Shop all books", exact: true })).toBeVisible();
       await expect(page.getByTestId("home-loading")).toHaveCount(0);
       expect(held.some((route) => new URL(route.request().url()).pathname.endsWith("/catalog/rows"))).toBe(false);
-      await page.getByRole("link", { name: "Browse catalogue", exact: true }).click();
+      await page.getByRole("link", { name: "Shop all books", exact: true }).click();
       await expect(page).toHaveURL(/\/books$/);
     } finally {
       await Promise.allSettled(held.map((route) => route.abort()));

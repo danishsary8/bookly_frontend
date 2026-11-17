@@ -1,6 +1,6 @@
 import "./account.css";
 import { useId } from "react";
-import { ArrowUpRight, BookHeart, BookOpen, ChevronDown, Heart, KeyRound, LayoutDashboard, LifeBuoy, LogOut, MapPin, MessageSquareText, Package, RotateCcw, TicketPercent, UserPlus, UserRound, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, BookHeart, BookOpen, ChevronDown, ChevronRight, Heart, KeyRound, LayoutDashboard, LifeBuoy, LogOut, MapPin, MessageSquareText, Package, RotateCcw, TicketPercent, UserPlus, UserRound, type LucideIcon } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { m } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
@@ -140,7 +140,8 @@ export function AccountLayout() {
         </nav>
 
         {/* Phones and tablets: one compact menu. Keyed by the path so it closes after choosing a section. */}
-        <nav aria-label={dict.account.nav} className="lg:hidden">
+        {/* On the Overview the app-style section list below the content is the menu, so this compact one is not needed. */}
+        <nav aria-label={dict.account.nav} className={cn("lg:hidden", current.key === "overview" && "hidden")}>
           <p className="mb-2 truncate text-sm text-muted-foreground">{who}</p>
           <details key={pathname} className="group shop-card rounded-2xl border border-border bg-card">
             <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 rounded-2xl px-4 outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
@@ -172,5 +173,47 @@ export function AccountLayout() {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Phones (owner 2026-11-17): the account sections as an app-style grouped list, each row with its icon and a chevron,
+ * and Sign out at the end. Shown on the Overview below the content; laptops keep the sidebar.
+ */
+export function AccountMenuList() {
+  const session = useSession<Customer>("customer");
+  const flags = useQuery(shopFeaturesQuery());
+  const signOut = useSignOut();
+  const { dict } = useT();
+  const user = session?.user;
+  const demo = user?.email === "demo@bookly.test";
+  const visible = (key: SectionKey) => (key === "referrals" ? Boolean(flags.data?.referrals && user?.email_verified) && !demo : key !== "overview");
+  return (
+    <nav aria-label={dict.account.nav} className="account-menu-list grid gap-5 lg:hidden">
+      {groups.map((group) => {
+        const sections = group.sections.filter((s) => visible(s.key));
+        if (sections.length === 0) return null;
+        const id = `account-menu-${group.key}`;
+        return (
+          <div key={group.key} className="grid gap-2">
+            <p id={id} className="px-1 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">{dict.accountNav.groups[group.key]}</p>
+            <ul aria-labelledby={id} className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+              {sections.map(({ to, key, Icon }) => (
+                <li key={to}>
+                  <NavLink to={to} className="flex min-h-[3.25rem] items-center gap-3 px-4 text-[15px] font-medium outline-none transition-colors hover:bg-secondary focus-visible:bg-secondary focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+                    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-lapis-tint text-primary"><Icon className="size-[18px]" aria-hidden="true" /></span>
+                    <span className="min-w-0 flex-1 truncate">{label(dict, key)}</span>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+      <button type="button" onClick={() => void signOut()} className="flex min-h-[3.25rem] items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 text-[15px] font-semibold text-destructive outline-none transition-colors hover:bg-destructive-tint focus-visible:ring-2 focus-visible:ring-ring">
+        <LogOut className="size-[18px]" aria-hidden="true" /> {dict.account.signOut}
+      </button>
+    </nav>
   );
 }

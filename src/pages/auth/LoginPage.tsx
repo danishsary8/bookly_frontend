@@ -2,7 +2,9 @@ import { useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { ArrowRight, Loader2, Smartphone } from "lucide-react";
+import { ArrowRight, Loader2, Smartphone, UserPlus } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Stepper } from "@/components/ui/stepper";
 import { authApi } from "@/api/endpoints/auth";
 import type { Customer } from "@/api/types";
@@ -12,6 +14,8 @@ import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { AuthPage } from "@/features/auth/AuthPage";
 import { SocialButtons, TELEGRAM_ICON } from "@/features/auth/SocialButtons";
+import { NewHereNotice } from "@/features/auth/NewHereNotice";
+import { markHasAccount } from "@/features/auth/newHere";
 import { loginSchema, type LoginValues } from "@/features/auth/schemas";
 import { useAfterSignIn } from "@/features/auth/useAfterSignIn";
 import { openTelegram, useTelegramLink } from "@/features/auth/telegram";
@@ -48,6 +52,7 @@ export default function LoginPage() {
 
   const welcome = (customer: Customer) => {
     const firstName = customer.name?.split(" ")[0];
+    markHasAccount();
     afterSignIn(customer, next, firstName ? s.welcomeBackName(firstName) : s.welcomeBack);
   };
   const telegramLink = useTelegramLink("login", welcome);
@@ -65,6 +70,7 @@ export default function LoginPage() {
     try {
       const response = await authApi.login(values.email, values.password, await turnstile.getToken());
       const firstName = response.customer?.name?.split(" ")[0];
+      markHasAccount();
       afterSignIn(response.customer, next, firstName ? s.welcomeBackName(firstName) : s.welcomeBack);
     } catch (error) {
       const message = applyApiErrors(error, setError, ["email", "password"]);
@@ -89,10 +95,13 @@ export default function LoginPage() {
     <AuthPage
       eyebrow={s.welcomeBack}
       title={dict.auth.signIn}
-      lead={s.loginLead}
+      // Phones: the lead is left out so the whole page, sign up included, fits the first screen (owner 2026-11-17).
+      lead={<span className="hidden sm:inline">{s.loginLead}</span>}
       legal
     >
-      <div className="grid gap-5 short:gap-3">
+      <div className="-mt-3 grid gap-4 sm:mt-0 sm:gap-5 short:gap-3">
+        {/* New visitors: a short note pointing to sign up; it leaves once they start typing an email (owner 2026-11-17). */}
+        <NewHereNotice to={withNext("/register", next)} hide={Boolean(email?.trim()) || Boolean(state?.notice)} />
         {state?.notice && !formError && !telegramError ? <FormAlert tone="success">{state.notice}</FormAlert> : null}
         {formError || telegramError ? <FormAlert ref={alertRef} title={formError ?? telegramError ?? undefined} /> : null}
 
@@ -178,7 +187,7 @@ export default function LoginPage() {
         ) : null}
         {mode === "email" && step === 0 ? (
           <div className="grid gap-3 short:gap-2">
-            <SocialButtons next={next} />
+            <SocialButtons next={next} hint={s.socialHint} row />
             {telegram ? (
               <button
                 type="button"
@@ -186,7 +195,7 @@ export default function LoginPage() {
                   setFormError(null);
                   setMode("phone");
                 }}
-                className="mx-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold text-foreground/80 underline-offset-4 transition-colors duration-150 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="mx-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold text-primary underline-offset-4 transition-colors duration-150 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring short:min-h-10"
               >
                 <Smartphone className="size-4" aria-hidden="true" />
                 {s.signInWithPhone}
@@ -241,12 +250,17 @@ export default function LoginPage() {
             <SocialButtons next={next} />
           </div>
         )}
-        <p className="border-t border-border pt-4 text-center text-sm text-muted-foreground short:pt-3">
-          {dict.auth.dontHaveAccount}{" "}
-          <Link to={withNext("/register", next)} className="font-semibold text-primary underline-offset-4 hover:underline">
-            {dict.auth.signUp}
+        {/* Sign up: one balanced row under a divider (label left, button right) so the whole card fits a laptop screen; stacked on phones (owner 2026-11-17). */}
+        <div className="flex flex-col items-stretch gap-2.5 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 short:gap-2 short:pt-3">
+          <p className="text-center text-sm text-muted-foreground sm:text-left">{s.newHere}</p>
+          <Link
+            to={withNext("/register", next)}
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full gap-2 border-primary/40 text-[15px] font-semibold text-primary hover:border-primary hover:bg-lapis-tint sm:w-auto sm:px-5")}
+          >
+            <UserPlus className="size-[18px]" aria-hidden="true" />
+            {s.createFree}
           </Link>
-        </p>
+        </div>
       </div>
     </AuthPage>
   );

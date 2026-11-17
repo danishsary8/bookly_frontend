@@ -543,10 +543,19 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
     const lipScale = geo.current.lipScale;
     const frames = (k: number) =>
       settle
-        ? [{ translate: `0 ${from * k}px` }, { translate: `0 ${-4 * k}px`, offset: 0.82 }, { translate: "0 0" }]
-        : [{ translate: `0 ${from * k}px` }, { translate: `0 ${to * k}px` }];
+        ? [{ transform: `translate3d(0, ${from * k}px, 0)` }, { transform: `translate3d(0, ${-4 * k}px, 0)`, offset: 0.82 }, { transform: "translate3d(0, 0, 0)" }]
+        : [{ transform: `translate3d(0, ${from * k}px, 0)` }, { transform: `translate3d(0, ${to * k}px, 0)` }];
+    // Same path and timing as before, as a GPU transform: iOS Safari flickered animating the `translate` property on the
+    // preserve-3d row (iPhone 13 Pro Max, 2026-11-17). Older finished lifts are dropped once the new one has started, so
+    // filled animations never pile up on the row.
     // no Web Animations (old browsers, test DOMs): the row simply swaps
-    const move = (el: HTMLDivElement | null, k: number) => (typeof el?.animate === "function" ? el.animate(frames(k), { duration: ms, easing, fill: "forwards" }) : undefined);
+    const move = (el: HTMLDivElement | null, k: number) => {
+      if (typeof el?.animate !== "function") return undefined;
+      const before = typeof el.getAnimations === "function" ? el.getAnimations() : [];
+      const run = el.animate(frames(k), { duration: ms, easing, fill: "forwards" });
+      before.forEach((a) => a.cancel());
+      return run;
+    };
     const runs = [move(unit.current, 1), move(lip.current, lipScale)];
     return Promise.all(runs.map((a) => a?.finished.catch(() => undefined)));
   };

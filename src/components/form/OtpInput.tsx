@@ -97,7 +97,7 @@ export const OtpInput = ({ value, onChange, length = 6, label, error, hint, disa
             onPaste={(event) => handlePaste(index, event)}
             onFocus={(event) => event.target.select()}
             className={cn(
-              "h-14 w-12 rounded-md border border-input bg-card text-center text-xl font-semibold tabular-nums text-foreground",
+              "h-14 w-0 min-w-0 flex-1 rounded-md sm:w-12 sm:flex-none border border-input bg-card text-center text-xl font-semibold tabular-nums text-foreground",
               "outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               "aria-[invalid=true]:border-destructive disabled:opacity-60",
             )}

@@ -170,12 +170,27 @@ describe("password reset", () => {
 
     await user.click(screen.getByLabelText("Digit 1 of 6"));
     await user.paste("654321");
+    // The password fields appear only after the code is in and Continue is pressed.
+    expect(screen.queryByText("New password")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    expect(await screen.findByText("Code 654321")).toBeInTheDocument();
     await user.type(passwordInput("New password"), "newreading4");
     await user.type(passwordInput("Confirm new password"), "newreading4");
     await user.click(screen.getByRole("button", { name: "Save new password" }));
     expect(await screen.findByText("Password updated. Sign in with your new password.")).toBeInTheDocument();
     expect(post).toHaveBeenLastCalledWith("/auth/reset-password", { email: "dara@example.com", code: "654321", password: "newreading4", password_confirmation: "newreading4" });
     expect(screen.getByText("dara@example.com")).toBeInTheDocument();
+  });
+
+  it("asks for the full code before showing the password fields", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(api, "post").mockResolvedValue({ message: "ok" });
+    app("/forgot-password");
+    await user.type(screen.getByLabelText("Email"), "dara@example.com");
+    await user.click(screen.getByRole("button", { name: "Send reset code" }));
+    await screen.findByRole("heading", { level: 1, name: "Set a new password" });
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.queryByText("New password")).not.toBeInTheDocument();
   });
 });
 

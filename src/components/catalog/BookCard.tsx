@@ -137,7 +137,7 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
       <div className="@container mt-3.5 flex flex-1 flex-col px-0.5">
         {formats || audienceTag ? (
           <div className="flex items-center justify-between gap-1.5">
-            {formats ? <p className="line-clamp-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{formats}</p> : <span />}
+            {formats ? <p className="line-clamp-2 text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground sm:line-clamp-1 sm:tracking-[0.14em]">{formats}</p> : <span />}
             {audienceTag ? <span className="shrink-0 rounded bg-muted/80 px-1.5 py-0.5 text-xs font-medium text-muted-foreground">{audienceTag}</span> : null}
           </div>
         ) : null}

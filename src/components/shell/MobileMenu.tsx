@@ -1,3 +1,4 @@
+import { BookOpen, Heart, House, Library, Package, PenLine, Sparkles, TrendingUp, UserRound, type LucideIcon } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useSession } from "@/api/session";
 import { Drawer, DrawerBody, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -19,11 +20,17 @@ import { useT } from "@/i18n";
  * focus is trapped and Esc or the scrim closes it and returns focus.
  */
 
+/** One style for every link (owner 2026-11-17): icon + label, compact 44px rows, the current page softly highlighted. */
 const linkClass = (active: boolean) =>
   cn(
-    "relative flex min-h-12 items-center rounded-md px-3 font-display text-xl outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring",
-    active ? "text-primary before:absolute before:inset-y-3 before:left-0 before:w-0.5 before:rounded-full before:bg-primary" : "text-foreground hover:bg-secondary",
+    "flex min-h-11 items-center gap-3 rounded-lg px-3 text-[15px] font-semibold outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-[18px] [&_svg]:shrink-0",
+    active ? "bg-lapis-tint text-primary" : "text-foreground hover:bg-secondary [&_svg]:text-muted-foreground",
   );
+const ICONS: Record<string, LucideIcon> = {
+  "/": House, "/books": BookOpen, "/authors": PenLine, "/series": Library, "/books?sort=newest": Sparkles,
+  "/books?sort=best_selling": TrendingUp, "/account": UserRound, "/account/orders": Package, "/account/wishlist": Heart,
+};
+const groupLabel = "px-3 pb-1 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground";
 
 export function MobileMenu() {
   const panel = useShellPanel();
@@ -38,7 +45,7 @@ export function MobileMenu() {
         <DrawerHeader>
           <DrawerTitle>{dict.nav.menu}</DrawerTitle>
         </DrawerHeader>
-        <DrawerBody className="grid content-start gap-6">
+        <DrawerBody className="grid content-start gap-5">
           <LiveSearch id="mobile-search" onNavigate={closeShellPanel} inputClassName="h-12" />
 
           {/* Light / Dark near the top, labelled, so it is easy to find (owner 2026-11-16). */}
@@ -48,9 +55,11 @@ export function MobileMenu() {
           </div>
 
           <nav aria-label={dict.navLinks.main}>
-            <ul className="grid gap-1">
+            <p className={groupLabel} aria-hidden="true">{dict.navLinks.shop}</p>
+            <ul className="grid gap-0.5">
               <li>
                 <NavLink to="/" onClick={closeShellPanel} className={linkClass(location.pathname === "/")} aria-current={location.pathname === "/" ? "page" : undefined}>
+                  <House aria-hidden="true" />
                   {dict.navLinks.home}
                 </NavLink>
               </li>
@@ -60,6 +69,7 @@ export function MobileMenu() {
                 return (
                   <li key={item.to}>
                     <NavLink to={item.to} onClick={closeShellPanel} className={linkClass(active)} aria-current={active ? "page" : undefined}>
+                      {(() => { const Icon = ICONS[item.to] ?? BookOpen; return <Icon aria-hidden="true" />; })()}
                       {label}
                     </NavLink>
                   </li>
@@ -68,10 +78,9 @@ export function MobileMenu() {
             </ul>
           </nav>
 
-          <hr className="border-border" />
-
-          <nav aria-label={dict.navLinks.yourAccount}>
-            <ul className="grid gap-1">
+          <nav aria-label={dict.navLinks.yourAccount} className="border-t border-border pt-4">
+            <p className={groupLabel} aria-hidden="true">{dict.navLinks.yourAccount}</p>
+            <ul className="grid gap-0.5">
               {accountNav.map((item) => {
                 const active = isActivePath(location.pathname, item.to);
                 const label = dict.navLinks[item.label];
@@ -81,11 +90,9 @@ export function MobileMenu() {
                       to={item.to}
                       onClick={closeShellPanel}
                       aria-current={active ? "page" : undefined}
-                      className={cn(
-                        "flex min-h-11 items-center rounded-md px-3 text-base font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                        active ? "text-primary" : "text-foreground hover:bg-secondary",
-                      )}
+                      className={linkClass(active)}
                     >
+                      {(() => { const Icon = ICONS[item.to] ?? UserRound; return <Icon aria-hidden="true" />; })()}
                       {label}
                     </NavLink>
                   </li>
