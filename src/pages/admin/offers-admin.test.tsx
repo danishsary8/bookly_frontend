@@ -75,6 +75,36 @@ describe("offers admin", () => {
     await user.click(within(dialog).getByRole("button", { name: "Create offer" }));
     await waitFor(() => expect(create).toHaveBeenCalledWith(expect.objectContaining({ type: "gift", gift_id: 5, gift_quantity: 1, min_subtotal: "10.00", percent_off: "0.00" })));
   });
+
+  it("creates a fixed amount promotion like buy 2 save $3", async () => {
+    signIn(admin);
+    vi.spyOn(opsApi, "offers").mockResolvedValue(page([]));
+    const create = vi.spyOn(opsApi, "createOffer").mockResolvedValue({ ...paused, type: "buy_n_amount", amount_off: "3.00", min_quantity: 2 });
+    const user = userEvent.setup();
+    app();
+    await user.click(await screen.findByRole("button", { name: "New offer" }));
+    await screen.findByRole("heading", { level: 1, name: "New offer" });
+    const dialog = document.body;
+    await user.type(within(dialog).getByLabelText("Name"), "Buy 2 Save $3");
+    await user.selectOptions(within(dialog).getByLabelText("Offer type"), "buy_n_amount");
+    await user.clear(within(dialog).getByLabelText(/Buy at least/));
+    await user.type(within(dialog).getByLabelText(/Buy at least/), "2");
+    await user.clear(within(dialog).getByLabelText(/Discount amount/));
+    await user.type(within(dialog).getByLabelText(/Discount amount/), "3.00");
+    await user.click(within(dialog).getByRole("radio", { name: "All books" }));
+    await user.click(within(dialog).getByRole("button", { name: "Create offer" }));
+    await waitFor(() =>
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "buy_n_amount",
+          name: "Buy 2 Save $3",
+          min_quantity: 2,
+          amount_off: "3.00",
+          percent_off: "0.00",
+        })
+      )
+    );
+  });
   it("lists offers with their status, books, uses and end date", async () => {
     signIn(admin);
     vi.spyOn(opsApi, "offers").mockResolvedValue(page([holmes, paused]));
@@ -135,12 +165,12 @@ describe("offers admin", () => {
     await screen.findByRole("heading", { level: 1, name: "New offer" });
     const dialog = document.body;
     await user.clear(within(dialog).getByLabelText(/Buy at least/));
-    await user.type(within(dialog).getByLabelText(/Buy at least/), "1");
+    await user.type(within(dialog).getByLabelText(/Buy at least/), "0");
     await user.clear(within(dialog).getByLabelText(/Percent off/));
     await user.type(within(dialog).getByLabelText(/Percent off/), "60");
     await user.click(within(dialog).getByRole("button", { name: "Create offer" }));
     expect(within(dialog).getByText("Give the offer a name (only staff see it).")).toBeInTheDocument();
-    expect(within(dialog).getByText("Enter a whole number from 2 to 20.")).toBeInTheDocument();
+    expect(within(dialog).getByText("Enter a whole number from 1 to 20.")).toBeInTheDocument();
     expect(within(dialog).getByText(/at most 50/)).toBeInTheDocument();
     expect(within(dialog).getByText("Choose at least one book, category or series.")).toBeInTheDocument();
     expect(create).not.toHaveBeenCalled();
