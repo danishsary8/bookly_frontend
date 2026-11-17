@@ -24,6 +24,22 @@ import { ListState, SearchBox, Segmented, TableCard, td, th, thead } from "@/fea
 import { useStaff } from "@/features/admin/staffSession";
 import { useListParams } from "@/features/admin/useListParams";
 import { orderDateTime } from "@/features/orders/format";
+
+const PP = "Asia/Phnom_Penh";
+const dayThisYear = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: PP });
+const dayOtherYear = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: PP });
+const timeOnly = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: PP });
+const yearOf = (d: Date) => new Intl.DateTimeFormat("en-GB", { year: "numeric", timeZone: PP }).format(d);
+/** "13 Nov" (the year only when it is not this year) and "18:41", in shop time. */
+const placedDay = (value: string | null | undefined) => {
+  if (!value) return "";
+  const d = new Date(value);
+  return (yearOf(d) === yearOf(new Date()) ? dayThisYear : dayOtherYear).format(d);
+};
+/** This table only: tighter cell padding so every column fits a laptop without sideways scrolling. */
+const thc = th.replace("px-5", "px-3.5");
+const tdc = td.replace("px-5", "px-3.5");
+const placedTime = (value: string | null | undefined) => (value ? timeOnly.format(new Date(value)) : "");
 import { MAX_PRINT, staffPrintPath } from "@/features/orders/documents/printLinks";
 import { rangeSummary } from "@/lib/pagination";
 import { formatUsd } from "@/stores/currency";
@@ -136,8 +152,8 @@ function NextSteps({ allowed, number, short, t, onPick }: { allowed: OrderStatus
       {forward.map((s) => {
         const { Icon, label } = STEPS[s]!;
         return (
-          <Button key={s} size="sm" variant="outline" className="min-h-11 gap-1.5 whitespace-nowrap" aria-label={t.nextFor.replace("{step}", label).replace("{n}", number)} title={label} onClick={() => onPick(s)}>
-            <Icon aria-hidden="true" /> {short[s] ?? label}
+          <Button key={s} size="sm" variant="outline" className="min-h-11 min-w-11 gap-1.5 whitespace-nowrap px-3" aria-label={t.nextFor.replace("{step}", label).replace("{n}", number)} title={label} onClick={() => onPick(s)}>
+            <Icon aria-hidden="true" /> <span className="hidden min-[1360px]:inline">{short[s] ?? label}</span>
           </Button>
         );
       })}
@@ -250,10 +266,10 @@ export default function OrdersAdminPage() {
         query={orders}
         empty={{ when: list.length === 0, icon: Package, title: "No orders match", description: q || status || from || to ? "Try another search, status or date." : "Orders will show up here as customers place them." }}
       >
-        <TableCard stale={orders.isPlaceholderData} minWidth={1040}>
+        <TableCard stale={orders.isPlaceholderData} minWidth={820}>
           <thead className={thead}>
             <tr>
-              <th scope="col" className={`${th} w-12`}>
+              <th scope="col" className={`${thc} w-12`}>
                 <label className="-m-3 grid size-11 cursor-pointer place-items-center">
                   <span className="sr-only">Select every order on this page</span>
                   <Checkbox
@@ -263,19 +279,18 @@ export default function OrdersAdminPage() {
                   />
                 </label>
               </th>
-              <th scope="col" className={th}>Order</th>
-              <th scope="col" className={th}>Customer</th>
-              <th scope="col" className={th}>{t.payment}</th>
-              <th scope="col" className={th}>Status</th>
-              <th scope="col" className={`${th} text-right`}>Total</th>
-              <th scope="col" className={th}>Placed</th>
-              <th scope="col" className={th}>{t.actions}</th>
+              <th scope="col" className={thc}>Order</th>
+              <th scope="col" className={thc}>Customer</th>
+              <th scope="col" className={thc}>Status</th>
+              <th scope="col" className={`${thc} text-right`}>Total</th>
+              <th scope="col" className={thc}>Placed</th>
+              <th scope="col" className={thc}>{t.actions}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {list.map((o) => (
               <tr key={o.id} className={selected.includes(o.id!) ? "bg-lapis-tint/60" : "hover:bg-surface-2/60"}>
-                <td className={`${td} w-12`}>
+                <td className={`${tdc} w-12`}>
                   <label className="-m-3 grid size-11 cursor-pointer place-items-center">
                     <span className="sr-only">Select order {o.order_number}</span>
                     <Checkbox
@@ -285,7 +300,7 @@ export default function OrdersAdminPage() {
                     />
                   </label>
                 </td>
-                <th scope="row" className={`${td} font-normal`}>
+                <th scope="row" className={`${tdc} font-normal`}>
                   <Link to={`/admin/orders/${o.id}`} className="whitespace-nowrap font-semibold tabular-nums underline-offset-4 hover:text-primary hover:underline">
                     {o.order_number}
                   </Link>
@@ -299,20 +314,11 @@ export default function OrdersAdminPage() {
                     {o.coupon_code ? ` · ${o.coupon_code}` : ""}
                   </span>
                 </th>
-                <td className={td}>
-                  <span className="block">{o.customer?.name}</span>
-                  <span className="block text-sm text-muted-foreground">{o.customer?.email}</span>
+                <td className={`${tdc} max-w-[11rem] xl:max-w-[15rem] 2xl:max-w-none`}>
+                  <span className="block truncate">{o.customer?.name}</span>
+                  <span className="block truncate text-sm text-muted-foreground" title={o.customer?.email ?? undefined}>{o.customer?.email}</span>
                 </td>
-                <td className={td}>
-                  <span className="inline-flex items-center gap-1.5 text-sm font-medium">
-                    {o.payment_method === "khqr" ? <QrCode className="size-4 text-muted-foreground" aria-hidden="true" /> : <Banknote className="size-4 text-muted-foreground" aria-hidden="true" />}
-                    {o.payment_method === "khqr" ? t.khqr : t.cod}
-                  </span>
-                  <span className={cn("block text-xs font-semibold", o.payment_status === "succeeded" ? "text-success" : "text-muted-foreground")}>
-                    {o.payment_status === "succeeded" ? t.paid : t.unpaid}
-                  </span>
-                </td>
-                <td className={td}>
+                <td className={tdc}>
                   <div className="flex flex-col items-start gap-1">
                     <OrderStatusBadge status={o.status} />
                     {o.is_waiting_stock ? (
@@ -322,9 +328,23 @@ export default function OrdersAdminPage() {
                     ) : null}
                   </div>
                 </td>
-                <td className={`${td} text-right font-semibold tabular-nums`}>{formatUsd(o.total_usd)}</td>
-                <td className={`${td} whitespace-nowrap text-sm text-muted-foreground`}>{orderDateTime(o.placed_at)}</td>
-                <td className={td}>
+                <td className={`${tdc} whitespace-nowrap text-right tabular-nums`}>
+                  {/* The total with how it is paid underneath (owner 2026-11-17: one column fewer, no sideways scroll). */}
+                  <span className="block font-semibold">{formatUsd(o.total_usd)}</span>
+                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                    {o.payment_method === "khqr" ? <QrCode className="size-3.5" aria-hidden="true" /> : <Banknote className="size-3.5" aria-hidden="true" />}
+                    {o.payment_method === "khqr" ? t.khqr : t.cod} ·{" "}
+                    <span className={cn("font-semibold", o.payment_status === "succeeded" ? "text-success" : "text-muted-foreground")}>{o.payment_status === "succeeded" ? t.paid : t.unpaid}</span>
+                  </span>
+                </td>
+                <td className={`${tdc} whitespace-nowrap text-sm tabular-nums`}>
+                  {/* Two short lines (owner 2026-11-17): the day, then the time; the full date and time on hover. */}
+                  <time dateTime={o.placed_at ?? undefined} title={orderDateTime(o.placed_at)} className="grid leading-tight">
+                    <span className="font-medium">{placedDay(o.placed_at)}</span>
+                    <span className="text-muted-foreground">{placedTime(o.placed_at)}</span>
+                  </time>
+                </td>
+                <td className={tdc}>
                   <NextSteps
                     allowed={(o as { allowed_next_statuses?: OrderStatus[] }).allowed_next_statuses ?? []}
                     number={o.order_number ?? ""}
