@@ -18,7 +18,7 @@ export type DashTone = "coral" | "saffron" | "sky" | "sea";
  * against the period before, a smooth trend line in the card's colour and a "View …" link. A soft spotlight follows
  * the pointer and the card lifts on hover.
  */
-export function Kpi({ id, label, value, khr, detail, change, comparisonId, trend, labels, format, view, icon: Icon, tone }: {
+export function Kpi({ id, label, value, khr, detail, change, comparisonId, trend, labels, format, view, icon: Icon, tone, opening = false }: {
   id: string;
   label: string;
   value: ReactNode;
@@ -32,6 +32,8 @@ export function Kpi({ id, label, value, khr, detail, change, comparisonId, trend
   view?: { to: string; label: string };
   icon: LucideIcon;
   tone: DashTone;
+  /** The dashboard's first open: the trend line draws itself in. */
+  opening?: boolean;
 }) {
   return (
     <section
@@ -57,7 +59,7 @@ export function Kpi({ id, label, value, khr, detail, change, comparisonId, trend
         {change ? <div className="dash-kpi-change">{change}</div> : null}
         {detail ? <p className="text-sm text-muted-foreground tabular-nums">{detail}</p> : null}
       </div>
-      {trend ? <Sparkline values={trend} labels={labels} format={format} name={`${label} trend`} color="var(--tone-fill)" fill={0.18} className="dash-kpi-trend mt-auto h-10" /> : null}
+      {trend ? <Sparkline drawIn={opening} values={trend} labels={labels} format={format} name={`${label} trend`} color="var(--tone-fill)" fill={0.18} className="dash-kpi-trend mt-auto h-10" /> : null}
       {view ? (
         <Link to={view.to} className="dash-kpi-link group inline-flex items-center gap-1 pt-1 text-sm font-semibold underline-offset-4 hover:underline" style={{ color: "var(--tone-ink)" }}>
           {view.label} <ArrowRight className="admin-arrow size-4" aria-hidden="true" />
@@ -108,7 +110,7 @@ export function SectionLabel({ children }: { children: ReactNode }) {
 
 
 /**
- * A dashboard section that rises into place the first time it scrolls into view (owner 2026-11-16: motion when the
+ * A dashboard section that fades in the first time it scrolls into view (owner 2026-11-16: motion when the
  * dashboard opens). Once only; reduced motion shows it at once.
  */
 export function Reveal({ children, className, delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
@@ -116,10 +118,11 @@ export function Reveal({ children, className, delay = 0 }: { children: ReactNode
   return (
     <m.div
       className={className}
-      initial={reduce ? false : { opacity: 0, y: 22 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      // fade only, no movement: charts inside must stay put so a pointer (or a quick hover after scrolling) hits them
+      initial={reduce ? false : { opacity: 0 }}
+      whileInView={{ opacity: 1 }}
       viewport={{ once: true, amount: 0.12 }}
-      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay }}
     >
       {children}
     </m.div>

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertTriangle, ArrowRight, BarChart3, BellRing, Boxes, CheckCircle2, ClipboardList, CreditCard, DollarSign, FolderTree, LineChart, PieChart as PieIcon, Receipt, ShoppingBag, Trophy, UserPlus } from "lucide-react";
 import { m, useReducedMotion } from "motion/react";
 import { staggerDelay, transitions } from "@/lib/motion";
@@ -71,6 +71,15 @@ function AdminDashboard() {
   const c = s?.comparison;
   const versus = c ? `vs ${day(c.period.from)}${c.period.from !== c.period.to ? ` – ${day(c.period.to)}` : ""}` : "";
   const reducedMotion = useReducedMotion();
+  // The opening flourish (numbers count up, trend lines draw in) plays once, when the figures first arrive. Cards
+  // re-created later (a new period, a refetch) show their values at once, so nothing replays or shifts the page.
+  const [opening, setOpening] = useState(true);
+  const arrived = Boolean(s);
+  useEffect(() => {
+    if (!arrived) return;
+    const done = window.setTimeout(() => setOpening(false), 1800);
+    return () => window.clearTimeout(done);
+  }, [arrived]);
   const rise = (index: number) => ({
     initial: reducedMotion ? false : { opacity: 0, y: 26, scale: 0.97 },
     animate: { opacity: 1, y: 0, scale: 1 },
@@ -119,23 +128,23 @@ function AdminDashboard() {
           {/* 1 · Performance: four KPI cards in the sample's colours (revenue coral, orders saffron, average sky, customers sea). */}
           <div className="dash-kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <m.div className="grid" {...rise(0)}>
-              <Kpi id="net-revenue" label="Net revenue" value={<AnimatedNumber countUp value={Number(s.revenue.net_usd)} format={usd} />} khr={s.revenue.net_khr} icon={DollarSign} tone="coral"
+              <Kpi opening={opening} id="net-revenue" label="Net revenue" value={<AnimatedNumber countUp={opening} value={Number(s.revenue.net_usd)} format={usd} />} khr={s.revenue.net_khr} icon={DollarSign} tone="coral"
                 detail={`${formatUsd(s.revenue.gross_usd)} from ${s.delivered_orders} delivered ${s.delivered_orders === 1 ? "order" : "orders"}${Number(s.revenue.refunds_usd) > 0 ? `, less ${formatUsd(s.revenue.refunds_usd)} refunded` : ""}`}
                 comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.net_revenue} previous={Number(c.revenue.net_usd)} versus="" /> : null}
                 trend={series(trend, (d) => Number(d.net_revenue_usd))} labels={labels} format={usd} view={{ to: "/admin/reports", label: "View sales report" }} />
             </m.div>
             <m.div className="grid" {...rise(1)}>
-              <Kpi id="orders-placed" label="Orders placed" value={<AnimatedNumber countUp value={s.orders_placed} format={count} />} icon={ShoppingBag} tone="saffron"
+              <Kpi opening={opening} id="orders-placed" label="Orders placed" value={<AnimatedNumber countUp={opening} value={s.orders_placed} format={count} />} icon={ShoppingBag} tone="saffron"
                 comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.orders_placed} previous={c.orders_placed} versus="" /> : null}
                 trend={series(trend, (d) => d.orders_placed)} labels={labels} view={{ to: "/admin/orders", label: "View orders" }} />
             </m.div>
             <m.div className="grid" {...rise(2)}>
-              <Kpi id="average-order" label="Average order" value={<AnimatedNumber countUp value={Number(s.average_order_value_usd)} format={usd} />} khr={s.average_order_value_khr} detail="delivered orders" icon={Receipt} tone="sky"
+              <Kpi opening={opening} id="average-order" label="Average order" value={<AnimatedNumber countUp={opening} value={Number(s.average_order_value_usd)} format={usd} />} khr={s.average_order_value_khr} detail="delivered orders" icon={Receipt} tone="sky"
                 comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.average_order_value} previous={Number(c.average_order_value_usd)} versus="" /> : null}
                 trend={series(trend, (d) => Number(d.average_order_usd))} labels={labels} format={usd} view={{ to: "/admin/reports?tab=orders", label: "View order report" }} />
             </m.div>
             <m.div className="grid" {...rise(3)}>
-              <Kpi id="new-customers" label="New customers" value={<AnimatedNumber countUp value={s.new_customers} format={count} />} detail="verified their account" icon={UserPlus} tone="sea"
+              <Kpi opening={opening} id="new-customers" label="New customers" value={<AnimatedNumber countUp={opening} value={s.new_customers} format={count} />} detail="verified their account" icon={UserPlus} tone="sea"
                 comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.new_customers} previous={c.new_customers} versus="" /> : null}
                 trend={series(trend, (d) => d.new_customers)} labels={labels} view={{ to: "/admin/customers", label: "View customers" }} />
             </m.div>
@@ -171,13 +180,13 @@ function AdminDashboard() {
           {/* 2a · Profit for the same days (Reports → Profit, owner 2026-11-16). */}
           {/* 2a · This month's goal next to the profit for the chosen days (Phase 4). */}
           <Reveal><div className="dash-money-grid grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-            <GoalCard />
-            <ProfitGlance from={s.period.from} to={s.period.to} link={`/admin/reports?${new URLSearchParams({ ...rangeToParams(range), tab: "profit" }).toString()}`} />
+            <GoalCard opening={opening} />
+            <ProfitGlance opening={opening} from={s.period.from} to={s.period.to} link={`/admin/reports?${new URLSearchParams({ ...rangeToParams(range), tab: "profit" }).toString()}`} />
           </div></Reveal>
 
           {/* 2b · At a glance: the React Bits MagicBento with the shop's own figures (owner 2026-11-15). */}
           <SectionLabel>{h.glance}</SectionLabel>
-          <Reveal><GlanceBento s={s} ins={ins} /></Reveal>
+          <GlanceBento s={s} ins={ins} />
 
           {/* 3 · Books: what sells, which shelves, what runs out. */}
           <SectionLabel>{h.catalogue}</SectionLabel>
@@ -243,8 +252,8 @@ function AdminDashboard() {
                       <p className="text-sm text-muted-foreground">{dict.dashboardAnalysis.reminderNote}</p>
                       <dl className="dash-reminder-metrics grid grid-cols-2 gap-3 sm:grid-cols-3">
                         <Stat label={dict.dashboardAnalysis.recovered} value={`${ins.cart_reminder_recovery.recovered} (${ins.cart_reminder_recovery.percent}%)`} />
-                        <Stat label={dict.dashboardAnalysis.sent} value={<AnimatedNumber countUp value={ins.cart_reminder_recovery.sent} format={count} />} />
-                        {ins.promotions?.gift_orders !== undefined ? <Stat label={dict.dashboardAnalysis.gifts} value={<AnimatedNumber countUp value={ins.promotions.gift_orders} format={count} />} /> : null}
+                        <Stat label={dict.dashboardAnalysis.sent} value={<AnimatedNumber countUp={opening} value={ins.cart_reminder_recovery.sent} format={count} />} />
+                        {ins.promotions?.gift_orders !== undefined ? <Stat label={dict.dashboardAnalysis.gifts} value={<AnimatedNumber countUp={opening} value={ins.promotions.gift_orders} format={count} />} /> : null}
                       </dl>
                     </Panel>
                   ) : null}
@@ -260,7 +269,7 @@ function AdminDashboard() {
             <RecentOrders user={session?.user} />
           </div></Reveal>
 
-          {ins?.dead_stock && ins.stock_value && ins.promotions && ins.repeat_customer_rate && ins.top_authors && ins.provinces ? <Reveal><InsightsWidgets data={ins} /></Reveal> : null}
+          {ins?.dead_stock && ins.stock_value && ins.promotions && ins.repeat_customer_rate && ins.top_authors && ins.provinces ? <InsightsWidgets data={ins} /> : null}
 
           <Reveal><SystemHealthCard /></Reveal>
         </div>

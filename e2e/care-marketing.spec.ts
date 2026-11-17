@@ -93,6 +93,8 @@ test("admin create forms fit the viewport, retain focus and validate and save us
       await expect(dialog.locator('[data-slot="dialog-footer"]')).toBeInViewport();
       for (const dark of [false, true]) {
         await page.evaluate((dark) => document.documentElement.classList.toggle("dark", dark), dark);
+        // Colours fade between themes; check contrast once every running transition has settled, not mid-fade.
+        await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => a instanceof CSSTransition).map((a) => a.finished.catch(() => undefined))));
         const axe = await new AxeBuilder({ page }).include('[role="dialog"]').withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
         expect(axe.violations.map((item) => `${item.id}: ${item.nodes.map((n) => n.target).join()}`), `${route}/${width}/${dark}`).toEqual([]);
       }

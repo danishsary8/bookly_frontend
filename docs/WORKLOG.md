@@ -1153,3 +1153,9 @@ component's own dependencies). Values still glide between periods. Rules: design
   at 1440 and 390 with no page errors, no failed API calls, no sideways scroll, nothing off screen (a fast first run hit
   the API's 120/min rate limit, so the sweep was repeated at a human pace). Offer picker: books and a series ticked
   across tabs and listed as chips. Not checked: the live site, real devices.
+- CI E2E fix (PR #190): the dashboard count-up and trend draw-in replayed whenever cards were re-created (period
+  change), shifting the page under an open chart tooltip. They now play only for the first moment after the figures
+  arrive (`opening`, 1.8 s). Dashboard sections fade in without moving. `care-marketing` forms test: the dark-mode
+  contrast check now waits for the theme's colour transitions to finish (pre-existing flake, also seen on main).
+  Local runs: dashboard-motion/clarity/admin-smoke 15/15 (3 repeats), care-marketing forms 4/4, other admin specs passed;
+  714 unit tests, lint, typecheck, build OK.

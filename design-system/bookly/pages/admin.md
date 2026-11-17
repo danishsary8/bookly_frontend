@@ -186,5 +186,5 @@ Applies only to the admin sales dashboard at `/admin`, through `.dash-overview` 
   have to be the same book."
 - Collections book picker: the list shows A–Z without typing; typing searches.
 - Dashboard first open: KPI cards rise from 26 px with a slight scale; figures count up from 0 (`AnimatedNumber
-  countUp`, also the goal and profit panels); sparklines draw in from the left; each section rises in when it first
-  scrolls into view (`Reveal`). Reduced motion: no movement, final values at once.
+  countUp`, also the goal and profit panels); sparklines draw in from the left; each section fades in (no movement, so charts stay
+  pointable) when it first scrolls into view (`Reveal`). Reduced motion: no movement, final values at once.
