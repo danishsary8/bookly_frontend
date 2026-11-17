@@ -208,11 +208,15 @@ describe("reports page", () => {
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
     open("/admin/reports?tab=offers&period=custom&from=2026-09-01&to=2026-09-30");
 
-    expect((await screen.findByText("Books per order with an offer")).closest("section")).toHaveTextContent("2.50");
-    expect(screen.getByText("Average order with an offer").closest("section")).toHaveTextContent("$33.50");
-    expect(screen.getByText("Without an offer: 1.00")).toBeInTheDocument();
-    expect(screen.getByText("Without an offer: $31.50")).toBeInTheDocument();
-    expect(screen.getByText("66.7% of 3 orders")).toBeInTheDocument();
+    const compare = (await screen.findByRole("heading", { name: "Orders with an offer vs without" })).closest("section")!;
+    const average = within(compare).getByRole("heading", { name: "Average order" }).parentElement!.parentElement!;
+    expect(average).toHaveTextContent("With an offer$33.50");
+    expect(average).toHaveTextContent("Without$31.50");
+    const books = within(compare).getByRole("heading", { name: "Books per order" }).parentElement!.parentElement!;
+    expect(books).toHaveTextContent("With an offer2.50");
+    expect(books).toHaveTextContent("Without1.00");
+    expect(books).toHaveTextContent("2.5× bigger with an offer");
+    expect(screen.getByText("66.7% of all 3 orders")).toBeInTheDocument();
     const table = screen.getByRole("region", { name: "Offers table" });
     const holmes = within(table).getByRole("rowheader", { name: /Buy 2 Holmes/ }).closest("tr")!;
     expect(within(holmes).getByText("Buy 2, save 15%")).toBeInTheDocument();
