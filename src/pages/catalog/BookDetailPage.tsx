@@ -608,7 +608,7 @@ export default function BookDetailPage() {
                   {authors.map((a, i) => (
                     <span key={a.id}>
                       {i > 0 ? ", " : null}
-                      <Link to={`/authors/${a.id}`} className="font-semibold text-foreground underline-offset-4 hover:underline">
+                      <Link to={`/authors/${a.id}`} className="inline-block py-1 font-semibold text-foreground underline-offset-4 hover:underline">
                         {a.name}
                       </Link>
                     </span>
