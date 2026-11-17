@@ -2,7 +2,7 @@ import { AdminFormDialogContent as DialogContent } from "@/features/admin/AdminF
 import { ResultSummary } from "@/features/admin/reportKit";
 import { useDeferredValue, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, CircleSlash, Pencil, Plus, Search, Tag, Trash2, X } from "lucide-react";
+import { CheckCircle2, CircleSlash, Info, Pencil, Plus, Search, Tag, Trash2, X } from "lucide-react";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { staffApi } from "@/api/endpoints/staff";
 import { opsApi, opsQueries, type Offer, type OfferInput, type OfferStatus, type OfferTargetType } from "@/api/endpoints/staffOps";
@@ -56,88 +56,158 @@ const coverage = (o: Offer) => {
 
 /** The sentence customers see on a book page (the shop writes the same words in en.ts `offers.bookLine`). */
 const customerSentence = (n: number, percent: string, label: string | null, endsAt: string | null) =>
-  `${label ? `Buy ${n} from ${label}, save ${percent}%.` : `Buy ${n} or more books in this offer, save ${percent}% on each.`}${endsAt ? ` Ends ${orderDate(endsAt)}.` : ""}`;
+  `${label ? `Buy any ${n} from ${label}, save ${percent}%.` : `Buy any ${n} or more books in this offer, save ${percent}% on each.`} Mix and match: they don't have to be the same book.${endsAt ? ` Ends ${orderDate(endsAt)}.` : ""}`;
 
 const toLocalInput = (iso: string | null) =>
   iso ? new Date(new Date(iso).getTime() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16) : "";
 
 type Pick = { type: OfferTargetType; id: number; label: string };
 
-/** One search box for books, categories and series; picks are removable chips. */
-function TargetPicker({ value, onChange, error }: { value: Pick[]; onChange: (next: Pick[]) => void; error?: string }) {
+const TABS: Array<{ type: OfferTargetType; label: string; plural: string }> = [
+  { type: "book", label: "Books", plural: "books" },
+  { type: "category", label: "Categories", plural: "categories" },
+  { type: "series", label: "Series", plural: "series" },
+];
+
+/**
+ * Choosing what an offer covers (owner 2026-11-16: easy to find, as many as needed). Three tabs (Books, Categories,
+ * Series) each show a list straight away (books A–Z, every category, every series); the search box narrows the open
+ * tab. Tick rows to add or remove them; "Select all shown" adds the whole visible list. Everything chosen stays above
+ * the list as chips, grouped by kind, with a count and "Clear all". A short "How it works" note says that any mix of
+ * the covered books counts towards the number (the shop's rule, OfferCalculator::evaluate).
+ */
+function TargetPicker({ value, onChange, error, n, percent }: { value: Pick[]; onChange: (next: Pick[]) => void; error?: string; n: number; percent: string }) {
+  const [tab, setTab] = useState<OfferTargetType>("book");
   const [text, setText] = useState("");
   const q = useDeferredValue(text.trim());
+  const needle = q.toLowerCase();
   const categories = useQuery(catalogQueries.categories());
   const series = useQuery(catalogQueries.seriesList({ per_page: 100 }));
   const books = useQuery({
-    queryKey: ["staff", "offers", "book-search", q],
-    queryFn: () => staffApi.books({ q, per_page: 8 }),
-    enabled: q.length >= 2,
+    queryKey: ["staff", "offers", "book-pick", q.length >= 2 ? q : ""],
+    queryFn: () => staffApi.books({ ...(q.length >= 2 ? { q } : {}), sort: "title", per_page: 40 }),
+    enabled: tab === "book",
+    placeholderData: (previous) => previous,
   });
-  const has = (p: Pick) => value.some((v) => v.type === p.type && v.id === p.id);
-  const needle = q.toLowerCase();
-  const results: Pick[] =
-    q.length < 2
-      ? []
-      : [
-          ...(series.data?.data ?? []).filter((s) => s.name?.toLowerCase().includes(needle)).map((s) => ({ type: "series" as const, id: s.id!, label: s.name ?? "" })),
-          ...(categories.data ?? []).filter((c) => c.name?.toLowerCase().includes(needle)).map((c) => ({ type: "category" as const, id: c.id!, label: c.name ?? "" })),
-          ...(books.data?.data ?? []).map((b) => ({ type: "book" as const, id: b.id, label: b.title })),
-        ]
-          .filter((p) => !has(p))
-          .slice(0, 12);
+  const key = (p: Pick) => `${p.type}:${p.id}`;
+  const chosen = new Set(value.map(key));
+  const rows: Array<Pick & { detail?: string }> =
+    tab === "book"
+      ? (books.data?.data ?? []).map((b) => ({ type: "book" as const, id: b.id, label: b.title, detail: b.authors?.map((au) => au.name).join(", ") }))
+      : tab === "category"
+        ? (categories.data ?? []).filter((c) => !needle || c.name?.toLowerCase().includes(needle)).map((c) => ({ type: "category" as const, id: c.id!, label: c.name ?? "" }))
+        : (series.data?.data ?? []).filter((x) => !needle || x.name?.toLowerCase().includes(needle)).map((x) => ({ type: "series" as const, id: x.id!, label: x.name ?? "" }));
+  const loading = tab === "book" ? books.isPending : tab === "category" ? categories.isPending : series.isPending;
+  const toggle = (p: Pick) => onChange(chosen.has(key(p)) ? value.filter((v) => key(v) !== key(p)) : [...value, { type: p.type, id: p.id, label: p.label }]);
+  const unchosenShown = rows.filter((r) => !chosen.has(key(r)));
+  const count = (type: OfferTargetType) => value.filter((v) => v.type === type).length;
+  const tabInfo = TABS.find((x) => x.type === tab)!;
 
   return (
-    <div className="grid gap-2">
-      <label htmlFor="offer-target-search" className="text-sm font-semibold">
-        Books, categories or series
-      </label>
+    <div className="grid gap-3" role="group" aria-labelledby="offer-target-title">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p id="offer-target-title" className="text-sm font-semibold">Books in this offer</p>
+        <p className="text-sm text-muted-foreground" aria-live="polite">
+          {value.length ? `${value.length} chosen` : "Nothing chosen yet"}
+          {value.length ? (
+            <button type="button" onClick={() => onChange([])} className="ml-3 font-semibold text-primary underline-offset-4 hover:underline">
+              Clear all
+            </button>
+          ) : null}
+        </p>
+      </div>
+
+      {/* How the rule works, in the admin's own numbers. */}
+      <div className="flex gap-3 rounded-xl border border-primary/20 bg-primary/[0.05] p-3.5 text-sm">
+        <Info className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+        <div className="grid gap-1">
+          <p className="font-semibold">How it works</p>
+          <p className="text-muted-foreground">
+            Customers can <strong className="font-semibold text-foreground">mix any books in this offer</strong>. &ldquo;Buy {n || "N"}&rdquo; means any {n || "N"} copies from the books, categories and series below; they don&rsquo;t have to be the same book.
+            Once the cart has {n || "N"} or more, every one of those books gets {percent ? `${pct(percent)}%` : "the discount"} off.
+          </p>
+        </div>
+      </div>
+
       {value.length ? (
-        <ul className="flex flex-wrap gap-2" aria-label="Chosen">
+        <ul className="flex max-h-32 flex-wrap gap-2 overflow-y-auto" aria-label="Chosen">
           {value.map((p) => (
-            <li key={`${p.type}:${p.id}`} className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-1 py-1 pl-3 pr-1 text-sm">
+            <li key={key(p)} className="inline-flex items-center gap-1 rounded-full border border-primary/25 bg-primary/[0.06] py-1 pl-3 pr-1 text-sm">
               <span className="text-muted-foreground">{TYPE_LABEL[p.type]}:</span> {p.label}
-              <Button type="button" size="icon-sm" variant="ghost" aria-label={`Remove ${p.label}`} onClick={() => onChange(value.filter((v) => !(v.type === p.type && v.id === p.id)))}>
+              <Button type="button" size="icon-sm" variant="ghost" aria-label={`Remove ${p.label}`} onClick={() => toggle(p)}>
                 <X aria-hidden="true" />
               </Button>
             </li>
           ))}
         </ul>
       ) : null}
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-        <input
-          id="offer-target-search"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Type 2+ letters: Holmes, Philosophy, Emma…"
-          autoComplete="off"
-          aria-invalid={error ? true : undefined}
-          aria-describedby={error ? "offer-target-error" : undefined}
-          className="h-11 w-full rounded-md border border-input bg-card pl-9 pr-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring aria-[invalid=true]:border-destructive"
-        />
-      </div>
-      {results.length ? (
-        <ul className="grid max-h-56 gap-1 overflow-y-auto rounded-md border border-border bg-card p-1" aria-label="Search results">
-          {results.map((p) => (
-            <li key={`${p.type}:${p.id}`}>
-              <button
-                type="button"
-                onClick={() => {
-                  onChange([...value, p]);
-                  setText("");
-                }}
-                className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <span className="w-20 shrink-0 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{TYPE_LABEL[p.type]}</span>
-                <span className="truncate">{p.label}</span>
-              </button>
-            </li>
+
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div role="tablist" aria-label="What to choose" className="grid grid-cols-3 border-b border-border bg-surface-1 p-1">
+          {TABS.map((x) => (
+            <button
+              key={x.type}
+              type="button"
+              role="tab"
+              aria-selected={tab === x.type}
+              onClick={() => {
+                setTab(x.type);
+                setText("");
+              }}
+              className={cn(
+                "flex min-h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                tab === x.type ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {x.label}
+              {count(x.type) ? <span className="rounded-full bg-primary px-1.5 text-[11px] leading-[18px] text-primary-foreground tabular-nums">{count(x.type)}</span> : null}
+            </button>
           ))}
-        </ul>
-      ) : q.length >= 2 && !books.isFetching ? (
-        <p className="text-sm text-muted-foreground">Nothing found for “{q}”.</p>
-      ) : null}
+        </div>
+        <div className="grid gap-2 p-3">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <input
+              id="offer-target-search"
+              type="search"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder={tab === "book" ? "Search titles or authors (2+ letters)" : `Filter ${tabInfo.plural}`}
+              aria-label={`Search ${tabInfo.plural}`}
+              autoComplete="off"
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "offer-target-error" : undefined}
+              className="h-11 w-full rounded-md border border-input bg-card pl-9 pr-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring aria-[invalid=true]:border-destructive"
+            />
+          </div>
+          <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+            <span>{loading ? "Loading…" : `${rows.length} ${tabInfo.plural} shown${tab === "book" && q.length < 2 ? " (A–Z, first 40)" : ""}`}</span>
+            {unchosenShown.length > 1 ? (
+              <button type="button" onClick={() => onChange([...value, ...unchosenShown.map(({ type, id, label }) => ({ type, id, label }))])} className="min-h-8 font-semibold text-primary underline-offset-4 hover:underline">
+                Select all shown
+              </button>
+            ) : null}
+          </div>
+          <ul className="grid max-h-64 gap-0.5 overflow-y-auto overscroll-contain" aria-label={`${tabInfo.label} to choose from`}>
+            {rows.map((r) => {
+              const on = chosen.has(key(r));
+              return (
+                <li key={key(r)}>
+                  <label className={cn("flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-2.5 py-1.5 text-sm transition-colors", on ? "bg-primary/[0.07]" : "hover:bg-surface-2")}>
+                    <input type="checkbox" checked={on} onChange={() => toggle(r)} className="size-4 shrink-0 accent-[var(--primary)]" />
+                    <span className="min-w-0 flex-1">
+                      <span className={cn("block truncate", on && "font-semibold")}>{r.label}</span>
+                      {r.detail ? <span className="block truncate text-xs text-muted-foreground">{r.detail}</span> : null}
+                    </span>
+                    {on ? <CheckCircle2 className="size-4 shrink-0 text-primary" aria-hidden="true" /> : null}
+                  </label>
+                </li>
+              );
+            })}
+            {!loading && rows.length === 0 ? <li className="px-2.5 py-3 text-sm text-muted-foreground">Nothing found{q ? ` for “${q}”` : ""}.</li> : null}
+          </ul>
+        </div>
+      </div>
       {error ? (
         <p id="offer-target-error" className="text-sm text-destructive">
           {error}
@@ -252,7 +322,7 @@ function OfferDialog({ offer, onClose }: { offer: Offer | null; onClose: () => v
           <DialogHeader>
             <DialogTitle>{offer ? `Edit ${offer.name}` : "New offer"}</DialogTitle>
             <DialogDescription>
-              Customers get the discount by themselves when the cart has enough books from the offer. It never adds up with a coupon: the customer gets the bigger one.
+              Customers get the discount by themselves when the cart has enough books from the offer (any mix of the covered books counts). It never adds up with a coupon: the customer gets the bigger one.
             </DialogDescription>
           </DialogHeader>
           {errors.form ? <FormAlert title={errors.form} /> : null}
@@ -303,7 +373,7 @@ function OfferDialog({ offer, onClose }: { offer: Offer | null; onClose: () => v
               onChange={(val) => set({ applies_to: val })}
             />
           </fieldset>
-          {v.applies_to === "selected" ? <TargetPicker value={v.targets} onChange={(targets) => set({ targets })} error={errors.targets} /> : null}
+          {v.applies_to === "selected" ? <TargetPicker value={v.targets} onChange={(targets) => set({ targets })} error={errors.targets} n={set_ ? 0 : Number(v.min_quantity) || 0} percent={v.percent_off} /> : null}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TextField label="Starts" optional type="datetime-local" value={v.starts_at} onChange={(e) => set({ starts_at: e.target.value })} error={errors.starts_at} />
             <TextField label="Ends" optional type="datetime-local" value={v.ends_at} onChange={(e) => set({ ends_at: e.target.value })} error={errors.ends_at} />

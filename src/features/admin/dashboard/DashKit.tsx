@@ -17,7 +17,7 @@ export type DashTone = "coral" | "saffron" | "sky" | "sea";
  * against the period before, a smooth trend line in the card's colour and a "View …" link. A soft spotlight follows
  * the pointer and the card lifts on hover.
  */
-export function Kpi({ id, label, value, khr, detail, change, comparisonId, trend, labels, format, view, icon: Icon, tone }: {
+export function Kpi({ id, label, value, khr, detail, change, comparisonId, trend, labels, format, view, icon: Icon, tone, opening = false }: {
   id: string;
   label: string;
   value: ReactNode;
@@ -31,6 +31,8 @@ export function Kpi({ id, label, value, khr, detail, change, comparisonId, trend
   view?: { to: string; label: string };
   icon: LucideIcon;
   tone: DashTone;
+  /** The dashboard's first open: the trend line draws itself in. */
+  opening?: boolean;
 }) {
   return (
     <section
@@ -56,7 +58,7 @@ export function Kpi({ id, label, value, khr, detail, change, comparisonId, trend
         {change ? <div className="dash-kpi-change">{change}</div> : null}
         {detail ? <p className="text-sm text-muted-foreground tabular-nums">{detail}</p> : null}
       </div>
-      {trend ? <Sparkline values={trend} labels={labels} format={format} name={`${label} trend`} color="var(--tone-fill)" fill={0.18} className="dash-kpi-trend mt-auto h-10" /> : null}
+      {trend ? <Sparkline drawIn={opening} values={trend} labels={labels} format={format} name={`${label} trend`} color="var(--tone-fill)" fill={0.18} className="dash-kpi-trend mt-auto h-10" /> : null}
       {view ? (
         <Link to={view.to} className="dash-kpi-link group inline-flex items-center gap-1 pt-1 text-sm font-semibold underline-offset-4 hover:underline" style={{ color: "var(--tone-ink)" }}>
           {view.label} <ArrowRight className="admin-arrow size-4" aria-hidden="true" />
@@ -104,4 +106,3 @@ export function RankTable({ head, rows }: { head: [string, string, string]; rows
 export function SectionLabel({ children }: { children: ReactNode }) {
   return <p className="dash-section-label flex items-center gap-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground"><span>{children}</span><span aria-hidden="true" className="h-px flex-1 bg-border" /></p>;
 }
-

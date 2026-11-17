@@ -1673,7 +1673,8 @@ export const en = {
   offers: {
     badge: (n: number, pct: string) => `Buy ${n}, save ${pct}%`,
     bookLine: (n: number, pct: string, label: string | null) =>
-      label ? `Buy ${n} from ${label}, save ${pct}%.` : `Buy ${n} or more books in this offer, save ${pct}% on each.`,
+      // owner 2026-11-16: say plainly that any mix of the covered books counts
+      label ? `Buy any ${n} from ${label}, save ${pct}%. Mix and match: they don't have to be the same book.` : `Buy any ${n} or more books in this offer, save ${pct}% on each. Mix and match: they don't have to be the same book.`,
     ends: (date: string) => `Ends ${date}.`,
     offerLine: (n: number, pct: string) => `Offer: buy ${n}, save ${pct}%`,
     inOffer: "In offer",

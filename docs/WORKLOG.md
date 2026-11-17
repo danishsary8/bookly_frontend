@@ -1145,3 +1145,17 @@ component's own dependencies). Values still glide between periods. Rules: design
   sideways scroll, nothing off screen, no page errors. Screens checked: home 390×844 and 375×667, menu light/dark,
   shelf, books list scrolled, book, cart, account, orders, checkout. Pill matched to the active tab at 375 and 1440.
   Not checked: real devices, real cover images (blocked in this sandbox).
+
+### 2026-11-16 — Offer picker + dashboard opening motion (branch `admin-offer-picker`, on top of `mobile-polish`)
+- Owner: easier offer book/category/series choosing (many at once), state clearly that any books in the offer count,
+  dashboard motion on first open, every admin feature usable. Details in design-system/bookly/pages/admin.md.
+- Checks: lint, typecheck, 714 tests passed (3 skipped), build OK. Browser (local API, demo admin): all 39 admin routes
+  at 1440 and 390 with no page errors, no failed API calls, no sideways scroll, nothing off screen (a fast first run hit
+  the API's 120/min rate limit, so the sweep was repeated at a human pace). Offer picker: books and a series ticked
+  across tabs and listed as chips. Not checked: the live site, real devices.
+- CI E2E fix (PR #190): the dashboard count-up and trend draw-in replayed whenever cards were re-created (period
+  change), shifting the page under an open chart tooltip. They now play only for the first moment after the figures
+  arrive (`opening`, 1.8 s). Dashboard sections fade in without moving. `care-marketing` forms test: the dark-mode
+  contrast check now waits for the theme's colour transitions to finish (pre-existing flake, also seen on main).
+  Local runs: dashboard-motion/clarity/admin-smoke 15/15 (3 repeats), care-marketing forms 4/4, other admin specs passed;
+  714 unit tests, lint, typecheck, build OK.

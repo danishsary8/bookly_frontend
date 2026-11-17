@@ -16,7 +16,7 @@ const money = (n: number) => formatUsd(n.toFixed(2));
  * spending, linking to Reports → Profit. Hidden on an API without the profit report (404) or if it fails, so the
  * rest of the dashboard is never blocked by it.
  */
-export function ProfitGlance({ from, to, link }: { from: string; to: string; link: string }) {
+export function ProfitGlance({ from, to, link, opening = false }: { from: string; to: string; link: string; opening?: boolean }) {
   const { dict } = useT();
   const t = dict.profitReport;
   const range = { from, to };
@@ -47,7 +47,7 @@ export function ProfitGlance({ from, to, link }: { from: string; to: string; lin
             <div className="grid content-start gap-1 rounded-xl bg-[var(--tone-tint)] px-4 py-3.5">
               <dt className="text-sm font-semibold">{t.profit}</dt>
               <dd className="grid gap-1">
-                <span className="text-2xl font-semibold tabular-nums"><AnimatedNumber value={Number(now.gross_profit_usd)} format={money} /></span>
+                <span className="text-2xl font-semibold tabular-nums"><AnimatedNumber countUp={opening} value={Number(now.gross_profit_usd)} format={money} /></span>
                 <Khr value={now.gross_profit_khr} />
                 <span className="text-sm text-muted-foreground tabular-nums">{now.margin_percent == null ? t.noMargin : t.margin.replace("{p}", `${now.margin_percent}%`)}</span>
                 <Change percent={c.change_percent.gross_profit} previous={Number(c.totals.gross_profit_usd)} versus="" />
@@ -61,7 +61,7 @@ export function ProfitGlance({ from, to, link }: { from: string; to: string; lin
               <div key={label} className="grid content-start gap-1 rounded-xl border border-border px-4 py-3.5">
                 <dt className="text-sm text-muted-foreground">{label}</dt>
                 <dd className="grid gap-0.5">
-                  <span className="text-xl font-semibold tabular-nums"><AnimatedNumber value={Number(usd)} format={money} /></span>
+                  <span className="text-xl font-semibold tabular-nums"><AnimatedNumber countUp={opening} value={Number(usd)} format={money} /></span>
                   <Khr value={khr} />
                 </dd>
               </div>

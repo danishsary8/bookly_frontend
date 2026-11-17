@@ -175,3 +175,15 @@ Applies only to the admin sales dashboard at `/admin`, through `.dash-overview` 
 - Expand changed fields inline. Null-only values on one-sided events are omitted; a change to null remains visible. Stock delta, SKU and related book/order links remain readable. The audit log stays read-only.
 - Newsletter: URL search/status/pagination; draft test/send/edit/delete actions and read-only content viewing for sent/sending campaigns. Label actual sending progress correctly. Gift cards/referrals have recipient/customer/order links and in-app confirmations, including visible failure feedback; feature-off screens explain availability without exposing hosting variables or enabling features.
 - Staff actions link to sign-in history and the actor's audit history. Exchange rates keep append-only history, explicit immediate/scheduled starts and a link to their audit history. Native calendar controls follow dark mode.
+
+## Offer picker, dashboard entrance — 2026-11-16 (branch `admin-offer-picker`)
+- Offer editor "Books in this offer": tabs Books / Categories / Series (each with a count of what is chosen), a list
+  shown straight away (books A–Z, first 40; every category; every series), a search box that narrows the open tab,
+  tick rows to add/remove, "Select all shown", chosen items as chips above with "Clear all".
+- A "How it works" note in the admin's own numbers: any mix of the covered books counts towards "Buy N" (they do not
+  have to be the same book; OfferCalculator::evaluate); once reached, every covered copy gets the percent.
+- Customer sentence (en/km `offers.bookLine`) and the editor preview now read "Buy any N … Mix and match: they don't
+  have to be the same book."
+- Collections book picker: the list shows A–Z without typing; typing searches.
+- Dashboard first open: KPI cards rise from 26 px with a slight scale; figures count up from 0 (`AnimatedNumber
+  countUp`, also the goal and profit panels); sparklines draw in from the left. Sections below have no entrance motion (it moved charts under a quick hover in CI). Reduced motion: no movement, final values at once.

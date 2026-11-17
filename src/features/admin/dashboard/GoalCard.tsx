@@ -17,7 +17,7 @@ const monthName = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numer
  * shop should be by today, "On track" / "Behind", and what is needed per day for the rest of the month. Always this
  * calendar month, whatever period the dashboard shows. Hidden on an API without the goal route.
  */
-export function GoalCard() {
+export function GoalCard({ opening = false }: { opening?: boolean }) {
   const { dict } = useT();
   const t = dict.goalCard;
   const query = useQuery(shopSettingsQueries.goal());
@@ -50,7 +50,7 @@ export function GoalCard() {
         <div className="grid gap-3">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-[2rem] font-semibold leading-none tracking-[-0.03em] tabular-nums"><AnimatedNumber value={net} format={money} /></p>
+              <p className="text-[2rem] font-semibold leading-none tracking-[-0.03em] tabular-nums"><AnimatedNumber countUp={opening} value={net} format={money} /></p>
               <Khr value={g.net_revenue_khr} />
               <p className="mt-1 text-sm text-muted-foreground tabular-nums">{t.of.replace("{goal}", formatUsd(g.goal_usd!))} · {g.percent ?? 0}%</p>
             </div>

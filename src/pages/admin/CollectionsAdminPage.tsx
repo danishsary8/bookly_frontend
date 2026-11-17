@@ -99,17 +99,17 @@ function BookPicker({
   const [text, setText] = useState("");
   const q = useDeferredValue(text.trim());
   const books = useQuery({
-    queryKey: ["staff", "collections", "book-search", q],
-    queryFn: () => staffApi.books({ q, per_page: 8 }),
-    enabled: q.length >= 2,
+    // Books show straight away (A–Z) so staff can browse; typing 2+ letters searches (owner 2026-11-16).
+    queryKey: ["staff", "collections", "book-search", q.length >= 2 ? q : ""],
+    queryFn: () => staffApi.books({ ...(q.length >= 2 ? { q } : {}), sort: "title", per_page: q.length >= 2 ? 12 : 30 }),
+    placeholderData: (previous) => previous,
   });
   const full = value.length >= MAX_BOOKS;
-  const results =
-    q.length < 2
-      ? []
-      : (books.data?.data ?? []).filter(
-          (b) => !value.some((v) => v.id === b.id),
-        );
+  const results = full
+    ? []
+    : (books.data?.data ?? []).filter(
+        (b) => !value.some((v) => v.id === b.id),
+      );
   const move = (from: number, to: number) => {
     const next = [...value];
     const [item] = next.splice(from, 1);
@@ -143,7 +143,7 @@ function BookPicker({
           placeholder={
             full
               ? "The list is full"
-              : "Type 2+ letters of a title to add a book"
+              : "Search titles, or pick from the list below"
           }
           autoComplete="off"
           aria-invalid={error ? true : undefined}
