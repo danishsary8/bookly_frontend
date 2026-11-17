@@ -43,8 +43,8 @@ export function NewHereNotice({ to, hide = false }: { to: string; hide?: boolean
           transition={{ duration: reduce ? 0 : 0.32, ease: [0.22, 1, 0.36, 1] }}
           className="overflow-hidden"
         >
-          <div className="mb-4 flex items-center gap-3 rounded-xl border border-primary/20 bg-lapis-tint px-3.5 py-2.5 text-sm">
-            <Sparkles className="size-4 shrink-0 text-primary" aria-hidden="true" />
+          <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-lapis-tint px-3.5 py-2 text-sm">
+            <Sparkles className="hidden size-4 shrink-0 text-primary sm:block" aria-hidden="true" />
             <p className="min-w-0 flex-1 text-foreground">
               {t.newHere}{" "}
               <Link to={to} className="whitespace-nowrap font-semibold text-primary underline underline-offset-4 hover:no-underline">

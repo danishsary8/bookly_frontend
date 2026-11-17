@@ -72,7 +72,7 @@ function Divider({ children }: { children: string }) {
   );
 }
 
-export function SocialButtons({ next = null, telegram = false, hint }: { next?: string | null; telegram?: boolean; /** A short line under the "or" divider (sign-in page: new accounts work too). */ hint?: string }) {
+export function SocialButtons({ next = null, telegram = false, hint, row = false }: { next?: string | null; telegram?: boolean; /** A short line under the "or" divider (sign-in page: new accounts work too). */ hint?: string; /** Sign-in page: Google and Facebook side by side, named only (owner 2026-11-17). */ row?: boolean }) {
   const enabled = (["google", "facebook"] as const).filter(socialEnabled);
   const afterSignIn = useAfterSignIn();
   const { dict } = useT();
@@ -105,11 +105,11 @@ export function SocialButtons({ next = null, telegram = false, hint }: { next?: 
     return (
       <div className="grid gap-3">
         <Divider>{s.or}</Divider>
-        <div className="grid gap-3">
+        <div className={cn("grid gap-3", row && "grid-cols-2 max-[340px]:grid-cols-1")}>
           {(["google", "facebook"] as const).map((p) => (
-            <button key={p} type="button" disabled aria-describedby="social-soon" className={cn(buttonClass, "cursor-not-allowed opacity-60")}>
+            <button key={p} type="button" disabled aria-describedby="social-soon" aria-label={row ? s.continueWith(NAMES[p]) : undefined} className={cn(buttonClass, "cursor-not-allowed opacity-60")}>
               {ICONS[p]}
-              {s.continueWith(NAMES[p])}
+              {row ? NAMES[p] : s.continueWith(NAMES[p])}
             </button>
           ))}
         </div>
@@ -180,10 +180,10 @@ export function SocialButtons({ next = null, telegram = false, hint }: { next?: 
   return (
     <div className="grid gap-3 short:gap-2">
       <Divider>{s.or}</Divider>
-      {hint && enabled.length ? <p className="-mt-1 text-center text-[13px] text-muted-foreground">{hint}</p> : null}
+      {hint && enabled.length ? <p className="-mt-1 hidden text-center text-[13px] text-muted-foreground sm:block">{hint}</p> : null}
       {error || telegramError ? <FormAlert title={error ?? telegramError ?? undefined} /> : null}
       <div className="grid gap-3 short:gap-2">
-        <div className="grid gap-3 short:gap-2">
+        <div className={cn("grid gap-3 short:gap-2", row && enabled.length > 1 && "grid-cols-2 max-[340px]:grid-cols-1")}>
         {enabled.map((p) => (
           <button
             key={p}
@@ -191,13 +191,14 @@ export function SocialButtons({ next = null, telegram = false, hint }: { next?: 
             onClick={() => start(p)}
             disabled={busy !== null}
             aria-busy={busy === p || undefined}
+            aria-label={row && enabled.length > 1 ? s.continueWith(NAMES[p]) : undefined}
             className={cn(
               buttonClass,
               "outline-none hover:border-foreground/40 hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-70",
             )}
           >
             {busy === p ? <Loader2 className="size-[18px] animate-spin motion-reduce:animate-none" aria-hidden="true" /> : ICONS[p]}
-            {s.continueWith(NAMES[p])}
+            {row && enabled.length > 1 ? NAMES[p] : s.continueWith(NAMES[p])}
           </button>
         ))}
         </div>

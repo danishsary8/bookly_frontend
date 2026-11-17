@@ -95,10 +95,11 @@ export default function LoginPage() {
     <AuthPage
       eyebrow={s.welcomeBack}
       title={dict.auth.signIn}
-      lead={s.loginLead}
+      // Phones: the lead is left out so the whole page, sign up included, fits the first screen (owner 2026-11-17).
+      lead={<span className="hidden sm:inline">{s.loginLead}</span>}
       legal
     >
-      <div className="grid gap-5 short:gap-3">
+      <div className="-mt-3 grid gap-4 sm:mt-0 sm:gap-5 short:gap-3">
         {/* New visitors: a short note pointing to sign up; it leaves once they start typing an email (owner 2026-11-17). */}
         <NewHereNotice to={withNext("/register", next)} hide={Boolean(email?.trim()) || Boolean(state?.notice)} />
         {state?.notice && !formError && !telegramError ? <FormAlert tone="success">{state.notice}</FormAlert> : null}
@@ -186,7 +187,7 @@ export default function LoginPage() {
         ) : null}
         {mode === "email" && step === 0 ? (
           <div className="grid gap-3 short:gap-2">
-            <SocialButtons next={next} hint={s.socialHint} />
+            <SocialButtons next={next} hint={s.socialHint} row />
             {telegram ? (
               <button
                 type="button"
@@ -194,7 +195,7 @@ export default function LoginPage() {
                   setFormError(null);
                   setMode("phone");
                 }}
-                className="mx-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold text-foreground/80 underline-offset-4 transition-colors duration-150 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="mx-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold text-primary underline-offset-4 transition-colors duration-150 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring short:min-h-10"
               >
                 <Smartphone className="size-4" aria-hidden="true" />
                 {s.signInWithPhone}
