@@ -1480,6 +1480,7 @@ export const en = {
     inStock: "In stock",
     sale: "Sale",
     new: "New",
+    similarTheme: "Similar in theme",
     onlyLeft: (n: number) => `Only ${n} left`,
   },
   infoPages: {

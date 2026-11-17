@@ -1,4 +1,4 @@
-import { Ban, Sparkles, Tag } from "lucide-react";
+import { Ban, Compass, Sparkles, Tag } from "lucide-react";
 import { useT, type Translations } from "@/i18n";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +45,18 @@ export const OutOfStockBadge = ({ className }: { className?: string }) => (
   <span className={cn(base, "rounded-md border-[1.5px] border-dashed border-muted-foreground text-muted-foreground", className)}>
     <Ban className="h-3.5 w-3.5" aria-hidden="true" />
     <Word pick={(d) => d.cards.outOfStock} />
+  </span>
+);
+
+export const SimilarThemeBadge = ({ className }: { className?: string }) => (
+  <span
+    className={cn(
+      "inline-flex h-5.5 items-center gap-1.5 whitespace-nowrap rounded-md bg-secondary px-2 text-[11px] font-semibold text-secondary-foreground shadow-xs border border-border/50",
+      className
+    )}
+  >
+    <Compass className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden="true" />
+    <Word pick={(d) => d.cards.similarTheme} />
   </span>
 );
 

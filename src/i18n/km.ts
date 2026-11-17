@@ -1486,6 +1486,7 @@ export const km: Translations = {
     inStock: "មានក្នុងស្តុក",
     sale: "បញ្ចុះតម្លៃ",
     new: "ថ្មី",
+    similarTheme: "ប្រធានបទស្រដៀងគ្នា",
     onlyLeft: (n: number) => `នៅសល់តែ ${n}`,
   },
   infoPages: {

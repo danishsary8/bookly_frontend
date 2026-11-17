@@ -11,7 +11,9 @@ export type PageLinks = Schemas["PageLinks"];
 
 /** Reader rating: a public score the shop enters per book with its source (e.g. 4.3, "Goodreads"), shown until customers review. */
 export type ReaderRating = { reader_rating?: number | string | null; reader_rating_source?: string | null };
-export type BookCard = Schemas["BookCard"] & ReaderRating;
+export type BookCard = Schemas["BookCard"] & ReaderRating & {
+  recommendation_reason?: "similar" | string | null;
+};
 export type BookDetail = Schemas["BookDetail"] & ReaderRating;
 export type BookVariant = Schemas["Variant"];
 export type BookFormat = BookVariant["format"];
