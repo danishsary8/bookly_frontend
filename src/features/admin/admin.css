@@ -279,3 +279,6 @@
   .admin-topbar a > span:first-child { display: grid; width: 32px; height: 32px; }
   .admin-topbar .admin-brand-word { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden; }
 }
+
+/* Book and format forms: a hairline and air between titled sections (2026-11-17). */
+.book-form > .book-form-section + .book-form-section { border-top: 1px solid var(--border); padding-top: 1.5rem; }

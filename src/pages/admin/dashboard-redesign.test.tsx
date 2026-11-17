@@ -81,7 +81,8 @@ describe("dashboard redesign", () => {
     expect(await screen.findByRole("rowheader", { name: "Cash on delivery" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Cart reminder recovery" })).toHaveTextContent("1 (25%)");
     expect(screen.getByText(/may not have been caused by the reminder/)).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: /Customers who ordered: First-time customers 2, Returning customers 1/ })).toBeInTheDocument();
+    // "Customers who ordered" repeated the Repeat customers tile, so it was removed (owner 2026-11-17).
+    expect(screen.queryByRole("region", { name: "Customers who ordered" })).not.toBeInTheDocument();
   });
 
   it("shows attention counts and staff activity in accessible tabs", async () => {
@@ -96,14 +97,15 @@ describe("dashboard redesign", () => {
     expect(screen.getByText(/order.updated/)).toBeInTheDocument();
   });
 
-  it("keeps unknown delivery locations separate from the provinces", async () => {
+  it("does not repeat delivery areas or attention counts in the glance grid", async () => {
     setSession("staff", { token: "t", expiresAt: null, user: admin });
     vi.spyOn(staffApi, "summary").mockResolvedValue(summary);
     vi.spyOn(staffApi, "sales").mockResolvedValue(sales);
     vi.spyOn(insightsApi, "get").mockResolvedValue({ ...insights, delivery_areas: { phnom_penh: 2, provinces: 3, unknown: 1 } });
     app();
-    const area = await screen.findByRole("region", { name: "Delivery areas" });
-    expect(within(area).getByRole("img", { name: /Phnom Penh 2, Provinces 3, Unknown location 1/ })).toBeInTheDocument();
+    expect(await screen.findByRole("region", { name: "Net revenue" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Delivery areas" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Needs attention" })).not.toBeInTheDocument();
   });
 
   it("shows KPI cards with a trend line and a View link each", async () => {

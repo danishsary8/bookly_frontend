@@ -10,19 +10,24 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ImageUploadField } from "@/components/ui/ImageUploadField";
 import { Switch } from "@/components/ui/switch";
+import { useStaff } from "@/features/admin/staffSession";
+import { FormSection } from "./FormSection";
+import { PricingFields } from "./PricingFields";
+import { MONEY, suggestSku } from "./pricing";
 import { FORMATS } from "@/lib/catalog";
 import { validateImageUrl } from "@/lib/imageValidation";
 import { useT } from "@/i18n";
 
 const DIGITAL = new Set(["ebook", "audiobook"]);
-type Values = { format: string; sku: string; isbn: string; price_usd: string; stock_quantity: string; low_stock_threshold: string; cover_image_url: string; is_active: boolean; release_date: string; allow_backorder: boolean; delay_note: string };
+type Values = { format: string; sku: string; isbn: string; price_usd: string; cost_price_usd: string; stock_quantity: string; low_stock_threshold: string; cover_image_url: string; is_active: boolean; release_date: string; allow_backorder: boolean; delay_note: string };
 type Errors = Partial<Record<keyof Values | "form", string>>;
 
-const valuesFor = (variant: StaffVariant | null, format: string, defaultCover = ""): Values => ({
+const valuesFor = (variant: StaffVariant | null, format: string, defaultCover = "", title = ""): Values => ({
   format: variant?.format ?? format,
-  sku: variant?.sku ?? "",
+  sku: variant?.sku ?? (title ? suggestSku(title, format) : ""),
   isbn: variant?.isbn ?? "",
   price_usd: variant?.price_usd ?? "",
+  cost_price_usd: variant?.cost_price_usd ?? "",
   stock_quantity: String(variant?.stock_quantity ?? 0),
   low_stock_threshold: String(variant?.low_stock_threshold ?? 5),
   cover_image_url: variant ? (variant.cover_image_url ?? "") : defaultCover,
@@ -37,7 +42,8 @@ function check(v: Values, digital: boolean): Errors {
   if (!v.sku.trim()) e.sku = "Enter a SKU.";
   else if (v.sku.trim().length > 50) e.sku = "Keep the SKU under 50 characters.";
   if (v.isbn.trim().length > 20) e.isbn = "An ISBN has at most 20 characters.";
-  if (!/^\d+(\.\d{1,2})?$/.test(v.price_usd.trim())) e.price_usd = "Enter a price in dollars, like 12.99.";
+  if (!MONEY.test(v.price_usd.trim())) e.price_usd = "Enter a price in dollars, like 12.99.";
+  if (v.cost_price_usd.trim() && !MONEY.test(v.cost_price_usd.trim())) e.cost_price_usd = "Enter a cost in dollars, like 8.50.";
   if (!digital) {
     if (!/^\d+$/.test(v.stock_quantity.trim())) e.stock_quantity = "Enter a whole number, 0 or more.";
     if (!/^\d+$/.test(v.low_stock_threshold.trim())) e.low_stock_threshold = "Enter a whole number, 0 or more.";
@@ -62,7 +68,10 @@ export function VariantDialog({
   onOpenChange,
   onSaved,
   defaultCover = "",
+  bookTitle = "",
 }: {
+  /** A new format gets a SKU suggested from the title. */
+  bookTitle?: string;
   /** A new format starts with the book's main cover (owner 2026-11-02). */
   defaultCover?: string;
   bookId: number;
@@ -74,7 +83,11 @@ export function VariantDialog({
 }) {
   const free = FORMATS.filter((f) => !usedFormats.includes(f.value));
   const { dict } = useT();
-  const [values, setValues] = useState<Values>(() => valuesFor(variant, free[0]?.value ?? "paperback", defaultCover));
+  const t = dict.bookForm;
+  const isAdmin = useStaff()?.user?.role === "admin";
+  const [values, setValues] = useState<Values>(() => valuesFor(variant, free[0]?.value ?? "paperback", defaultCover, bookTitle));
+  // The suggested SKU follows the format until someone types their own.
+  const [skuTouched, setSkuTouched] = useState(Boolean(variant));
   const [errors, setErrors] = useState<Errors>({});
   const alertRef = useRef<HTMLDivElement>(null);
   const digital = DIGITAL.has(values.format);
@@ -88,7 +101,7 @@ export function VariantDialog({
     },
     onError: (error) => {
       const apiError = ApiError.from(error);
-      const fields = ["format", "sku", "isbn", "price_usd", "stock_quantity", "low_stock_threshold", "cover_image_url"] as const;
+      const fields = ["format", "sku", "isbn", "price_usd", "cost_price_usd", "stock_quantity", "low_stock_threshold", "cover_image_url"] as const;
       const next: Errors = {};
       for (const f of fields) {
         const m = apiError.field(f);
@@ -110,6 +123,7 @@ export function VariantDialog({
       sku: values.sku.trim(),
       isbn: values.isbn.trim() || null,
       price_usd: values.price_usd.trim(),
+      ...(isAdmin ? { cost_price_usd: values.cost_price_usd.trim() || null } : {}),
       ...(digital ? {} : { stock_quantity: Number(values.stock_quantity), low_stock_threshold: Number(values.low_stock_threshold) }),
       cover_image_url: values.cover_image_url.trim() || null,
       is_active: values.is_active,
@@ -121,35 +135,58 @@ export function VariantDialog({
   return (
     <Dialog open={open} onOpenChange={(next) => !save.isPending && onOpenChange(next)}>
       <DialogContent size="md">
-        <form onSubmit={submit} noValidate className="grid gap-5">
+        <form onSubmit={submit} noValidate className="book-form grid gap-6">
           <DialogHeader>
             <DialogTitle>{variant ? `Edit ${label.toLowerCase()}` : "Add a format"}</DialogTitle>
             <DialogDescription>{digital ? "Ebooks and audiobooks have no stock to track." : "Stock changes are recorded in the stock history."}</DialogDescription>
           </DialogHeader>
           {errors.form ? <FormAlert ref={alertRef} title={errors.form} /> : null}
-          {variant ? null : (
-            <SelectField label="Format" value={values.format} onChange={(e) => set({ format: e.target.value })} error={errors.format}>
-              {free.map((f) => (
-                <option key={f.value} value={f.value}>
-                  {f.label}
-                </option>
-              ))}
-            </SelectField>
-          )}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <TextField label="SKU" value={values.sku} onChange={(e) => set({ sku: e.target.value })} error={errors.sku} autoComplete="off" />
-            <TextField label="ISBN" optional value={values.isbn} onChange={(e) => set({ isbn: e.target.value })} error={errors.isbn} autoComplete="off" />
-            <div className="grid content-start gap-2">
-              <TextField label="Price (USD)" inputMode="decimal" value={values.price_usd} onChange={(e) => set({ price_usd: e.target.value })} error={errors.price_usd} hint={dict.shopExtras.charmHint} />
-              {/^\d+(\.\d{1,2})?$/.test(values.price_usd) && Number(values.price_usd) < 99999999 ? (
-                <Button type="button" variant="outline" onClick={() => set({ price_usd: `${Math.floor(Number(values.price_usd))}.99` })}>
-                  {dict.shopExtras.makeCharm(`${Math.floor(Number(values.price_usd))}.99`)}
-                </Button>
-              ) : null}
+          <FormSection id="variant-codes" title={t.codes}>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {variant ? null : (
+                <SelectField
+                  label={t.format}
+                  containerClassName="sm:col-span-2"
+                  value={values.format}
+                  onChange={(e) => set({ format: e.target.value, ...(skuTouched || !bookTitle ? {} : { sku: suggestSku(bookTitle, e.target.value) }) })}
+                  error={errors.format}
+                >
+                  {free.map((f) => (
+                    <option key={f.value} value={f.value}>
+                      {f.label}
+                    </option>
+                  ))}
+                </SelectField>
+              )}
+              <TextField
+                label={t.sku}
+                value={values.sku}
+                onChange={(e) => {
+                  setSkuTouched(true);
+                  set({ sku: e.target.value });
+                }}
+                error={errors.sku}
+                hint={variant || !bookTitle ? undefined : t.skuHint}
+                autoComplete="off"
+              />
+              <TextField label="ISBN" optional inputMode="numeric" value={values.isbn} onChange={(e) => set({ isbn: e.target.value })} error={errors.isbn} autoComplete="off" />
             </div>
-            {digital ? null : (
-              <>
-                <TextField label="In stock" inputMode="numeric" value={values.stock_quantity} onChange={(e) => set({ stock_quantity: e.target.value })} error={errors.stock_quantity} />
+          </FormSection>
+          <FormSection id="variant-pricing" title={t.pricing} hint={isAdmin ? t.pricingHint : undefined}>
+            <PricingFields
+              price={values.price_usd}
+              cost={values.cost_price_usd}
+              onPrice={(v) => set({ price_usd: v })}
+              onCost={(v) => set({ cost_price_usd: v })}
+              priceError={errors.price_usd}
+              costError={errors.cost_price_usd}
+              showCost={isAdmin}
+            />
+          </FormSection>
+          {digital ? null : (
+            <FormSection id="variant-stock" title={t.stockSection}>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <TextField label={t.stock} inputMode="numeric" value={values.stock_quantity} onChange={(e) => set({ stock_quantity: e.target.value })} error={errors.stock_quantity} />
                 <TextField
                   label="Low-stock alert at"
                   inputMode="numeric"
@@ -158,23 +195,25 @@ export function VariantDialog({
                   error={errors.low_stock_threshold}
                   hint="Staff are notified when stock falls to this."
                 />
-              </>
-            )}
-          </div>
-          <ImageUploadField
-            label="Cover image"
-            optional
-            value={values.cover_image_url}
-            onChange={(url) => set({ cover_image_url: url })}
-            error={errors.cover_image_url}
-          />
-          <label className="flex min-h-11 items-center justify-between gap-4 rounded-md border border-border px-4 py-2">
-            <span className="grid">
-              <span className="font-semibold">On sale</span>
-              <span className="text-sm text-muted-foreground">Off hides this format from the shop; past orders keep it.</span>
-            </span>
-            <Switch checked={values.is_active} onCheckedChange={(checked) => set({ is_active: checked })} />
-          </label>
+              </div>
+            </FormSection>
+          )}
+          <FormSection id="variant-sale" title={t.visibility}>
+            <ImageUploadField
+              label="Cover image"
+              optional
+              value={values.cover_image_url}
+              onChange={(url) => set({ cover_image_url: url })}
+              error={errors.cover_image_url}
+            />
+            <label className="flex min-h-11 items-center justify-between gap-4 rounded-md border border-border px-4 py-2">
+              <span className="grid">
+                <span className="font-semibold">On sale</span>
+                <span className="text-sm text-muted-foreground">Off hides this format from the shop; past orders keep it.</span>
+              </span>
+              <Switch checked={values.is_active} onCheckedChange={(checked) => set({ is_active: checked })} />
+            </label>
+          </FormSection>
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline" disabled={save.isPending}>

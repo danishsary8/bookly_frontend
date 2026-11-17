@@ -59,7 +59,7 @@
 .inventory-speed .admin-segmented { max-width: 100%; }
 @media (max-width: 479px) { .inventory-speed { width: 100%; } .inventory-speed .admin-segmented { display: grid; width: 100%; grid-template-columns: repeat(5, minmax(0, 1fr)); } .inventory-speed .admin-segmented > button { min-width: 0; padding-inline: 4px; font-size: 13px; } }
 .report-tabs { display: grid; gap: 20px; }
-.dash-ranking-table { min-width: 0; max-width: 100%; overflow-x: auto; }
+.dash-ranking-table { min-width: 0; max-width: 100%; overflow-x: auto; contain: inline-size; } /* its table never sizes the panel (320px, long KHR figures) */
 .dash-ranking-table:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; border-radius: 4px; }
 .dash-overview .dash-insight-metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
 .dash-overview .dash-reminder-metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr)); }

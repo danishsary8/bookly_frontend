@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Ban, CheckCircle2, WalletCards } from "lucide-react";
+import { ArrowLeft, Ban, Check, CheckCircle2, Circle, WalletCards, XCircle } from "lucide-react";
+import { useT } from "@/i18n";
+import { cn } from "@/lib/utils";
 import { Link, useParams } from "react-router-dom";
 import { opsApi, opsKeys, opsQueries, REFUND_METHOD_LABELS, type RefundMethod, type StaffReturn } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
@@ -149,6 +151,36 @@ function ActionDialog({ item, action, onClose }: { item: StaffReturn; action: Ac
   );
 }
 
+/** Requested → Approved → Refunded, or stopped at "Not accepted": where the return is now, at a glance. */
+function ReturnProgress({ status }: { status: StaffReturn["status"] }) {
+  const t = useT().dict.returnsAdmin;
+  const rejected = status === "rejected";
+  const reached = status === "requested" ? 0 : status === "approved" ? 1 : status === "refunded" ? 2 : 0;
+  const steps = rejected ? [t.requested, t.rejectedStep] : [t.requested, t.approved, t.refundedStep];
+  return (
+    <ol aria-label={t.progress} className="flex flex-wrap items-center gap-x-2 gap-y-2">
+      {steps.map((label, i) => {
+        const done = rejected ? true : i <= reached;
+        const current = rejected ? i === 1 : i === reached;
+        const Icon = rejected && i === 1 ? XCircle : done ? Check : Circle;
+        return (
+          <li key={label} aria-current={current ? "step" : undefined} className="flex items-center gap-2">
+            {i > 0 ? <span aria-hidden="true" className={cn("h-0.5 w-6 rounded-full sm:w-10", done ? "bg-primary" : "bg-border")} /> : null}
+            <span
+              className={cn(
+                "inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-sm font-semibold",
+                rejected && i === 1 ? "border-destructive/40 bg-destructive-tint text-destructive" : done ? "border-primary/30 bg-lapis-tint text-primary" : "border-border text-muted-foreground",
+              )}
+            >
+              <Icon className="size-4" aria-hidden="true" /> {label}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 /*
  * /admin/returns/:id: what the customer wants to send back and why, then the
  * next step: requested → approve or don't accept; approved → refund (restocks)
@@ -159,6 +191,7 @@ export default function ReturnAdminPage() {
   const valid = Number.isInteger(id) && id > 0;
   const item = useQuery({ ...opsQueries.return(id), enabled: valid });
   const [action, setAction] = useState<Action | null>(null);
+  const t = useT().dict.returnsAdmin;
   const back = (
     <Link to="/admin/returns" className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline">
       <ArrowLeft className="size-4" aria-hidden="true" /> All returns
@@ -177,6 +210,21 @@ export default function ReturnAdminPage() {
 
   const r = item.data;
   const available: Action[] = r.status === "requested" ? ["approve", "reject"] : r.status === "approved" ? ["refund", "reject"] : [];
+  const nextText = r.status === "requested" ? t.nextRequested : r.status === "approved" ? t.nextApproved : t.nextDone;
+  const actionButtons = (full: boolean) =>
+    available.map((key) => {
+      const { label, Icon, destructive } = ACTIONS[key];
+      return (
+        <Button
+          key={key}
+          variant={destructive ? "outline" : "default"}
+          onClick={() => setAction(key)}
+          className={cn(full && "w-full", destructive ? "border-destructive/50 text-destructive hover:bg-destructive-tint" : undefined)}
+        >
+          <Icon aria-hidden="true" /> {label}
+        </Button>
+      );
+    });
 
   return (
     <AdminPage
@@ -192,20 +240,9 @@ export default function ReturnAdminPage() {
           · requested {orderDate(r.requested_at)}
         </span>
       }
-      actions={available.map((key) => {
-        const { label, Icon, destructive } = ACTIONS[key];
-        return (
-          <Button
-            key={key}
-            variant={destructive ? "outline" : "default"}
-            onClick={() => setAction(key)}
-            className={destructive ? "border-destructive/50 text-destructive hover:bg-destructive-tint" : undefined}
-          >
-            <Icon aria-hidden="true" /> {label}
-          </Button>
-        );
-      })}
+      actions={available.length ? <div className="flex flex-wrap gap-2 xl:hidden">{actionButtons(false)}</div> : null}
     >
+      <ReturnProgress status={r.status} />
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <section aria-labelledby="return-books" className="grid grid-cols-1 content-start gap-4 desk-card rounded-xl border border-border bg-card p-5">
           <h2 id="return-books" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
@@ -217,9 +254,13 @@ export default function ReturnAdminPage() {
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold">{line.title}</span>
                   <span className="block text-sm text-muted-foreground">
-                    {formatLabel(line.format)} · Qty {line.quantity} × {formatUsd(line.unit_price_usd)}
+                    {formatLabel(line.format)} · {line.quantity === 1 ? t.copy : t.copies.replace("{n}", String(line.quantity))} × {formatUsd(line.unit_price_usd)}
                   </span>
-                  {line.reason ? <span className="mt-1 block text-sm">“{line.reason}”</span> : null}
+                  {line.reason ? <span className="mt-1.5 inline-block rounded-md bg-surface-2 px-2 py-1 text-sm">“{line.reason}”</span> : null}
+                </span>
+                <span className="text-right tabular-nums">
+                  <span className="sr-only">{t.lineTotal}: </span>
+                  <span className="font-semibold">{formatUsd(Number(line.unit_price_usd) * (line.quantity ?? 1))}</span>
                 </span>
               </li>
             ))}
@@ -268,12 +309,30 @@ export default function ReturnAdminPage() {
                 </dd>
               </div>
             ) : null}
+            {/* Each figure on its own row (the wallet split used to squeeze into the total's row, 2026-11-17). */}
             <div className="flex items-baseline justify-between gap-4 border-t border-border pt-3">
-              <dt className="font-semibold">{r.is_refund_final ? "Refunded" : "Refund if accepted"}</dt>
-              <dd className="text-2xl font-semibold tabular-nums">{formatUsd(r.refund_amount_usd)}</dd>
-              {Number(r.credit_refund_usd) > 0 ? <><dt>Restored to wallet</dt><dd>{formatUsd(r.credit_refund_usd)}</dd><dt>External refund</dt><dd>{formatUsd(r.external_refund_usd)}</dd></> : null}
+                <dt className="font-semibold">{r.is_refund_final ? "Refunded" : "Refund if accepted"}</dt>
+                <dd className="text-2xl font-semibold tabular-nums">{formatUsd(r.refund_amount_usd)}</dd>
             </div>
+              {Number(r.credit_refund_usd) > 0 ? (
+                <>
+                  <div className="flex items-baseline justify-between gap-4 text-sm">
+                    <dt className="text-muted-foreground">{t.wallet}</dt>
+                    <dd className="font-semibold tabular-nums">{formatUsd(r.credit_refund_usd)}</dd>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-4 text-sm">
+                    <dt className="text-muted-foreground">{t.external}</dt>
+                    <dd className="font-semibold tabular-nums">{formatUsd(r.external_refund_usd)}</dd>
+                  </div>
+                </>
+              ) : null}
           </dl>
+        </section>
+        <div className="grid content-start gap-6">
+        <section aria-labelledby="return-next" className={cn("grid content-start gap-3 rounded-xl border p-5", available.length ? "border-primary/30 bg-lapis-tint" : "desk-card border-border bg-card")}>
+          <h2 id="return-next" className="font-sans text-[1.0625rem] font-semibold tracking-normal">{t.next}</h2>
+          <p className="text-[15px] text-muted-foreground">{nextText}</p>
+          {available.length ? <div className="grid gap-2">{actionButtons(true)}</div> : null}
         </section>
         <section aria-labelledby="return-customer" className="grid content-start gap-2 desk-card rounded-xl border border-border bg-card p-5">
           <h2 id="return-customer" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
@@ -290,6 +349,7 @@ export default function ReturnAdminPage() {
           ) : null}
           {r.resolved_at ? <p className="mt-2 text-sm text-muted-foreground">Answered {orderDateTime(r.resolved_at)}</p> : null}
         </section>
+        </div>
       </div>
       {action ? <ActionDialog key={action} item={r} action={action} onClose={() => setAction(null)} /> : null}
     </AdminPage>

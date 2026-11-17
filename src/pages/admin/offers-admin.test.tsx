@@ -12,6 +12,7 @@ import { RequireStaff } from "@/routes/adminGuards";
 import { renderWithProviders } from "@/test/render";
 import { dismissToast } from "@/stores/toast";
 import OffersAdminPage from "./OffersAdminPage";
+import OfferEditPage from "./OfferEditPage";
 import { giftsApi } from "@/api/endpoints/gifts";
 
 /* /admin/offers (owner 2026-11-01: 1A table + dialog, 2A one search box, 3A preview, 4A row switch with confirm). */
@@ -34,6 +35,8 @@ const app = () =>
       <Routes>
         <Route element={<RequireStaff />}>
           <Route path="/admin/offers" element={<OffersAdminPage />} />
+          <Route path="/admin/offers/new" element={<OfferEditPage />} />
+          <Route path="/admin/offers/:id" element={<OfferEditPage />} />
         </Route>
       </Routes>
       <Toaster />
@@ -61,7 +64,9 @@ describe("offers admin", () => {
     const user = userEvent.setup();
     app();
     await user.click(await screen.findByRole("button", { name: "New offer" }));
-    const dialog = screen.getByRole("dialog");
+    // The editor is its own page now (owner 2026-11-17).
+    await screen.findByRole("heading", { level: 1, name: "New offer" });
+    const dialog = document.body;
     await user.type(within(dialog).getByLabelText("Name"), "Free pen");
     await user.selectOptions(within(dialog).getByLabelText("Offer type"), "gift");
     await user.selectOptions(within(dialog).getByLabelText("Free gift"), "5");
@@ -91,7 +96,9 @@ describe("offers admin", () => {
     const create = vi.spyOn(opsApi, "createOffer").mockResolvedValue({ ...holmes, is_active: false, status: "paused" });
     app();
     await user.click(await screen.findByRole("button", { name: "New offer" }));
-    const dialog = screen.getByRole("dialog");
+    // The editor is its own page now (owner 2026-11-17).
+    await screen.findByRole("heading", { level: 1, name: "New offer" });
+    const dialog = document.body;
     await user.type(within(dialog).getByLabelText("Name"), "Buy 2 Holmes");
     await user.clear(within(dialog).getByLabelText(/Percent off/));
     await user.type(within(dialog).getByLabelText(/Percent off/), "15");
@@ -124,7 +131,9 @@ describe("offers admin", () => {
     const create = vi.spyOn(opsApi, "createOffer");
     app();
     await user.click(await screen.findByRole("button", { name: "New offer" }));
-    const dialog = screen.getByRole("dialog");
+    // The editor is its own page now (owner 2026-11-17).
+    await screen.findByRole("heading", { level: 1, name: "New offer" });
+    const dialog = document.body;
     await user.clear(within(dialog).getByLabelText(/Buy at least/));
     await user.type(within(dialog).getByLabelText(/Buy at least/), "1");
     await user.clear(within(dialog).getByLabelText(/Percent off/));

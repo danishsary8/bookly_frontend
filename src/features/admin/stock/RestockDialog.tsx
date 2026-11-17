@@ -16,6 +16,7 @@ import { toast } from "@/stores/toast";
 interface RestockVariantInfo {
   id: number;
   book_title?: string;
+  publisher_id?: number | null;
   format?: string;
   sku: string;
   stock_quantity: number;
@@ -58,6 +59,15 @@ export function RestockDialog({
   const suppliers = useQuery({ ...supplierQueries.list({ active: "1" }), enabled: open, retry: false });
   const picker = suppliers.isSuccess;
   const [values, setValues] = useState<Values>(initialValues);
+  // The book's own publisher, when it sells direct: listed first and picked by default (owner 2026-11-17).
+  const own = picker && variant?.publisher_id ? suppliers.data.find((x) => x.publisher?.id === variant.publisher_id) : undefined;
+  const [suggested, setSuggested] = useState<string | null>(null);
+  if (own && open && suggested !== `${variant?.id}:${own.id}`) {
+    setSuggested(`${variant?.id}:${own.id}`);
+    if (!values.supplier_choice) setValues((v) => ({ ...v, supplier_choice: String(own.id) }));
+  }
+  const publishers = picker ? suppliers.data.filter((x) => x.type === "publisher" && x.id !== own?.id) : [];
+  const others = picker ? suppliers.data.filter((x) => x.type !== "publisher" && x.id !== own?.id) : [];
   const [errors, setErrors] = useState<Errors>({});
   const alertRef = useRef<HTMLDivElement>(null);
 
@@ -77,6 +87,7 @@ export function RestockDialog({
       onRestocked?.();
       onOpenChange(false);
       setValues(initialValues);
+      setSuggested(null);
       setErrors({});
     },
     onError: (error) => {
@@ -139,6 +150,7 @@ export function RestockDialog({
         if (!restock.isPending) {
           if (!next) {
             setValues(initialValues);
+            setSuggested(null);
             setErrors({});
           }
           onOpenChange(next);
@@ -192,7 +204,21 @@ export function RestockDialog({
                   hint={<Link to="/admin/suppliers" className="font-semibold text-primary underline-offset-4 hover:underline">{ts.manage}</Link>}
                 >
                   <option value="">{ts.pickerNone}</option>
-                  {suppliers.data.map((s) => <option key={s.id} value={String(s.id)}>{s.name}</option>)}
+                  {own ? (
+                    <optgroup label={ts.ownPublisher}>
+                      <option value={String(own.id)}>{own.name}</option>
+                    </optgroup>
+                  ) : null}
+                  {publishers.length ? (
+                    <optgroup label={ts.publishers}>
+                      {publishers.map((x) => <option key={x.id} value={String(x.id)}>{x.name}</option>)}
+                    </optgroup>
+                  ) : null}
+                  {others.length ? (
+                    <optgroup label={ts.distributors}>
+                      {others.map((x) => <option key={x.id} value={String(x.id)}>{x.name}</option>)}
+                    </optgroup>
+                  ) : null}
                   <option value="other">{ts.pickerOther}</option>
                 </SelectField>
                 {values.supplier_choice === "other" ? (

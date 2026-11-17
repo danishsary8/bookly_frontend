@@ -94,7 +94,7 @@ describe("Return Admin & Store Credits", () => {
     const user = userEvent.setup();
 
     await user.click(
-      await screen.findByRole("button", { name: /record refund/i }),
+      (await screen.findAllByRole("button", { name: /record refund/i }))[0],
     );
     const select = screen.getByLabelText(/how was the money returned/i);
     expect(select).toHaveValue("");
@@ -141,7 +141,7 @@ describe("Return Admin & Store Credits", () => {
     const user = userEvent.setup();
 
     await user.click(
-      await screen.findByRole("button", { name: /record refund/i }),
+      (await screen.findAllByRole("button", { name: /record refund/i }))[0],
     );
     const select = screen.getByLabelText(/how was the money returned/i);
     await user.selectOptions(select, "cash");

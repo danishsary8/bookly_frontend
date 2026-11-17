@@ -1159,3 +1159,40 @@ component's own dependencies). Values still glide between periods. Rules: design
   contrast check now waits for the theme's colour transitions to finish (pre-existing flake, also seen on main).
   Local runs: dashboard-motion/clarity/admin-smoke 15/15 (3 repeats), care-marketing forms 4/4, other admin specs passed;
   714 unit tests, lint, typecheck, build OK.
+
+## Book form + admin fixes (2026-11-17, not committed yet; the owner pushes the batch)
+- Book form (`admin-book-form` work): titled sections, first format with price/supplier cost/stock on the New book page
+  (SKU suggested from the title), live profit and margin, format rows show cost and profit (admins), save bar shows
+  unsaved/saved. Backend companion: `cost_price_usd` on formats (admin only).
+- Dashboard: KPI trend line was cut short with a faint "ghost spike" (pathLength animation on a morphing path); now a
+  clip reveal. Periods over 45 days are grouped (weeks / fortnights) so 12 months stays readable. Big jumps show as a
+  multiple ("17.8×"). Removed duplicates from "At a glance": Delivery areas (= Orders by province), Needs attention
+  (= Shop activity tab), Customers who ordered (= Repeat customers). Low-stock rows no longer overflow at 320px.
+- Orders list: payment column (Cash/KHQR, paid or not) and a Next step column with one-click icon buttons (Process /
+  Ship / Deliver, cancel icon) using the order page's confirm dialog (moved to features/admin/orders). Bulk "Change
+  status" now only offers steps the ticked orders can take, with "N of M can"; before, it let staff pick e.g. Shipped
+  for pending orders and every order failed.
+- Returns: "To refund" tab (approved returns were hidden behind "Needs action"); list shows the books and the reason
+  plus a Review button; detail has a progress tracker, a "What to do next" card with the actions, line totals, and the
+  wallet/external refund rows no longer squeeze into the total's row.
+- Support: every signed-in customer uses the account chat (unverified ones used to get the guest form, email-only
+  replies) and a "New reply" badge on the list. Needs the backend route change.
+- All new text in en.ts + km.ts.
+- Checks: lint, typecheck, 718 unit tests, build. Playwright: new e2e/book-form.spec.ts + dashboard clarity/motion,
+  catalogue, admin operations (9/9). Against a local Laravel API seeded with DemoSeeder + ShopActivitySeeder: support
+  chat customer↔staff round trip, bulk and row status changes, Profit/Inventory/Returns screenshots, axe + no sideways
+  scroll on orders, returns, return detail and dashboard at 1440/390/320 in light and dark. Not checked: the live site.
+- Offers and collections editors are pages now (/admin/offers/new, /admin/offers/:id, /admin/collections/new,
+  /admin/collections/:id; forms in features/admin/offers and features/admin/collections). Sections on the left, live
+  preview / home-page settings on the right, sticky save bar. Both book pickers filter by category. Offer picker:
+  "Good for a promotion" lists slow movers (inventory report, in stock and no order for 90 days) then slow sellers
+  (least sold, in stock), each tagged. No API change. Checks: 718 unit tests, lint, typecheck, build; care-marketing
+  spec 3/3 (offer/collection pages at 1440/390/320, light and dark, axe); local-API run: promotion view, category
+  filter, create offer returns to the list.
+- Suppliers as publishers or distributors (owner "go"; backend migration `add_type_and_publisher_to_suppliers`):
+  supplier form picks the type (with the 40-55% direct / many-publishers wholesaler explanation) and, for a publisher,
+  links the catalogue publisher (fills the name). Supplier cards show the type; list filters by type. Restock groups
+  suppliers as "This book's publisher" / "Publishers (direct)" / "Distributors and wholesalers" and preselects the
+  book's own publisher. Profit report's spending-by-supplier rows show the type. Checks: 719 unit tests, lint,
+  typecheck, build; local-API browser run (suppliers page at 1440/390/320 light+dark with axe, form, restock
+  preselect).

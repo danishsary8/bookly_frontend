@@ -73,7 +73,7 @@ test("admin create forms fit the viewport, retain focus and validate and save us
   test.setTimeout(360_000);
   const state = await prepare(page, baseURL);
   const forms = [
-    ["coupons", "New coupon"], ["offers", "New offer"], ["promotions", "New promotion"], ["rewards", "New reward rule"], ["gifts", "Create gift"], ["collections", "New collection"],
+    ["coupons", "New coupon"], ["promotions", "New promotion"], ["rewards", "New reward rule"], ["gifts", "Create gift"],
     ["authors", "Add author"], ["categories", "Add category"], ["publishers", "Add publisher"], ["series", "Add series"], ["series", "Manage volumes for Reading adventures"], ["members", "Invite member"], ["newsletter", "New campaign"], ["books", "Import CSV"], ["assistant/knowledge", "Add FAQ"], ["books/1", "Add format"], ["stock", "Restock"],
   ];
   for (const width of [1440, 390]) {
@@ -104,6 +104,27 @@ test("admin create forms fit the viewport, retain focus and validate and save us
       await expect(trigger).toBeFocused();
     }
   }
+  // Offers and collections open their own page instead of a dialog (owner 2026-11-17).
+  for (const width of [1440, 390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    for (const [route, action] of [["offers", "New offer"], ["collections", "New collection"]]) {
+      await page.goto(`/admin/${route}`);
+      await page.getByRole("button", { name: action, exact: true }).click({ timeout: 10_000 });
+      await expect(page).toHaveURL(new RegExp(`/admin/${route}/new$`));
+      await expect(page.getByRole("heading", { level: 1, name: action })).toBeVisible();
+      for (const dark of [false, true]) {
+        await page.evaluate((dark) => document.documentElement.classList.toggle("dark", dark), dark);
+        await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => a instanceof CSSTransition).map((a) => a.finished.catch(() => undefined))));
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${route} page/${width}`).toBe(true);
+        const axe = await new AxeBuilder({ page }).include(".admin-page").withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+        expect(axe.violations.map((item) => `${item.id}: ${item.nodes.map((n) => n.target).join()}`), `${route} page/${width}/${dark}`).toEqual([]);
+      }
+      await page.evaluate(() => document.documentElement.classList.remove("dark"));
+      await page.getByRole("button", { name: "Cancel", exact: true }).click();
+      await expect(page).toHaveURL(new RegExp(`/admin/${route}$`));
+    }
+  }
+  await page.setViewportSize({ width: 1440, height: 844 });
   await page.goto("/admin/coupons");
   await page.getByRole("button", { name: "New coupon", exact: true }).click();
   const dialog = page.getByRole("dialog");

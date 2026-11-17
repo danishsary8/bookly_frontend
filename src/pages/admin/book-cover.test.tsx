@@ -65,6 +65,7 @@ describe("book cover", () => {
     await user.upload(screen.getByLabelText(/^Cover/), new File(["x"], "emma.png", { type: "image/png" }));
     expect(upload).toHaveBeenCalled();
     expect(await screen.findByRole("img", { name: "Cover preview" })).toHaveAttribute("src", COVER);
+    await user.click(screen.getByRole("button", { name: "Add the format later" }));
     await user.click(screen.getByRole("button", { name: /Create/ }));
 
     const dialog = await screen.findByRole("dialog");

@@ -1,9 +1,10 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Mail, Pencil, Phone, Plus, Truck, UserRound } from "lucide-react";
+import { BookOpen, Mail, Pencil, Phone, Plus, Truck, UserRound } from "lucide-react";
 import { ApiError } from "@/api/errors";
-import { supplierQueries, suppliersApi, type Supplier, type SupplierInput } from "@/api/endpoints/suppliers";
-import { TextAreaField, TextField } from "@/components/form/Field";
+import { supplierQueries, suppliersApi, type Supplier, type SupplierInput, type SupplierType } from "@/api/endpoints/suppliers";
+import { SelectField, TextAreaField, TextField } from "@/components/form/Field";
+import { catalogQueries } from "@/api/endpoints/catalog";
 import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -38,8 +39,9 @@ export default function SuppliersPage() {
   const canEdit = user?.role === "admin" || !user?.permissions || user.permissions.includes("catalog:manage");
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [kind, setKind] = useState<"all" | SupplierType>("all");
   const [editing, setEditing] = useState<Supplier | "new" | null>(null);
-  const query = useQuery(supplierQueries.list({ q: q || undefined, active: filter === "all" ? undefined : filter }));
+  const query = useQuery(supplierQueries.list({ q: q || undefined, active: filter === "all" ? undefined : filter, ...(kind === "all" ? {} : { type: kind }) }));
   const all = useQuery(supplierQueries.list());
   const missing = query.isError && ApiError.from(query.error).status === 404;
   const totals = (all.data ?? []).reduce((sum, s) => ({ active: sum.active + (s.is_active ? 1 : 0), spent: sum.spent + Math.round(Number(s.spend_usd) * 100) }), { active: 0, spent: 0 });
@@ -58,6 +60,7 @@ export default function SuppliersPage() {
             <div className="dash-toolbar">
               <SearchBox label={t.search} value={q} onSearch={setQ} placeholder={t.searchPlaceholder} className="min-w-0 flex-1 sm:max-w-md" busy={query.isFetching} />
               <Segmented label={t.title} value={filter} options={[{ value: "all", label: t.all }, { value: "1", label: t.active }, { value: "0", label: t.off }]} onChange={setFilter} />
+              <Segmented label={t.type} value={kind} options={[{ value: "all", label: t.allTypes }, { value: "publisher", label: t.typePublisher }, { value: "distributor", label: t.typeDistributor }]} onChange={setKind} />
             </div>
             {all.data?.length ? (
               <ul className="flex flex-wrap gap-2" aria-label={t.title}>
@@ -104,7 +107,16 @@ function SupplierCard({ supplier: s, query, onEdit }: { supplier: Supplier; quer
           <span aria-hidden="true" className="dash-kpi-icon grid size-10 shrink-0 place-items-center rounded-full bg-[var(--tone-tint)] text-[var(--tone-ink)]"><Truck className="size-[18px]" /></span>
           <div className="min-w-0">
             <h2 id={`supplier-${s.id}`} className="truncate font-sans text-base font-semibold tracking-normal"><Highlight text={s.name} query={query} /></h2>
-            <span className={cn("mt-0.5 inline-flex rounded-full px-2 py-0.5 text-xs font-bold", s.is_active ? "bg-success-tint text-success" : "bg-secondary text-muted-foreground")}>{s.is_active ? t.active : t.off}</span>
+            <span className="mt-0.5 flex flex-wrap gap-1.5">
+              <span className={cn("inline-flex rounded-full px-2 py-0.5 text-xs font-bold", s.is_active ? "bg-success-tint text-success" : "bg-secondary text-muted-foreground")}>{s.is_active ? t.active : t.off}</span>
+              {s.type ? (
+                <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold", s.type === "publisher" ? "bg-lapis-tint text-primary" : "bg-surface-2 text-foreground")}>
+                  {s.type === "publisher" ? <BookOpen className="size-3" aria-hidden="true" /> : <Truck className="size-3" aria-hidden="true" />}
+                  {s.type === "publisher" ? t.typePublisher : t.typeDistributor}
+                </span>
+              ) : null}
+            </span>
+            {s.publisher ? <span className="mt-1 block truncate text-xs text-muted-foreground">{s.publisher.name}</span> : null}
           </div>
         </div>
         {onEdit ? (
@@ -133,9 +145,9 @@ function SupplierCard({ supplier: s, query, onEdit }: { supplier: Supplier; quer
   );
 }
 
-type Values = { name: string; contact_name: string; phone: string; email: string; note: string; is_active: boolean };
+type Values = { name: string; type: SupplierType; publisher_id: string; contact_name: string; phone: string; email: string; note: string; is_active: boolean };
 type Errors = Partial<Record<keyof Values | "form", string>>;
-const blank: Values = { name: "", contact_name: "", phone: "", email: "", note: "", is_active: true };
+const blank: Values = { name: "", type: "distributor", publisher_id: "", contact_name: "", phone: "", email: "", note: "", is_active: true };
 
 function SupplierDialog({ supplier, onClose }: { supplier: Supplier | "new" | null; onClose: () => void }) {
   const open = supplier !== null;
@@ -153,9 +165,10 @@ function SupplierForm({ supplier, onClose }: { supplier: Supplier | "new"; onClo
   const queryClient = useQueryClient();
   const alertRef = useRef<HTMLDivElement>(null);
   const existing = supplier === "new" ? null : supplier;
-  const [values, setValues] = useState<Values>(existing ? { name: existing.name, contact_name: existing.contact_name ?? "", phone: existing.phone ?? "", email: existing.email ?? "", note: existing.note ?? "", is_active: existing.is_active } : blank);
+  const [values, setValues] = useState<Values>(existing ? { name: existing.name, type: existing.type ?? "distributor", publisher_id: existing.publisher ? String(existing.publisher.id) : "", contact_name: existing.contact_name ?? "", phone: existing.phone ?? "", email: existing.email ?? "", note: existing.note ?? "", is_active: existing.is_active } : blank);
   const [errors, setErrors] = useState<Errors>({});
   const set = (patch: Partial<Values>) => setValues((v) => ({ ...v, ...patch }));
+  const publishers = useQuery(catalogQueries.publishers({ per_page: 100 }));
 
   const save = useMutation({
     mutationFn: (input: SupplierInput) => (existing ? suppliersApi.update(existing.id, input) : suppliersApi.create(input)),
@@ -167,7 +180,7 @@ function SupplierForm({ supplier, onClose }: { supplier: Supplier | "new"; onClo
     onError: (error) => {
       const apiError = ApiError.from(error);
       const next: Errors = {};
-      for (const f of ["name", "contact_name", "phone", "email", "note"] as const) {
+      for (const f of ["name", "type", "publisher_id", "contact_name", "phone", "email", "note"] as const) {
         const m = apiError.field(f);
         if (m) next[f] = m;
       }
@@ -185,7 +198,7 @@ function SupplierForm({ supplier, onClose }: { supplier: Supplier | "new"; onClo
     setErrors(e);
     if (Object.keys(e).length) return;
     const clean = (v: string) => v.trim() || null;
-    save.mutate({ name: values.name.trim(), contact_name: clean(values.contact_name), phone: clean(values.phone), email: clean(values.email), note: clean(values.note), is_active: values.is_active });
+    save.mutate({ name: values.name.trim(), type: values.type, publisher_id: values.type === "publisher" && values.publisher_id ? Number(values.publisher_id) : null, contact_name: clean(values.contact_name), phone: clean(values.phone), email: clean(values.email), note: clean(values.note), is_active: values.is_active });
   };
 
   return (
@@ -197,7 +210,44 @@ function SupplierForm({ supplier, onClose }: { supplier: Supplier | "new"; onClo
         </DialogHeader>
         {errors.form ? <FormAlert ref={alertRef} title={errors.form} /> : null}
         <div className="grid gap-4">
-          <TextField label={t.name} required autoFocus value={values.name} maxLength={150} onChange={(e) => set({ name: e.target.value })} error={errors.name} placeholder="e.g. Monument Books" />
+          <fieldset className="grid gap-2">
+            <legend className="mb-1 text-sm font-semibold">{t.type}</legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(["publisher", "distributor"] as const).map((k) => (
+                <label key={k} className={cn("flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm", values.type === k ? "border-primary bg-lapis-tint" : "border-border hover:bg-surface-2")}>
+                  <input type="radio" name="supplier-type" className="mt-0.5 size-4 accent-[var(--primary)]" checked={values.type === k} onChange={() => set({ type: k, ...(k === "distributor" ? { publisher_id: "" } : {}) })} />
+                  <span className="grid gap-0.5">
+                    <span className="inline-flex items-center gap-1.5 font-semibold">
+                      {k === "publisher" ? <BookOpen className="size-4" aria-hidden="true" /> : <Truck className="size-4" aria-hidden="true" />}
+                      {k === "publisher" ? t.typePublisher : t.typeDistributor}
+                    </span>
+                    <span className="text-muted-foreground">{k === "publisher" ? t.typePublisherHint : t.typeDistributorHint}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          {values.type === "publisher" ? (
+            <SelectField
+              label={t.linkPublisher}
+              optional
+              hint={t.linkHint}
+              value={values.publisher_id}
+              error={errors.publisher_id}
+              onChange={(e) => {
+                const name = publishers.data?.data.find((p) => String(p.id) === e.target.value)?.name;
+                set({ publisher_id: e.target.value, ...(name && !values.name.trim() ? { name } : {}) });
+              }}
+            >
+              <option value="">{t.linkNone}</option>
+              {(publishers.data?.data ?? []).map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </SelectField>
+          ) : null}
+          <TextField label={t.name} required autoFocus value={values.name} maxLength={150} onChange={(e) => set({ name: e.target.value })} error={errors.name} placeholder={values.type === "publisher" ? "e.g. Penguin Random House" : "e.g. Monument Books"} />
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField label={t.contact} optional value={values.contact_name} maxLength={150} onChange={(e) => set({ contact_name: e.target.value })} error={errors.contact_name} autoComplete="off" />
             <TextField label={t.phone} optional type="tel" inputMode="tel" value={values.phone} maxLength={40} onChange={(e) => set({ phone: e.target.value })} error={errors.phone} autoComplete="off" />

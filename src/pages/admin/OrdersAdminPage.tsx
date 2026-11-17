@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download, FileText, ListChecks, Package, Printer, X } from "lucide-react";
+import { Banknote, Download, FileText, ListChecks, Package, Printer, QrCode, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { opsApi, opsQueries } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
@@ -15,6 +15,10 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Pagination } from "@/components/ui/pagination";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { BulkStatusDialog } from "@/features/admin/orders/BulkStatusDialog";
+import { StatusDialog } from "@/features/admin/orders/OrderStatusDialog";
+import { STEPS } from "@/features/admin/orders/orderSteps";
+import { useT } from "@/i18n";
+import { cn } from "@/lib/utils";
 import { useIsNewOrder } from "@/features/admin/orders/newOrders";
 import { ListState, SearchBox, Segmented, TableCard, td, th, thead } from "@/features/admin/listKit";
 import { useStaff } from "@/features/admin/staffSession";
@@ -122,6 +126,30 @@ function SelectionBar({ ids, onStatus, onClear }: { ids: number[]; onStatus: () 
   );
 }
 
+/** The row's quick actions: the next forward step as an icon button with a short label, and cancel as an icon. */
+function NextSteps({ allowed, number, short, t, onPick }: { allowed: OrderStatus[]; number: string; short: Partial<Record<OrderStatus, string>>; t: { cancel: string; nextFor: string; done: string }; onPick: (to: OrderStatus) => void }) {
+  const forward = allowed.filter((s) => STEPS[s] && !STEPS[s]!.destructive);
+  const cancel = allowed.find((s) => STEPS[s]?.destructive);
+  if (!forward.length && !cancel) return <span className="text-sm text-muted-foreground">{t.done}</span>;
+  return (
+    <div className="flex items-center gap-1.5">
+      {forward.map((s) => {
+        const { Icon, label } = STEPS[s]!;
+        return (
+          <Button key={s} size="sm" variant="outline" className="min-h-11 gap-1.5 whitespace-nowrap" aria-label={t.nextFor.replace("{step}", label).replace("{n}", number)} title={label} onClick={() => onPick(s)}>
+            <Icon aria-hidden="true" /> {short[s] ?? label}
+          </Button>
+        );
+      })}
+      {cancel ? (
+        <Button size="icon" variant="ghost" className="size-11 text-destructive hover:bg-destructive-tint" aria-label={t.cancel.replace("{n}", number)} title={STEPS[cancel]!.label} onClick={() => onPick(cancel)}>
+          {(() => { const Icon = STEPS[cancel]!.Icon; return <Icon aria-hidden="true" />; })()}
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
 /*
  * /admin/orders: every order, newest first; search by order number or customer,
  * filter by status and by the day it was placed. All filters live in the URL.
@@ -143,15 +171,31 @@ export default function OrdersAdminPage() {
   const isNew = useIsNewOrder();
   const [exporting, setExporting] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
+  // The next steps each ticked order allows, kept while paging, so the bulk dialog offers only steps that fit.
+  const [allowedById, setAllowedById] = useState<Record<number, OrderStatus[]>>({});
   const [changing, setChanging] = useState(false);
+  // One order, one step: the same confirm dialog as the order page (note for the timeline included).
+  const [step, setStep] = useState<{ order: { id?: number; order_number?: string }; to: OrderStatus } | null>(null);
+  const t = useT().dict.ordersList;
+  const short: Partial<Record<OrderStatus, string>> = { processing: t.process, shipped: t.ship, delivered: t.deliver };
   const meta = orders.data?.meta;
   const list = orders.data?.data ?? [];
   const pageIds = list.map((o) => o.id!);
   const onPage = pageIds.filter((id) => selected.includes(id)).length;
   const full = selected.length >= MAX_PRINT;
-  const toggle = (id: number, on: boolean) =>
+  const remember = (ids: number[]) =>
+    setAllowedById((current) => ({ ...current, ...Object.fromEntries(list.filter((o) => ids.includes(o.id!)).map((o) => [o.id!, (o as { allowed_next_statuses?: OrderStatus[] }).allowed_next_statuses ?? []])) }));
+  const toggle = (id: number, on: boolean) => {
+    remember([id]);
+    setSelectedRaw(id, on);
+  };
+  const setSelectedRaw = (id: number, on: boolean) =>
     setSelected((current) => (on ? (current.includes(id) || current.length >= MAX_PRINT ? current : [...current, id]) : current.filter((x) => x !== id)));
-  const togglePage = (on: boolean) =>
+  const togglePage = (on: boolean) => {
+    remember(pageIds);
+    setSelectedAll(on);
+  };
+  const setSelectedAll = (on: boolean) =>
     setSelected((current) => (on ? [...current, ...pageIds.filter((id) => !current.includes(id))].slice(0, MAX_PRINT) : current.filter((id) => !pageIds.includes(id))));
 
   return (
@@ -206,7 +250,7 @@ export default function OrdersAdminPage() {
         query={orders}
         empty={{ when: list.length === 0, icon: Package, title: "No orders match", description: q || status || from || to ? "Try another search, status or date." : "Orders will show up here as customers place them." }}
       >
-        <TableCard stale={orders.isPlaceholderData} minWidth={800}>
+        <TableCard stale={orders.isPlaceholderData} minWidth={1040}>
           <thead className={thead}>
             <tr>
               <th scope="col" className={`${th} w-12`}>
@@ -221,9 +265,11 @@ export default function OrdersAdminPage() {
               </th>
               <th scope="col" className={th}>Order</th>
               <th scope="col" className={th}>Customer</th>
+              <th scope="col" className={th}>{t.payment}</th>
               <th scope="col" className={th}>Status</th>
               <th scope="col" className={`${th} text-right`}>Total</th>
               <th scope="col" className={th}>Placed</th>
+              <th scope="col" className={th}>{t.actions}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -240,7 +286,7 @@ export default function OrdersAdminPage() {
                   </label>
                 </td>
                 <th scope="row" className={`${td} font-normal`}>
-                  <Link to={`/admin/orders/${o.id}`} className="font-semibold tabular-nums underline-offset-4 hover:text-primary hover:underline">
+                  <Link to={`/admin/orders/${o.id}`} className="whitespace-nowrap font-semibold tabular-nums underline-offset-4 hover:text-primary hover:underline">
                     {o.order_number}
                   </Link>
                   {isNew(o.id) ? (
@@ -258,6 +304,15 @@ export default function OrdersAdminPage() {
                   <span className="block text-sm text-muted-foreground">{o.customer?.email}</span>
                 </td>
                 <td className={td}>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-medium">
+                    {o.payment_method === "khqr" ? <QrCode className="size-4 text-muted-foreground" aria-hidden="true" /> : <Banknote className="size-4 text-muted-foreground" aria-hidden="true" />}
+                    {o.payment_method === "khqr" ? t.khqr : t.cod}
+                  </span>
+                  <span className={cn("block text-xs font-semibold", o.payment_status === "succeeded" ? "text-success" : "text-muted-foreground")}>
+                    {o.payment_status === "succeeded" ? t.paid : t.unpaid}
+                  </span>
+                </td>
+                <td className={td}>
                   <div className="flex flex-col items-start gap-1">
                     <OrderStatusBadge status={o.status} />
                     {o.is_waiting_stock ? (
@@ -269,6 +324,15 @@ export default function OrdersAdminPage() {
                 </td>
                 <td className={`${td} text-right font-semibold tabular-nums`}>{formatUsd(o.total_usd)}</td>
                 <td className={`${td} whitespace-nowrap text-sm text-muted-foreground`}>{orderDateTime(o.placed_at)}</td>
+                <td className={td}>
+                  <NextSteps
+                    allowed={(o as { allowed_next_statuses?: OrderStatus[] }).allowed_next_statuses ?? []}
+                    number={o.order_number ?? ""}
+                    short={short}
+                    t={t}
+                    onPick={(to) => setStep({ order: o, to })}
+                  />
+                </td>
               </tr>
             ))}
           </tbody>
@@ -276,8 +340,10 @@ export default function OrdersAdminPage() {
       </ListState>
       <Pagination page={meta?.current_page ?? 1} lastPage={meta?.last_page ?? 1} hrefFor={hrefFor} />
       {isAdmin ? <ExportDialog open={exporting} onOpenChange={setExporting} /> : null}
+      {step ? <StatusDialog key={`${step.order.id}-${step.to}`} order={step.order as never} to={step.to} onClose={() => setStep(null)} /> : null}
       <BulkStatusDialog
         ids={selected}
+        allowed={selected.map((id) => allowedById[id]).filter(Boolean)}
         open={changing}
         onOpenChange={setChanging}
         onDone={(result) => setSelected((current) => current.filter((id) => !result.updated.some((u) => u.id === id)))}

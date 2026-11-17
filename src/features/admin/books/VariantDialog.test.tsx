@@ -8,7 +8,7 @@ describe("price suggestion", () => {
   it("changes only the unsaved price after the staff member clicks", async () => {
     const user = userEvent.setup();
     renderWithProviders(<VariantDialog bookId={1} variant={null} usedFormats={[]} open onOpenChange={() => {}} onSaved={() => {}} />);
-    const input = screen.getByLabelText("Price (USD)");
+    const input = screen.getByLabelText("Sell price (USD)");
     await user.type(input, "12.50");
     expect(input).toHaveValue("12.50");
     expect(screen.getByText("Prices ending in .99 sell better")).toBeInTheDocument();

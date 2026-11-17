@@ -7,7 +7,6 @@ import { supportApi, type Topic } from "@/api/endpoints/support";
 import { ordersApi } from "@/api/endpoints/orders";
 import { Button } from "@/components/ui/button";
 import { useTurnstile } from "@/features/auth/turnstile";
-import { needsVerifying } from "@/features/auth/verification";
 import { useT } from "@/i18n";
 import { ConversationView, supportField } from "./ConversationView";
 import { useConversations } from "./useSupport";
@@ -41,11 +40,12 @@ function CustomerSupport({ customer, initialMessage = "" }: { customer: Customer
       <label className="grid gap-1">{t.order}<select className={supportField} value={order} onChange={(event) => setOrder(event.target.value)}><option value="">{t.noOrder}</option>{orders.data?.data.map((item) => <option key={item.id} value={item.id}>{item.order_number}</option>)}</select></label>
       <label className="grid gap-1">{t.firstMessage}<textarea className={supportField} required maxLength={2000} rows={3} value={message} onChange={(event) => setMessage(event.target.value)} /></label>
       <Button type="submit" disabled={start.isPending || !message.trim()}>{t.send}</Button>{start.isError ? <p role="alert" className="text-destructive">{t.error}</p> : null}
-    </form> : list.isError ? <p role="alert">{t.error}</p> : list.isPending ? <p role="status">{t.loading}</p> : <ul className="grid gap-2">{list.data?.value.data.length ? list.data.value.data.map((item) => <li key={item.id}><Button variant="outline" className="h-auto min-h-11 w-full justify-start whitespace-normal text-left" onClick={() => select(item.id)}>#{item.id} · {t.topics[item.topic]} · {t.status[item.status]}{item.unread_count ? ` (${item.unread_count})` : ""}</Button></li>) : <li>{t.empty}</li>}</ul>}
+    </form> : list.isError ? <p role="alert">{t.error}</p> : list.isPending ? <p role="status">{t.loading}</p> : <ul className="grid gap-2">{list.data?.value.data.length ? list.data.value.data.map((item) => <li key={item.id}><Button variant="outline" className="h-auto min-h-11 w-full justify-start whitespace-normal text-left" onClick={() => select(item.id)}><span className="flex w-full flex-wrap items-center gap-2"><span>#{item.id} · {t.topics[item.topic]} · {t.status[item.status]}</span>{item.unread_count ? <span className="ml-auto rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">{t.newReply} · {item.unread_count}</span> : null}</span></Button></li>) : <li>{t.empty}</li>}</ul>}
     {!selected && !starting && (list.data?.value.meta.last_page ?? 1) > 1 ? <nav aria-label={dict.ui.pagination} className="flex gap-2"><Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>{dict.ui.prev}</Button><span className="self-center">{dict.ui.page(page)}</span><Button variant="outline" disabled={page >= (list.data?.value.meta.last_page ?? 1)} onClick={() => setPage(page + 1)}>{dict.ui.next}</Button></nav> : null}
   </div>;
 }
 export function SupportPanel({ initialMessage = "" }: { initialMessage?: string }) {
   const customer = useSession<Customer>("customer")?.user;
-  return customer && !needsVerifying(customer) ? <CustomerSupport key={`${customer.id}:${initialMessage}`} customer={customer} initialMessage={initialMessage} /> : <GuestSupport key={initialMessage} initialMessage={initialMessage} />;
+  // Any signed-in customer chats in the account, so staff replies show here (owner 2026-11-17).
+  return customer ? <CustomerSupport key={`${customer.id}:${initialMessage}`} customer={customer} initialMessage={initialMessage} /> : <GuestSupport key={initialMessage} initialMessage={initialMessage} />;
 }

@@ -5,6 +5,10 @@ import { api } from "../client";
 export interface Supplier {
   id: number;
   name: string;
+  /** Publisher (buying direct) or distributor / wholesaler (owner 2026-11-17). Missing on an older API. */
+  type?: SupplierType;
+  /** The catalogue publisher a publisher supplier is. */
+  publisher?: { id: number; name: string } | null;
   contact_name: string | null;
   phone: string | null;
   email: string | null;
@@ -16,14 +20,16 @@ export interface Supplier {
   last_restock_at: string | null;
 }
 
-export type SupplierInput = Partial<Pick<Supplier, "name" | "contact_name" | "phone" | "email" | "note" | "is_active">>;
+export type SupplierType = "publisher" | "distributor";
+
+export type SupplierInput = Partial<Pick<Supplier, "name" | "contact_name" | "phone" | "email" | "note" | "is_active" | "type">> & { publisher_id?: number | null };
 
 export const suppliersApi = {
-  list: (params: { q?: string; active?: "0" | "1" } = {}) => api.get<{ data: Supplier[] }>("/staff/suppliers", { params }).then((r) => r.data),
+  list: (params: { q?: string; active?: "0" | "1"; type?: SupplierType } = {}) => api.get<{ data: Supplier[] }>("/staff/suppliers", { params }).then((r) => r.data),
   create: (input: SupplierInput) => api.post<{ data: Supplier }>("/staff/suppliers", input).then((r) => r.data),
   update: (id: number, input: SupplierInput) => api.patch<{ data: Supplier }>(`/staff/suppliers/${id}`, input).then((r) => r.data),
 };
 
 export const supplierQueries = {
-  list: (params: { q?: string; active?: "0" | "1" } = {}) => queryOptions({ queryKey: ["staff", "suppliers", params] as const, queryFn: () => suppliersApi.list(params), staleTime: 30_000 }),
+  list: (params: { q?: string; active?: "0" | "1"; type?: SupplierType } = {}) => queryOptions({ queryKey: ["staff", "suppliers", params] as const, queryFn: () => suppliersApi.list(params), staleTime: 30_000 }),
 };
