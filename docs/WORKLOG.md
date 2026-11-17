@@ -1159,3 +1159,13 @@ component's own dependencies). Values still glide between periods. Rules: design
   contrast check now waits for the theme's colour transitions to finish (pre-existing flake, also seen on main).
   Local runs: dashboard-motion/clarity/admin-smoke 15/15 (3 repeats), care-marketing forms 4/4, other admin specs passed;
   714 unit tests, lint, typecheck, build OK.
+
+### 2026-11-17 — Classic shelf look (branch `shelf-classic-look`)
+- Owner: bring back the old titled-spine shelf, keep the new pill glide and row lift, fix the shelf bugs and make it
+  smooth. Details in design-system/bookly/pages/home.md.
+- Bugs fixed: books packed 2 px apart with different thickness cut into each other while turning (broken side faces);
+  about half the spines had no binding (signed shift on the hash).
+- Checks: lint, typecheck, 714 tests passed (3 skipped), build OK. Browser (local API) at 1440×900 and 390×844: 60
+  titled spines, all with a binding, mid-turn and row-lift frames clean, new row lands, no page errors. Frame time
+  in headless Chrome without a GPU, desktop: median 50 ms here vs 133 ms on main (phone 16.7 ms on both).
+  Dark mode checked at 1280. Not checked: real devices, real cover images (blocked in this sandbox).
