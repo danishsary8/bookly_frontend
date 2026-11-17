@@ -4,7 +4,8 @@ import { creditApi } from "./credit";
 
 afterEach(() => vi.restoreAllMocks());
 it("enables money features only for explicit boolean flags", async () => {
-  vi.spyOn(api, "get").mockResolvedValueOnce({}).mockResolvedValueOnce({ data: { gift_cards: "true", referrals: true } });
-  expect(await creditApi.features()).toEqual({ gift_cards: false, referrals: false });
-  expect(await creditApi.features()).toEqual({ gift_cards: false, referrals: true });
+  vi.spyOn(api, "get").mockResolvedValueOnce({}).mockResolvedValueOnce({ data: { referrals: "true" } }).mockResolvedValueOnce({ data: { referrals: true } });
+  expect(await creditApi.features()).toEqual({ referrals: false });
+  expect(await creditApi.features()).toEqual({ referrals: false });
+  expect(await creditApi.features()).toEqual({ referrals: true });
 });

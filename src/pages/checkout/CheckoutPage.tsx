@@ -22,7 +22,6 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { setCoupon, useCoupon } from "@/features/cart/couponStore";
 import { useUsableCart } from "@/features/cart/useCart";
 import { AddressPicker } from "@/features/checkout/AddressPicker";
-import { GiftOption } from "@/features/checkout/GiftOption";
 import { PaymentOptions, type PaymentChoice } from "@/features/checkout/PaymentOptions";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { cn } from "@/lib/utils";
@@ -130,8 +129,6 @@ export default function CheckoutPage() {
   const deliveryPhone = addressId == null ? "" : phoneEdits[addressId] ?? selectedAddress?.phone ?? "";
   const phoneValid = /^\+?[0-9][0-9 ()-]{5,28}[0-9]$/.test(deliveryPhone.trim());
   const [deliveryNote, setDeliveryNote] = useState("");
-  const [isGift, setIsGift] = useState(false);
-  const [giftMessage, setGiftMessage] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   // Set when the last attempt lost its response: the order may exist even though the cart
   // now looks empty, so the page stays put and the retry (same key) returns that order.
@@ -157,7 +154,6 @@ export default function CheckoutPage() {
           ...(useCredit ? { use_credit: true, expected_payment_due_usd: preview.data?.payment_due?.usd } : {}),
           ...(coupon ? { coupon_code: coupon } : {}),
           ...(deliveryNote.trim() ? { delivery_note: deliveryNote.trim() } : {}),
-          ...(isGift ? { is_gift: true, ...(giftMessage.trim() ? { gift_message: giftMessage.trim() } : {}) } : {}),
           // Offers spec O1: send the offer the customer saw, so a just-ended offer never silently raises the total.
           ...(preview.data?.applied === "offer" && preview.data.offer?.id ? { offer_id: preview.data.offer.id } : {}),
         },
@@ -265,18 +261,10 @@ export default function CheckoutPage() {
                 containerClassName="checkout-delivery-note"
               />
               </div>
-              <GiftOption
-                isGift={isGift}
-                onIsGiftChange={setIsGift}
-                message={giftMessage}
-                onMessageChange={setGiftMessage}
-                cashOnDelivery={paymentMethod === "cod"}
-                khqrAvailable={Boolean(khqr)}
-              />
             </Step>
 
             <Step n={2} title={dict.checkout.paymentMethod} done>
-              {(features.data?.gift_cards || features.data?.referrals) && Number(preview.data?.credit_balance?.usd) > 0 ? (
+              {features.data?.referrals && Number(preview.data?.credit_balance?.usd) > 0 ? (
                 <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 has-[:checked]:border-primary has-[:checked]:bg-lapis-tint">
                   <input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} disabled={place.isPending || unconfirmed} className="size-[18px] accent-primary" />
                   {dict.credit.use} ({formatMoney(preview.data?.credit_balance?.usd, preview.data?.credit_balance?.khr, currency)})

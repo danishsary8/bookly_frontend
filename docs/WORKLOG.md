@@ -1228,3 +1228,14 @@ component's own dependencies). Values still glide between periods. Rules: design
 - Checks: lint, typecheck, 720 tests passed (3 skipped, new test for the breakdown), build OK. Browser with the local
   API (30 days): $191.35 − $7.89 = $183.46 book sales, + $15.00 delivery − $0.00 refunds = $198.46 net revenue;
   Profit $123.87 known cost + $59.59 without cost = $183.46. No page errors. Not checked: the live API, phone width.
+
+### 2026-11-17 — Remove gift cards and the checkout gift note (branch `remove-gift-cards`)
+- Owner decision (backend branch `remove-gift-cards` in bookly_backend_v2): gift cards and the checkout gift note are
+  removed. Free gifts with offers (/admin/gifts, free-gift lines) and referrals with the credit wallet stay.
+- Removed: account and admin gift card pages, the KHQR gift payment panel, menu links and routes, gift card API calls
+  and types, `gift_cards` feature flag, the checkout "This is a gift" option, gift stamps and cut-out card on invoices
+  and packing slips, gift blocks on order pages, their en + km text, unit and e2e tests. Old audit entries still read
+  "Gift card (removed)".
+- Checks: lint, typecheck, 710 tests (gift tests removed), build OK. e2e account-smoke, admin-operations, credit-smoke
+  (now referrals only): 5/5 passed. Browser (local API): /admin/gifts loads, no gift card links, /admin/gift-cards is
+  the not-found page, no page errors. Not checked: the checkout page itself (demo cart empty), the live API.

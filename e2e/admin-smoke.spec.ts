@@ -33,8 +33,7 @@ async function prepareAdmin(page: Page, baseURL?: string) {
     if (path === "/staff/settings/payments") body = { data: { khqr_enabled: true, khqr_discount_percent: "3", cod_max_order_usd: "80" } };
     if (path === "/staff/newsletter/summary") body = { confirmed: 0, pending: 0, unsubscribed: 0, total: 0, daily_limit: 100 };
     if (path.startsWith("/staff/assistant/")) body = { data: { data: [], current_page: 1, last_page: 1 } };
-    if (path === "/shop/features") body = { data: { gift_cards: true, referrals: true } };
-    if (path === "/staff/gift-cards") body = { data: [], current_page: 1, last_page: 1, totals: { sold_usd: "0.00", redeemed_usd: "0.00", outstanding_usd: "0.00", refund_review_usd: "0.00" } };
+    if (path === "/shop/features") body = { data: { referrals: true } };
     if (path === "/staff/referrals") body = { data: [], current_page: 1, last_page: 1, stats: { total: 0, rewarded: 0, credited_usd: "0.00", unrecovered_usd: "0.00" } };
     if (/^\/staff\/(books|orders|returns|customers)\/\d+$/.test(path)) return route.fulfill({ status: 404, json: { message: "Not found." } });
     // Reports have separate, substantial contracts; verify their error recovery here.
@@ -47,7 +46,7 @@ async function prepareAdmin(page: Page, baseURL?: string) {
 test("admin routes load without module errors or crashes", async ({ page, baseURL }) => {
   test.setTimeout(360_000);
   const { errors } = await prepareAdmin(page, baseURL);
-  const routes = ["", "/reports", "/orders", "/returns", "/customers", "/support", "/reviews", "/ratings", "/assistant/knowledge", "/coupons", "/offers", "/promotions", "/rewards", "/gifts", "/reading-lists", "/collections", "/books", "/books/new", "/stock", "/authors", "/categories", "/publishers", "/series", "/trash", "/newsletter", "/gift-cards", "/referrals", "/members", "/exchange-rates", "/audit-log", "/purchases", "/security", "/orders/999", "/returns/999", "/customers/999"];
+  const routes = ["", "/reports", "/orders", "/returns", "/customers", "/support", "/reviews", "/ratings", "/assistant/knowledge", "/coupons", "/offers", "/promotions", "/rewards", "/gifts", "/reading-lists", "/collections", "/books", "/books/new", "/stock", "/authors", "/categories", "/publishers", "/series", "/trash", "/newsletter", "/referrals", "/members", "/exchange-rates", "/audit-log", "/purchases", "/security", "/orders/999", "/returns/999", "/customers/999"];
   const findings: string[] = [];
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 900 });

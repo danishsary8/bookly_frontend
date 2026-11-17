@@ -124,7 +124,7 @@ describe("CartPage", () => {
 
 describe("CheckoutPage", () => {
   it("shows the credit remainder and sends the amount the customer approved", async () => {
-    vi.spyOn(creditApi, "features").mockResolvedValue({ gift_cards: true, referrals: false });
+    vi.spyOn(creditApi, "features").mockResolvedValue({ referrals: true });
     vi.mocked(cartApi.preview).mockImplementation(async (code, address, _area, useCredit) => ({ ...preview(code ?? null, address ?? null), credit_balance: amount("5.00"), credit_used: amount(useCredit ? "5.00" : "0.00"), payment_due: amount(useCredit ? "22.48" : "27.48") }));
     const place = vi.spyOn(cartApi, "placeOrder").mockResolvedValue({ ...order, credit_used_usd: "5.00", payment_due_usd: "22.48" });
     vi.spyOn(ordersApi, "order").mockResolvedValue(order);
@@ -181,17 +181,6 @@ describe("CheckoutPage", () => {
       expect.objectContaining({ delivery_note: "Call before delivery" }),
       expect.any(String),
     );
-  });
-
-  it("sends the gift option and message (trimmed) only when ticked", async () => {
-    const user = userEvent.setup();
-    const place = vi.spyOn(cartApi, "placeOrder").mockResolvedValue(order);
-    vi.spyOn(ordersApi, "order").mockResolvedValue(order);
-    app("/checkout");
-    await user.click(await screen.findByRole("checkbox", { name: /This is a gift/ }));
-    await user.type(screen.getByLabelText(/Gift message/), "  For Mum  ");
-    await user.click(screen.getByRole("button", { name: "Place order" }));
-    expect(place).toHaveBeenCalledWith(expect.objectContaining({ is_gift: true, gift_message: "For Mum" }), expect.any(String));
   });
 
   it("prices delivery for the chosen address", async () => {

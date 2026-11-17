@@ -21,17 +21,16 @@ test("account routes render and remain usable on a laptop", async ({ page, baseU
     const path = url.pathname.slice("/api/v1".length);
     let body: unknown = { data: [], meta: { current_page: 1, last_page: 1, total: 0, per_page: 20, from: null, to: null }, links: {} };
     if (path === "/me") body = { data: customer };
-    if (path === "/shop/features") body = { data: { gift_cards: true, referrals: true } };
+    if (path === "/shop/features") body = { data: { referrals: true } };
     if (path === "/cart") body = { data: { id: 1, items: [], item_count: 0, subtotal_usd: "0.00", can_checkout: true } };
     if (path === "/store-rating") body = { data: { average: null, count: 0 } };
     if (path === "/delivery/options") body = { data: { areas: [], provinces: [], payment_methods: [] } };
     if (path === "/me/ebook-devices") body = { data: [], meta: { max_devices: 3, next_removal_at: null } };
-    if (path === "/me/gift-cards") body = { data: [], balance_usd: "0.00", current_page: 1, last_page: 1 };
     if (path === "/me/referrals") body = { data: { code: "TESTREFERRAL", friend_discount_usd: "2.00", reward_usd: "2.00", balance_usd: "0.00", current_page: 1, last_page: 1, history: [] } };
     if (/^\/orders\//.test(path)) return route.fulfill({ status: 404, json: { message: "Not found." } });
     return route.fulfill({ json: body });
   });
-  for (const route of ["", "/orders", "/wishlist", "/lists", "/reviews", "/ebooks", "/coupons", "/profile", "/security", "/addresses", "/support", "/gift-cards", "/referrals", "/orders/999", "/orders/999/pay"]) {
+  for (const route of ["", "/orders", "/wishlist", "/lists", "/reviews", "/ebooks", "/coupons", "/profile", "/security", "/addresses", "/support", "/referrals", "/orders/999", "/orders/999/pay"]) {
     await page.goto(`/account${route}`);
     await expect(page.locator("main h1").first()).toBeVisible();
     await expect(page.getByText(/^Loading/)).toHaveCount(0);
