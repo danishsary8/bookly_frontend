@@ -1,6 +1,6 @@
 import "./account.css";
 import { useId } from "react";
-import { ArrowUpRight, BookHeart, BookOpen, ChevronDown, Gift, Heart, KeyRound, LayoutDashboard, LifeBuoy, LogOut, MapPin, MessageSquareText, Package, RotateCcw, TicketPercent, UserPlus, UserRound, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, BookHeart, BookOpen, ChevronDown, Heart, KeyRound, LayoutDashboard, LifeBuoy, LogOut, MapPin, MessageSquareText, Package, RotateCcw, TicketPercent, UserPlus, UserRound, type LucideIcon } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { m } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
@@ -20,7 +20,7 @@ import { useT, type Translations } from "@/i18n";
  * Khmer labels never has to scroll sideways. Each section is its own page with its own URL.
  */
 
-type SectionKey = "overview" | "orders" | "returns" | "coupons" | "gifts" | "referrals" | "ebooks" | "wishlist" | "readingLists" | "reviews" | "profile" | "security" | "addresses" | "support";
+type SectionKey = "overview" | "orders" | "returns" | "coupons" | "referrals" | "ebooks" | "wishlist" | "readingLists" | "reviews" | "profile" | "security" | "addresses" | "support";
 type Section = { to: string; key: SectionKey; Icon: LucideIcon; end?: boolean };
 
 const groups: { key: keyof Translations["accountNav"]["groups"]; sections: Section[] }[] = [
@@ -31,7 +31,6 @@ const groups: { key: keyof Translations["accountNav"]["groups"]; sections: Secti
       { to: "/account/orders", key: "orders", Icon: Package },
       { to: "/account/returns", key: "returns", Icon: RotateCcw },
       { to: "/account/coupons", key: "coupons", Icon: TicketPercent },
-      { to: "/account/gift-cards", key: "gifts", Icon: Gift },
       { to: "/account/referrals", key: "referrals", Icon: UserPlus },
     ],
   },
@@ -56,7 +55,7 @@ const groups: { key: keyof Translations["accountNav"]["groups"]; sections: Secti
 ];
 
 function label(dict: Translations, key: SectionKey) {
-  return key === "support" ? dict.support.title : key === "gifts" || key === "referrals" ? dict.credit[key] : dict.account[key];
+  return key === "support" ? dict.support.title : key === "referrals" ? dict.credit.referrals : dict.account[key];
 }
 
 function SectionLinks({ visible, onNavigate }: { visible: (key: SectionKey) => boolean; onNavigate?: () => void }) {
@@ -113,7 +112,7 @@ export function AccountLayout() {
   const who = firstName ? dict.account.signedInAs(user?.email ?? user?.phone ?? firstName) : " ";
   const demo = user?.email === "demo@bookly.test";
   const visible = (key: SectionKey) =>
-    key === "gifts" ? Boolean(flags.data?.gift_cards) && !demo : key === "referrals" ? Boolean(flags.data?.referrals && user?.email_verified) && !demo : true;
+    key === "referrals" ? Boolean(flags.data?.referrals && user?.email_verified) && !demo : true;
   const current = groups.flatMap((g) => g.sections).find((s) => (s.end ? pathname === s.to : pathname.startsWith(s.to))) ?? groups[0].sections[0];
   const CurrentIcon = current.Icon;
 

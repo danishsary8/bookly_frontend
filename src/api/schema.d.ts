@@ -29,7 +29,6 @@ export interface paths {
                     content: {
                         "application/json": {
                             data?: {
-                                gift_cards: boolean;
                                 referrals: boolean;
                             };
                         };
@@ -39,264 +38,6 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/me/gift-cards": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Buyer purchases and wallet balance, 20 per page; verified non-demo customers only */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Purchases */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data: components["schemas"]["GiftCard"][];
-                            balance_usd: string;
-                            current_page: number;
-                            last_page: number;
-                        };
-                    };
-                };
-                /** @description Feature disabled */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        /** Create an unpaid USD KHQR purchase; no credit funding or simulated activation */
-        post: {
-            parameters: {
-                query?: never;
-                header: {
-                    "Idempotency-Key": string;
-                };
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["GiftPurchaseInput"];
-                };
-            };
-            responses: {
-                /** @description Pending purchase (same buyer/key/details replays existing purchase) */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: components["schemas"]["GiftCard"];
-                        };
-                    };
-                };
-                /** @description Feature disabled */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid details or purchase unavailable */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/me/gift-cards/{id}/payment": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Buyer-only verified payment polling, 20/min; late payments require staff refund review */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: components["parameters"]["Id"];
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Payment state */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["GiftPaymentState"];
-                    };
-                };
-                /** @description Disabled or not owned */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/me/gift-cards/{id}/reveal": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reveal active code exactly once; response is never cached */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: components["parameters"]["Id"];
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Code */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                code?: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Disabled or not owned */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Already shown or not active */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/me/gift-cards/redeem": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Single-use redemption to wallet; 5/min/customer, 20/hour/IP and one-hour lock after ten failures */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        gift_code: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description New balance */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                balance_usd?: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Feature disabled */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Generic failure; no validity/status disclosure */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Rate limited */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
         delete?: never;
         options?: never;
         head?: never;
@@ -344,194 +85,6 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/staff/gift-cards": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Admin-only paged cards and funding/redeemed/unredeemed/refund-review totals; code hashes omitted */
-        get: {
-            parameters: {
-                query?: {
-                    last_four?: string;
-                    buyer_id?: number;
-                    status?: "pending_payment" | "active" | "redeemed" | "cancelled" | "expired";
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Paged card records and totals (amounts in USD) */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Feature disabled */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/staff/gift-cards/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Admin-only card details and payment status; no redeemable code */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: components["parameters"]["Id"];
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Card and payment state */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Disabled or missing */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/staff/gift-cards/{id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Cancel pending/active card with audit; paid cancellations require manual refund */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: components["parameters"]["Id"];
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Card and payment state */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Disabled or missing */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not cancellable */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/staff/gift-cards/{id}/resend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Explicit audited resend to original recipient, active cards only; one-hour cooldown; respects send date */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: components["parameters"]["Id"];
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Card and delivery status */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Disabled or missing */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Unavailable or cooldown */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
         delete?: never;
         options?: never;
         head?: never;
@@ -6315,10 +5868,6 @@ export interface paths {
                         payment_method: "cod";
                         coupon_code?: string;
                         delivery_note?: string;
-                        /** @description Free gift option. Default false. */
-                        is_gift?: boolean;
-                        /** @description Kept only when is_gift is true (trimmed; empty = null). */
-                        gift_message?: string | null;
                         /** @description The offer shown in the preview. If it no longer applies, 422 on offer_id and nothing is placed. Leave it out to accept whatever wins now. */
                         offer_id?: number;
                     };
@@ -13515,9 +13064,6 @@ export interface components {
             shipping_address?: components["schemas"]["AddressInput"];
             can_cancel?: boolean;
             delivery_note?: string | null;
-            /** @description Free gift option (no fee). The packing sheet hides prices. */
-            is_gift?: boolean;
-            gift_message?: string | null;
             is_free_shipping?: boolean;
             estimated_delivery?: components["schemas"]["EstimatedDelivery"];
             status_history?: {
@@ -13542,9 +13088,6 @@ export interface components {
             /** Format: date-time */
             delivered_at?: string | null;
             delivery_note?: string | null;
-            /** @description Free gift option (no fee). The packing sheet hides prices. */
-            is_gift?: boolean;
-            gift_message?: string | null;
             /** @enum {string} */
             payment_method?: "card" | "cod" | "khqr";
             /** @enum {string|null} */
@@ -13678,45 +13221,6 @@ export interface components {
                 price_usd?: string;
                 stock_quantity?: number;
                 is_active?: boolean;
-            } | null;
-        };
-        GiftCard: {
-            id: number;
-            amount_usd: string;
-            recipient_name: string;
-            recipient_email: string;
-            message: string | null;
-            /** Format: date */
-            send_on: string;
-            /** @enum {string} */
-            status: "pending_payment" | "active" | "redeemed" | "cancelled" | "expired";
-            last_four: string | null;
-            expires_at: string | null;
-            can_reveal: boolean;
-            email_sent_at: string | null;
-            email_failed_at: string | null;
-        };
-        GiftPurchaseInput: {
-            /** @description 5.00 through 200.00 USD, at most two decimal places */
-            amount_usd: string;
-            recipient_name: string;
-            /** Format: email */
-            recipient_email: string;
-            /** @description Plain text, escaped on display */
-            message?: string | null;
-            /**
-             * Format: date
-             * @description Today through 90 days ahead in shop timezone
-             */
-            send_on: string;
-        };
-        GiftPaymentState: {
-            data: components["schemas"]["GiftCard"];
-            payment: {
-                qr_payload: string;
-                expires_at: string;
-                /** @enum {string} */
-                mode: "test" | "bakong";
             } | null;
         };
         /** @enum {string} */
@@ -13857,9 +13361,6 @@ export type SchemaBookImportRow = components['schemas']['BookImportRow'];
 export type SchemaReview = components['schemas']['Review'];
 export type SchemaOwnReview = components['schemas']['OwnReview'];
 export type SchemaStockAlert = components['schemas']['StockAlert'];
-export type SchemaGiftCard = components['schemas']['GiftCard'];
-export type SchemaGiftPurchaseInput = components['schemas']['GiftPurchaseInput'];
-export type SchemaGiftPaymentState = components['schemas']['GiftPaymentState'];
 export type SchemaReferralStatus = components['schemas']['ReferralStatus'];
 export type SchemaReferralSummary = components['schemas']['ReferralSummary'];
 export type ResponseValidation = components['responses']['Validation'];

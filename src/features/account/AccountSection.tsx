@@ -1,9 +1,9 @@
 import { useId, type ReactNode } from "react";
-import { BookHeart, BookOpen, Gift, Heart, KeyRound, LayoutDashboard, LifeBuoy, MapPin, MessageSquareText, Package, RotateCcw, TicketPercent, UserPlus, UserRound } from "lucide-react";
+import { BookHeart, BookOpen, Heart, KeyRound, LayoutDashboard, LifeBuoy, MapPin, MessageSquareText, Package, RotateCcw, TicketPercent, UserPlus, UserRound } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { useT } from "@/i18n";
 
-const pageIcons = { orders: Package, returns: RotateCcw, coupons: TicketPercent, "gift-cards": Gift, referrals: UserPlus, ebooks: BookOpen, wishlist: Heart, lists: BookHeart, reviews: MessageSquareText, profile: UserRound, security: KeyRound, addresses: MapPin, support: LifeBuoy };
+const pageIcons = { orders: Package, returns: RotateCcw, coupons: TicketPercent, referrals: UserPlus, ebooks: BookOpen, wishlist: Heart, lists: BookHeart, reviews: MessageSquareText, profile: UserRound, security: KeyRound, addresses: MapPin, support: LifeBuoy };
 
 /** Heading block for one account page (the page's h1) with an optional action on the right. */
 export function AccountSection({ title, lead, action, children }: { title: string; lead?: ReactNode; action?: ReactNode; children: ReactNode }) {

@@ -245,7 +245,8 @@ describe("reports page", () => {
     expect(card("Cost of books sold")).toHaveTextContent("$27.00 sold, less $12.00 of books back on the shelf");
     expect(card("Gross profit")).toHaveTextContent("$20.00");
     expect(card("Margin")).toHaveTextContent("57.1%");
-    expect(get).toHaveBeenLastCalledWith("profit", { from: "2026-10-09", to: "2026-10-15", group: "day" });
+    expect(get).toHaveBeenCalledWith("profit", { from: "2026-10-09", to: "2026-10-15", group: "day" });
+    expect(within(card("Net book sales")).getByRole("link", { name: /View net revenue/ })).toHaveAttribute("href", "/admin/reports?period=custom&from=2026-10-09&to=2026-10-15");
     expect(card("Restock spending")).toHaveTextContent("5 restocked without a cost");
     expect(screen.getByRole("note")).toHaveTextContent("$30.00 of sales (2 copies) have no restock cost yet");
     expect(screen.getByText("Monument Books")).toBeInTheDocument();

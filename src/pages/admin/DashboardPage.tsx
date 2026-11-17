@@ -10,10 +10,7 @@ import { ErrorState, InlineError } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { IncomeChart } from "@/features/admin/dashboard/IncomeChart";
-import { InsightsWidgets } from "@/features/admin/dashboard/InsightsWidgets";
 import { PaymentMethods } from "@/features/admin/dashboard/PaymentMethods";
-import { DashboardActivity } from "@/features/admin/dashboard/DashboardActivity";
-import { RecentOrders } from "@/features/admin/dashboard/RecentOrders";
 import { StatusDonut } from "@/features/admin/dashboard/StatusDonut";
 import { SalesChart } from "@/features/admin/SalesChart";
 import { day, rangeFromParams, rangeToParams } from "@/features/admin/dashboardRange";
@@ -209,7 +206,7 @@ function AdminDashboard() {
 
           {/* 2a · Profit for the same days (Reports → Profit, owner 2026-11-16). */}
           {/* 2a · This month's goal next to the profit for the chosen days (Phase 4). */}
-          <div className="dash-money-grid grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+          <div className="dash-money-grid grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
             <GoalCard opening={opening} />
             <ProfitGlance opening={opening} versus={versus} from={s.period.from} to={s.period.to} link={`/admin/reports?${new URLSearchParams({ ...rangeToParams(range), tab: "profit" }).toString()}`} />
           </div>
@@ -220,7 +217,7 @@ function AdminDashboard() {
 
           {/* 3 · Books: what sells, which shelves, what runs out. */}
           <SectionLabel>{h.catalogue}</SectionLabel>
-          <div className="dash-catalogue-grid grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-[minmax(0,5fr)_minmax(0,4fr)_minmax(0,4fr)]">
+          <div className="dash-catalogue-grid grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
             <Panel id="best-sellers" title="Best sellers" icon={Trophy} tone="saffron">
               {s.best_sellers.length === 0 ? (
                 <p className="text-[15px] text-muted-foreground">No delivered sales in this period yet.</p>
@@ -228,6 +225,8 @@ function AdminDashboard() {
                 <RankTable head={["Book", "Copies", "Sales"]} rows={s.best_sellers.map((b) => ({ key: b.book_id, copies: b.copies_sold, sales: formatUsd(b.sales_usd), khr: b.sales_khr, name: <Link to={`/admin/books/${b.book_id}`} className="font-semibold underline-offset-4 hover:text-primary hover:underline">{b.title}</Link> }))} />
               )}
             </Panel>
+            {/* Top categories and low stock share the right column, beside the longer best sellers list. */}
+            <div className="grid content-start gap-6">
             <Panel id="top-categories" title="Top categories" icon={FolderTree} tone="sky" action={<span className="text-sm text-muted-foreground">by copies in orders placed</span>}>
               {!s.top_categories || s.top_categories.length === 0 ? (
                 <p className="text-[15px] text-muted-foreground">No categorised sales in this period yet.</p>
@@ -240,7 +239,6 @@ function AdminDashboard() {
               title="Low stock"
               icon={Boxes}
               tone="coral"
-              className="lg:col-span-2 2xl:col-span-1"
               action={<Link to="/admin/stock" className="group inline-flex items-center gap-1 text-sm font-semibold text-primary underline-offset-4 hover:underline">{h.allStock} <ArrowRight className="admin-arrow size-4" aria-hidden="true" /></Link>}
             >
               {s.low_stock.length === 0 ? (
@@ -264,13 +262,14 @@ function AdminDashboard() {
                 </ul>
               )}
             </Panel>
+            </div>
           </div>
 
           {/* 4 · Customers and how they pay. */}
           {ins?.payment_methods || ins?.cart_reminder_recovery ? (
             <>
               <SectionLabel>{h.customers}</SectionLabel>
-              <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+              <div className="dash-customers-grid grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {ins.payment_methods ? (
                   <Panel id="payment-methods" title={dict.dashboardAnalysis.payments} icon={CreditCard} tone="rose" action={<span className="text-sm text-muted-foreground">{dict.dashboardAnalysis.paymentNote}</span>}>
                     <PaymentMethods rows={ins.payment_methods} />
@@ -291,15 +290,6 @@ function AdminDashboard() {
               </div>
             </>
           ) : null}
-
-          {/* 5 · Operations: what needs attention, latest orders, deeper insights and health. */}
-          <SectionLabel>{h.operations}</SectionLabel>
-          <div className="dash-operations-grid grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-            {ins ? <DashboardActivity data={ins} /> : null}
-            <RecentOrders user={session?.user} />
-          </div>
-
-          {ins?.dead_stock && ins.stock_value && ins.promotions && ins.repeat_customer_rate && ins.top_authors && ins.provinces ? <InsightsWidgets data={ins} /> : null}
 
           <SystemHealthCard />
         </div>
