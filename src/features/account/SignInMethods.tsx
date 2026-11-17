@@ -73,7 +73,7 @@ export function SignInMethods({ customer }: { customer: Customer | undefined }) 
   return (
     <section aria-labelledby="sign-in-methods" className="grid max-w-xl gap-4 shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
       <div className="grid gap-1">
-        <h2 id="sign-in-methods" className="account-panel-title"><ShieldCheck aria-hidden="true" />
+        <h2 id="sign-in-methods" className="account-panel-title scroll-mt-28"><ShieldCheck aria-hidden="true" />
           {t.waysIn}
         </h2>
         <p className="text-[15px] text-muted-foreground">{t.waysInLead}</p>
