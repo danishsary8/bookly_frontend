@@ -1,5 +1,5 @@
 import { AlertTriangle, ArrowDownRight, ArrowRight, ArrowUpRight, CircleHelp, FolderTree, LineChart, PackagePlus, Percent, PiggyBank, Receipt, ShoppingBag, Trophy, Truck } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ApiError } from "@/api/errors";
 import type { ReportGroup, ReportRange } from "@/api/endpoints/reports";
 import { AnimatedNumber } from "@/features/admin/dashboard/AnimatedNumber";
@@ -37,6 +37,12 @@ export function ProfitTab({ range, versus, group, onGroup }: { range: ReportRang
   const { dict } = useT();
   const t = dict.profitReport;
   const query = useReport("profit", range, group);
+  // The Sales tab's money for the same days (shared cache): net book sales = net revenue − delivery fees.
+  const sales = useReport("sales", range, group);
+  const { search } = useLocation();
+  const salesParams = new URLSearchParams(search);
+  salesParams.delete("tab");
+  const salesLink = `/admin/reports${salesParams.size ? `?${salesParams.toString()}` : ""}`;
   const groupWord = t[group];
 
   // Before the backend with the profit report is deployed the route is a 404: say so instead of an error page.
@@ -70,6 +76,15 @@ export function ProfitTab({ range, versus, group, onGroup }: { range: ReportRang
         const netSalesBefore = Number(c.totals.sales_usd) - Number(c.totals.refunds_usd);
         const netCost = Number(now.cost_of_goods_usd) - returnedCost;
         const netCostBefore = Number(c.totals.cost_of_goods_usd) - Number(c.totals.returned_cost_usd);
+        // Net revenue − delivery fees (− sales without a cost, which profit leaves out) when it adds up to this card.
+        const salesTotals = sales.data?.totals;
+        const unknownSales = Number(now.sales_cost_unknown_usd);
+        const fromRevenue = salesTotals && Math.abs(Number(salesTotals.net_revenue_usd) - Number(salesTotals.shipping_usd) - unknownSales - netSales) < 0.005
+          ? (unknownSales > 0 ? t.netSalesFromRevenueUnknown : t.netSalesFromRevenue)
+              .replace("{rev}", money(Number(salesTotals.net_revenue_usd)))
+              .replace("{ship}", money(Number(salesTotals.shipping_usd)))
+              .replace("{unknown}", money(unknownSales))
+          : null;
         const marginOf = (profit: number, sales: number) => (sales > 0 ? Math.round((profit / sales) * 1000) / 10 : null);
         const margin = marginOf(Number(now.profit_after_refunds_usd), netSales);
         const marginBefore = marginOf(Number(c.totals.profit_after_refunds_usd), netSalesBefore);
@@ -96,7 +111,8 @@ export function ProfitTab({ range, versus, group, onGroup }: { range: ReportRang
                 icon={ShoppingBag}
                 tone="saffron"
                 value={<AnimatedNumber value={netSales} format={money} />}
-                detail={refunds > 0 ? t.netSalesDetail.replace("{sales}", money(Number(now.sales_usd))).replace("{v}", money(refunds)) : t.noRefunds}
+                detail={fromRevenue ?? (refunds > 0 ? t.netSalesDetail.replace("{sales}", money(Number(now.sales_usd))).replace("{v}", money(refunds)) : t.noRefunds)}
+                view={{ to: salesLink, label: t.viewNetRevenue }}
                 change={<Change percent={changeOf(netSales, netSalesBefore)} previous={netSalesBefore} versus={versus} />}
                 trend={r.series.map((p) => Number(p.sales_usd))}
                 labels={labels}
