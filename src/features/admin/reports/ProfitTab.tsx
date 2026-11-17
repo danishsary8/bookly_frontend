@@ -83,7 +83,7 @@ export function ProfitTab({ range, versus, group, onGroup }: { range: ReportRang
                 value={<AnimatedNumber value={Number(now.restock_spend_usd)} format={money} />}
                 khr={now.restock_spend_khr}
                 detail={[t.spendDetail.replace("{n}", count(now.restock_units)), now.restock_units_without_cost ? t.spendNoCost.replace("{n}", count(now.restock_units_without_cost)) : ""].filter(Boolean).join(" · ")}
-                change={<Change percent={c.change_percent.restock_spend} previous={Number(c.totals.restock_spend_usd)} versus={versus} moreIsBetter={false} />}
+                change={<Change percent={c.change_percent.restock_spend} previous={Number(c.totals.restock_spend_usd)} versus={versus} moreIsBetter={null} />}
                 trend={spendPoints.map((p) => p.value)}
                 labels={labels}
                 format={money}
@@ -95,7 +95,11 @@ export function ProfitTab({ range, versus, group, onGroup }: { range: ReportRang
                 tone="saffron"
                 value={<AnimatedNumber value={Number(now.sales_usd)} format={money} />}
                 khr={now.sales_khr}
-                detail={t.salesDetail.replace("{n}", count(now.units_sold_costed))}
+                detail={
+                  now.units_sold_cost_unknown === 0
+                    ? t.costAll.replace("{n}", count(now.units_sold_costed))
+                    : t.costMissing.replace("{total}", formatUsd((Number(now.sales_usd) + Number(now.sales_cost_unknown_usd)).toFixed(2))).replace("{amount}", formatUsd(now.sales_cost_unknown_usd)).replace("{n}", count(now.units_sold_cost_unknown))
+                }
                 change={<Change percent={c.change_percent.sales} previous={Number(c.totals.sales_usd)} versus={versus} />}
                 trend={r.series.map((p) => Number(p.sales_usd))}
                 labels={labels}
@@ -109,7 +113,7 @@ export function ProfitTab({ range, versus, group, onGroup }: { range: ReportRang
                 value={<AnimatedNumber value={Number(now.cost_of_goods_usd)} format={money} />}
                 khr={now.cost_of_goods_khr}
                 detail={t.costDetail}
-                change={<Change percent={c.change_percent.cost_of_goods} previous={Number(c.totals.cost_of_goods_usd)} versus={versus} moreIsBetter={false} />}
+                change={<Change percent={c.change_percent.cost_of_goods} previous={Number(c.totals.cost_of_goods_usd)} versus={versus} moreIsBetter={null} />}
                 trend={r.series.map((p) => Number(p.cost_of_goods_usd))}
                 labels={labels}
                 format={money}
@@ -121,17 +125,33 @@ export function ProfitTab({ range, versus, group, onGroup }: { range: ReportRang
                 tone="sea"
                 value={<AnimatedNumber value={Number(now.gross_profit_usd)} format={money} />}
                 khr={now.gross_profit_khr}
-                detail={now.margin_percent == null ? t.noMargin : t.margin.replace("{p}", pct(now.margin_percent))}
+                detail={[
+                  now.margin_percent == null ? t.noMargin : t.margin.replace("{p}", pct(now.margin_percent)),
+                  Number(now.profit_after_refunds_usd) !== Number(now.gross_profit_usd) ? t.afterRefundsShort.replace("{v}", formatUsd(now.profit_after_refunds_usd)) : "",
+                ].filter(Boolean).join(" · ")}
                 change={<Change percent={c.change_percent.gross_profit} previous={Number(c.totals.gross_profit_usd)} versus={versus} />}
                 trend={profitPoints.map((p) => p.value)}
                 labels={labels}
                 format={money}
               />
             </div>
-            <p className="flex items-start gap-2 text-sm text-muted-foreground">
-              <CircleHelp className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-              {t.lead}
-            </p>
+            <div className="flex flex-col gap-2 rounded-xl border border-border/60 bg-surface-2/40 px-4 py-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+              <p className="flex items-start gap-2">
+                <CircleHelp className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                <span>
+                  {t.lead}{" "}
+                  <Link to="/admin/reports?tab=sales" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
+                    {t.salesLink}
+                  </Link>
+                </span>
+              </p>
+              {now.units_sold_cost_unknown === 0 && now.units_sold_costed > 0 ? (
+                <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold text-success">
+                  <span className="size-1.5 rounded-full bg-success" aria-hidden="true" />
+                  {t.costTracked}
+                </span>
+              ) : null}
+            </div>
 
             <div className="dash-sales-grid grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
               <Panel id="profit-trend" title={t.profitChart.replace("{group}", groupWord)} icon={LineChart} tone="sea" action={<GroupPicker value={group} onChange={onGroup} labels={{ day: cap(t.day), week: cap(t.week), month: cap(t.month) }} />}>
