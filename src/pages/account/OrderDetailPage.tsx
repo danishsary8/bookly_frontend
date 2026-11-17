@@ -85,7 +85,7 @@ export default function OrderDetailPage() {
     <div className="grid gap-8">
       <FreeGiftLine gift={o.free_gift} />
       <div className="grid gap-4">
-        <Link to="/account/orders" className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+        <Link to="/account/orders" className="inline-flex min-h-11 w-fit items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline">
           <ArrowLeft className="size-4" aria-hidden="true" /> {t.allOrders}
         </Link>
         <div className="flex flex-wrap items-end justify-between gap-4">
