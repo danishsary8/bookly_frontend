@@ -100,12 +100,6 @@ test("dashboard charts morph between periods and expose exact hover, keyboard an
   await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("tooltip")).toContainText("1 copy");
   await page.keyboard.press("Escape");
-  const areas = page.getByRole("region", { name: "Delivery areas", exact: true });
-  await scrollToChart(areas);
-  await areas.locator(".dash-share-row").last().hover();
-  await expect(page.getByRole("tooltip")).toContainText("Unknown location");
-  await expect(page.getByRole("tooltip")).toContainText("4");
-  await page.keyboard.press("Escape");
   await page.setViewportSize({ width: 390, height: 844 });
   await scrollToChart(books);
   await books.locator(".dash-daily-bar-hit").first().tap();

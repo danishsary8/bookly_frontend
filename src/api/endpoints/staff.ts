@@ -125,6 +125,8 @@ export interface StaffVariant {
   isbn: string | null;
   price_usd: string;
   price_khr: string | null;
+  /** Supplier cost per copy. Admins only: missing for staff. */
+  cost_price_usd?: string | null;
   stock_quantity: number;
   low_stock_threshold: number;
   is_low_stock: boolean;
@@ -237,6 +239,7 @@ export interface VariantInput {
   sku?: string;
   isbn?: string | null;
   price_usd?: string;
+  cost_price_usd?: string | null;
   stock_quantity?: number;
   low_stock_threshold?: number;
   cover_image_url?: string | null;
@@ -342,6 +345,8 @@ export interface StockItem {
   id: number;
   book_id: number;
   book_title: string;
+  /** The book's publisher: the restock picker suggests its supplier first. */
+  publisher_id?: number | null;
   format: BookFormat;
   sku: string;
   isbn: string | null;

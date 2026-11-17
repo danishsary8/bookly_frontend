@@ -304,7 +304,7 @@ describe("returns", () => {
     vi.spyOn(opsApi, "return").mockResolvedValue(item);
     const reject = vi.spyOn(opsApi, "rejectReturn").mockResolvedValue({ ...item, status: "rejected", staff_note: "Outside 30 days" } as StaffReturn);
     app("/admin/returns/7");
-    await userEvent.click(await screen.findByRole("button", { name: "Don't accept" }));
+    await userEvent.click((await screen.findAllByRole("button", { name: "Don't accept" }))[0]);
     const dialog = screen.getByRole("dialog");
     await userEvent.click(within(dialog).getByRole("button", { name: "Don't accept" }));
     expect(within(dialog).getByText("Write the reason the customer will see.")).toBeInTheDocument();

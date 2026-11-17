@@ -7,7 +7,7 @@ test("dashboard retains all information and controls with a clear responsive hie
   test.setTimeout(240_000);
   const { errors, writes } = await prepareDashboard(page, baseURL);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  const headings = ["Net revenue", "Orders placed", "Average order", "New customers", "Income report", "Orders placed by status", "Books sold", "Ebooks sold", "Order ratings", "Needs attention", "Customers who ordered", "Delivery areas", "Best sellers", "Top categories", "Low stock", "Payment methods", "Cart reminder recovery", "Shop activity", "Recent orders", "Slow movers", "Top authors", "Orders by province", "Offers and coupons", "System health"];
+  const headings = ["Net revenue", "Orders placed", "Average order", "New customers", "Income report", "Orders placed by status", "Books sold", "Ebooks sold", "Order ratings", "Best sellers", "Top categories", "Low stock", "Payment methods", "Cart reminder recovery", "Shop activity", "Recent orders", "Slow movers", "Top authors", "Orders by province", "Offers and coupons", "System health"];
   for (const [width, height, theme] of [[1440, 900, "light"], [1366, 768, "light"], [1920, 1080, "light"], [768, 1024, "light"], [390, 844, "light"], [375, 812, "light"], [844, 390, "light"], [1440, 900, "dark"], [390, 844, "dark"]] as const) {
     await page.setViewportSize({ width, height });
     await page.goto("/admin");

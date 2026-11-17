@@ -255,7 +255,7 @@ describe("Book Publishing, Bulk Actions and CSV Import/Export", () => {
 
     // Admin sees the publishing status selector
     expect(
-      screen.getByRole("group", { name: "Publishing" }),
+      screen.getByRole("region", { name: "Publishing" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("radiogroup", { name: "Book Status" }),

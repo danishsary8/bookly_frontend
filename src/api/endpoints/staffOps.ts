@@ -301,6 +301,8 @@ export const opsApi = {
   deleteCoupon: (id: number) => api.delete(`/staff/coupons/${id}`),
 
   offers: (f: OfferFilters = {}) => api.get<Paginated<Offer>>("/staff/offers", { params: toQueryParams(f) }),
+  offer: (id: number) => api.get<Resource<Offer>>(`/staff/offers/${id}`).then((r) => r.data),
+  collection: (id: number) => api.get<Resource<StaffBookCollection>>(`/staff/collections/${id}`).then((r) => r.data),
   createOffer: (input: OfferInput) => api.post<Resource<Offer>>("/staff/offers", input).then((r) => r.data),
   updateOffer: (id: number, input: OfferInput) => api.patch<Resource<Offer>>(`/staff/offers/${id}`, input).then((r) => r.data),
   deleteOffer: (id: number) => api.delete(`/staff/offers/${id}`),

@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Ban, CheckCircle2, FileText, Gift, Mail, PackageCheck, Phone, Printer, Truck } from "lucide-react";
+import { ArrowLeft, Ban, FileText, Gift, Mail, Phone, Printer } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { opsApi, opsKeys, opsQueries, type StaffOrder } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
@@ -10,11 +10,12 @@ import { TextAreaField } from "@/components/form/Field";
 import { FormAlert } from "@/components/form/FormAlert";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { OrderPaymentCard } from "@/features/admin/orders/OrderPaymentCard";
+import { StatusDialog } from "@/features/admin/orders/OrderStatusDialog";
+import { STEPS } from "@/features/admin/orders/orderSteps";
 import { useStaff } from "@/features/admin/staffSession";
 import { usePauseAutoRefresh } from "@/features/admin/autoRefresh";
 import { DeliveryAddressCard, OrderItemsCard } from "@/features/orders/OrderSummary";
@@ -22,67 +23,6 @@ import { OrderTimeline } from "@/features/orders/OrderTimeline";
 import { orderDateTime } from "@/features/orders/format";
 import { staffPrintPath } from "@/features/orders/documents/printLinks";
 import { toast } from "@/stores/toast";
-
-/** What each staff step is called on its button, what it does, and the toast after it. */
-const STEPS: Partial<Record<OrderStatus, { label: string; Icon: typeof Truck; detail: string; done: string; destructive?: boolean }>> = {
-  processing: { label: "Start processing", Icon: PackageCheck, detail: "The order is confirmed and being packed. The customer can no longer cancel it.", done: "Order is being processed" },
-  shipped: { label: "Mark as shipped", Icon: Truck, detail: "The order is with the courier.", done: "Order marked as shipped" },
-  delivered: { label: "Mark as delivered", Icon: CheckCircle2, detail: "The customer has the books and paid the courier: the cash payment is recorded as received.", done: "Order marked as delivered" },
-  cancelled: { label: "Cancel order", Icon: Ban, detail: "The books go back into stock and any coupon use is given back to the customer.", done: "Order cancelled", destructive: true },
-};
-
-function StatusDialog({ order, to, onClose }: { order: StaffOrder; to: OrderStatus; onClose: () => void }) {
-  const queryClient = useQueryClient();
-  const step = STEPS[to]!;
-  const [note, setNote] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const change = useMutation({
-    mutationFn: () => opsApi.setOrderStatus(order.id!, to, note.trim() || undefined),
-    onSuccess: (saved) => {
-      queryClient.setQueryData(opsKeys.order(order.id!), saved);
-      void queryClient.invalidateQueries({ queryKey: ["staff", "orders"] });
-      void queryClient.invalidateQueries({ queryKey: ["staff", "dashboard"] });
-      toast.success({ title: step.done, description: order.order_number });
-      onClose();
-    },
-    onError: (err) => {
-      const apiError = ApiError.from(err);
-      setError(apiError.field("status") ?? apiError.field("note") ?? apiError.message);
-      void queryClient.invalidateQueries({ queryKey: opsKeys.order(order.id!) });
-    },
-  });
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    setError(null);
-    change.mutate();
-  };
-  return (
-    <Dialog open onOpenChange={(open) => !open && !change.isPending && onClose()}>
-      <DialogContent size="sm">
-        <form onSubmit={submit} className="grid gap-5">
-          <DialogHeader>
-            <DialogTitle>
-              {step.label}: {order.order_number}
-            </DialogTitle>
-            <DialogDescription>{step.detail}</DialogDescription>
-          </DialogHeader>
-          {error ? <FormAlert title={error} /> : null}
-          <TextAreaField label="Note for the timeline" optional hint="The customer sees this on their order. Up to 500 characters." maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline" disabled={change.isPending}>
-                Back
-              </Button>
-            </DialogClose>
-            <Button type="submit" variant={step.destructive ? "destructive" : "default"} loading={change.isPending}>
-              {step.label}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function StaffNoteCard({ order }: { order: StaffOrder }) {
   const queryClient = useQueryClient();

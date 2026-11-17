@@ -37,7 +37,10 @@ export function Change({ percent, previous, versus, moreIsBetter = true, onDark 
   const up = percent > 0;
   const good = up === moreIsBetter;
   const Icon = up ? ArrowUpRight : ArrowDownRight;
-  const amount = `${Math.abs(percent).toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
+  // Big jumps read better as a multiple: +1,683% → "17.8×" (owner 2026-11-17).
+  const amount = up && percent >= 200
+    ? `${(1 + percent / 100).toLocaleString("en-US", { maximumFractionDigits: 1 })}×`
+    : `${Math.abs(percent).toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
   return (
     <span className="inline-flex flex-wrap items-center gap-x-1 text-sm tabular-nums">
       <span className={cn("inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 font-semibold", onDark ? (good ? "bg-[#7EDDB0]/20 text-[#B7F5D6]" : "bg-[#FF9FB6]/20 text-[#FFD1DC]") : good ? "bg-success-tint text-success" : "bg-destructive-tint text-destructive")}>

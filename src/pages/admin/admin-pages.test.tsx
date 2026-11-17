@@ -356,10 +356,46 @@ describe("books", () => {
     await user.type(screen.getByLabelText("Find an author to add"), "twain");
     await user.click(await screen.findByRole("button", { name: /Mark Twain/ }));
     await user.click(await screen.findByRole("checkbox", { name: "Fiction" }));
+    // The first format sits on the same page: a price is needed before the book is created.
+    await user.click(screen.getByRole("button", { name: "Create book" }));
+    expect(await screen.findByText("Enter a price in dollars, like 12.99.")).toBeInTheDocument();
+    expect(create).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("SKU")).toHaveValue("NEW-TITLE-PB");
+    await user.type(screen.getByLabelText("Sell price (USD)"), "20");
+    await user.type(screen.getByLabelText(/Supplier cost/), "12.40");
+    expect(screen.getByTestId("profit-line")).toHaveTextContent("Profit $7.60 per copy");
+    expect(screen.getByTestId("profit-line")).toHaveTextContent("38% margin");
+    const variant = vi.spyOn(staffApi, "createVariant").mockResolvedValue({} as never);
+    await user.clear(screen.getByLabelText("Copies in stock"));
+    await user.type(screen.getByLabelText("Copies in stock"), "15");
     await user.click(screen.getByRole("button", { name: "Create book" }));
     expect(create).toHaveBeenCalledWith(expect.objectContaining({ title: "New Title", author_ids: [9], category_ids: [1], language: "English", publisher_id: null }));
+    await waitFor(() =>
+      expect(variant).toHaveBeenCalledWith(30, expect.objectContaining({ format: "paperback", sku: "NEW-TITLE-PB", price_usd: "20", cost_price_usd: "12.40", stock_quantity: 15, is_active: true })),
+    );
+    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/admin/books/30"));
+  });
+
+  it("can still create a book first and add the format later", async () => {
+    const user = userEvent.setup();
+    signIn(admin);
+    vi.spyOn(catalogApi, "categories").mockResolvedValue([]);
+    vi.spyOn(catalogApi, "publishers").mockResolvedValue(page([]));
+    vi.spyOn(catalogApi, "seriesList").mockResolvedValue(page([]));
+    vi.spyOn(catalogApi, "authors").mockResolvedValue(page([{ id: 9, name: "Mark Twain" }]));
+    vi.spyOn(staffApi, "createBook").mockResolvedValue({ ...book, id: 30, title: "New Title", variants: [], is_visible: false });
+    vi.spyOn(staffApi, "book").mockResolvedValue({ ...book, id: 30, title: "New Title", variants: [], is_visible: false });
+    const variant = vi.spyOn(staffApi, "createVariant");
+    app("/admin/books/new");
+    await user.type(screen.getByLabelText("Title"), "New Title");
+    await user.type(screen.getByLabelText("Find an author to add"), "twain");
+    await user.click(await screen.findByRole("button", { name: /Mark Twain/ }));
+    await user.click(screen.getByRole("button", { name: "Add the format later" }));
+    expect(screen.queryByLabelText("Sell price (USD)")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Create book" }));
     await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/admin/books/30"));
     expect(await screen.findByText(/No formats yet/)).toBeInTheDocument();
+    expect(variant).not.toHaveBeenCalled();
   });
 
   it("hides deleting from staff who aren't admins", async () => {

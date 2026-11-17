@@ -196,7 +196,7 @@ export interface ProfitReport {
     change_percent: Record<"restock_spend" | "sales" | "cost_of_goods" | "gross_profit" | "profit_after_refunds", number>;
   };
   series: Array<{ date: string; restock_spend_usd: Usd; sales_usd: Usd; cost_of_goods_usd: Usd; gross_profit_usd: Usd; margin_percent: number | null }>;
-  by_supplier: Array<{ supplier: string | null; restocks: number; units: number; units_without_cost: number; spend_usd: Usd; spend_khr: Khr; average_unit_cost_usd: Usd | null }>;
+  by_supplier: Array<{ supplier: string | null; type?: "publisher" | "distributor" | null; restocks: number; units: number; units_without_cost: number; spend_usd: Usd; spend_khr: Khr; average_unit_cost_usd: Usd | null }>;
   by_category: Array<ProfitRow & { category_id: number; name: string }>;
   top_books: Array<ProfitRow & { book_id: number; variant_id: number; title: string; format: string; unit_cost_usd: Usd }>;
   cost_unknown: Array<{ book_id: number; variant_id: number; title: string; format: string; units_sold: number; sales_usd: Usd }>;

@@ -31,3 +31,6 @@ dist-ssr
 # Playwright
 test-results/
 playwright-report/
+
+# Local screenshots from browser checks (kept out of git)
+overnight-screenshots/

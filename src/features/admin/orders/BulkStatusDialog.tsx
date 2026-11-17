@@ -8,6 +8,8 @@ import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { cn } from "@/lib/utils";
+import type { OrderStatus } from "@/api/types";
 import { toast } from "@/stores/toast";
 
 /** The bulk steps (cancel stays one order at a time: it gives stock and coupons back). Same words as the order page. */
@@ -23,9 +25,19 @@ const orders = (n: number) => `${n} ${n === 1 ? "order" : "orders"}`;
  * Change the status of the ticked orders together. Each order changes on its own (the API's rules,
  * history, audit and customer email); the dialog then lists any order that could not move and why.
  */
-export function BulkStatusDialog({ ids, open, onOpenChange, onDone }: { ids: number[]; open: boolean; onOpenChange: (open: boolean) => void; onDone: (result: BulkStatusResult) => void }) {
+export function BulkStatusDialog({ ids, allowed = [], open, onOpenChange, onDone }: {
+  ids: number[];
+  /** Each ticked order's allowed next steps (owner 2026-11-17: only offer steps that fit, instead of failing after). */
+  allowed?: OrderStatus[][];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onDone: (result: BulkStatusResult) => void;
+}) {
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<BulkStatusTarget>("processing");
+  const fits = (target: BulkStatusTarget) => (allowed.length ? allowed.filter((a) => a.includes(target)).length : ids.length);
+  const best = TARGETS.reduce((top, t) => (fits(t.value) > fits(top.value) ? t : top), TARGETS[0]).value;
+  const [picked, setStatus] = useState<BulkStatusTarget | null>(null);
+  const status: BulkStatusTarget = picked && fits(picked) > 0 ? picked : best;
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BulkStatusResult | null>(null);
@@ -34,6 +46,7 @@ export function BulkStatusDialog({ ids, open, onOpenChange, onDone }: { ids: num
     setResult(null);
     setError(null);
     setNote("");
+    setStatus(null);
   };
 
   const change = useMutation({
@@ -103,17 +116,28 @@ export function BulkStatusDialog({ ids, open, onOpenChange, onDone }: { ids: num
             <fieldset className="grid gap-2">
               <legend className="mb-1 text-sm font-semibold">New status</legend>
               <RadioGroup value={status} onValueChange={(v) => setStatus(v as BulkStatusTarget)} aria-label="New status" className="gap-2">
-                {TARGETS.map(({ value, label, Icon, detail }) => (
-                  <label key={value} className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-lapis-tint">
-                    <RadioGroupItem value={value} aria-label={label} className="mt-0.5" />
-                    <span className="grid gap-0.5">
-                      <span className="inline-flex items-center gap-2 font-semibold">
-                        <Icon className="size-4" aria-hidden="true" /> {label}
+                {TARGETS.map(({ value, label, Icon, detail }) => {
+                  const n = fits(value);
+                  const none = n === 0;
+                  return (
+                    <label key={value} className={cn("flex items-start gap-3 rounded-md border border-border p-3 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-lapis-tint", none ? "cursor-not-allowed opacity-60" : "cursor-pointer")}>
+                      <RadioGroupItem value={value} aria-label={label} disabled={none} className="mt-0.5" />
+                      <span className="grid flex-1 gap-0.5">
+                        <span className="flex flex-wrap items-center justify-between gap-2 font-semibold">
+                          <span className="inline-flex items-center gap-2">
+                            <Icon className="size-4" aria-hidden="true" /> {label}
+                          </span>
+                          {allowed.length ? (
+                            <span className={cn("rounded-full px-2 py-0.5 text-xs tabular-nums", n === ids.length ? "bg-success-tint text-success" : none ? "bg-surface-2 text-muted-foreground" : "bg-warning-tint text-foreground")}>
+                              {none ? "No ticked order can" : `${n} of ${ids.length} can`}
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className="text-sm text-muted-foreground">{detail}</span>
                       </span>
-                      <span className="text-sm text-muted-foreground">{detail}</span>
-                    </span>
-                  </label>
-                ))}
+                    </label>
+                  );
+                })}
               </RadioGroup>
             </fieldset>
             <TextAreaField label="Note for each timeline" optional hint="Every customer sees this on their order. Up to 500 characters." maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />

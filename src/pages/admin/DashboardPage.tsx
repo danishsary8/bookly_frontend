@@ -36,7 +36,37 @@ import "@/features/admin/dashboard/dashboard.css";
 const usd = (n: number) => formatUsd(n.toFixed(2));
 const count = (n: number) => Math.round(n).toLocaleString("en-US");
 
-const series = (days: TrendDay[] | undefined, pick: (d: TrendDay) => number) => (days?.length ? days.map(pick) : undefined);
+/*
+ * A KPI trend line stays readable with any amount of data (owner 2026-11-17: "prepare for big data"): up to 45 days
+ * draw one point a day; longer periods are grouped into weeks (90 days) or fortnights (12 months), summed, or averaged for
+ * per-order figures, so a year is ~52 smooth points instead of 365 spikes.
+ */
+const MAX_POINTS = 45;
+const bucketSize = (days: TrendDay[] | undefined) => ((days?.length ?? 0) > MAX_POINTS ? 7 * Math.ceil((days?.length ?? 0) / (MAX_POINTS * 7)) : 1);
+const series = (days: TrendDay[] | undefined, pick: (d: TrendDay) => number, mode: "sum" | "mean" = "sum") => {
+  if (!days?.length) return undefined;
+  const size = bucketSize(days);
+  if (size === 1) return days.map(pick);
+  const out: number[] = [];
+  for (let i = 0; i < days.length; i += size) {
+    const group = days.slice(i, i + size).map(pick).filter(Number.isFinite);
+    const sum = group.reduce((a, b) => a + b, 0);
+    const nonZero = group.filter((v) => v > 0);
+    out.push(mode === "sum" ? sum : nonZero.length ? nonZero.reduce((a, b) => a + b, 0) / nonZero.length : 0);
+  }
+  return out;
+};
+const seriesLabels = (days: TrendDay[] | undefined, label: (date: string) => string) => {
+  if (!days?.length) return undefined;
+  const size = bucketSize(days);
+  if (size === 1) return days.map((d) => label(d.date));
+  const out: string[] = [];
+  for (let i = 0; i < days.length; i += size) {
+    const group = days.slice(i, i + size);
+    out.push(`${label(group[0].date)} – ${label(group[group.length - 1].date)}`);
+  }
+  return out;
+};
 
 /*
  * /admin: how the shop is doing over today / 7 / 30 days or chosen days (Phnom Penh days, from
@@ -65,7 +95,7 @@ function AdminDashboard() {
   const insights = useQuery(insightsQueries.get(range));
   const trend = insights.data?.trend;
   const ins = insights.data;
-  const labels = trend?.map((d) => day(d.date));
+  const labels = seriesLabels(trend, day);
   const s = summary.data;
   const firstName = session?.user.name.split(" ")[0];
   const c = s?.comparison;
@@ -139,9 +169,9 @@ function AdminDashboard() {
                 trend={series(trend, (d) => d.orders_placed)} labels={labels} view={{ to: "/admin/orders", label: "View orders" }} />
             </m.div>
             <m.div className="grid" {...rise(2)}>
-              <Kpi opening={opening} id="average-order" label="Average order" value={<AnimatedNumber countUp={opening} value={Number(s.average_order_value_usd)} format={usd} />} khr={s.average_order_value_khr} detail="delivered orders" icon={Receipt} tone="sky"
+              <Kpi opening={opening} id="average-order" label="Average order" value={<AnimatedNumber countUp={opening} value={Number(s.average_order_value_usd)} format={usd} />} khr={s.average_order_value_khr} detail="per delivered order" icon={Receipt} tone="sky"
                 comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.average_order_value} previous={Number(c.average_order_value_usd)} versus="" /> : null}
-                trend={series(trend, (d) => Number(d.average_order_usd))} labels={labels} format={usd} view={{ to: "/admin/reports?tab=orders", label: "View order report" }} />
+                trend={series(trend, (d) => Number(d.average_order_usd), "mean")} labels={labels} format={usd} view={{ to: "/admin/reports?tab=orders", label: "View order report" }} />
             </m.div>
             <m.div className="grid" {...rise(3)}>
               <Kpi opening={opening} id="new-customers" label="New customers" value={<AnimatedNumber countUp={opening} value={s.new_customers} format={count} />} detail="verified their account" icon={UserPlus} tone="sea"
@@ -216,13 +246,13 @@ function AdminDashboard() {
               {s.low_stock.length === 0 ? (
                 <p className="flex items-center gap-2 text-[15px] text-success"><CheckCircle2 className="size-4" aria-hidden="true" />Every active format is above its low-stock level.</p>
               ) : (
-                <ul className="grid gap-2">
+                <ul className="grid grid-cols-1 gap-2">
                   {s.low_stock.map((v) => (
-                    <li key={v.book_variant_id}>
+                    <li key={v.book_variant_id} className="min-w-0">
                       <Link to={`/admin/books/${v.book_id}`} className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5 text-[15px] outline-none transition-colors hover:bg-[var(--tone-tint)] focus-visible:ring-2 focus-visible:ring-ring">
                         <span className="min-w-0">
                           <span className="block truncate font-semibold">{v.title}</span>
-                          <span className="block text-sm text-muted-foreground">{formatLabel(v.format)} · {v.sku}</span>
+                          <span className="block truncate text-sm text-muted-foreground">{formatLabel(v.format)} · {v.sku}</span>
                         </span>
                         <span className={cn("flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums", v.stock_quantity === 0 ? "bg-destructive-tint text-destructive" : "bg-warning-tint text-warning")}>
                           <AlertTriangle className="size-3.5" aria-hidden="true" />

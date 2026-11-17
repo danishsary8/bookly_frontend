@@ -29,7 +29,7 @@ it("shows suppliers as cards with what was bought, and adds a new one", async ()
   expect(await screen.findByText("Enter the supplier's name.")).toBeInTheDocument();
   await userEvent.type(screen.getByLabelText(/Supplier name/), "Peace Book Center");
   await userEvent.click(screen.getByRole("button", { name: "Save supplier" }));
-  await waitFor(() => expect(create).toHaveBeenCalledWith({ name: "Peace Book Center", contact_name: null, phone: null, email: null, note: null, is_active: true }));
+  await waitFor(() => expect(create).toHaveBeenCalledWith({ name: "Peace Book Center", type: "distributor", publisher_id: null, contact_name: null, phone: null, email: null, note: null, is_active: true }));
 });
 
 it("lets staff pick an active supplier when restocking", async () => {
@@ -43,4 +43,14 @@ it("lets staff pick an active supplier when restocking", async () => {
   await userEvent.selectOptions(await screen.findByLabelText(/^Supplier/), "Monument Books");
   await userEvent.click(screen.getByRole("button", { name: "Confirm restock" }));
   await waitFor(() => expect(restock).toHaveBeenCalledWith(9, { quantity: 5, supplier_id: 1, supplier: null, unit_cost_usd: null, note: null }));
+});
+
+it("suggests the book's own publisher first when restocking (owner 2026-11-17)", async () => {
+  const { RestockDialog } = await import("@/features/admin/stock/RestockDialog");
+  const direct = { ...monument, id: 7, name: "Penguin (direct)", type: "publisher" as const, publisher: { id: 3, name: "Penguin" } };
+  vi.spyOn(suppliersApi, "list").mockResolvedValue([{ ...monument, type: "distributor" as const }, direct]);
+  renderWithProviders(<RestockDialog variant={{ id: 9, sku: "D-1", stock_quantity: 0, publisher_id: 3 }} open onOpenChange={() => {}} />);
+  const select = (await screen.findByRole("combobox", { name: /^Supplier/ })) as HTMLSelectElement;
+  await waitFor(() => expect(select.value).toBe("7"));
+  expect([...select.querySelectorAll("optgroup")].map((g) => g.label)).toEqual(["This book's publisher", "Distributors and wholesalers"]);
 });

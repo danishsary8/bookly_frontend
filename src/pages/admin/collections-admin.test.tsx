@@ -11,6 +11,7 @@ import { RequireStaff } from "@/routes/adminGuards";
 import { renderWithProviders } from "@/test/render";
 import { dismissToast } from "@/stores/toast";
 import CollectionsAdminPage from "./CollectionsAdminPage";
+import CollectionEditPage from "./CollectionEditPage";
 
 /* /admin/collections (owner 2026-11-01: seasonal collections, books picked by hand, English + Khmer fields). */
 
@@ -36,6 +37,8 @@ const app = () =>
       <Routes>
         <Route element={<RequireStaff />}>
           <Route path="/admin/collections" element={<CollectionsAdminPage />} />
+          <Route path="/admin/collections/new" element={<CollectionEditPage />} />
+          <Route path="/admin/collections/:id" element={<CollectionEditPage />} />
         </Route>
       </Routes>
       <Toaster />
@@ -93,7 +96,8 @@ describe("collections admin", () => {
     const create = vi.spyOn(opsApi, "createCollection").mockResolvedValue({ ...exam, title_en: "Holiday gifts" });
     app();
     await user.click(await screen.findByRole("button", { name: /New collection/ }));
-    const dialog = await screen.findByRole("dialog", { name: "New collection" });
+    await screen.findByRole("heading", { level: 1, name: "New collection" });
+    const dialog = document.body;
     await user.click(within(dialog).getByRole("button", { name: "Create collection" }));
     expect(within(dialog).getByText("Give the collection an English title.")).toBeInTheDocument();
     expect(create).not.toHaveBeenCalled();
@@ -120,12 +124,14 @@ describe("collections admin", () => {
     const user = userEvent.setup();
     signIn(admin);
     vi.spyOn(opsApi, "collections").mockResolvedValue(page([rain]));
+    vi.spyOn(opsApi, "collection").mockResolvedValue(rain);
     const update = vi.spyOn(opsApi, "updateCollection").mockRejectedValue(
       new ApiError({ kind: "validation", status: 422, message: "Invalid.", fieldErrors: { slug: ["The slug has already been taken."] } }),
     );
     app();
     await user.click(await screen.findByRole("button", { name: "Edit Rainy season reads" }));
-    const dialog = await screen.findByRole("dialog", { name: /Edit Rainy season reads/ });
+    await screen.findByRole("heading", { level: 1, name: /Edit Rainy season reads/ });
+    const dialog = document.body;
     expect(within(dialog).getByText(/1 book is in the trash and will leave this collection when you save: Old Book/)).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Save collection" }));
     expect(await within(dialog).findByText("The slug has already been taken.")).toBeInTheDocument();

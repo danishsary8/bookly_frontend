@@ -71,11 +71,13 @@ const ReturnAdminPage = lazy(() => import("../pages/admin/ReturnAdminPage"));
 const ReviewsAdminPage = lazy(() => import("../pages/admin/ReviewsAdminPage"));
 const CouponsAdminPage = lazy(() => import("../pages/admin/CouponsAdminPage"));
 const OffersAdminPage = lazy(() => import("../pages/admin/OffersAdminPage"));
+const OfferEditPage = lazy(() => import("../pages/admin/OfferEditPage"));
 const RewardsAdminPage = lazy(() => import("../pages/admin/RewardsAdminPage"));
 const PromotionsAdminPage = lazy(() => import("../pages/admin/PromotionsAdminPage"));
 const GiftsPage = lazy(() => import("../pages/admin/GiftsPage"));
 const RatingsPage = lazy(() => import("../pages/admin/RatingsPage"));
 const CollectionsAdminPage = lazy(() => import("../pages/admin/CollectionsAdminPage"));
+const CollectionEditPage = lazy(() => import("../pages/admin/CollectionEditPage"));
 const CustomersAdminPage = lazy(() => import("../pages/admin/CustomersAdminPage"));
 const CustomerAdminPage = lazy(() => import("../pages/admin/CustomerAdminPage"));
 const MembersAdminPage = lazy(() => import("../pages/admin/MembersAdminPage"));
@@ -239,12 +241,16 @@ const AppRoutes = () => {
               <Route path="assistant/knowledge" element={<AssistantKnowledgePage />} />
               <Route path="coupons" element={<CouponsAdminPage />} />
               <Route path="offers" element={<OffersAdminPage />} />
+              <Route path="offers/new" element={<OfferEditPage />} />
+              <Route path="offers/:id" element={<OfferEditPage />} />
               <Route path="promotions" element={<PromotionsAdminPage />} />
               <Route path="rewards" element={<RewardsAdminPage />} />
               <Route path="gifts" element={<GiftsPage />} />
               <Route path="ratings" element={<RatingsPage />} />
               <Route path="reading-lists" element={<ReadingListPicksPage />} />
               <Route path="collections" element={<CollectionsAdminPage />} />
+              <Route path="collections/new" element={<CollectionEditPage />} />
+              <Route path="collections/:id" element={<CollectionEditPage />} />
               <Route path="customers" element={<CustomersAdminPage />} />
               <Route path="customers/:id" element={<CustomerAdminPage />} />
               <Route path="security" element={<StaffSecurityPage />} />

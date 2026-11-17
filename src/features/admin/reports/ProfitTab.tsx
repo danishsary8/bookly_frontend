@@ -170,7 +170,7 @@ export function ProfitTab({ range, versus, group, onGroup }: { range: ReportRang
                       khr: s.spend_khr,
                       name: (
                         <>
-                          <span className={s.supplier ? "font-semibold" : "font-semibold italic text-muted-foreground"}>{s.supplier ?? t.noSupplier}</span>
+                          <span className={s.supplier ? "font-semibold" : "font-semibold italic text-muted-foreground"}>{s.supplier ?? t.noSupplier}</span>{s.type ? <span className="ml-2 rounded-full bg-surface-2 px-2 py-0.5 text-xs font-semibold text-muted-foreground">{s.type === "publisher" ? dict.suppliers.typePublisher : dict.suppliers.typeDistributor}</span> : null}
                           <span className="block text-sm text-muted-foreground tabular-nums">
                             {[`${count(s.restocks)} ${t.restocks.toLowerCase()}`, s.average_unit_cost_usd ? `${t.averageCost} ${formatUsd(s.average_unit_cost_usd)}` : "", s.units_without_cost ? t.withoutCost.replace("{n}", count(s.units_without_cost)) : ""].filter(Boolean).join(" · ")}
                           </span>
