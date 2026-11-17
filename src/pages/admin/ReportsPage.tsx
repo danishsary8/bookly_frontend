@@ -104,21 +104,41 @@ function SalesTab({ range, versus }: { range: ReportRange; versus: string }) {
           <>
             <div className="dash-kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <Kpi id="r-net-revenue" label="Net revenue" icon={CircleDollarSign} tone="coral" value={<AnimatedNumber value={Number(t.net_revenue_usd)} format={money} />} khr={t.net_revenue_khr}
+                detail={`${formatUsd(t.gross_revenue_usd)} gross − ${formatUsd(t.refunds_usd)} refunded`}
                 change={<Change percent={c.change_percent.net_revenue} previous={Number(c.totals.net_revenue_usd)} versus={versus} />}
                 trend={r.series.map((p) => Number(p.net_revenue_usd))} labels={labels} format={money} />
-              <Kpi id="r-delivered" label="Delivered orders" icon={Truck} tone="saffron" value={<AnimatedNumber value={t.orders_count} format={count} />} detail={`${count(t.orders_placed)} placed`}
+              <Kpi id="r-delivered" label="Delivered orders" icon={Truck} tone="saffron" value={<AnimatedNumber value={t.orders_count} format={count} />} detail={`${count(t.orders_placed)} placed (${count(t.orders_count)} delivered)`}
                 change={<Change percent={c.change_percent.orders_count} previous={c.totals.orders_count} versus={versus} />}
                 trend={r.series.map((p) => p.orders_count)} labels={labels} format={count} />
               <Kpi id="r-average" label="Average order" icon={Receipt} tone="sky" value={<AnimatedNumber value={Number(t.average_order_value_usd)} format={money} />} khr={t.average_order_value_khr}
+                detail="Net revenue ÷ delivered orders"
                 change={<Change percent={c.change_percent.average_order_value} previous={Number(c.totals.average_order_value_usd)} versus={versus} />}
                 trend={r.series.map((p) => Number(p.average_order_value_usd))} labels={labels} format={money} />
               <Kpi id="r-books-sold" label="Books sold" icon={ShoppingBag} tone="sea" value={<AnimatedNumber value={t.items_sold} format={count} />}
+                detail={`${t.orders_count ? (t.items_sold / t.orders_count).toFixed(1) : 0} books per delivered order`}
                 change={<Change percent={c.change_percent.items_sold} previous={c.totals.items_sold} versus={versus} />}
                 trend={r.series.map((p) => p.items_sold)} labels={labels} format={count} />
             </div>
-            <p className="text-sm text-muted-foreground tabular-nums">
-              {formatUsd(t.gross_revenue_usd)} from delivered orders, less {formatUsd(t.refunds_usd)} refunded · discounts given {formatUsd(t.discount_usd)} · delivery fees {formatUsd(t.shipping_usd)}
-            </p>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-border/60 bg-surface-2/40 px-4 py-3 text-sm text-muted-foreground tabular-nums">
+              <span>
+                <span className="font-semibold text-foreground">{formatUsd(t.gross_revenue_usd)}</span> delivered gross
+              </span>
+              <span>
+                <span className="font-semibold text-foreground">−{formatUsd(t.discount_usd)}</span> discounts
+              </span>
+              <span>
+                <span className="font-semibold text-foreground">−{formatUsd(t.refunds_usd)}</span> refunds
+              </span>
+              <span>
+                <span className="font-semibold text-foreground">+{formatUsd(t.shipping_usd)}</span> delivery fees
+              </span>
+              <span className="ml-auto text-xs text-muted-foreground sm:text-sm">
+                Need book margins & supplier costs?{" "}
+                <Link to="/admin/reports?tab=profit" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
+                  View Profit tab →
+                </Link>
+              </span>
+            </div>
             <Panel
               id="sales-trend"
               title={`Net revenue by ${group}`}

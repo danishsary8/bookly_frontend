@@ -1206,3 +1206,12 @@ component's own dependencies). Values still glide between periods. Rules: design
   book's own publisher. Profit report's spending-by-supplier rows show the type. Checks: 719 unit tests, lint,
   typecheck, build; local-API browser run (suppliers page at 1440/390/320 light+dark with axe, form, restock
   preselect).
+
+### 2026-11-17 — Dashboard & Reports Data Clarity (branch `feature/reports-data-clarity`)
+- Reports Sales Tab: added transparent details on Net revenue (`gross − refunds`), Average order (`Net revenue ÷ delivered orders`),
+  Delivered orders (`placed vs delivered`), and Books sold (`copies / delivered order`).
+- Replaced the plain summary paragraph in Sales tab with a clear reconciliation breakdown card displaying Gross Delivered,
+  Discounts Deducted, Refunds Deducted, Delivery Fees Collected, with an inline link to the Profit tab.
+- Profit Tab: added explicit `100% cost tracked` badge on Book Sales when all sold items have known costs, displayed `Profit after refunds`
+  right on the Gross Profit KPI card, added a cross-link to the Sales tab for net collected cash reconciliation.
+- Checks: lint, typecheck, reports-page unit tests passed (11/11).
