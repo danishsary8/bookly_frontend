@@ -128,31 +128,44 @@ function SalesTab({ range, versus }: { range: ReportRange; versus: string }) {
             </div>
             {/* How the money adds up (owner 2026-11-17). Order totals are stored after discounts and with delivery, so the
                 steps start from the books' full price; "Book sales" is the same number as on the Profit tab. */}
-            <div className="grid gap-2 rounded-xl border border-border/60 bg-surface-2/40 px-4 py-3 text-sm tabular-nums">
-            <dl aria-label="How net revenue adds up" className="grid gap-x-6 gap-y-2 sm:grid-cols-2 xl:grid-cols-5">
-              {([
-                ["Books at full price", bookFull, ""],
-                ["Discounts", -discounts, "−"],
-                ["Book sales", bookSales, "="],
-                ["Delivery fees", shipping, "+"],
-                ["Refunds", -refunds, "−"],
-              ] as const).map(([label, cents, sign]) => (
-                <div key={label} className="grid gap-0.5">
-                  <dt className="text-muted-foreground">{label}</dt>
-                  <dd className="font-semibold text-foreground">
-                    {sign === "−" ? "−" : sign === "+" ? "+" : ""}
-                    {formatUsd((Math.abs(cents) / 100).toFixed(2))}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-              <p className="text-muted-foreground">
-                = <span className="font-semibold text-foreground">{formatUsd(t.net_revenue_usd)}</span> net revenue ·{" "}
-                <Link to="/admin/reports?tab=profit" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
-                  Cost and profit are on the Profit tab →
-                </Link>
-              </p>
-            </div>
+            <section className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+              <h3 className="text-sm font-semibold text-muted-foreground">How net revenue adds up</h3>
+              <dl aria-label="How net revenue adds up" className="mt-3 grid grid-cols-2 gap-2.5 tabular-nums sm:grid-cols-3 xl:grid-cols-5">
+                {([
+                  ["Books at full price", bookFull, "plain"],
+                  ["Discounts", discounts, "minus"],
+                  ["Book sales", bookSales, "subtotal"],
+                  ["Delivery fees", shipping, "plus"],
+                  ["Refunds", refunds, "minus"],
+                ] as const).map(([label, cents, kind]) => (
+                  <div
+                    key={label}
+                    className={cn(
+                      "grid content-start gap-1 rounded-xl border px-3.5 py-3",
+                      kind === "subtotal" ? "border-primary/25 bg-primary/5" : "border-border/70 bg-surface-2/50",
+                    )}
+                  >
+                    <dt className="text-[13px] text-muted-foreground">{label}</dt>
+                    <dd className={cn("text-lg font-semibold leading-tight", cents === 0 ? "text-foreground" : kind === "minus" ? "text-destructive" : kind === "plus" ? "text-success" : "text-foreground")}>
+                      {cents === 0 ? "" : kind === "minus" ? "−" : kind === "plus" ? "+" : ""}
+                      {formatUsd((cents / 100).toFixed(2))}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="mt-3 flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t border-border pt-3">
+                <p className="grid gap-0.5">
+                  <span className="text-sm text-muted-foreground">Net revenue</span>
+                  <span className="text-2xl font-semibold leading-none tracking-[-0.02em] tabular-nums text-foreground">= {formatUsd(t.net_revenue_usd)}</span>
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Full price − discounts + delivery fees − refunds ·{" "}
+                  <Link to="/admin/reports?tab=profit" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
+                    Cost and profit are on the Profit tab →
+                  </Link>
+                </p>
+              </div>
+            </section>
             <Panel
               id="sales-trend"
               title={`Net revenue by ${group}`}
