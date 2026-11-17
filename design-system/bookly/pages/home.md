@@ -177,6 +177,16 @@ Supersedes "Clean spines" (lettering) and the row `key` remount. The bookcase st
   touch (a 1.5–2 px gap) because each book's place is the running sum of the widths before it.
 - Reduced motion: rows swap at once, the pill jumps, no autoplay (as before).
 
+## Classic titled spines — 2026-11-17 (branch `shelf-classic-look`)
+Supersedes the spine and size rules of "Shelf motion + wordless spines". The pill glide and the library lift stay.
+- Spines are back to the "Shelf realism pass" look: rounded cloth, hinge grooves, striped headbands, the main title in
+  foil and the author's surname at the foot. Three bindings from the book id: gold rules, a leather title label (long
+  titles fall back to rules), raised bands.
+- Every book the same height and thickness again (`ws = 0.14·H`) with a `0.025·H` gap. Packed books of different
+  thickness 2 px apart cut into each other in 3D while the middle book turned (broken faces next to the open book).
+- Bug fixed: the binding was picked with a signed shift (`hash >> 11`), which is negative for about half the ids, so
+  those spines had no binding. Now `hash >>> 11`.
+
 ## Phone polish — 2026-11-16 (branch `mobile-polish`, on top of `home-shelf-motion`)
 Phone-only (< 640px) unless noted; laptops keep their layout.
 - Hero: subtitle and the "Popular" label hidden on phones; tighter spacing and a smaller title; "Browse catalogue" and
