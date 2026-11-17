@@ -769,15 +769,16 @@ export default function ReportsPage() {
               update(rangeToParams({ period: value }), "tab");
             }}
           />
+          {/* The comparison belongs to the period it describes (owner 2026-11-17). */}
+          <p className="report-compare dash-comparison">Changes {versus}</p>
         </div>
         )}
         <div className="report-export flex flex-wrap items-center gap-2">
-          {tab !== "inventory" ? <p className="dash-comparison">Changes {versus}</p> : null}
-          <Button variant="outline" onClick={() => void exportCsv()} loading={exporting}>
-            <Download aria-hidden="true" /> Export CSV
+          <Button variant="outline" size="sm" onClick={() => void exportCsv()} loading={exporting} aria-label="Export CSV" title="Export this report as CSV">
+            <Download aria-hidden="true" /> CSV
           </Button>
-          <Button variant="outline" onClick={() => void exportExcel()} loading={exportingExcel}>
-            <FileSpreadsheet aria-hidden="true" /> Excel, all reports
+          <Button variant="outline" size="sm" onClick={() => void exportExcel()} loading={exportingExcel} aria-label="Excel, all reports" title="Download every report in one Excel file">
+            <FileSpreadsheet aria-hidden="true" /> Excel
           </Button>
         </div>
         {picking && tab !== "inventory" ? <div className="dash-custom-range"><CustomRange range={range} shown={days} onApply={(from, to) => update(rangeToParams({ period: "custom", from, to }), "tab")} /></div> : null}

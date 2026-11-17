@@ -56,6 +56,11 @@
 .dash-overview .dash-bento p.text-sm { font-size: 13px; line-height: 1.55; }
 .dash-profit-metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); }
 .report-export { justify-content: flex-end; }
+/* Reports toolbar: period + its comparison on the left, exports on the right, one row on laptops. */
+.report-compare { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border-radius: 999px; background: var(--surface-2); white-space: nowrap; }
+.report-export > button { min-height: 40px; }
+.dash-period-control:has(.report-compare) { flex-wrap: wrap; }
+.dash-period-control:has(.report-compare) .admin-segmented { flex-shrink: 0; }
 .inventory-speed .admin-segmented { max-width: 100%; }
 @media (max-width: 479px) { .inventory-speed { width: 100%; } .inventory-speed .admin-segmented { display: grid; width: 100%; grid-template-columns: repeat(5, minmax(0, 1fr)); } .inventory-speed .admin-segmented > button { min-width: 0; padding-inline: 4px; font-size: 13px; } }
 .report-tabs { display: grid; gap: 20px; }
