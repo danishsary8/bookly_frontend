@@ -577,16 +577,16 @@ export default function BookDetailPage() {
                   {book.categories.filter((c) => !c.id || !book.categories!.some((child) => child.id !== c.id && getCategoryHierarchy(child).parent?.id === c.id)).map((c) => {
                     const { parent } = getCategoryHierarchy(c);
                     return (
-                      <span key={c.id ?? c.slug} className="inline-flex items-center rounded-full border border-border bg-card/70 px-3 py-1.5">
+                      <span key={c.id ?? c.slug} className="inline-flex items-center rounded-full border border-border bg-card/70 px-3">
                         {parent ? (
                           <>
-                            <Link to={`/categories/${parent.slug}`} className="underline-offset-4 hover:underline">
+                            <Link to={`/categories/${parent.slug}`} className="inline-flex min-h-9 items-center underline-offset-4 hover:underline">
                               {parent.name}
                             </Link>
                             <span className="mx-1.5 opacity-60" aria-hidden="true">›</span>
                           </>
                         ) : null}
-                        <Link to={`/categories/${c.slug}`} className="underline-offset-4 hover:underline">
+                        <Link to={`/categories/${c.slug}`} className="inline-flex min-h-9 items-center underline-offset-4 hover:underline">
                           {c.name}
                         </Link>
                       </span>
