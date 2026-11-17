@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 import { AnimatePresence, m } from "motion/react";
 import { useLocation, useNavigationType } from "react-router-dom";
 import { duration, ease, transitions } from "@/lib/motion";
+import { frameOf } from "./frame";
 
 /*
  * MASTER §5 page transition: the new page fades in rising 8px (360ms ease-out),
@@ -19,6 +20,7 @@ import { duration, ease, transitions } from "@/lib/motion";
 
 const FOCUS_WAIT_MS = 4000;
 
+
 const focusQuietly = (element: HTMLElement) => {
   if (!element.hasAttribute("tabindex")) element.setAttribute("tabindex", "-1");
   element.focus({ preventScroll: true });
@@ -35,8 +37,16 @@ export function PageTransition({ children, mainId = "content" }: { children: Rea
 
   useLayoutEffect(() => {
     if (scrolledFor.current === location.pathname) return;
+    const sameFrame = frameOf(scrolledFor.current) === frameOf(location.pathname);
     scrolledFor.current = location.pathname;
     if (location.hash || navigationType === "POP") return;
+    if (sameFrame) {
+      // Inside the same frame: stay put, unless the reader is below the top of the content (then bring it into view).
+      const area = document.querySelector<HTMLElement>(".account-area");
+      const top = area ? area.getBoundingClientRect().top + window.scrollY : 0;
+      if (window.scrollY > top) window.scrollTo({ top, left: 0, behavior: "instant" as ScrollBehavior });
+      return;
+    }
     window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
   }, [location.pathname, location.hash, navigationType]);
 
@@ -72,7 +82,7 @@ export function PageTransition({ children, mainId = "content" }: { children: Rea
   return (
     <AnimatePresence mode="popLayout" initial={false}>
       <m.div
-        key={location.pathname}
+        key={frameOf(location.pathname)}
         data-route={location.pathname}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0, transition: transitions.page }}

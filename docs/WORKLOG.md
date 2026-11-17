@@ -1249,3 +1249,14 @@ component's own dependencies). Values still glide between periods. Rules: design
 - Checks: lint, typecheck, 720 tests, build OK. Browser (local API) at 1440 and 390: sales/orders/inventory/dashboard
   load with no page errors, axe 0 violations; dashboard shows "vs 4 Nov – 10 Nov" for 7 days and "vs 19 Sept – 18 Oct"
   for 30 days. Not checked: the live API.
+
+### 2026-11-17 — Account sidebar stays put (committed to main at the owner's request)
+- Bug: the page transition keyed every page by its full path, so moving between account sections faded the whole
+  account area (sidebar included) out and in, jumped to the top and reset the sidebar's scroll. Now /account/* counts
+  as one frame (`src/components/motion/frame.ts`): the sidebar stays mounted and still, only the content on the right
+  fades in, and the page only scrolls if the reader was below the top of the account area. FrozenOutlet shows the
+  live route while still in its frame (a layer fading out to another page keeps its own page).
+- Sidebar: no visible scrollbar, tighter spacing (links 40px on laptops) so it fits a laptop screen.
+- Checks: lint, typecheck, 720 tests, build OK. Browser (local API, 1440): clicking Sign-in & security, Addresses,
+  Orders, Wishlist, Profile keeps the same sidebar element and scroll position while the heading changes; phone menu
+  closes after choosing; account → Best sellers → Back → Reviews → a book page all load; axe 0; no page errors.

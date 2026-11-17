@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useOutlet } from "react-router-dom";
+import { useLocation, useOutlet } from "react-router-dom";
+import { frameOf } from "./frame";
 
 /*
  * The route element this transition layer was created with. Without it, the page
@@ -10,6 +11,9 @@ import { useOutlet } from "react-router-dom";
  */
 export function FrozenOutlet() {
   const outlet = useOutlet();
-  const [frozen] = useState(outlet);
-  return frozen;
+  const { pathname } = useLocation();
+  const [frozen] = useState(() => ({ outlet, frame: frameOf(pathname) }));
+  // Still inside the frame this layer was made for (e.g. moving between account sections): show the live route, so
+  // the nested sections change while the frame stays. A layer fading out to another frame keeps its own page.
+  return frameOf(pathname) === frozen.frame ? outlet : frozen.outlet;
 }

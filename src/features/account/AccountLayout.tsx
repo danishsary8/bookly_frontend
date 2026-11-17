@@ -2,6 +2,7 @@ import "./account.css";
 import { useId } from "react";
 import { ArrowUpRight, BookHeart, BookOpen, ChevronDown, Gift, Heart, KeyRound, LayoutDashboard, LifeBuoy, LogOut, MapPin, MessageSquareText, Package, RotateCcw, TicketPercent, UserPlus, UserRound, type LucideIcon } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { m } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
 import { shopFeaturesQuery } from "@/api/endpoints/credit";
 import { useSession } from "@/api/session";
@@ -62,7 +63,7 @@ function SectionLinks({ visible, onNavigate }: { visible: (key: SectionKey) => b
   const { dict } = useT();
   const instanceId = useId();
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-3">
       {groups.map((group) => {
         const sections = group.sections.filter((s) => visible(s.key));
         if (sections.length === 0) return null;
@@ -81,7 +82,7 @@ function SectionLinks({ visible, onNavigate }: { visible: (key: SectionKey) => b
                     onClick={onNavigate}
                     className={({ isActive }) =>
                       cn(
-                        "account-nav-link relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-[15px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring",
+                        "account-nav-link relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-[15px] font-medium lg:min-h-10 outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring",
                         isActive
                           ? "bg-lapis-tint font-semibold text-primary after:absolute after:inset-y-2 after:left-0 after:w-[3px] after:rounded-full after:bg-primary"
                           : "text-muted-foreground hover:bg-secondary hover:text-foreground",
@@ -120,7 +121,7 @@ export function AccountLayout() {
     <div className="account-area container-shell pb-20 pt-6 sm:pt-8 short:pt-4" data-account-page={current.key}>
       <div className="account-frame">
         {/* Laptops: the sidebar card. */}
-        <nav aria-label={dict.account.nav} className="account-sidebar shop-card sticky top-[calc(var(--header-h)+1.5rem)] hidden max-h-[calc(100dvh-var(--header-h)-3rem)] self-start overflow-y-auto overscroll-contain rounded-2xl border border-border bg-card p-3 lg:block">
+        <nav aria-label={dict.account.nav} className="account-sidebar no-scrollbar shop-card sticky top-[calc(var(--header-h)+1rem)] hidden max-h-[calc(100dvh-var(--header-h)-2rem)] self-start overflow-y-auto overscroll-contain rounded-2xl border border-border bg-card p-2.5 lg:block">
           <div className="account-identity">
             <span className="pointer-events-none absolute -right-6 -top-10 size-28 rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--on-lapis-muted)_45%,transparent),transparent)]" aria-hidden="true" />
             <span className="account-avatar" aria-hidden="true">
@@ -165,7 +166,10 @@ export function AccountLayout() {
 
         <div className="account-content min-w-0">
           {/* Frozen like the site outlet, so a page fading out keeps showing its own section. */}
-          <FrozenOutlet />
+          {/* The sidebar stays; only this part changes between sections (keyed by the address). */}
+          <m.div key={pathname} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0, transition: { duration: 0.24, ease: [0.2, 0.8, 0.2, 1] } }}>
+            <FrozenOutlet />
+          </m.div>
         </div>
       </div>
     </div>
