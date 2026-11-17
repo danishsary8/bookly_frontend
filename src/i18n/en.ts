@@ -108,7 +108,7 @@ export const en = {
   home: {
     heroTitle: "Books delivered across Cambodia",
     heroSubtitle: "Browse classics, contemporary fiction, history, and literature. Cash on delivery in Phnom Penh and all provinces.",
-    browseCatalogue: "Browse catalogue",
+    browseCatalogue: "Shop all books",
     popularBooks: "Popular in every genre",
     newReleases: "New releases",
     viewAll: "View all",

@@ -120,7 +120,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
 
 
           {topCategories.length ? (
-            <nav aria-label={h.popularCategories} className="mt-4 grid gap-3 text-sm sm:mt-8 sm:flex sm:flex-wrap sm:items-center short:mt-6">
+            <nav aria-label={h.popularCategories} className="mt-8 hidden gap-3 text-sm sm:flex sm:flex-wrap sm:items-center short:mt-6">
               <span className="hidden text-[13px] text-on-lapis-muted sm:mr-1 sm:inline">{h.popularCategories}</span>
               {/* Phones: one row that scrolls sideways (bleeding to the panel edge) instead of wrapping onto two. */}
               <span className="no-scrollbar -mx-6 flex gap-3 overflow-x-auto px-6 sm:contents">
@@ -137,17 +137,17 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
             </nav>
           ) : null}
           {/* One calm call to action (cream on lapis, the arrow in its own lapis disc) and the shop's two promises. */}
-          <div className="mt-4 flex flex-row flex-nowrap items-center justify-between gap-x-3 sm:mt-8 sm:flex-wrap sm:justify-start sm:gap-6 sm:gap-x-8 short:mt-6">
+          <div className="mt-5 flex flex-row flex-nowrap items-center justify-between gap-x-3 sm:mt-8 sm:flex-wrap sm:justify-start sm:gap-6 sm:gap-x-8 short:mt-6">
               <Link
                 to="/books"
-                className="hero-catalogue-cta relative isolate inline-flex h-12 shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap rounded-full bg-[#FBF6EC] py-1.5 pl-4 pr-1.5 text-[14px] sm:h-[3.25rem] sm:pl-6 sm:text-[15px] font-semibold leading-none text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
+                className="hero-catalogue-cta relative isolate inline-flex h-[3.25rem] w-full shrink-0 items-center justify-between gap-3 overflow-hidden whitespace-nowrap rounded-full bg-[#FBF6EC] py-1.5 pl-6 pr-1.5 text-[15px] sm:h-[3.25rem] sm:w-auto sm:justify-start sm:pl-6 sm:text-[15px] font-semibold leading-none text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
               >
                 <span className="relative">{dict.home.browseCatalogue}</span>
                 <span className="relative grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </span>
               </Link>
-            <ul className="grid min-w-0 shrink gap-1.5 text-[12.5px] leading-5 text-on-lapis-muted sm:gap-2 sm:text-[13px]">
+            <ul className="hidden min-w-0 shrink gap-1.5 sm:grid text-[12.5px] leading-5 text-on-lapis-muted sm:gap-2 sm:text-[13px]">
               <li className="inline-flex items-center gap-2 whitespace-nowrap"><Wallet className="size-4 text-gold" aria-hidden="true" /> {h.cod}</li>
               <li className="inline-flex items-center gap-2 whitespace-nowrap"><QrCode className="size-4 text-gold" aria-hidden="true" /> {h.khqr}</li>
             </ul>
@@ -198,7 +198,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                   e.currentTarget.style.setProperty("--tilt-y", "0deg");
                   e.currentTarget.style.setProperty("--tilt-x", "0deg");
                 }}
-                className="hero-stack relative mx-auto w-[min(190px,50%,calc((100svh-30rem)*0.5))] min-w-[140px] sm:w-[min(300px,60%)] lg:w-[min(340px,60%,calc((var(--hero-panel-height)-14rem)*0.6))]"
+                className="hero-stack relative mx-auto w-[min(210px,56%,calc((100svh-26rem)*0.5))] min-w-[140px] sm:w-[min(300px,60%)] lg:w-[min(340px,60%,calc((var(--hero-panel-height)-14rem)*0.6))]"
               >
                 <span className="pointer-events-none absolute left-1/2 top-[42%] -z-10 size-[210%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(130_160_255/0.3),transparent)]" aria-hidden="true" />
                 <div className="relative aspect-[2/3] [perspective:1400px]">
