@@ -1238,3 +1238,14 @@ component's own dependencies). Values still glide between periods. Rules: design
 - Checks: lint, typecheck, 720 tests (profit test updated: 55 − 20 = 35, 27 − 12 = 15, profit 20, margin 57.1%),
   build OK. Browser (local API, 30 days, 1440 and 390): $123.87 − $68.60 = $55.27, 44.6%; axe 0 violations, no
   page errors. Not checked: a period with refunds in the browser (covered by the unit test), the live API.
+
+### 2026-11-17 — Reports and dashboard tidy-up (committed to main at the owner's request)
+- Sales tab: "Average order" card removed (it repeats the Customers tab). Funnel tab removed.
+- Orders tab: "Where the orders are now" overview: Delivered / In progress / Cancelled or returned with counts and
+  shares, one stacked bar of every status and a legend; delivery area and payment method side by side.
+- Inventory tab: "Needs attention" chips, "What your stock is worth" (3 cards), and the not-selling money moved into
+  the "Not selling for 90 days" panel with a plain explanation; "Runs out soon" gets a matching summary. en + km.
+- Dashboard: every KPI card (and the profit glance) shows "vs <previous dates>", following the chosen period.
+- Checks: lint, typecheck, 720 tests, build OK. Browser (local API) at 1440 and 390: sales/orders/inventory/dashboard
+  load with no page errors, axe 0 violations; dashboard shows "vs 4 Nov – 10 Nov" for 7 days and "vs 19 Sept – 18 Oct"
+  for 30 days. Not checked: the live API.

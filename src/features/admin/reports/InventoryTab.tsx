@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { ApiError } from "@/api/errors";
 import { inventoryQuery, type InventoryDays } from "@/api/endpoints/reports";
 import { AnimatedNumber } from "@/features/admin/dashboard/AnimatedNumber";
-import { Kpi, RankTable } from "@/features/admin/dashboard/DashKit";
+import { Kpi, RankTable, SectionLabel } from "@/features/admin/dashboard/DashKit";
 import { Panel } from "@/features/admin/reportKit";
 import { Segmented } from "@/features/admin/listKit";
 import { Empty, State } from "@/features/admin/reports/reportParts";
@@ -57,25 +57,30 @@ export function InventoryTab() {
               </div>
             </div>
 
-            <ul className="flex flex-wrap gap-2" aria-label={t.tab}>
+            <SectionLabel>{t.attention}</SectionLabel>
+            <ul className="-mt-2 flex flex-wrap gap-2" aria-label={t.attention}>
               <StatusChip tone="warning" icon={AlertTriangle} label={t.lowStock} value={s.low_stock} />
               <StatusChip tone="danger" icon={Boxes} label={t.outOfStock} value={s.out_of_stock} />
               <StatusChip tone="warning" icon={Timer} label={t.soon} value={s.runs_out_soon} />
               <StatusChip tone="muted" icon={Snail} label={t.dead} value={s.dead_formats} />
             </ul>
 
-            <div className="dash-kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <SectionLabel>{t.worth}</SectionLabel>
+            <div className="dash-kpi-grid -mt-2 grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Kpi id="i-cost" label={t.cost} icon={PackageCheck} tone="sky" value={<AnimatedNumber value={Number(s.value_cost_usd)} format={money} />} khr={s.value_cost_khr}
                 detail={[t.costDetail.replace("{n}", count(s.copies)), s.copies_without_cost ? t.costMissing.replace("{n}", count(s.copies_without_cost)) : ""].filter(Boolean).join(" · ")} />
               <Kpi id="i-retail" label={t.retail} icon={Tags} tone="saffron" value={<AnimatedNumber value={Number(s.value_retail_usd)} format={money} />} khr={s.value_retail_khr} detail={t.retailDetail.replace("{n}", count(s.formats_in_stock))} />
               <Kpi id="i-potential" label={t.potential} icon={PiggyBank} tone="sea" value={<AnimatedNumber value={Number(s.potential_profit_usd)} format={money} />} khr={s.potential_profit_khr} detail={t.potentialDetail} />
-              <Kpi id="i-dead" label={t.dead} icon={Snail} tone="coral" value={<AnimatedNumber value={Number(s.dead_value_usd)} format={money} />} khr={s.dead_value_khr}
-                detail={t.deadDetail.replace("{copies}", count(s.dead_copies)).replace("{formats}", count(s.dead_formats)).replace("{days}", String(r.dead_days))} />
             </div>
 
             <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
               <Panel id="inventory-runs-out" title={t.runsOut} icon={Hourglass} tone="coral"
                 action={<Link to="/admin/purchases" className="group inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary underline-offset-4 hover:underline"><ClipboardList className="size-4" aria-hidden="true" />{t.purchaseList} <ArrowRight className="admin-arrow size-4" aria-hidden="true" /></Link>}>
+                <div className="grid gap-1 rounded-xl border border-warning/25 bg-warning-tint/60 px-4 py-3.5">
+                  <p className="text-sm font-semibold text-muted-foreground">{t.runsOutSoon}</p>
+                  <p className="text-[1.75rem] font-semibold leading-none tracking-[-0.02em] tabular-nums">{count(s.runs_out_soon)}</p>
+                  <p className="text-sm text-muted-foreground">{t.runsOutSoonDetail.replace("{out}", count(s.out_of_stock)).replace("{low}", count(s.low_stock))}</p>
+                </div>
                 <p className="text-sm text-muted-foreground">{t.runsOutNote.replace("{n}", String(r.sales_days)).replace("{cover}", String(r.cover_days))}</p>
                 {r.runs_out.length === 0 ? (
                   <Empty>{t.runsOutEmpty}</Empty>
@@ -102,7 +107,18 @@ export function InventoryTab() {
               </Panel>
 
               <Panel id="inventory-not-selling" title={t.notSelling.replace("{n}", String(r.dead_days))} icon={Snail} tone="slate">
-                <p className="text-sm text-muted-foreground">{t.notSellingNote}</p>
+                {/* Money sitting on the shelf (owner 2026-11-17): the value sits with the list it describes. */}
+                <div className="grid gap-1.5 rounded-xl border border-destructive/20 bg-destructive-tint/60 px-4 py-3.5">
+                  <p className="text-sm font-semibold text-muted-foreground">{t.deadMoney}</p>
+                  <p className="text-[1.75rem] font-semibold leading-none tracking-[-0.02em] tabular-nums">
+                    <AnimatedNumber value={Number(s.dead_value_usd)} format={money} />
+                  </p>
+                  {s.dead_value_khr ? <p className="text-sm text-muted-foreground tabular-nums">≈ {Number(s.dead_value_khr).toLocaleString("en-US")} ៛</p> : null}
+                  <p className="text-sm text-muted-foreground">
+                    {t.deadDetail.replace("{copies}", count(s.dead_copies)).replace("{formats}", count(s.dead_formats)).replace("{days}", String(r.dead_days))}
+                  </p>
+                  <p className="text-sm">{t.deadExplain.replace("{days}", String(r.dead_days))}</p>
+                </div>
                 {r.not_selling.length === 0 ? (
                   <Empty>{t.notSellingEmpty.replace("{n}", String(r.dead_days))}</Empty>
                 ) : (

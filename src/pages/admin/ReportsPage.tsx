@@ -1,10 +1,8 @@
 import { useState, type ReactNode } from "react";
-import { AlertTriangle, ArrowDown, BarChart3, Boxes, CircleDollarSign, Download, FileSpreadsheet, FolderTree, Gift, Hourglass, LineChart, MapPin, PenTool, PiggyBank, Printer, Receipt, ShoppingBag, ShoppingCart, Tag, Ticket, TrendingUp, Trophy, Truck, Undo2, UserPlus, Users, Wallet, XCircle } from "lucide-react";
+import { AlertTriangle, BarChart3, Boxes, CheckCircle2, CircleDollarSign, Download, FileSpreadsheet, FolderTree, Gift, Hourglass, LineChart, MapPin, PenTool, PiggyBank, Printer, Receipt, RotateCcw, ShoppingBag, Tag, Ticket, TrendingUp, Trophy, Truck, Undo2, UserPlus, Users, Wallet, XCircle } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { inventoryApi, reportsApi, type ReportGroup, type ReportName, type ReportRange } from "@/api/endpoints/reports";
 import { ApiError } from "@/api/errors";
-import type { OrderStatus } from "@/api/types";
-import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminPage } from "@/features/admin/AdminPage";
@@ -37,7 +35,6 @@ const TABS: Array<{ value: ReportName; label: string }> = [
   { value: "orders", label: "Orders" },
   { value: "products", label: "Products" },
   { value: "customers", label: "Customers" },
-  { value: "funnel", label: "Funnel" },
   { value: "coupons", label: "Coupons & refunds" },
   { value: "offers", label: "Offers" },
   { value: "profit", label: "Profit" },
@@ -109,7 +106,7 @@ function SalesTab({ range, versus }: { range: ReportRange; versus: string }) {
         const labels = points.map((p) => p.label);
         return (
           <>
-            <div className="dash-kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="dash-kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Kpi id="r-net-revenue" label="Net revenue" icon={CircleDollarSign} tone="coral" value={<AnimatedNumber value={Number(t.net_revenue_usd)} format={money} />} khr={t.net_revenue_khr}
                 detail={`${formatUsd(t.gross_revenue_usd)} collected − ${formatUsd(t.refunds_usd)} refunded`}
                 change={<Change percent={c.change_percent.net_revenue} previous={Number(c.totals.net_revenue_usd)} versus={versus} />}
@@ -117,10 +114,6 @@ function SalesTab({ range, versus }: { range: ReportRange; versus: string }) {
               <Kpi id="r-delivered" label="Delivered orders" icon={Truck} tone="saffron" value={<AnimatedNumber value={t.orders_count} format={count} />} detail={`${count(t.orders_placed)} orders placed in this period`}
                 change={<Change percent={c.change_percent.orders_count} previous={c.totals.orders_count} versus={versus} />}
                 trend={r.series.map((p) => p.orders_count)} labels={labels} format={count} />
-              <Kpi id="r-average" label="Average order" icon={Receipt} tone="sky" value={<AnimatedNumber value={Number(t.average_order_value_usd)} format={money} />} khr={t.average_order_value_khr}
-                detail="Money collected ÷ delivered orders (before refunds)"
-                change={<Change percent={c.change_percent.average_order_value} previous={Number(c.totals.average_order_value_usd)} versus={versus} />}
-                trend={r.series.map((p) => Number(p.average_order_value_usd))} labels={labels} format={money} />
               <Kpi id="r-books-sold" label="Books sold" icon={ShoppingBag} tone="sea" value={<AnimatedNumber value={t.items_sold} format={count} />}
                 detail={`${t.orders_count ? (t.items_sold / t.orders_count).toFixed(1) : 0} books per delivered order`}
                 change={<Change percent={c.change_percent.items_sold} previous={c.totals.items_sold} versus={versus} />}
@@ -214,30 +207,80 @@ function OrdersTab({ range, versus }: { range: ReportRange; versus: string }) {
                 change={<Change percent={c.change_percent.average_delivery_hours} previous={c.average_delivery_hours ?? 0} versus={versus} moreIsBetter={false} />}
               />
             </div>
+            {/* Orders tab (owner 2026-11-17): one clear overview of where the period's orders are now, then delivery
+                area and payment method side by side. */}
+            <Panel id="orders-status" title="Where the orders are now" icon={BarChart3} tone="sky" action={<span className="text-sm text-muted-foreground tabular-nums">{count(r.total_orders)} orders placed</span>}>
+              {r.total_orders === 0 ? <Empty>No orders placed in this period.</Empty> : <OrderStatusOverview byStatus={r.orders_by_status} total={r.total_orders} />}
+            </Panel>
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <Panel id="orders-status" title="Orders placed by status" icon={BarChart3} tone="sky">
-                {r.total_orders === 0 ? <Empty>No orders placed in this period.</Empty> : <ShareList label="Orders by status" rows={Object.entries(r.orders_by_status).map(([status, n]) => ({ key: status, name: <OrderStatusBadge status={status as OrderStatus} />, value: n }))} />}
+              <Panel id="orders-area" title="Delivery area" icon={MapPin} tone="sea">
+                {r.total_orders === 0 ? <Empty>No orders placed in this period.</Empty> : <ShareList label="Orders by delivery area" rows={[{ key: "pp", name: "Phnom Penh", value: r.orders_by_delivery_area.phnom_penh }, { key: "prov", name: "Provinces", value: r.orders_by_delivery_area.provinces }]} />}
               </Panel>
-              <div className="grid content-start gap-6">
-                <Panel id="orders-area" title="Delivery area" icon={MapPin} tone="sea">
-                  {r.total_orders === 0 ? <Empty>No orders placed in this period.</Empty> : <ShareList label="Orders by delivery area" rows={[{ key: "pp", name: "Phnom Penh", value: r.orders_by_delivery_area.phnom_penh }, { key: "prov", name: "Provinces", value: r.orders_by_delivery_area.provinces }]} />}
-                </Panel>
-                <Panel id="orders-payment" title="Payment method" icon={Wallet} tone="saffron">
-                  {r.total_orders === 0 ? (
-                    <Empty>No orders placed in this period.</Empty>
-                  ) : (
-                    <ShareList
-                      label="Orders by payment method"
-                      rows={Object.entries(r.orders_by_payment_method).map(([method, n]) => ({ key: method, name: { cod: "Cash on delivery", card: "Card", khqr: "Bakong KHQR" }[method] ?? method, value: n }))}
-                    />
-                  )}
-                </Panel>
-              </div>
+              <Panel id="orders-payment" title="Payment method" icon={Wallet} tone="saffron">
+                {r.total_orders === 0 ? (
+                  <Empty>No orders placed in this period.</Empty>
+                ) : (
+                  <ShareList
+                    label="Orders by payment method"
+                    rows={Object.entries(r.orders_by_payment_method).map(([method, n]) => ({ key: method, name: { cod: "Cash on delivery", card: "Card", khqr: "Bakong KHQR" }[method] ?? method, value: n }))}
+                  />
+                )}
+              </Panel>
             </div>
           </>
         );
       }}
     </State>
+  );
+}
+
+/** The status overview: three headline groups, one stacked bar of every status, and a legend with counts. */
+const STATUS_STEPS: Array<{ key: string; label: string; fill: string; group: "progress" | "done" | "stopped" }> = [
+  { key: "pending", label: "Pending", fill: "bg-warning", group: "progress" },
+  { key: "paid", label: "Paid", fill: "bg-primary/45", group: "progress" },
+  { key: "processing", label: "Processing", fill: "bg-primary/70", group: "progress" },
+  { key: "shipped", label: "Shipped", fill: "bg-primary", group: "progress" },
+  { key: "delivered", label: "Delivered", fill: "bg-success", group: "done" },
+  { key: "cancelled", label: "Cancelled", fill: "bg-muted-foreground/45", group: "stopped" },
+  { key: "returned", label: "Returned", fill: "bg-destructive", group: "stopped" },
+];
+function OrderStatusOverview({ byStatus, total }: { byStatus: Record<string, number>; total: number }) {
+  const n = (key: string) => byStatus[key] ?? 0;
+  const share = (v: number) => (total ? (v / total) * 100 : 0);
+  const sum = (group: string) => STATUS_STEPS.filter((s) => s.group === group).reduce((t, s) => t + n(s.key), 0);
+  const groups = [
+    { key: "done", label: "Delivered", hint: "reached the customer", value: sum("done"), Icon: CheckCircle2, tone: "bg-success-tint text-success" },
+    { key: "progress", label: "In progress", hint: "pending, paid, processing or shipped", value: sum("progress"), Icon: Truck, tone: "bg-lapis-tint text-primary" },
+    { key: "stopped", label: "Cancelled or returned", hint: "did not complete", value: sum("stopped"), Icon: RotateCcw, tone: "bg-surface-2 text-foreground" },
+  ];
+  return (
+    <div className="grid gap-5">
+      <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {groups.map(({ key, label, hint, value, Icon, tone }) => (
+          <div key={key} className="grid gap-1 rounded-xl border border-border px-4 py-3.5">
+            <dt className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+              <span className={cn("grid size-7 place-items-center rounded-full", tone)}><Icon className="size-4" aria-hidden="true" /></span>
+              {label}
+            </dt>
+            <dd className="grid gap-0.5">
+              <span className="text-2xl font-semibold tabular-nums">{count(value)} <span className="text-base font-normal text-muted-foreground">· {percent(share(value))}</span></span>
+              <span className="text-sm text-muted-foreground">{hint}</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-surface-2" role="img" aria-label={STATUS_STEPS.map((s) => `${s.label} ${n(s.key)}`).join(", ")}>
+        {STATUS_STEPS.map((s) => (n(s.key) > 0 ? <span key={s.key} className={cn("h-full border-r-2 border-card last:border-r-0", s.fill)} style={{ width: `${share(n(s.key))}%` }} /> : null))}
+      </div>
+      <ul className="grid grid-cols-2 gap-x-6 gap-y-2.5 sm:grid-cols-4 lg:grid-cols-7" aria-label="Orders by status">
+        {STATUS_STEPS.map((s) => (
+          <li key={s.key} className="grid gap-0.5">
+            <span className="flex items-center gap-2 text-sm text-muted-foreground"><span className={cn("size-2.5 shrink-0 rounded-full", s.fill)} aria-hidden="true" />{s.label}</span>
+            <span className="pl-[18px] text-[15px] font-semibold tabular-nums">{count(n(s.key))} <span className="font-normal text-muted-foreground">· {percent(share(n(s.key)))}</span></span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -423,48 +466,6 @@ function CustomersTab({ range, versus }: { range: ReportRange; versus: string })
               )}
             </Panel>
           </>
-        );
-      }}
-    </State>
-  );
-}
-
-function FunnelTab({ range }: { range: ReportRange }) {
-  const query = useReport("funnel", range);
-  return (
-    <State query={query}>
-      {() => {
-        const steps = query.data!.steps;
-        const first = steps[0]?.count ?? 0;
-        return (
-          <Panel id="funnel" title="From cart to delivery" icon={ShoppingCart} tone="sky" action={<span className="text-sm text-muted-foreground">carts are an estimate; visits are not tracked</span>}>
-            {first === 0 ? (
-              <Empty>No carts or orders in this period.</Empty>
-            ) : (
-              <ol className="grid gap-2">
-                {steps.map((step, i) => (
-                  <li key={step.key} className="grid gap-2">
-                    {i > 0 ? (
-                      <p className="flex items-center gap-1.5 pl-1 text-sm text-muted-foreground tabular-nums">
-                        <ArrowDown className="size-4" aria-hidden="true" /> {percent(step.step_conversion_rate)} of the step before
-                      </p>
-                    ) : null}
-                    <div className="grid gap-1.5 rounded-xl border border-border p-3.5">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <span className="font-semibold">{step.name}</span>
-                        <span className="tabular-nums">
-                          <span className="text-lg font-semibold">{count(step.count)}</span> <span className="text-sm text-muted-foreground">· {percent(step.conversion_rate)} of carts</span>
-                        </span>
-                      </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-secondary" aria-hidden="true">
-                        <div className="admin-bar h-full rounded-full" style={{ width: `${first ? (step.count / first) * 100 : 0}%`, background: "var(--tone-fill)" }} />
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </Panel>
         );
       }}
     </State>
@@ -801,7 +802,6 @@ export default function ReportsPage() {
         <TabsContent value="orders">{tab === "orders" ? <OrdersTab range={days} versus={versus} /> : null}</TabsContent>
         <TabsContent value="products">{tab === "products" ? <ProductsTab range={days} /> : null}</TabsContent>
         <TabsContent value="customers">{tab === "customers" ? <CustomersTab range={days} versus={versus} /> : null}</TabsContent>
-        <TabsContent value="funnel">{tab === "funnel" ? <FunnelTab range={days} /> : null}</TabsContent>
         <TabsContent value="coupons">{tab === "coupons" ? <CouponsTab range={days} /> : null}</TabsContent>
         <TabsContent value="offers">{tab === "offers" ? <OffersTab range={days} /> : null}</TabsContent>
         <TabsContent value="inventory">{tab === "inventory" ? <InventoryTab /> : null}</TabsContent>

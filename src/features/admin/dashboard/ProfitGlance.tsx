@@ -16,7 +16,7 @@ const money = (n: number) => formatUsd(n.toFixed(2));
  * spending, linking to Reports → Profit. Hidden on an API without the profit report (404) or if it fails, so the
  * rest of the dashboard is never blocked by it.
  */
-export function ProfitGlance({ from, to, link, opening = false }: { from: string; to: string; link: string; opening?: boolean }) {
+export function ProfitGlance({ from, to, link, versus = "", opening = false }: { from: string; to: string; link: string; versus?: string; opening?: boolean }) {
   const { dict } = useT();
   const t = dict.profitReport;
   const range = { from, to };
@@ -50,7 +50,7 @@ export function ProfitGlance({ from, to, link, opening = false }: { from: string
                 <span className="text-2xl font-semibold tabular-nums"><AnimatedNumber countUp={opening} value={Number(now.gross_profit_usd)} format={money} /></span>
                 <Khr value={now.gross_profit_khr} />
                 <span className="text-sm text-muted-foreground tabular-nums">{now.margin_percent == null ? t.noMargin : t.margin.replace("{p}", `${now.margin_percent}%`)}</span>
-                <Change percent={c.change_percent.gross_profit} previous={Number(c.totals.gross_profit_usd)} versus="" />
+                <Change percent={c.change_percent.gross_profit} previous={Number(c.totals.gross_profit_usd)} versus={versus} />
               </dd>
             </div>
             {([
