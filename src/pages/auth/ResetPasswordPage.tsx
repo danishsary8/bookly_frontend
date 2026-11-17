@@ -18,8 +18,9 @@ import { useT } from "@/i18n";
 import { Rich } from "@/i18n/Rich";
 
 /*
- * Step 2 of 2: the emailed code and a new password, sent together (the API has
- * no separate code check, so a wrong code is reported on the code after submit).
+ * Step 2 of 2, shown in two parts: first the emailed code (Continue), then the new
+ * password. The API has no separate code check, so both are sent together at the end
+ * and a wrong code brings the customer back to the code part with the error.
  * A successful reset signs the customer out everywhere, so they sign in again.
  */
 export default function ResetPasswordPage() {
@@ -34,13 +35,24 @@ export default function ResetPasswordPage() {
   const { dict } = useT();
   const s = dict.signin;
 
-  const { register, control, handleSubmit, setError, formState } = useForm<ResetPasswordValues>({
+  const [part, setPart] = useState<"code" | "password">("code");
+  const { register, control, handleSubmit, setError, formState, trigger, getFieldState } = useForm<ResetPasswordValues>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: { email: knownEmail, code: "", password: "", password_confirmation: "" },
   });
   const { errors, isSubmitting } = formState;
   const password = useWatch({ control, name: "password" });
   const email = useWatch({ control, name: "email" });
+  const code = useWatch({ control, name: "code" });
+
+  const backToCode = () => {
+    setPart("code");
+    requestAnimationFrame(() => codeRef.current?.querySelector("input")?.focus());
+  };
+  const continueToPassword = async () => {
+    setFormError(null);
+    if (await trigger(knownEmail ? ["code"] : ["email", "code"])) setPart("password");
+  };
 
   const submit = async (values: ResetPasswordValues) => {
     setFormError(null);
@@ -52,7 +64,9 @@ export default function ResetPasswordPage() {
       const message = applyApiErrors(error, setError, ["email", "code", "password", "password_confirmation"]);
       if (message && /code/i.test(message)) {
         setError("code", { type: "server", message });
-        requestAnimationFrame(() => codeRef.current?.querySelector("input")?.focus());
+        backToCode();
+      } else if (getFieldState("email").invalid) {
+        setPart("code");
       } else if (message) {
         setFormError(message);
         requestAnimationFrame(() => alertRef.current?.focus());
@@ -65,7 +79,9 @@ export default function ResetPasswordPage() {
       eyebrow={s.passwordHelp}
       title={s.resetTitle}
       lead={
-        knownEmail ? (
+        part === "password" ? (
+          <p>{s.resetLeadPassword}</p>
+        ) : knownEmail ? (
           <p>
             <Rich text={s.resetLeadKnown(knownEmail)} strong="font-semibold text-foreground" />
           </p>
@@ -82,33 +98,65 @@ export default function ResetPasswordPage() {
         </p>
       }
     >
-      <form onSubmit={(event) => void handleSubmit(submit)(event)} noValidate className="grid gap-5">
+      <form
+        onSubmit={(event) => {
+          if (part === "code") {
+            event.preventDefault();
+            void continueToPassword();
+            return;
+          }
+          void handleSubmit(submit)(event);
+        }}
+        noValidate
+        className="grid gap-5"
+      >
         {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
-        {knownEmail ? (
+        {knownEmail || part === "password" ? (
           <input type="hidden" autoComplete="username" {...register("email")} />
         ) : (
           <TextField label={dict.auth.email} type="email" autoComplete="email" inputMode="email" error={errors.email?.message} {...register("email")} />
         )}
-        <div ref={codeRef} className="grid gap-1">
-          <Controller
-            control={control}
-            name="code"
-            render={({ field, fieldState }) => (
-              <OtpInput value={field.value} onChange={field.onChange} label={s.resetCode} error={fieldState.error?.message} autoFocus={Boolean(knownEmail)} />
-            )}
-          />
-          {email ? <ResendCode send={(token) => authApi.forgotPassword(email, token)} startCoolingDown={state?.justSent} turnstileAction="forgot_password" /> : null}
-        </div>
-        <div className="grid gap-3">
-          <PasswordField label={s.newPassword} autoComplete="new-password" aria-describedby="new-password-rules" error={errors.password?.message} {...register("password")} />
-          <PasswordChecklist id="new-password-rules" value={password ?? ""} />
-        </div>
-        <PasswordField label={s.confirmNewPassword} autoComplete="new-password" error={errors.password_confirmation?.message} {...register("password_confirmation")} />
-        <CtaGlare block>
-          <Button type="submit" variant="cta" size="lg" className="w-full" loading={isSubmitting}>
-            {isSubmitting ? dict.ui.saving : s.saveNewPassword}
-          </Button>
-        </CtaGlare>
+        {part === "code" ? (
+          <>
+            <div ref={codeRef} className="grid gap-1">
+              <Controller
+                control={control}
+                name="code"
+                render={({ field, fieldState }) => (
+                  <OtpInput value={field.value} onChange={field.onChange} label={s.resetCode} error={fieldState.error?.message} autoFocus={Boolean(knownEmail)} />
+                )}
+              />
+              {email ? <ResendCode send={(token) => authApi.forgotPassword(email, token)} startCoolingDown={state?.justSent} turnstileAction="forgot_password" /> : null}
+            </div>
+            <Button key="continue" type="submit" variant="cta" size="lg" className="w-full">
+              {s.stepContinue}
+            </Button>
+          </>
+        ) : (
+          <>
+            {/* The code just entered, with a way back to fix it. */}
+            <div className="flex items-center gap-3 rounded-full border border-border bg-card py-1.5 pl-4 pr-2">
+              <span className="min-w-0 flex-1 truncate text-sm font-medium tabular-nums text-foreground">{s.resetCodeChip(code)}</span>
+              <button
+                type="button"
+                onClick={backToCode}
+                className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+              >
+                {s.stepChange}
+              </button>
+            </div>
+            <div className="grid gap-3">
+              <PasswordField label={s.newPassword} autoComplete="new-password" aria-describedby="new-password-rules" autoFocus error={errors.password?.message} {...register("password")} />
+              <PasswordChecklist id="new-password-rules" value={password ?? ""} />
+            </div>
+            <PasswordField label={s.confirmNewPassword} autoComplete="new-password" error={errors.password_confirmation?.message} {...register("password_confirmation")} />
+            <CtaGlare block>
+              <Button type="submit" variant="cta" size="lg" className="w-full" loading={isSubmitting}>
+                {isSubmitting ? dict.ui.saving : s.saveNewPassword}
+              </Button>
+            </CtaGlare>
+          </>
+        )}
       </form>
     </AuthPage>
   );

@@ -1270,3 +1270,4 @@ component's own dependencies). Values still glide between periods. Rules: design
 - Checks: lint, typecheck, 720 tests, build OK. Browser (local API, 1440): clicking Sign-in & security, Addresses,
   Orders, Wishlist, Profile keeps the same sidebar element and scroll position while the heading changes; phone menu
   closes after choosing; account → Best sellers → Back → Reviews → a book page all load; axe 0; no page errors.
+- 2026-11-17 — Reset password in two parts: enter the 6-digit code, press Continue, then the new password fields appear (code shown with a Change link; a wrong code from the API sends the customer back to the code). Sign-in page: "New to Bookly?" + "Create a free account" now sit on one row on tablet/laptop so the whole card fits a 1366×650 screen without scrolling (stacked on phones). Code boxes now shrink to fit 320px phones (no sideways scroll). EN + KM text added.

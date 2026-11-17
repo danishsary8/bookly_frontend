@@ -864,6 +864,8 @@ export const km: Translations = {
     resetLead: "បញ្ចូលអ៊ីមែលរបស់អ្នក លេខកូដ 6 ខ្ទង់ដែលយើងបានផ្ញើ និងពាក្យសម្ងាត់ថ្មី។",
     newCodeOther: "ត្រូវការលេខកូដថ្មីសម្រាប់អ៊ីមែលផ្សេងមែនទេ?",
     startOver: "ចាប់ផ្តើមម្តងទៀត",
+    resetLeadPassword: "បានបញ្ចូលលេខកូដហើយ។ ឥឡូវជ្រើសរើសពាក្យសម្ងាត់ថ្មី។",
+    resetCodeChip: (code: string) => `លេខកូដ ${code}`,
     resetCode: "លេខកូដកំណត់ឡើងវិញ",
     newPassword: "ពាក្យសម្ងាត់ថ្មី",
     confirmNewPassword: "បញ្ជាក់ពាក្យសម្ងាត់ថ្មី",

@@ -858,6 +858,8 @@ export const en = {
     resetLead: "Enter your email, the 6-digit code we sent you, and a new password.",
     newCodeOther: "Need a new code for a different email?",
     startOver: "Start over",
+    resetLeadPassword: "Code entered. Now choose a new password.",
+    resetCodeChip: (code: string) => `Code ${code}`,
     resetCode: "Reset code",
     newPassword: "New password",
     confirmNewPassword: "Confirm new password",
