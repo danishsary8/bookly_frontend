@@ -13,6 +13,7 @@ export type PageLinks = Schemas["PageLinks"];
 export type ReaderRating = { reader_rating?: number | string | null; reader_rating_source?: string | null };
 export type BookCard = Schemas["BookCard"] & ReaderRating & {
   recommendation_reason?: "similar" | string | null;
+  match?: "meaning" | string | null;
 };
 export type BookDetail = Schemas["BookDetail"] & ReaderRating;
 export type BookVariant = Schemas["Variant"];

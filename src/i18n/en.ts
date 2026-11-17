@@ -1278,6 +1278,7 @@ export const en = {
     noMatchQuery: (q: string) => `No books match "${q}"`,
     similarSpelling: (q: string) => `No exact match for "${q}". Showing books with a similar spelling.`,
     noMatchFilters: "No books match these filters",
+    booksAboutTopic: "Books about this topic",
     noMatchLead: "Try a shorter title, an author's surname, or clear a filter.",
     clearFilters: "Clear filters",
     sorts: {

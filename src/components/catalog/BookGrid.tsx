@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Sparkles } from "lucide-react";
 import type { BookCard as Book } from "@/api/types";
 import { BookCardSkeletonFrameless } from "@/components/BookCardSkeleton";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
@@ -65,29 +66,67 @@ export function BookGrid({ books, loading = false, skeletonCount = 8, empty, hea
 
   if (books.length === 0) return <>{empty}</>;
 
+  const normalBooks = books.filter((b) => b.match !== "meaning");
+  const topicBooks = books.filter((b) => b.match === "meaning");
+
+  const renderItem = (book: Book, index: number, eagerCount: number) => (
+    <StaggerItem as="li" key={book.id} index={index} className="grid min-w-0 content-start gap-3 [&>*]:min-w-0">
+      {above?.(book, index)}
+      <BookCard
+        book={book}
+        instanceKey={`${instancePrefix}-${book.id}`}
+        headingLevel={headingLevel}
+        eager={index < eagerCount}
+        showAvailability
+        saved={wishlist.isSaved(book.id)}
+        adding={cart.pendingBookId === book.id}
+        onAddToCart={cart.add}
+        onToggleWishlist={wishlist.toggle}
+      />
+      {below?.(book, index)}
+    </StaggerItem>
+  );
+
+  if (topicBooks.length === 0) {
+    return (
+      <Stagger
+        as={ordered ? "ol" : "ul"}
+        key={books.map((b) => b.id).join(",")}
+        className={cn(gridClass, "transition-opacity duration-150", stale && "opacity-60", className)}
+      >
+        {books.map((book, index) => renderItem(book, index, 4))}
+      </Stagger>
+    );
+  }
+
   return (
-    <Stagger
-      as={ordered ? "ol" : "ul"}
-      key={books.map((b) => b.id).join(",")}
-      className={cn(gridClass, "transition-opacity duration-150", stale && "opacity-60", className)}
-    >
-      {books.map((book, index) => (
-        <StaggerItem as="li" key={book.id} index={index} className="grid min-w-0 content-start gap-3 [&>*]:min-w-0">
-          {above?.(book, index)}
-          <BookCard
-            book={book}
-            instanceKey={`${instancePrefix}-${book.id}`}
-            headingLevel={headingLevel}
-            eager={index < 4}
-            showAvailability
-            saved={wishlist.isSaved(book.id)}
-            adding={cart.pendingBookId === book.id}
-            onAddToCart={cart.add}
-            onToggleWishlist={wishlist.toggle}
-          />
-          {below?.(book, index)}
-        </StaggerItem>
-      ))}
-    </Stagger>
+    <div className="grid min-w-0 content-start gap-10">
+      {normalBooks.length > 0 ? (
+        <Stagger
+          as={ordered ? "ol" : "ul"}
+          key={normalBooks.map((b) => b.id).join(",")}
+          className={cn(gridClass, "transition-opacity duration-150", stale && "opacity-60", className)}
+        >
+          {normalBooks.map((book, index) => renderItem(book, index, 4))}
+        </Stagger>
+      ) : null}
+
+      <div className="grid min-w-0 content-start gap-4">
+        <div className="flex items-center gap-2.5 border-b border-border/60 pb-3">
+          <Sparkles className="size-5 text-primary shrink-0" aria-hidden="true" />
+          <h3 className="font-display text-lg font-semibold sm:text-xl text-foreground">
+            {dict.browse.booksAboutTopic}
+          </h3>
+        </div>
+
+        <Stagger
+          as={ordered ? "ol" : "ul"}
+          key={topicBooks.map((b) => b.id).join(",")}
+          className={cn(gridClass, "transition-opacity duration-150", stale && "opacity-60", className)}
+        >
+          {topicBooks.map((book, index) => renderItem(book, normalBooks.length + index, 2))}
+        </Stagger>
+      </div>
+    </div>
   );
 }

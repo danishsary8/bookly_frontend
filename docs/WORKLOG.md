@@ -1278,3 +1278,10 @@ component's own dependencies). Values still glide between periods. Rules: design
 - Displayed `<SimilarThemeBadge />` in `src/components/catalog/BookCard.tsx` when `book.recommendation_reason === "similar"`.
 - Added unit tests in `src/components/catalog/book-card.test.tsx` verifying badge presence and translation in EN and KM.
 - Checks: npm run lint (0 errors), npm run typecheck (0 errors), npm test (134 test files passed, 723 passed), npm run build (built cleanly in 17.78s).
+
+### 2026-11-18 — Topic results section heading for search (branch `feature/similar-books-label`)
+- Added `match?: "meaning" | string | null` to `BookCard` in `src/api/types.ts`.
+- Added `browse.booksAboutTopic` in `src/i18n/en.ts` ("Books about this topic") and `src/i18n/km.ts` ("សៀវភៅអំពីប្រធានបទនេះ" — natural, authentic Khmer phrasing for Cambodian readers).
+- Updated `src/components/catalog/BookGrid.tsx` to partition search results: keyword matches render in the primary grid, while semantic topic matches (`match === "meaning"`) render below an accessible section heading with a `Sparkles` icon and `browse.booksAboutTopic`.
+- Added unit tests in `src/components/catalog/book-grid.test.tsx` verifying heading visibility, separation of keyword and topic results, and proper localization in EN and KM.
+- Checks: npm run lint (0 errors), npm run typecheck (0 errors), npm test (133 test files passed, 714 passed / 3 skipped), npm run build (built cleanly in 19.53s).
