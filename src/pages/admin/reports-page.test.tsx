@@ -208,11 +208,15 @@ describe("reports page", () => {
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
     open("/admin/reports?tab=offers&period=custom&from=2026-09-01&to=2026-09-30");
 
-    expect((await screen.findByText("Books per order with an offer")).closest("section")).toHaveTextContent("2.50");
-    expect(screen.getByText("Average order with an offer").closest("section")).toHaveTextContent("$33.50");
-    expect(screen.getByText("Without an offer: 1.00")).toBeInTheDocument();
-    expect(screen.getByText("Without an offer: $31.50")).toBeInTheDocument();
-    expect(screen.getByText("66.7% of 3 orders")).toBeInTheDocument();
+    const compare = (await screen.findByRole("heading", { name: "Orders with an offer vs without" })).closest("section")!;
+    const average = within(compare).getByRole("heading", { name: "Average order" }).parentElement!.parentElement!;
+    expect(average).toHaveTextContent("With an offer$33.50");
+    expect(average).toHaveTextContent("Without$31.50");
+    const books = within(compare).getByRole("heading", { name: "Books per order" }).parentElement!.parentElement!;
+    expect(books).toHaveTextContent("With an offer2.50");
+    expect(books).toHaveTextContent("Without1.00");
+    expect(books).toHaveTextContent("2.5× bigger with an offer");
+    expect(screen.getByText("66.7% of all 3 orders")).toBeInTheDocument();
     const table = screen.getByRole("region", { name: "Offers table" });
     const holmes = within(table).getByRole("rowheader", { name: /Buy 2 Holmes/ }).closest("tr")!;
     expect(within(holmes).getByText("Buy 2, save 15%")).toBeInTheDocument();
@@ -232,13 +236,18 @@ describe("reports page", () => {
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
     open("/admin/reports?tab=profit&period=custom&from=2026-10-09&to=2026-10-15");
 
-    const profitCard = (await screen.findByRole("heading", { name: "Gross profit" })).closest("section")!;
-    expect(profitCard).toHaveTextContent("$28.00");
-    expect(profitCard).toHaveTextContent("50.9% margin");
+    // Returns are counted inside the cards: sales 55 − refunds 20 = 35; cost 27 − returned 12 = 15; profit 20.
+    const card = (name: string) => screen.getByRole("heading", { name }).closest("section")!;
+    await screen.findByRole("heading", { name: "Gross profit" });
+    expect(card("Net book sales")).toHaveTextContent("$35.00");
+    expect(card("Net book sales")).toHaveTextContent("$55.00 sold, less $20.00 refunded");
+    expect(card("Cost of books sold")).toHaveTextContent("$15.00");
+    expect(card("Cost of books sold")).toHaveTextContent("$27.00 sold, less $12.00 of books back on the shelf");
+    expect(card("Gross profit")).toHaveTextContent("$20.00");
+    expect(card("Margin")).toHaveTextContent("57.1%");
     expect(get).toHaveBeenLastCalledWith("profit", { from: "2026-10-09", to: "2026-10-15", group: "day" });
-    expect(screen.getByRole("heading", { name: "Restock spending" }).closest("section")).toHaveTextContent("5 restocked without a cost");
+    expect(card("Restock spending")).toHaveTextContent("5 restocked without a cost");
     expect(screen.getByRole("note")).toHaveTextContent("$30.00 of sales (2 copies) have no restock cost yet");
-    expect(screen.getByRole("heading", { name: "Profit after refunds" }).closest("section")).toHaveTextContent("less $20.00 refunded, plus $12.00 of copies back on the shelf");
     expect(screen.getByText("Monument Books")).toBeInTheDocument();
     expect(screen.getByText("No supplier given")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Dune" })).toHaveAttribute("href", "/admin/books/7");

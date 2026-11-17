@@ -160,22 +160,22 @@ function AdminDashboard() {
             <m.div className="grid" {...rise(0)}>
               <Kpi opening={opening} id="net-revenue" label="Net revenue" value={<AnimatedNumber countUp={opening} value={Number(s.revenue.net_usd)} format={usd} />} khr={s.revenue.net_khr} icon={DollarSign} tone="coral"
                 detail={`${formatUsd(s.revenue.gross_usd)} from ${s.delivered_orders} delivered ${s.delivered_orders === 1 ? "order" : "orders"}${Number(s.revenue.refunds_usd) > 0 ? `, less ${formatUsd(s.revenue.refunds_usd)} refunded` : ""}`}
-                comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.net_revenue} previous={Number(c.revenue.net_usd)} versus="" /> : null}
+                comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.net_revenue} previous={Number(c.revenue.net_usd)} versus={versus} /> : null}
                 trend={series(trend, (d) => Number(d.net_revenue_usd))} labels={labels} format={usd} view={{ to: "/admin/reports", label: "View sales report" }} />
             </m.div>
             <m.div className="grid" {...rise(1)}>
               <Kpi opening={opening} id="orders-placed" label="Orders placed" value={<AnimatedNumber countUp={opening} value={s.orders_placed} format={count} />} icon={ShoppingBag} tone="saffron"
-                comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.orders_placed} previous={c.orders_placed} versus="" /> : null}
+                comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.orders_placed} previous={c.orders_placed} versus={versus} /> : null}
                 trend={series(trend, (d) => d.orders_placed)} labels={labels} view={{ to: "/admin/orders", label: "View orders" }} />
             </m.div>
             <m.div className="grid" {...rise(2)}>
               <Kpi opening={opening} id="average-order" label="Average order" value={<AnimatedNumber countUp={opening} value={Number(s.average_order_value_usd)} format={usd} />} khr={s.average_order_value_khr} detail="per delivered order" icon={Receipt} tone="sky"
-                comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.average_order_value} previous={Number(c.average_order_value_usd)} versus="" /> : null}
+                comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.average_order_value} previous={Number(c.average_order_value_usd)} versus={versus} /> : null}
                 trend={series(trend, (d) => Number(d.average_order_usd), "mean")} labels={labels} format={usd} view={{ to: "/admin/reports?tab=orders", label: "View order report" }} />
             </m.div>
             <m.div className="grid" {...rise(3)}>
               <Kpi opening={opening} id="new-customers" label="New customers" value={<AnimatedNumber countUp={opening} value={s.new_customers} format={count} />} detail="verified their account" icon={UserPlus} tone="sea"
-                comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.new_customers} previous={c.new_customers} versus="" /> : null}
+                comparisonId={c ? "dashboard-comparison" : undefined} change={c ? <Change percent={c.change_percent.new_customers} previous={c.new_customers} versus={versus} /> : null}
                 trend={series(trend, (d) => d.new_customers)} labels={labels} view={{ to: "/admin/customers", label: "View customers" }} />
             </m.div>
           </div>
@@ -211,7 +211,7 @@ function AdminDashboard() {
           {/* 2a · This month's goal next to the profit for the chosen days (Phase 4). */}
           <div className="dash-money-grid grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
             <GoalCard opening={opening} />
-            <ProfitGlance opening={opening} from={s.period.from} to={s.period.to} link={`/admin/reports?${new URLSearchParams({ ...rangeToParams(range), tab: "profit" }).toString()}`} />
+            <ProfitGlance opening={opening} versus={versus} from={s.period.from} to={s.period.to} link={`/admin/reports?${new URLSearchParams({ ...rangeToParams(range), tab: "profit" }).toString()}`} />
           </div>
 
           {/* 2b · At a glance: the React Bits MagicBento with the shop's own figures (owner 2026-11-15). */}
