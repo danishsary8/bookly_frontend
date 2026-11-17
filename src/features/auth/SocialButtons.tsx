@@ -72,7 +72,7 @@ function Divider({ children }: { children: string }) {
   );
 }
 
-export function SocialButtons({ next = null, telegram = false }: { next?: string | null; telegram?: boolean }) {
+export function SocialButtons({ next = null, telegram = false, hint }: { next?: string | null; telegram?: boolean; /** A short line under the "or" divider (sign-in page: new accounts work too). */ hint?: string }) {
   const enabled = (["google", "facebook"] as const).filter(socialEnabled);
   const afterSignIn = useAfterSignIn();
   const { dict } = useT();
@@ -180,6 +180,7 @@ export function SocialButtons({ next = null, telegram = false }: { next?: string
   return (
     <div className="grid gap-3 short:gap-2">
       <Divider>{s.or}</Divider>
+      {hint && enabled.length ? <p className="-mt-1 text-center text-[13px] text-muted-foreground">{hint}</p> : null}
       {error || telegramError ? <FormAlert title={error ?? telegramError ?? undefined} /> : null}
       <div className="grid gap-3 short:gap-2">
         <div className="grid gap-3 short:gap-2">

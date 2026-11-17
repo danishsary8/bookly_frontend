@@ -799,6 +799,7 @@ export const km: Translations = {
     verifiedPurchase: "ការទិញដែលបានផ្ទៀងផ្ទាត់",
   },
   signin: {
+    newHere: "ទើបមកដល់ Bookly?", newHereLink: "បង្កើតគណនី", newHereClose: "បិទកំណត់ចំណាំនេះ", createFree: "បង្កើតគណនីឥតគិតថ្លៃ", socialHint: "Google និង Facebook ប្រើបានទាំងគណនីថ្មី និងគណនីដែលមានស្រាប់។",
     shelf: "សៀវភៅលក់ដាច់បំផុតនៅ Bookly",
     shelfEyebrow: "ពីធ្នើសៀវភៅ Bookly",
     bestSeller: "លក់ដាច់បំផុត",
