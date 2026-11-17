@@ -574,11 +574,32 @@ function OffersTab({ range }: { range: ReportRange }) {
         ];
         return (
           <>
-            <div className="dash-kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <Kpi id="r-offer-books" label="Books per order with an offer" icon={ShoppingBag} tone="saffron" value={orders ? (units / orders).toFixed(2) : "–"} detail={`Without an offer: ${w.orders ? w.books_per_order : "–"}`} />
-              <Kpi id="r-offer-average" label="Average order with an offer" icon={Receipt} tone="sky" value={orders ? usd(Math.round(revenue / orders)) : "–"} detail={`Without an offer: ${w.orders ? formatUsd(w.average_order_usd) : "–"}`} />
-              <Kpi id="r-offer-orders" label="Orders with an offer" icon={Tag} tone="sea" value={<AnimatedNumber value={orders} format={count} />} detail={all ? `${percent((orders / all) * 100)} of ${count(all)} orders` : "No orders in this period"} />
-              <Kpi id="r-offer-discount" label="Discount given by offers" icon={Gift} tone="coral" value={usd(discount)} detail={`On ${usd(revenue)} of orders`} view={{ to: "/admin/offers", label: "View offers" }} />
+            {/* Offers at a glance (owner 2026-11-17): how many orders used an offer and what it cost, then a side-by-side
+                comparison with orders that had no offer, so the effect of offers reads in one look. */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <Kpi id="r-offer-orders" label="Orders with an offer" icon={Tag} tone="sea" value={<AnimatedNumber value={orders} format={count} />} detail={all ? `${percent((orders / all) * 100)} of all ${count(all)} orders` : "No orders in this period"} />
+              <Kpi id="r-offer-discount" label="Discount given by offers" icon={Gift} tone="coral" value={usd(discount)} detail={revenue ? `${percent((discount / (revenue + discount)) * 100)} off ${usd(revenue + discount)} of books` : "No discount in this period"} view={{ to: "/admin/offers", label: "View offers" }} />
+              <section aria-labelledby="offer-compare-title" className="desk-card flex flex-col gap-4 rounded-[20px] border border-border bg-card p-5 sm:col-span-2">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h2 id="offer-compare-title" className="font-sans text-sm font-semibold tracking-normal text-muted-foreground">Orders with an offer vs without</h2>
+                  <span className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-primary" aria-hidden="true" />With an offer</span>
+                    <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-muted-foreground/40" aria-hidden="true" />Without</span>
+                  </span>
+                </div>
+                <OfferCompare
+                  label="Average order"
+                  withOffer={orders ? revenue / orders / 100 : null}
+                  without={w.orders ? Number(w.average_order_usd) : null}
+                  format={(n) => formatUsd(n.toFixed(2))}
+                />
+                <OfferCompare
+                  label="Books per order"
+                  withOffer={orders ? units / orders : null}
+                  without={w.orders ? Number(w.books_per_order) : null}
+                  format={(n) => n.toFixed(2)}
+                />
+              </section>
             </div>
             <Panel id="offers-table" title="What each offer sold" icon={Tag} tone="sea" action={<span className="text-sm text-muted-foreground">orders placed, not cancelled</span>}>
               {r.offers.length === 0 ? <Empty>No order used an offer in this period.</Empty> : null}
@@ -621,6 +642,35 @@ function OffersTab({ range }: { range: ReportRange }) {
         );
       }}
     </State>
+  );
+}
+
+/** One with/without comparison: two bars on the same scale and how many times bigger the offer orders are. */
+function OfferCompare({ label, withOffer, without, format }: { label: string; withOffer: number | null; without: number | null; format: (n: number) => string }) {
+  const top = Math.max(withOffer ?? 0, without ?? 0) || 1;
+  const ratio = withOffer !== null && without ? withOffer / without : null;
+  const bar = (value: number | null, tone: string, name: string) => (
+    <div className="grid grid-cols-[6.5rem_minmax(0,1fr)_auto] items-center gap-3 text-sm">
+      <span className="text-muted-foreground">{name}</span>
+      <span className="h-2.5 rounded-full bg-surface-2">
+        <span className={cn("block h-full rounded-full", tone)} style={{ width: `${value === null ? 0 : Math.max(2, (value / top) * 100)}%` }} />
+      </span>
+      <span className="min-w-[5.5rem] text-right font-semibold tabular-nums text-foreground">{value === null ? "–" : format(value)}</span>
+    </div>
+  );
+  return (
+    <div className="grid gap-2 border-t border-border pt-3 first-of-type:border-0">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-[15px] font-semibold text-foreground">{label}</h3>
+        {ratio !== null && Math.abs(ratio - 1) >= 0.05 ? (
+          <span className={cn("rounded-full px-2 py-0.5 text-xs font-bold tabular-nums", ratio > 1 ? "bg-success-tint text-success" : "bg-warning-tint text-warning")}>
+            {ratio > 1 ? `${ratio.toLocaleString("en-US", { maximumFractionDigits: 1 })}× bigger with an offer` : `${(1 / ratio).toLocaleString("en-US", { maximumFractionDigits: 1 })}× smaller with an offer`}
+          </span>
+        ) : null}
+      </div>
+      {bar(withOffer, "bg-primary", "With an offer")}
+      {bar(without, "bg-muted-foreground/40", "Without")}
+    </div>
   );
 }
 
