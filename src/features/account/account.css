@@ -20,7 +20,10 @@
 .account-back-to-shop:hover { background: var(--surface-2); }
 .account-back-to-shop svg { width: 17px; height: 17px; }
 .account-back-to-shop svg:last-child { margin-left: auto; }
-.account-section { gap: 24px; }
+.account-section { gap: 24px; grid-template-columns: minmax(0, 1fr); }
+/* Long Khmer words (no spaces) must wrap inside the screen instead of widening the column. */
+.account-section h1, .account-section h2, .account-section p { overflow-wrap: anywhere; }
+.account-security-grid, .account-profile-grid { grid-template-columns: minmax(0, 1fr); }
 .account-page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding: 4px 0 24px; border-bottom: 1px solid var(--border); }
 .account-page-heading h1 { font-size: clamp(30px, 2.6vw, 42px); line-height: 1.18; letter-spacing: -.025em; overflow-wrap: anywhere; }
 .account-page-heading > div:first-child { min-width: 0; gap: 9px; }
