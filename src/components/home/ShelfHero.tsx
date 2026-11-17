@@ -23,8 +23,11 @@ import { useT } from "@/i18n";
  *
  * Motion pass (owner 2026-11-16): the bookcase never remounts. Changing the row works like a library lift: the board
  * with its books slides out of the case and the next row rises into place and settles (transforms only, on the
- * compositor). The blue tab pill glides and stretches between tabs. Spines carry no lettering any more: five classic
- * bindings without words, real heights and thicknesses, books packed side by side.
+ * compositor). The blue tab pill glides and stretches between tabs.
+ *
+ * Classic look (owner 2026-11-17): the titled spines are back (title, author surname, and one of three bindings:
+ * gold rules, a leather title label, or raised bands). Every book has the same height and thickness with a small gap
+ * between them, so a book turning out of the row never cuts into its neighbours.
  */
 
 type RowId = "best_sellers" | "new_arrivals" | "coming_soon" | "education" | "ebook_deals";
@@ -57,9 +60,9 @@ const CASE_POST = 16;
 
 /** light: a pale cloth (dark tooling); gold: kept for compatibility with the colour reader. */
 type Tone = { bg: string; light: boolean; gold: boolean };
-/** Five bindings without lettering (owner 2026-11-16): raised bands, a blank tooled label, a two-tone jacket, Art Deco gilt, plain cloth. */
-const SPINES = ["bands", "label", "jacket", "deco", "plain"] as const;
-type SpineStyle = (typeof SPINES)[number];
+/** Three classic bindings: gold rules, a leather title label, or raised bands across the spine. */
+const BINDINGS = ["rules", "label", "bands"] as const;
+type Binding = (typeof BINDINGS)[number];
 type ShelfItem = {
   id: string;
   book: BookCard | null;
@@ -67,13 +70,13 @@ type ShelfItem = {
   title: string;
   by: string;
   surname: string;
-  /** Height (0.86–1) and thickness (0.72–1.2) from the id, so a book always looks the same. */
+  /** One shelf, one edition size: every book is the same height and thickness (1). */
   tall: number;
   thick: number;
-  spine: SpineStyle;
+  binding: Binding;
 };
 
-/** A small stable hash of the id: picks each book's size and binding. */
+/** A small stable hash of the id: picks each book's cloth colour and binding. */
 const hashOf = (id: string) => {
   let h = [...id].reduce((acc, ch) => Math.imul(acc ^ ch.charCodeAt(0), 0x01000193) >>> 0, 0x811c9dc5);
   // final mix (murmur3 fmix32), so short ids like "12" and "13" still land far apart
@@ -212,9 +215,9 @@ export function ShelfHero() {
       title: book?.title ?? "Bookly",
       by: names.join(", "),
       surname: names[0]?.split(" ").filter(Boolean).pop() ?? "Bookly",
-      tall: 0.86 + ((hash >> 3) % 15) / 100,
-      thick: 0.72 + ((hash >> 7) % 49) / 100,
-      spine: SPINES[(hash >> 11) % SPINES.length],
+      tall: 1,
+      thick: 1,
+      binding: BINDINGS[(hash >>> 11) % BINDINGS.length],
     };
   };
   // null = this row is still loading (the case shows the old row until the new one is ready to rise in).
@@ -370,9 +373,9 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
   // Same row and the same books: take the latest props (cover colours arrive after the books).
   const live = items && shown.row === current && sameIds(items, shown.items) ? items : shown.items;
   const n = live.length;
-  const [dims, setDims] = useState({ H: 340, ws: 50, d: 227, gap: 2, W: 1440 });
+  const [dims, setDims] = useState({ H: 340, ws: 48, d: 227, gap: 8.5, W: 1440 });
   const { H, ws, d, gap } = dims;
-  // Each book's place along the row: books touch (a 2px gap), so thick and thin books sit side by side as on a real shelf.
+  // Each book's place along the row: equal books with a small gap, so a book turning out never cuts into its neighbours.
   const widths = live.map((item) => ws * item.thick);
   const cum = [0];
   for (const w of widths) cum.push(cum[cum.length - 1] + w + gap);
@@ -399,7 +402,7 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
   useLayoutEffect(() => {
     const measure = () => {
       const H = Math.round(Math.max(190, Math.min((window.innerHeight - 440) / 1.12, window.innerWidth * 0.55, 380)));
-      setDims({ H, ws: H * 0.125, d: H * (2 / 3), gap: Math.max(1.5, H * 0.006), W: window.innerWidth });
+      setDims({ H, ws: H * 0.14, d: H * (2 / 3), gap: H * 0.025, W: window.innerWidth });
     };
     measure();
     window.addEventListener("resize", measure);
@@ -740,6 +743,11 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
             const bw = widths[v % n];
             const bd = H * (2 / 3) * (0.9 + item.tall * 0.1);
             const top = H / 2 - bh;
+            // Keep subtitles on the paper label; the narrow spine carries the main title.
+            const spineTitle = item.title.split(/:\s+/)[0];
+            const long = spineTitle.length > 24;
+            // A long title needs the whole spine width, so it never sits in the narrower label.
+            const binding = item.binding === "label" && spineTitle.length > 16 ? "rules" : item.binding;
             return (
               <div
                 key={`${shown.row}-${item.id}-${v}`}
@@ -765,15 +773,36 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
                   className="shelf-contact absolute"
                   style={{ width: bw * 2.2, height: bd * 1.15, left: -bw * 1.1, top: H / 2 - (bd * 1.15) / 2, transform: "rotateX(90deg)" }}
                 />
-                {/* spine (front of the box): a binding without lettering, in the book's own cloth colour */}
+                {/* spine (front of the box): rounded cloth with hinge grooves, headbands, the title, the surname and one of three bindings */}
                 <div
-                  className="shelf-face shelf-spine absolute overflow-hidden rounded-[2px_2px_3px_3px]"
+                  className={cn("shelf-face shelf-spine absolute flex flex-col items-center justify-between overflow-hidden rounded-[3px] py-3.5", item.tone.light ? "text-[#1B1A2E]" : "text-[#F6EFDF]")}
                   data-ink={item.tone.light ? "dark" : "gold"}
-                  data-spine={item.spine}
+                  data-binding={binding}
                   style={{ width: bw, height: bh, left: -bw / 2, top, backgroundColor: item.tone.bg, transform: `translateZ(${bd / 2}px)`, "--shade": "calc(var(--o, 0) * 0.55)" } as CSSProperties}
                 >
-                  <span className="spine-art" />
-                  <span className="spine-mark" />
+                  <span aria-hidden="true" className="shelf-headband shelf-headband-top" />
+                  <span aria-hidden="true" className="shelf-headband shelf-headband-bottom" />
+                  <span aria-hidden="true" className="shelf-rules" />
+                  {binding === "bands" ? <span aria-hidden="true" className="shelf-band" /> : null}
+                  <span className={cn("shelf-label grid place-items-center", binding === "label" && "shelf-label-panel")}>
+                    <span
+                      className="shelf-title max-h-full overflow-hidden text-center font-display leading-[1.25] tracking-[0.015em] [text-orientation:mixed] [writing-mode:vertical-rl]"
+                      style={{ fontSize: Math.max(10, Math.min(17, bw * (long ? 0.25 : 0.32))), maxWidth: bw * (binding === "label" ? 0.62 : 0.72) }}
+                    >
+                      {spineTitle}
+                    </span>
+                  </span>
+                  {binding === "bands" ? <span aria-hidden="true" className="shelf-band" /> : null}
+                  <span className="grid w-full justify-items-center gap-1.5">
+                    <span aria-hidden="true" className="shelf-rule-thin" />
+                    <span
+                      className={cn("shelf-surname max-h-[5.5em] overflow-hidden whitespace-nowrap font-semibold uppercase tracking-[0.12em] [writing-mode:vertical-rl]", item.tone.light ? "text-[#1B1A2E]" : item.tone.gold ? "text-[#E8C766]" : "text-[#F6EFDF]")}
+                      style={{ fontSize: Math.max(8, Math.min(10, bw * 0.18)) }}
+                    >
+                      {item.surname}
+                    </span>
+                    <span aria-hidden="true" className="shelf-ornament" />
+                  </span>
                 </div>
                 {/* front cover (right side of the box) */}
                 <div
