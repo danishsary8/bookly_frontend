@@ -1260,3 +1260,11 @@ component's own dependencies). Values still glide between periods. Rules: design
 - Checks: lint, typecheck, 720 tests, build OK. Browser (local API, 1440): clicking Sign-in & security, Addresses,
   Orders, Wishlist, Profile keeps the same sidebar element and scroll position while the heading changes; phone menu
   closes after choosing; account → Best sellers → Back → Reviews → a book page all load; axe 0; no page errors.
+
+### 2026-11-17 — Similar in theme label on book cards (branch `feature/similar-books-label`)
+- Added `recommendation_reason?: "similar" | string | null` to `BookCard` schema in `src/api/types.ts`.
+- Added `cards.similarTheme` in `src/i18n/en.ts` ("Similar in theme") and `src/i18n/km.ts` ("ប្រធានបទស្រដៀងគ្នា" — natural and authentic Khmer phrasing for Cambodian readers).
+- Created `SimilarThemeBadge` in `src/components/BookBadge.tsx` featuring `Compass` icon with accessible badge styling (`bg-secondary text-secondary-foreground border border-border/50`).
+- Displayed `<SimilarThemeBadge />` in `src/components/catalog/BookCard.tsx` when `book.recommendation_reason === "similar"`.
+- Added unit tests in `src/components/catalog/book-card.test.tsx` verifying badge presence and translation in EN and KM.
+- Checks: npm run lint (0 errors), npm run typecheck (0 errors), npm test (134 test files passed, 723 passed), npm run build (built cleanly in 17.78s).
