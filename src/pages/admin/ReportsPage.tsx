@@ -128,7 +128,8 @@ function SalesTab({ range, versus }: { range: ReportRange; versus: string }) {
             </div>
             {/* How the money adds up (owner 2026-11-17). Order totals are stored after discounts and with delivery, so the
                 steps start from the books' full price; "Book sales" is the same number as on the Profit tab. */}
-            <dl aria-label="How net revenue adds up" className="grid gap-x-6 gap-y-2 rounded-xl border border-border/60 bg-surface-2/40 px-4 py-3 text-sm tabular-nums sm:grid-cols-2 xl:grid-cols-5">
+            <div className="grid gap-2 rounded-xl border border-border/60 bg-surface-2/40 px-4 py-3 text-sm tabular-nums">
+            <dl aria-label="How net revenue adds up" className="grid gap-x-6 gap-y-2 sm:grid-cols-2 xl:grid-cols-5">
               {([
                 ["Books at full price", bookFull, ""],
                 ["Discounts", -discounts, "−"],
@@ -144,13 +145,14 @@ function SalesTab({ range, versus }: { range: ReportRange; versus: string }) {
                   </dd>
                 </div>
               ))}
-              <p className="text-muted-foreground sm:col-span-2 xl:col-span-5">
+            </dl>
+              <p className="text-muted-foreground">
                 = <span className="font-semibold text-foreground">{formatUsd(t.net_revenue_usd)}</span> net revenue ·{" "}
                 <Link to="/admin/reports?tab=profit" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
                   Cost and profit are on the Profit tab →
                 </Link>
               </p>
-            </dl>
+            </div>
             <Panel
               id="sales-trend"
               title={`Net revenue by ${group}`}

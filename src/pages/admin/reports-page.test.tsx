@@ -134,7 +134,7 @@ describe("reports page", () => {
     expect(list).toHaveTextContent("Book sales$115.50");
     expect(list).toHaveTextContent("Delivery fees+$4.50");
     expect(list).toHaveTextContent("Refunds−$20.00");
-    expect(list).toHaveTextContent("= $100.00 net revenue");
+    expect(list.parentElement).toHaveTextContent("= $100.00 net revenue");
   });
 
   it("keeps the period when switching tabs, and shows order mix with status labels", async () => {
