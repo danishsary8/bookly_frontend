@@ -70,7 +70,7 @@ export default function ReviewsPage() {
             return (
               <li key={review.id} className="grid gap-3 shop-card rounded-2xl border border-border bg-card p-4 sm:p-5">
                 <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                  <Link to={`/books/${bookId}`} className="font-semibold underline-offset-4 hover:underline">
+                  <Link to={`/books/${bookId}`} className="inline-flex min-h-11 items-center font-semibold underline-offset-4 hover:underline">
                     {review.book?.title ?? a.bookGone}
                   </Link>
                   <span className="text-sm text-muted-foreground">{orderDate(review.updated_at ?? review.created_at, locale)}</span>

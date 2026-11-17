@@ -54,7 +54,7 @@ function LatestOrder({ order }: { order: Order }) {
             {d.latestOrder}
           </h2>
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <Link to={`/account/orders/${order.id}`} className="font-display text-[1.75rem] leading-tight tabular-nums underline-offset-4 hover:underline">
+            <Link to={`/account/orders/${order.id}`} className="account-latest-number font-display text-[1.75rem] leading-tight tabular-nums underline-offset-4 hover:underline">
               {order.order_number}
             </Link>
             <OrderStatusBadge status={order.status} />

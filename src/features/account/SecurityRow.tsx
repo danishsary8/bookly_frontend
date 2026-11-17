@@ -6,14 +6,14 @@ export function Row({ icon, label, value, status, action, children }: { icon: Re
     <li className="account-security-row grid gap-3 py-4 first:pt-0 last:pb-0">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <span className="grid size-10 shrink-0 place-items-center rounded-full bg-lapis-tint text-primary">{icon}</span>
-        <div className="grid min-w-0 flex-1 gap-0.5">
+        <div className="grid min-w-0 flex-1 basis-[11rem] gap-0.5">
           <span className="text-sm font-semibold text-muted-foreground">{label}</span>
           <span className="flex flex-wrap items-center gap-2 break-all text-[15px] text-foreground">
             {value}
             {status}
           </span>
         </div>
-        {action}
+        {action ? <div className="shrink-0 max-[379px]:pl-[2.85rem]">{action}</div> : null}
       </div>
       {children}
     </li>
