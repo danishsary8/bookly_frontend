@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowRight, CircleHelp, FolderTree, LineChart, PackagePlus, PiggyBank, Receipt, ShoppingBag, Trophy, Truck, Undo2 } from "lucide-react";
+import { AlertTriangle, ArrowDownRight, ArrowRight, ArrowUpRight, CircleHelp, FolderTree, LineChart, PackagePlus, Percent, PiggyBank, Receipt, ShoppingBag, Trophy, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ApiError } from "@/api/errors";
 import type { ReportGroup, ReportRange } from "@/api/endpoints/reports";
@@ -23,6 +23,8 @@ const cap = (word: string) => word.charAt(0).toUpperCase() + word.slice(1);
 const money = (n: number) => formatUsd(n.toFixed(2));
 const count = (n: number) => Math.round(n).toLocaleString("en-US");
 const usdAxis = (n: number) => (n >= 1000 ? `$${(n / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 })}k` : `$${n}`);
+/** Percent change from `before` to `now`, like the API's change_percent (undefined when both are 0). */
+const changeOf = (now: number, before: number) => (before === 0 ? (now === 0 ? 0 : 100) : Math.round(((now - before) / Math.abs(before)) * 1000) / 10);
 const pct = (n: number | null) => (n == null ? "–" : `${n.toLocaleString("en-US", { maximumFractionDigits: 1 })}%`);
 const shortDay = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 const monthName = new Intl.DateTimeFormat("en-GB", { month: "short", year: "numeric", timeZone: "UTC" });
@@ -61,6 +63,16 @@ export function ProfitTab({ range, versus, group, onGroup }: { range: ReportRang
         const spendPoints: Point[] = r.series.map((p, i) => ({ label: labels[i], value: Number(p.restock_spend_usd) }));
         const hasProfit = profitPoints.some((p) => p.value !== 0);
         const hasSpend = spendPoints.some((p) => p.value !== 0);
+        // Returns counted inside sales and cost (owner 2026-11-17): one profit that the cards add up to.
+        const refunds = Number(now.refunds_usd);
+        const returnedCost = Number(now.returned_cost_usd);
+        const netSales = Number(now.sales_usd) - refunds;
+        const netSalesBefore = Number(c.totals.sales_usd) - Number(c.totals.refunds_usd);
+        const netCost = Number(now.cost_of_goods_usd) - returnedCost;
+        const netCostBefore = Number(c.totals.cost_of_goods_usd) - Number(c.totals.returned_cost_usd);
+        const marginOf = (profit: number, sales: number) => (sales > 0 ? Math.round((profit / sales) * 1000) / 10 : null);
+        const margin = marginOf(Number(now.profit_after_refunds_usd), netSales);
+        const marginBefore = marginOf(Number(c.totals.profit_after_refunds_usd), netSalesBefore);
 
         return (
           <>
@@ -74,33 +86,18 @@ export function ProfitTab({ range, versus, group, onGroup }: { range: ReportRang
               </p>
             ) : null}
 
+            {/* Top row (owner 2026-11-17): an income statement in four cards that add up left to right. Returns are
+                counted inside the cards: refunds come off sales, returned copies' cost comes off cost, so there is one
+                profit. Restock spending is not part of profit and sits beside the chart. */}
             <div className="dash-kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <Kpi
-                id="p-spend"
-                label={t.spend}
-                icon={PackagePlus}
-                tone="coral"
-                value={<AnimatedNumber value={Number(now.restock_spend_usd)} format={money} />}
-                khr={now.restock_spend_khr}
-                detail={[t.spendDetail.replace("{n}", count(now.restock_units)), now.restock_units_without_cost ? t.spendNoCost.replace("{n}", count(now.restock_units_without_cost)) : ""].filter(Boolean).join(" · ")}
-                change={<Change percent={c.change_percent.restock_spend} previous={Number(c.totals.restock_spend_usd)} versus={versus} moreIsBetter={null} />}
-                trend={spendPoints.map((p) => p.value)}
-                labels={labels}
-                format={money}
-              />
-              <Kpi
                 id="p-sales"
-                label={t.sales}
+                label={t.netSales}
                 icon={ShoppingBag}
                 tone="saffron"
-                value={<AnimatedNumber value={Number(now.sales_usd)} format={money} />}
-                khr={now.sales_khr}
-                detail={
-                  now.units_sold_cost_unknown === 0
-                    ? t.costAll.replace("{n}", count(now.units_sold_costed))
-                    : t.costMissing.replace("{total}", formatUsd((Number(now.sales_usd) + Number(now.sales_cost_unknown_usd)).toFixed(2))).replace("{amount}", formatUsd(now.sales_cost_unknown_usd)).replace("{n}", count(now.units_sold_cost_unknown))
-                }
-                change={<Change percent={c.change_percent.sales} previous={Number(c.totals.sales_usd)} versus={versus} />}
+                value={<AnimatedNumber value={netSales} format={money} />}
+                detail={refunds > 0 ? t.netSalesDetail.replace("{sales}", money(Number(now.sales_usd))).replace("{v}", money(refunds)) : t.noRefunds}
+                change={<Change percent={changeOf(netSales, netSalesBefore)} previous={netSalesBefore} versus={versus} />}
                 trend={r.series.map((p) => Number(p.sales_usd))}
                 labels={labels}
                 format={money}
@@ -110,10 +107,9 @@ export function ProfitTab({ range, versus, group, onGroup }: { range: ReportRang
                 label={t.cost}
                 icon={Receipt}
                 tone="sky"
-                value={<AnimatedNumber value={Number(now.cost_of_goods_usd)} format={money} />}
-                khr={now.cost_of_goods_khr}
-                detail={t.costDetail}
-                change={<Change percent={c.change_percent.cost_of_goods} previous={Number(c.totals.cost_of_goods_usd)} versus={versus} moreIsBetter={null} />}
+                value={<AnimatedNumber value={netCost} format={money} />}
+                detail={returnedCost > 0 ? t.costNetDetail.replace("{cost}", money(Number(now.cost_of_goods_usd))).replace("{v}", money(returnedCost)) : t.costDetail}
+                change={<Change percent={changeOf(netCost, netCostBefore)} previous={netCostBefore} versus={versus} moreIsBetter={null} />}
                 trend={r.series.map((p) => Number(p.cost_of_goods_usd))}
                 labels={labels}
                 format={money}
@@ -123,16 +119,22 @@ export function ProfitTab({ range, versus, group, onGroup }: { range: ReportRang
                 label={t.profit}
                 icon={PiggyBank}
                 tone="sea"
-                value={<AnimatedNumber value={Number(now.gross_profit_usd)} format={money} />}
-                khr={now.gross_profit_khr}
-                detail={[
-                  now.margin_percent == null ? t.noMargin : t.margin.replace("{p}", pct(now.margin_percent)),
-                  Number(now.profit_after_refunds_usd) !== Number(now.gross_profit_usd) ? t.afterRefundsShort.replace("{v}", formatUsd(now.profit_after_refunds_usd)) : "",
-                ].filter(Boolean).join(" · ")}
-                change={<Change percent={c.change_percent.gross_profit} previous={Number(c.totals.gross_profit_usd)} versus={versus} />}
+                value={<AnimatedNumber value={Number(now.profit_after_refunds_usd)} format={money} />}
+                khr={now.profit_after_refunds_khr}
+                detail={t.profitDetail}
+                change={<Change percent={c.change_percent.profit_after_refunds} previous={Number(c.totals.profit_after_refunds_usd)} versus={versus} />}
                 trend={profitPoints.map((p) => p.value)}
                 labels={labels}
                 format={money}
+              />
+              <Kpi
+                id="p-margin"
+                label={t.marginTitle}
+                icon={Percent}
+                tone="coral"
+                value={margin === null ? "–" : pct(margin)}
+                detail={t.marginDetail}
+                change={margin !== null && marginBefore !== null ? <MarginChange points={margin - marginBefore} versus={versus} /> : undefined}
               />
             </div>
             <div className="flex flex-col gap-2 rounded-xl border border-border/60 bg-surface-2/40 px-4 py-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
@@ -159,15 +161,17 @@ export function ProfitTab({ range, versus, group, onGroup }: { range: ReportRang
                 <DataTable caption={t.profitChart.replace("{group}", groupWord)} head={[t[group], t.profit]} rows={profitPoints.map((p) => [p.label, money(p.value)])} />
               </Panel>
               <Kpi
-                id="p-after-refunds"
-                label={t.afterRefunds}
-                icon={Undo2}
+                id="p-spend"
+                label={t.spend}
+                icon={PackagePlus}
                 tone="coral"
-                value={<AnimatedNumber value={Number(now.profit_after_refunds_usd)} format={money} />}
-                khr={now.profit_after_refunds_khr}
-                detail={t.afterRefundsDetail.replace("{refunds}", formatUsd(now.refunds_usd)).replace("{cost}", formatUsd(now.returned_cost_usd))}
-                change={<Change percent={c.change_percent.profit_after_refunds} previous={Number(c.totals.profit_after_refunds_usd)} versus={versus} />}
-                view={{ to: "/admin/reports?tab=coupons", label: "View refunds" }}
+                value={<AnimatedNumber value={Number(now.restock_spend_usd)} format={money} />}
+                khr={now.restock_spend_khr}
+                detail={[t.spendDetail.replace("{n}", count(now.restock_units)), now.restock_units_without_cost ? t.spendNoCost.replace("{n}", count(now.restock_units_without_cost)) : "", t.spendNote].filter(Boolean).join(" · ")}
+                change={<Change percent={c.change_percent.restock_spend} previous={Number(c.totals.restock_spend_usd)} versus={versus} moreIsBetter={null} />}
+                trend={spendPoints.map((p) => p.value)}
+                labels={labels}
+                format={money}
               />
             </div>
 
@@ -280,5 +284,24 @@ export function ProfitTab({ range, versus, group, onGroup }: { range: ReportRang
         );
       }}
     </State>
+  );
+}
+
+/** Margin change in percentage points (a margin of 40% → 41% is +1 point, not +2.5%). */
+function MarginChange({ points, versus }: { points: number; versus: string }) {
+  const { dict } = useT();
+  const rounded = Math.round(points * 10) / 10;
+  if (rounded === 0) return <span className="text-sm text-muted-foreground">{dict.profitReport.marginSame} {versus}</span>;
+  const up = rounded > 0;
+  const Icon = up ? ArrowUpRight : ArrowDownRight;
+  return (
+    <span className="inline-flex flex-wrap items-center gap-x-1 text-sm tabular-nums">
+      <span className={up ? "inline-flex items-center gap-0.5 rounded-full bg-success-tint px-2 py-0.5 font-semibold text-success" : "inline-flex items-center gap-0.5 rounded-full bg-destructive-tint px-2 py-0.5 font-semibold text-destructive"}>
+        <Icon className="size-4" aria-hidden="true" />
+        <span className="sr-only">{up ? "up" : "down"} </span>
+        {dict.profitReport.points.replace("{v}", Math.abs(rounded).toLocaleString("en-US", { maximumFractionDigits: 1 }))}
+      </span>{" "}
+      <span className="text-muted-foreground">{versus}</span>
+    </span>
   );
 }
