@@ -18,7 +18,7 @@ import { StatusDonut } from "@/features/admin/dashboard/StatusDonut";
 import { SalesChart } from "@/features/admin/SalesChart";
 import { day, rangeFromParams, rangeToParams } from "@/features/admin/dashboardRange";
 import { Change, CustomRange, Panel, PeriodPicker } from "@/features/admin/reportKit";
-import { Kpi, RankTable, Reveal, SectionLabel } from "@/features/admin/dashboard/DashKit";
+import { Kpi, RankTable, SectionLabel } from "@/features/admin/dashboard/DashKit";
 import { SystemHealthCard } from "@/features/admin/SystemHealthCard";
 import { StaffDashboard } from "@/features/admin/dashboard/StaffDashboard";
 import { AnimatedNumber } from "@/features/admin/dashboard/AnimatedNumber";
@@ -81,8 +81,8 @@ function AdminDashboard() {
     return () => window.clearTimeout(done);
   }, [arrived]);
   const rise = (index: number) => ({
-    initial: reducedMotion ? false : { opacity: 0, y: 26, scale: 0.97 },
-    animate: { opacity: 1, y: 0, scale: 1 },
+    initial: reducedMotion ? false : { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
     transition: { ...transitions.enter, delay: reducedMotion ? 0 : staggerDelay(index) },
   });
 
@@ -152,7 +152,7 @@ function AdminDashboard() {
 
           {/* 2 · Sales over time and where orders are. */}
           <SectionLabel>{h.sales}</SectionLabel>
-          <Reveal><div className="dash-sales-grid grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <div className="dash-sales-grid grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
             {trend?.length ? (
               <Panel id="sales-chart" title="Income report" icon={LineChart} tone="coral" action={<span className="text-sm text-muted-foreground">this period vs the previous one · by delivery date, less refunds</span>}>
                 <IncomeChart days={trend} />
@@ -175,14 +175,14 @@ function AdminDashboard() {
             >
               <StatusDonut counts={s.orders_by_status} />
             </Panel>
-          </div></Reveal>
+          </div>
 
           {/* 2a · Profit for the same days (Reports → Profit, owner 2026-11-16). */}
           {/* 2a · This month's goal next to the profit for the chosen days (Phase 4). */}
-          <Reveal><div className="dash-money-grid grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+          <div className="dash-money-grid grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
             <GoalCard opening={opening} />
             <ProfitGlance opening={opening} from={s.period.from} to={s.period.to} link={`/admin/reports?${new URLSearchParams({ ...rangeToParams(range), tab: "profit" }).toString()}`} />
-          </div></Reveal>
+          </div>
 
           {/* 2b · At a glance: the React Bits MagicBento with the shop's own figures (owner 2026-11-15). */}
           <SectionLabel>{h.glance}</SectionLabel>
@@ -190,7 +190,7 @@ function AdminDashboard() {
 
           {/* 3 · Books: what sells, which shelves, what runs out. */}
           <SectionLabel>{h.catalogue}</SectionLabel>
-          <Reveal><div className="dash-catalogue-grid grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-[minmax(0,5fr)_minmax(0,4fr)_minmax(0,4fr)]">
+          <div className="dash-catalogue-grid grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-[minmax(0,5fr)_minmax(0,4fr)_minmax(0,4fr)]">
             <Panel id="best-sellers" title="Best sellers" icon={Trophy} tone="saffron">
               {s.best_sellers.length === 0 ? (
                 <p className="text-[15px] text-muted-foreground">No delivered sales in this period yet.</p>
@@ -234,13 +234,13 @@ function AdminDashboard() {
                 </ul>
               )}
             </Panel>
-          </div></Reveal>
+          </div>
 
           {/* 4 · Customers and how they pay. */}
           {ins?.payment_methods || ins?.cart_reminder_recovery ? (
             <>
               <SectionLabel>{h.customers}</SectionLabel>
-              <Reveal className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+              <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
                 {ins.payment_methods ? (
                   <Panel id="payment-methods" title={dict.dashboardAnalysis.payments} icon={CreditCard} tone="rose" action={<span className="text-sm text-muted-foreground">{dict.dashboardAnalysis.paymentNote}</span>}>
                     <PaymentMethods rows={ins.payment_methods} />
@@ -258,20 +258,20 @@ function AdminDashboard() {
                     </Panel>
                   ) : null}
                 </div>
-              </Reveal>
+              </div>
             </>
           ) : null}
 
           {/* 5 · Operations: what needs attention, latest orders, deeper insights and health. */}
           <SectionLabel>{h.operations}</SectionLabel>
-          <Reveal><div className="dash-operations-grid grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+          <div className="dash-operations-grid grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
             {ins ? <DashboardActivity data={ins} /> : null}
             <RecentOrders user={session?.user} />
-          </div></Reveal>
+          </div>
 
           {ins?.dead_stock && ins.stock_value && ins.promotions && ins.repeat_customer_rate && ins.top_authors && ins.provinces ? <InsightsWidgets data={ins} /> : null}
 
-          <Reveal><SystemHealthCard /></Reveal>
+          <SystemHealthCard />
         </div>
       )}
     </AdminPage>
