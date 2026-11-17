@@ -22,7 +22,7 @@ export function Khr({ value, className }: { value?: string | null; className?: s
  * Change against the previous period of the same length. Up is green and down is red, except where more is worse
  * (refunds). The API reports "nothing before, something now" as 100%, which reads better as "New".
  */
-export function Change({ percent, previous, versus, moreIsBetter = true, onDark = false }: { percent?: number; previous?: number; versus: string; moreIsBetter?: boolean; onDark?: boolean }) {
+export function Change({ percent, previous, versus, moreIsBetter = true, onDark = false }: { percent?: number; previous?: number; versus: string; moreIsBetter?: boolean | null; onDark?: boolean }) {
   if (percent === undefined || previous === undefined) return null;
   if (previous === 0 && percent !== 0) {
     return (
@@ -35,7 +35,8 @@ export function Change({ percent, previous, versus, moreIsBetter = true, onDark 
     return <span className={cn("text-sm", onDark ? "admin-hero-muted" : "text-muted-foreground")}>No change {versus}</span>;
   }
   const up = percent > 0;
-  const good = up === moreIsBetter;
+  // null = neutral (costs and spending): the change is shown in grey, neither good nor bad.
+  const good = moreIsBetter === null ? null : up === moreIsBetter;
   const Icon = up ? ArrowUpRight : ArrowDownRight;
   // Big jumps read better as a multiple: +1,683% → "17.8×" (owner 2026-11-17).
   const amount = up && percent >= 200
@@ -43,7 +44,7 @@ export function Change({ percent, previous, versus, moreIsBetter = true, onDark 
     : `${Math.abs(percent).toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
   return (
     <span className="inline-flex flex-wrap items-center gap-x-1 text-sm tabular-nums">
-      <span className={cn("inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 font-semibold", onDark ? (good ? "bg-[#7EDDB0]/20 text-[#B7F5D6]" : "bg-[#FF9FB6]/20 text-[#FFD1DC]") : good ? "bg-success-tint text-success" : "bg-destructive-tint text-destructive")}>
+      <span className={cn("inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 font-semibold", good === null ? (onDark ? "bg-white/15 text-white" : "bg-surface-2 text-foreground") : onDark ? (good ? "bg-[#7EDDB0]/20 text-[#B7F5D6]" : "bg-[#FF9FB6]/20 text-[#FFD1DC]") : good ? "bg-success-tint text-success" : "bg-destructive-tint text-destructive")}>
         <Icon className="size-4" aria-hidden="true" />
         <span className="sr-only">{up ? "up" : "down"} </span>
         {amount}

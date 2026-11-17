@@ -94,6 +94,13 @@ function SalesTab({ range, versus }: { range: ReportRange; versus: string }) {
         const r = query.data!;
         const t = r.totals;
         const c = r.comparison;
+        // The money bridge in cents: order totals are after discounts and include delivery.
+        const cents = (v: string | null | undefined) => Math.round(Number(v ?? 0) * 100);
+        const discounts = cents(t.discount_usd);
+        const shipping = cents(t.shipping_usd);
+        const refunds = cents(t.refunds_usd);
+        const bookSales = cents(t.gross_revenue_usd) - shipping;
+        const bookFull = bookSales + discounts;
         const points: Point[] = r.series.map((p) => ({
           label: bucketLabel(p.date, group),
           value: Number(p.net_revenue_usd),
@@ -104,14 +111,14 @@ function SalesTab({ range, versus }: { range: ReportRange; versus: string }) {
           <>
             <div className="dash-kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <Kpi id="r-net-revenue" label="Net revenue" icon={CircleDollarSign} tone="coral" value={<AnimatedNumber value={Number(t.net_revenue_usd)} format={money} />} khr={t.net_revenue_khr}
-                detail={`${formatUsd(t.gross_revenue_usd)} gross − ${formatUsd(t.refunds_usd)} refunded`}
+                detail={`${formatUsd(t.gross_revenue_usd)} collected − ${formatUsd(t.refunds_usd)} refunded`}
                 change={<Change percent={c.change_percent.net_revenue} previous={Number(c.totals.net_revenue_usd)} versus={versus} />}
                 trend={r.series.map((p) => Number(p.net_revenue_usd))} labels={labels} format={money} />
-              <Kpi id="r-delivered" label="Delivered orders" icon={Truck} tone="saffron" value={<AnimatedNumber value={t.orders_count} format={count} />} detail={`${count(t.orders_placed)} placed (${count(t.orders_count)} delivered)`}
+              <Kpi id="r-delivered" label="Delivered orders" icon={Truck} tone="saffron" value={<AnimatedNumber value={t.orders_count} format={count} />} detail={`${count(t.orders_placed)} orders placed in this period`}
                 change={<Change percent={c.change_percent.orders_count} previous={c.totals.orders_count} versus={versus} />}
                 trend={r.series.map((p) => p.orders_count)} labels={labels} format={count} />
               <Kpi id="r-average" label="Average order" icon={Receipt} tone="sky" value={<AnimatedNumber value={Number(t.average_order_value_usd)} format={money} />} khr={t.average_order_value_khr}
-                detail="Net revenue ÷ delivered orders"
+                detail="Money collected ÷ delivered orders (before refunds)"
                 change={<Change percent={c.change_percent.average_order_value} previous={Number(c.totals.average_order_value_usd)} versus={versus} />}
                 trend={r.series.map((p) => Number(p.average_order_value_usd))} labels={labels} format={money} />
               <Kpi id="r-books-sold" label="Books sold" icon={ShoppingBag} tone="sea" value={<AnimatedNumber value={t.items_sold} format={count} />}
@@ -119,26 +126,31 @@ function SalesTab({ range, versus }: { range: ReportRange; versus: string }) {
                 change={<Change percent={c.change_percent.items_sold} previous={c.totals.items_sold} versus={versus} />}
                 trend={r.series.map((p) => p.items_sold)} labels={labels} format={count} />
             </div>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-border/60 bg-surface-2/40 px-4 py-3 text-sm text-muted-foreground tabular-nums">
-              <span>
-                <span className="font-semibold text-foreground">{formatUsd(t.gross_revenue_usd)}</span> delivered gross
-              </span>
-              <span>
-                <span className="font-semibold text-foreground">−{formatUsd(t.discount_usd)}</span> discounts
-              </span>
-              <span>
-                <span className="font-semibold text-foreground">−{formatUsd(t.refunds_usd)}</span> refunds
-              </span>
-              <span>
-                <span className="font-semibold text-foreground">+{formatUsd(t.shipping_usd)}</span> delivery fees
-              </span>
-              <span className="ml-auto text-xs text-muted-foreground sm:text-sm">
-                Need book margins & supplier costs?{" "}
+            {/* How the money adds up (owner 2026-11-17). Order totals are stored after discounts and with delivery, so the
+                steps start from the books' full price; "Book sales" is the same number as on the Profit tab. */}
+            <dl aria-label="How net revenue adds up" className="grid gap-x-6 gap-y-2 rounded-xl border border-border/60 bg-surface-2/40 px-4 py-3 text-sm tabular-nums sm:grid-cols-2 xl:grid-cols-5">
+              {([
+                ["Books at full price", bookFull, ""],
+                ["Discounts", -discounts, "−"],
+                ["Book sales", bookSales, "="],
+                ["Delivery fees", shipping, "+"],
+                ["Refunds", -refunds, "−"],
+              ] as const).map(([label, cents, sign]) => (
+                <div key={label} className="grid gap-0.5">
+                  <dt className="text-muted-foreground">{label}</dt>
+                  <dd className="font-semibold text-foreground">
+                    {sign === "−" ? "−" : sign === "+" ? "+" : ""}
+                    {formatUsd((Math.abs(cents) / 100).toFixed(2))}
+                  </dd>
+                </div>
+              ))}
+              <p className="text-muted-foreground sm:col-span-2 xl:col-span-5">
+                = <span className="font-semibold text-foreground">{formatUsd(t.net_revenue_usd)}</span> net revenue ·{" "}
                 <Link to="/admin/reports?tab=profit" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
-                  View Profit tab →
+                  Cost and profit are on the Profit tab →
                 </Link>
-              </span>
-            </div>
+              </p>
+            </dl>
             <Panel
               id="sales-trend"
               title={`Net revenue by ${group}`}

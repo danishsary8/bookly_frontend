@@ -1215,3 +1215,16 @@ component's own dependencies). Values still glide between periods. Rules: design
 - Profit Tab: added explicit `100% cost tracked` badge on Book Sales when all sold items have known costs, displayed `Profit after refunds`
   right on the Gross Profit KPI card, added a cross-link to the Sales tab for net collected cash reconciliation.
 - Checks: lint, typecheck, reports-page unit tests passed (11/11).
+
+### 2026-11-17 — Reports data check and fixes (branch `reports-data-clarity-fix`, on top of `feature/reports-data-clarity`)
+- Sales tab breakdown was wrong: it subtracted discounts again from a total that already has them taken off. It now
+  adds up step by step: books at full price − discounts = book sales (the same number the Profit tab uses before
+  missing costs), + delivery fees, − refunds = net revenue.
+- "Average order" said "Net revenue ÷ delivered orders"; the API divides money collected (before refunds). Label fixed.
+- Profit tab "Book sales" only counts copies with a known restock cost, so it differed from the Sales tab with no
+  explanation. Renamed "Sales with a known cost", with the full book sales and the part without a cost underneath.
+- Restock spending and cost of books sold changes are now neutral grey (a lower cost from selling less is not "good").
+- New Profit tab text in English + Khmer (was English only); the green badge uses the theme's success colour.
+- Checks: lint, typecheck, 720 tests passed (3 skipped, new test for the breakdown), build OK. Browser with the local
+  API (30 days): $191.35 − $7.89 = $183.46 book sales, + $15.00 delivery − $0.00 refunds = $198.46 net revenue;
+  Profit $123.87 known cost + $59.59 without cost = $183.46. No page errors. Not checked: the live API, phone width.

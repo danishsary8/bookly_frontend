@@ -110,7 +110,7 @@ describe("reports page", () => {
     const get = stubReports();
     open("/admin/reports?period=7d");
 
-    expect(await screen.findByText("$100.00")).toBeInTheDocument();
+    expect((await screen.findAllByText("$100.00")).length).toBeGreaterThan(0);
     expect(get).toHaveBeenLastCalledWith("sales", { ...rangeDays({ period: "7d" }), group: "day" });
     expect(screen.getByText("≈ 410,000 ៛")).toBeInTheDocument();
     expect(screen.getByText(/25%/)).toBeInTheDocument();
@@ -122,11 +122,26 @@ describe("reports page", () => {
     expect(screen.getByTestId("where")).toHaveTextContent("/admin/reports?period=7d&group=week");
   });
 
+  it("adds up the money step by step: full price, discounts, book sales, delivery, refunds", async () => {
+    setSession("staff", { token: "t", expiresAt: null, user: admin });
+    const withFees = { ...sales, totals: { ...sales.totals, discount_usd: "5.00", shipping_usd: "4.50" } };
+    vi.spyOn(reportsApi, "get").mockImplementation(async (name) => (name === "sales" ? withFees : reports[name]) as never);
+    open("/admin/reports?period=7d");
+    const list = await screen.findByLabelText("How net revenue adds up");
+    // collected 120.00 = books 115.50 + delivery 4.50; books before the 5.00 discount = 120.50
+    expect(list).toHaveTextContent("Books at full price$120.50");
+    expect(list).toHaveTextContent("Discounts−$5.00");
+    expect(list).toHaveTextContent("Book sales$115.50");
+    expect(list).toHaveTextContent("Delivery fees+$4.50");
+    expect(list).toHaveTextContent("Refunds−$20.00");
+    expect(list).toHaveTextContent("= $100.00 net revenue");
+  });
+
   it("keeps the period when switching tabs, and shows order mix with status labels", async () => {
     setSession("staff", { token: "t", expiresAt: null, user: admin });
     const get = stubReports();
     open("/admin/reports?period=7d");
-    await screen.findByText("$100.00");
+    await screen.findAllByText("$100.00");
 
     await userEvent.click(screen.getByRole("tab", { name: "Orders" }));
     expect(await screen.findByText("20%")).toBeInTheDocument();
