@@ -1270,4 +1270,21 @@ component's own dependencies). Values still glide between periods. Rules: design
 - Checks: lint, typecheck, 720 tests, build OK. Browser (local API, 1440): clicking Sign-in & security, Addresses,
   Orders, Wishlist, Profile keeps the same sidebar element and scroll position while the heading changes; phone menu
   closes after choosing; account → Best sellers → Back → Reviews → a book page all load; axe 0; no page errors.
-- 2026-11-17 — Reset password in two parts: enter the 6-digit code, press Continue, then the new password fields appear (code shown with a Change link; a wrong code from the API sends the customer back to the code). Sign-in page: "New to Bookly?" + "Create a free account" now sit on one row on tablet/laptop so the whole card fits a 1366×650 screen without scrolling (stacked on phones). Code boxes now shrink to fit 320px phones (no sideways scroll). EN + KM text added.
+
+### 2026-11-17 — Reset password in two parts & sign-in polish (from main)
+- Reset password in two parts: enter the 6-digit code, press Continue, then the new password fields appear (code shown with a Change link; a wrong code from the API sends the customer back to the code). Sign-in page: "New to Bookly?" + "Create a free account" now sit on one row on tablet/laptop so the whole card fits a 1366×650 screen without scrolling (stacked on phones). Code boxes now shrink to fit 320px phones (no sideways scroll). EN + KM text added.
+
+### 2026-11-17 — Similar in theme label on book cards (branch `feature/similar-books-label`)
+- Added `recommendation_reason?: "similar" | string | null` to `BookCard` schema in `src/api/types.ts`.
+- Added `cards.similarTheme` in `src/i18n/en.ts` ("Similar in theme") and `src/i18n/km.ts` ("ប្រធានបទស្រដៀងគ្នា" — natural and authentic Khmer phrasing for Cambodian readers).
+- Created `SimilarThemeBadge` in `src/components/BookBadge.tsx` featuring `Compass` icon with accessible badge styling (`bg-secondary text-secondary-foreground border border-border/50`).
+- Displayed `<SimilarThemeBadge />` in `src/components/catalog/BookCard.tsx` when `book.recommendation_reason === "similar"`.
+- Added unit tests in `src/components/catalog/book-card.test.tsx` verifying badge presence and translation in EN and KM.
+- Checks: npm run lint (0 errors), npm run typecheck (0 errors), npm test (134 test files passed, 723 passed), npm run build (built cleanly in 17.78s).
+
+### 2026-11-18 — Topic results section heading for search (branch `feature/similar-books-label`)
+- Added `match?: "meaning" | string | null` to `BookCard` in `src/api/types.ts`.
+- Added `browse.booksAboutTopic` in `src/i18n/en.ts` ("Books about this topic") and `src/i18n/km.ts` ("សៀវភៅអំពីប្រធានបទនេះ" — natural, authentic Khmer phrasing for Cambodian readers).
+- Updated `src/components/catalog/BookGrid.tsx` to partition search results: keyword matches render in the primary grid, while semantic topic matches (`match === "meaning"`) render below an accessible section heading with a `Sparkles` icon and `browse.booksAboutTopic`.
+- Added unit tests in `src/components/catalog/book-grid.test.tsx` verifying heading visibility, separation of keyword and topic results, and proper localization in EN and KM.
+- Checks: npm run lint (0 errors), npm run typecheck (0 errors), npm test (133 test files passed, 714 passed / 3 skipped), npm run build (built cleanly in 19.53s).

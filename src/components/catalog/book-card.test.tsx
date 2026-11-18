@@ -58,4 +58,21 @@ describe("BookCard audience tag", () => {
     renderWithProviders(<BookCard book={sampleBook({ school_grade: 12 })} />);
     expect(screen.getByText("ថ្នាក់ទី 12")).toBeInTheDocument();
   });
+
+  it("renders 'Similar in theme' badge when recommendation_reason is similar in English", () => {
+    renderWithProviders(<BookCard book={sampleBook({ recommendation_reason: "similar" })} />);
+    expect(screen.getByText("Similar in theme")).toBeInTheDocument();
+  });
+
+  it("renders 'ប្រធានបទស្រដៀងគ្នា' badge when recommendation_reason is similar in Khmer", () => {
+    act(() => setLanguage("km"));
+    renderWithProviders(<BookCard book={sampleBook({ recommendation_reason: "similar" })} />);
+    expect(screen.getByText("ប្រធានបទស្រដៀងគ្នា")).toBeInTheDocument();
+  });
+
+  it("does not render theme badge when recommendation_reason is absent", () => {
+    renderWithProviders(<BookCard book={sampleBook()} />);
+    expect(screen.queryByText("Similar in theme")).not.toBeInTheDocument();
+    expect(screen.queryByText("ប្រធានបទស្រដៀងគ្នា")).not.toBeInTheDocument();
+  });
 });
