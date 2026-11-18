@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, BookOpen } from "lucide-react";
@@ -33,16 +34,29 @@ interface AuthShellProps {
   legal?: boolean;
 }
 
+/** Desktop (lg, 1024px+) shows the lapis panel beside the form; smaller screens show it under the form. */
+const DESKTOP = "(min-width: 1024px)";
+const subscribe = (notify: () => void) => {
+  const mq = window.matchMedia?.(DESKTOP);
+  mq?.addEventListener("change", notify);
+  return () => mq?.removeEventListener("change", notify);
+};
+const useDesktop = () => useSyncExternalStore(subscribe, () => window.matchMedia?.(DESKTOP).matches ?? true, () => true);
+
 export const AuthShell = ({ children, panel, legal = false }: AuthShellProps) => {
   const { dict } = useT();
+  // Only one copy of the panel is mounted, so its cover carousel never runs twice.
+  const desktop = useDesktop();
   return (
     <div className="auth-paper min-h-dvh bg-background text-foreground lg:h-dvh lg:overflow-hidden">
       <div className="mx-auto grid min-h-dvh max-w-[1360px] lg:h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-10 lg:p-4">
-        <aside className="hero-lapis auth-cover hidden min-h-0 flex-col justify-between gap-6 overflow-hidden rounded-[14px] p-9 lg:flex xl:p-11">
-          <Wordmark onLapis />
-          {panel ?? <CoverWall />}
-          {legal ? <div className="border-t border-on-lapis-muted/20 pt-4"><AgreeNote onLapis /></div> : null}
-        </aside>
+        {desktop ? (
+          <aside className="hero-lapis auth-cover hidden min-h-0 flex-col justify-between gap-6 overflow-hidden rounded-[14px] p-9 lg:flex xl:p-11">
+            <Wordmark onLapis />
+            {panel ?? <CoverWall />}
+            {legal ? <div className="border-t border-on-lapis-muted/20 pt-4"><AgreeNote onLapis /></div> : null}
+          </aside>
+        ) : null}
 
         <main id="content" tabIndex={-1} className="relative flex min-h-0 flex-col px-4 py-5 sm:px-6 lg:overflow-y-auto lg:px-2 lg:py-0">
           {/* Mobile: wordmark + back. Desktop: the back button sits in the card header (AuthPage). */}
@@ -60,7 +74,14 @@ export const AuthShell = ({ children, panel, legal = false }: AuthShellProps) =>
           <div className="flex flex-1 items-start justify-center py-6 md:items-center md:pb-16 lg:items-stretch lg:py-0">
             <div className="w-full max-w-[34rem] lg:flex lg:max-w-[36rem] lg:flex-col">
               {children}
-              {legal ? <div className="mt-4 lg:hidden"><AgreeNote /></div> : null}
+              {/* Phones and tablets: the same lapis panel under the form, seen once you scroll (owner 2026-11-18). The
+                  wordmark is already in the top bar, so the panel starts with the shelves; the legal note sits inside. */}
+              {desktop ? null : (
+                <aside className="hero-lapis auth-cover mt-6 flex h-[30rem] flex-col justify-between gap-5 overflow-hidden rounded-[14px] px-9 pb-7 pt-4 sm:h-[34rem]">
+                  {panel ?? <CoverWall />}
+                  {legal ? <div className="border-t border-on-lapis-muted/20 pt-4"><AgreeNote onLapis /></div> : null}
+                </aside>
+              )}
             </div>
           </div>
         </main>
