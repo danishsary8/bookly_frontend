@@ -73,7 +73,9 @@ function Divider({ children }: { children: string }) {
 }
 
 export function SocialButtons({ next = null, telegram = false, hint, row = false }: { next?: string | null; telegram?: boolean; /** A short line under the "or" divider (sign-in page: new accounts work too). */ hint?: string; /** Sign-in page: Google and Facebook side by side, named only (owner 2026-11-17). */ row?: boolean }) {
-  const enabled = (["google", "facebook"] as const).filter(socialEnabled);
+  // Sign-in page (row): Google only for now; Facebook waits for Meta's business verification (owner 2026-11-18).
+  const providers = row ? (["google"] as const) : (["google", "facebook"] as const);
+  const enabled = providers.filter(socialEnabled);
   const afterSignIn = useAfterSignIn();
   const { dict } = useT();
   const s = dict.signin;
@@ -105,11 +107,11 @@ export function SocialButtons({ next = null, telegram = false, hint, row = false
     return (
       <div className="grid gap-3">
         <Divider>{s.or}</Divider>
-        <div className={cn("grid gap-3", row && "grid-cols-2 max-[340px]:grid-cols-1")}>
-          {(["google", "facebook"] as const).map((p) => (
-            <button key={p} type="button" disabled aria-describedby="social-soon" aria-label={row ? s.continueWith(NAMES[p]) : undefined} className={cn(buttonClass, "cursor-not-allowed opacity-60")}>
+        <div className={cn("grid gap-3", row && providers.length > 1 && "grid-cols-2 max-[340px]:grid-cols-1")}>
+          {providers.map((p) => (
+            <button key={p} type="button" disabled aria-describedby="social-soon" aria-label={row && providers.length > 1 ? s.continueWith(NAMES[p]) : undefined} className={cn(buttonClass, "cursor-not-allowed opacity-60")}>
               {ICONS[p]}
-              {row ? NAMES[p] : s.continueWith(NAMES[p])}
+              {row && providers.length > 1 ? NAMES[p] : s.continueWith(NAMES[p])}
             </button>
           ))}
         </div>

@@ -250,12 +250,12 @@ export default function LoginPage() {
             <SocialButtons next={next} />
           </div>
         )}
-        {/* Sign up: one balanced row under a divider (label left, button right) so the whole card fits a laptop screen; stacked on phones (owner 2026-11-17). */}
-        <div className="flex flex-col items-stretch gap-2.5 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 short:gap-2 short:pt-3">
-          <p className="text-center text-sm text-muted-foreground sm:text-left">{s.newHere}</p>
+        {/* Sign up: a full-width outline button under the divider, the same width as Google above, so the form reads as one column (owner 2026-11-18). */}
+        <div className="grid gap-2 border-t border-border pt-4 short:gap-1.5 short:pt-3">
+          <p className="text-center text-sm text-muted-foreground">{s.newHere}</p>
           <Link
             to={withNext("/register", next)}
-            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full gap-2 border-primary/40 text-[15px] font-semibold text-primary hover:border-primary hover:bg-lapis-tint sm:w-auto sm:px-5")}
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full gap-2 border-primary/40 text-[15px] font-semibold text-primary hover:border-primary hover:bg-lapis-tint")}
           >
             <UserPlus className="size-[18px]" aria-hidden="true" />
             {s.createFree}

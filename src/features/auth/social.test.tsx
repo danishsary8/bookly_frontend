@@ -121,7 +121,7 @@ describe("social sign-in", () => {
     const login = vi.fn((cb: (r: { status: string; authResponse?: { accessToken: string } }) => void) => cb({ status: "connected", authResponse: { accessToken: "fb-token" } }));
     window.FB = { init: vi.fn(), login };
     const post = vi.spyOn(api, "post").mockResolvedValue({ token: "tok", expires_at: null, customer });
-    app();
+    app("/register?next=%2Fcart"); // Facebook is hidden on the sign-in page until Meta verifies the business.
     await userEvent.click(screen.getByRole("button", { name: "Continue with Facebook" }));
     expect(login).toHaveBeenCalledWith(expect.any(Function), { scope: "email,public_profile" });
     await waitFor(() => expect(post).toHaveBeenCalledWith("/auth/social/facebook", { access_token: "fb-token" }));
@@ -132,7 +132,7 @@ describe("social sign-in", () => {
     // Someone not on the tester list: Facebook shows its own error, the popup closes without a token.
     window.FB = { init: vi.fn(), login: vi.fn((cb: (r: { status: string }) => void) => cb({ status: "unknown" })) };
     const post = vi.spyOn(api, "post");
-    app();
+    app("/register?next=%2Fcart"); // Facebook is hidden on the sign-in page until Meta verifies the business.
 
     const button = screen.getByRole("button", { name: "Continue with Facebook" });
     expect(screen.queryByText(/only works for invited accounts/)).not.toBeInTheDocument();
@@ -145,7 +145,7 @@ describe("social sign-in", () => {
     vi.stubEnv("VITE_FACEBOOK_APP_ID", "app-1");
     vi.stubEnv("VITE_FACEBOOK_PUBLIC", "true");
     window.FB = { init: vi.fn(), login: vi.fn((cb: (r: { status: string }) => void) => cb({ status: "unknown" })) };
-    app();
+    app("/register?next=%2Fcart"); // Facebook is hidden on the sign-in page until Meta verifies the business.
 
     const button = screen.getByRole("button", { name: "Continue with Facebook" });
     expect(button).not.toHaveAccessibleDescription();

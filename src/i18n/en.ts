@@ -793,7 +793,7 @@ export const en = {
     verifiedPurchase: "Verified purchase",
   },
   signin: {
-    newHere: "New to Bookly?", newHereLink: "Create an account", newHereClose: "Close this note", createFree: "Create a free account", socialHint: "Google and Facebook work for new and existing accounts.",
+    newHere: "New to Bookly?", newHereLink: "Create an account", newHereClose: "Close this note", createFree: "Create a free account", socialHint: "Google works for new and existing accounts.",
     shelf: "Best sellers at Bookly",
     shelfEyebrow: "From the Bookly shelves",
     bestSeller: "Best seller",
