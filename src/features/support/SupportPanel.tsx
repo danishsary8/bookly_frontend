@@ -7,6 +7,7 @@ import { supportApi, type Topic } from "@/api/endpoints/support";
 import { ordersApi } from "@/api/endpoints/orders";
 import { Button } from "@/components/ui/button";
 import { useTurnstile } from "@/features/auth/turnstile";
+import { isVerified } from "@/features/auth/verification";
 import { useT } from "@/i18n";
 import { ConversationView, supportField } from "./ConversationView";
 import { useConversations } from "./useSupport";
@@ -30,7 +31,7 @@ function CustomerSupport({ customer, initialMessage = "" }: { customer: Customer
   const [starting, setStarting] = useState(Boolean(initialMessage)); const [topic, setTopic] = useState<Topic>("other"); const [order, setOrder] = useState(""); const [message, setMessage] = useState(initialMessage);
   const [page, setPage] = useState(1);
   const list = useConversations(false, `?page=${page}`);
-  const orders = useQuery({ queryKey: ["support-orders", customer.id], queryFn: () => ordersApi.orders({ per_page: 20 }), enabled: starting });
+  const orders = useQuery({ queryKey: ["support-orders", customer.id], queryFn: () => ordersApi.orders({ per_page: 20 }), enabled: starting && isVerified(customer) });
   const select = (id: number) => { setSelected(id); setStarting(false); try { localStorage.setItem(storageKey, String(id)); } catch { /* Storage can be disabled. */ } };
   const start = useMutation({ mutationFn: () => supportApi.start({ topic, message, ...(order ? { order_id: Number(order) } : {}) }), onSuccess: (conversation) => { select(conversation.id); setMessage(""); void client.invalidateQueries({ queryKey: ["support"] }); } });
   return <div className="grid min-w-0 gap-4"><p className="text-sm text-muted-foreground">{t.intro}</p>

@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import { ArrowLeftRight, BarChart3, Bot, BookCopy, BookMarked, Boxes, Building2, FolderTree, Gift, Headset, LayoutDashboard, Library, Mail, Megaphone, MessageSquareText, Package, PenTool, RotateCcw, ScrollText, ShieldCheck, Sparkles, Star, Tag, TicketPercent, Trash2, UserPlus, Users, Wallet, Settings, Truck } from "lucide-react";
 import type { StaffRole } from "@/api/endpoints/staff";
+import { rewriteAdminPath, type Portal } from "./portal";
 
 export type AdminNavItem = { to: string; label: string; Icon: ComponentType<{ className?: string }>; end?: boolean; roles?: StaffRole[] };
 /** `tone` colours the group's marker and icons (admin.css `[data-tone]`), so each work area is easy to spot. */
@@ -80,17 +81,23 @@ export const adminNav: AdminNavGroup[] = [
   },
 ];
 
-export const navFor = (role: StaffRole | undefined) =>
+export const navFor = (role: StaffRole | undefined, portal: Portal = "admin") =>
   adminNav
-    .map((group) => ({ ...group, items: group.items.filter((item) => !item.roles || (role && item.roles.includes(role))) }))
+    .map((group) => ({
+      ...group,
+      items: group.items
+        .filter((item) => !item.roles || (role && item.roles.includes(role)))
+        .map((item) => ({ ...item, to: rewriteAdminPath(item.to, portal) })),
+    }))
     .filter((group) => group.items.length > 0);
 
-/** The nav group a path belongs to (longest match wins, so /admin/orders/5 → Orders). */
+/** The nav group a path belongs to (longest match wins, so /admin/orders/5 or /staff/orders/5 → Orders). */
 export const groupFor = (pathname: string) => {
+  const normalized = pathname === "/staff" ? "/admin" : pathname.startsWith("/staff/") ? `/admin/${pathname.slice("/staff/".length)}` : pathname;
   let best: { group: AdminNavGroup; length: number } | undefined;
   for (const group of adminNav)
     for (const item of group.items) {
-      const hit = item.end ? item.to === pathname : pathname === item.to || pathname.startsWith(`${item.to}/`);
+      const hit = item.end ? item.to === normalized : normalized === item.to || normalized.startsWith(`${item.to}/`);
       if (hit && (!best || item.to.length > best.length)) best = { group, length: item.to.length };
     }
   return best?.group;

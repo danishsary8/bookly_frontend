@@ -22,6 +22,7 @@ import { DeliveryAddressCard, OrderItemsCard } from "@/features/orders/OrderSumm
 import { OrderTimeline } from "@/features/orders/OrderTimeline";
 import { orderDateTime } from "@/features/orders/format";
 import { staffPrintPath } from "@/features/orders/documents/printLinks";
+import { usePortal, usePortalPath } from "@/features/admin/portal";
 import { toast } from "@/stores/toast";
 
 function StaffNoteCard({ order }: { order: StaffOrder }) {
@@ -114,18 +115,20 @@ function StaffNoteCard({ order }: { order: StaffOrder }) {
  */
 export default function OrderAdminPage() {
   const session = useStaff();
+  const portal = usePortal();
+  const toPortal = usePortalPath();
   const id = Number(useParams().id);
   const valid = Number.isInteger(id) && id > 0;
   const order = useQuery({ ...opsQueries.order(id), enabled: valid });
   const [step, setStep] = useState<OrderStatus | null>(null);
 
   const back = (
-    <Link to="/admin/orders" className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+    <Link to={toPortal("orders")} className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline">
       <ArrowLeft className="size-4" aria-hidden="true" /> All orders
     </Link>
   );
 
-  if (!valid || (order.isError && ApiError.from(order.error).kind === "not_found")) return <NotFoundState what="order" backTo="/admin/orders" backLabel="All orders" />;
+  if (!valid || (order.isError && ApiError.from(order.error).kind === "not_found")) return <NotFoundState what="order" backTo={toPortal("orders")} backLabel="All orders" />;
   if (order.isError) return <ErrorState error={order.error} onRetry={() => order.refetch()} headingLevel="h1" showHomeLink={false} />;
   if (!order.data)
     return (
@@ -166,11 +169,11 @@ export default function OrderAdminPage() {
           ) : null}
           {/* Packing slips are for active fulfillment: hidden for cancelled, delivered, and returned orders. */}
           {o.status !== "cancelled" && o.status !== "delivered" && o.status !== "returned" ? (
-            <Link to={staffPrintPath("packing-slip", [o.id!])} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline" })}>
+            <Link to={staffPrintPath("packing-slip", [o.id!], true, portal)} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline" })}>
               <Printer aria-hidden="true" /> Packing slip
             </Link>
           ) : null}
-          <Link to={staffPrintPath("invoice", [o.id!])} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline" })}>
+          <Link to={staffPrintPath("invoice", [o.id!], true, portal)} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline" })}>
             <FileText aria-hidden="true" /> Invoice
           </Link>
         </>
@@ -187,12 +190,14 @@ export default function OrderAdminPage() {
               <h2 id="order-customer" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
                 Customer
               </h2>
-              <Link to={`/admin/customers/${o.customer.id}`} className="font-semibold text-primary underline-offset-4 hover:underline">
+              <Link to={toPortal(`customers/${o.customer.id}`)} className="font-semibold text-primary underline-offset-4 hover:underline">
                 {o.customer.name}
               </Link>
-              <a href={`mailto:${o.customer.email}`} className="inline-flex items-center gap-2 text-[15px] text-muted-foreground hover:text-foreground">
-                <Mail className="size-4" aria-hidden="true" /> {o.customer.email}
-              </a>
+              {o.customer.email ? (
+                <a href={`mailto:${o.customer.email}`} className="inline-flex items-center gap-2 text-[15px] text-muted-foreground hover:text-foreground">
+                  <Mail className="size-4" aria-hidden="true" /> {o.customer.email}
+                </a>
+              ) : null}
               {o.customer.phone ? (
                 <a href={`tel:${o.customer.phone}`} className="inline-flex items-center gap-2 text-[15px] tabular-nums text-muted-foreground hover:text-foreground">
                   <Phone className="size-4" aria-hidden="true" /> {o.customer.phone}

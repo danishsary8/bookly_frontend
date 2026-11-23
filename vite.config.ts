@@ -1,13 +1,34 @@
 /// <reference types="vitest/config" />
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-import path from "path";
+import path from "node:path";
+import https from "node:https";
+import tls from "node:tls";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { seo } from "./scripts/seo";
+
+// Merge OS-trusted CAs (e.g. antivirus/corporate TLS inspection roots) with Node's defaults.
+function loadSystemCaCerts(): string[] | undefined {
+  if (typeof tls.getCACertificates !== "function") return undefined;
+  try {
+    const system = tls.getCACertificates("system");
+    if (system.length === 0) return undefined;
+    const certs = [...tls.getCACertificates("default"), ...system];
+    if (typeof tls.setDefaultCACertificates === "function") tls.setDefaultCACertificates(certs);
+    return certs;
+  } catch {
+    return undefined;
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = { ...loadEnv(mode, process.cwd()), ...process.env };
+  const ca = loadSystemCaCerts();
+  const proxyAgent =
+    ca && env.VITE_DEV_API_TARGET?.startsWith("https://")
+      ? new https.Agent({ ca })
+      : undefined;
   // Error reports name the deployed commit; with SENTRY_AUTH_TOKEN the build also uploads source maps
   // (then deletes them from dist), so stack traces point at real files and lines.
   const release = env.VERCEL_GIT_COMMIT_SHA ?? "";
@@ -42,6 +63,7 @@ export default defineConfig(({ mode }) => {
         "/api": {
           target: env.VITE_DEV_API_TARGET,
           changeOrigin: true,
+          ...(proxyAgent ? { agent: proxyAgent } : {}),
         },
       } : undefined,
     },

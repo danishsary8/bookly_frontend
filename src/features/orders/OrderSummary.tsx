@@ -39,9 +39,13 @@ export function OrderItemsCard({
         {(order.items ?? []).map((item) => (
           <li key={item.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3">
             <span className="min-w-0 flex-1">
-              <Link to={`/books/${item.book_id}`} className="font-semibold underline-offset-4 hover:underline">
-                {item.title}
-              </Link>
+              {item.book_id ? (
+                <Link to={`/books/${item.book_id}`} className="font-semibold underline-offset-4 hover:underline">
+                  {item.title}
+                </Link>
+              ) : (
+                <span className="font-semibold">{item.title}</span>
+              )}
               <span className="block text-sm text-muted-foreground">
                 {t.line(formatName(dict, item.format), item.quantity ?? 0, formatUsd(item.unit_price_usd))}
               </span>

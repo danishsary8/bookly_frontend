@@ -35,6 +35,7 @@ import {
 import { Pagination } from "@/components/ui/pagination";
 import { Switch } from "@/components/ui/switch";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { usePortalPath } from "@/features/admin/portal";
 import {
   ListState,
   SearchBox,
@@ -291,6 +292,7 @@ function CouponDialog({
 /* /admin/coupons: discount codes with their rules and how often they've been used. */
 export default function CouponsAdminPage() {
   const session = useStaff();
+  const toPortal = usePortalPath();
   const isAdmin = session?.user.role === "admin";
   const queryClient = useQueryClient();
   const { get, page, set, hrefFor } = useListParams();
@@ -418,7 +420,7 @@ export default function CouponsAdminPage() {
                       <span className="mt-0.5 block font-sans text-xs font-normal tracking-normal text-muted-foreground">
                         Store credit for{" "}
                         <Link
-                          to={`/admin/customers/${c.store_credit_for.id}`}
+                          to={toPortal(`customers/${c.store_credit_for.id}`)}
                           className="font-semibold text-primary underline-offset-4 hover:underline"
                         >
                           {c.store_credit_for.name ??

@@ -29,16 +29,20 @@ import { cn } from "@/lib/utils";
 type SurroundTheme = "dark" | "light" | "sepia";
 
 export default function ReaderPage() {
+  const location = useLocation();
+  const params = useParams<{ bookId: string }>();
+  const bookId = Number(params.bookId);
+  const isPreview = location.pathname.endsWith("/preview");
+  // Key by bookId + mode so switching books or opening preview resets page state and revokes old blobs cleanly.
+  return <ReaderView key={`${bookId}:${isPreview}`} bookId={bookId} isPreview={isPreview} />;
+}
+
+function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean }) {
   const { dict } = useT();
   const e = dict.ebook;
   const r = dict.readerUi;
   const navigate = useNavigate();
-  const location = useLocation();
   const queryClient = useQueryClient();
-  const params = useParams<{ bookId: string }>();
-  const bookId = Number(params.bookId);
-
-  const isPreview = location.pathname.endsWith("/preview");
 
   const [theme, setTheme] = useState<SurroundTheme>(() => {
     try {
@@ -55,6 +59,7 @@ export default function ReaderPage() {
   const sliderValue = draggingSliderValue ?? currentPage;
   const [pageLoading, setPageLoading] = useState<boolean>(true);
   const [pageError, setPageError] = useState<string | null>(null);
+  const [pageApiError, setPageApiError] = useState<ApiError | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -149,6 +154,7 @@ export default function ReaderPage() {
     async (pageToLoad: number) => {
       setPageLoading(true);
       setPageError(null);
+      setPageApiError(null);
 
       // Check preloaded cache first
       const cached = preloadedUrlsRef.current.get(pageToLoad);
@@ -159,6 +165,8 @@ export default function ReaderPage() {
           setPageLoading(false);
         };
         img.onerror = () => {
+          preloadedUrlsRef.current.delete(pageToLoad);
+          URL.revokeObjectURL(cached);
           setPageError(e.errorLoadingPage);
           setPageLoading(false);
         };
@@ -171,10 +179,6 @@ export default function ReaderPage() {
           ? await ebookApi.fetchPreviewPageBlobUrl(bookId, pageToLoad)
           : await ebookApi.fetchPageBlobUrl(bookId, pageToLoad);
 
-        // Revoke previous blob if any
-        if (activeBlobUrlRef.current && activeBlobUrlRef.current !== blobUrl) {
-          URL.revokeObjectURL(activeBlobUrlRef.current);
-        }
         activeBlobUrlRef.current = blobUrl;
         preloadedUrlsRef.current.set(pageToLoad, blobUrl);
 
@@ -184,12 +188,15 @@ export default function ReaderPage() {
           setPageLoading(false);
         };
         img.onerror = () => {
+          preloadedUrlsRef.current.delete(pageToLoad);
+          URL.revokeObjectURL(blobUrl);
           setPageError(e.errorLoadingPage);
           setPageLoading(false);
         };
         img.src = blobUrl;
       } catch (err) {
         const apiError = ApiError.from(err);
+        setPageApiError(apiError);
         setPageError(apiError.message || e.errorLoadingPage);
         setPageLoading(false);
       }
@@ -243,6 +250,10 @@ export default function ReaderPage() {
   // 3. Save progress (debounced)
   const saveProgressMutation = useMutation({
     mutationFn: (page: number) => ebookApi.saveProgress(bookId, page),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ebookKeys.library() });
+      void queryClient.invalidateQueries({ queryKey: ebookKeys.meta(bookId) });
+    },
   });
 
   const triggerProgressSave = useCallback(
@@ -282,6 +293,15 @@ export default function ReaderPage() {
         return false;
       }
 
+      if (jumpOpen) {
+        if (event.key === "Escape") setJumpOpen(false);
+        return;
+      }
+      const target = event.target;
+      if (target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) {
+        return;
+      }
+
       if (event.key === "ArrowLeft" || event.key === "PageUp") {
         event.preventDefault();
         prevPage();
@@ -301,7 +321,7 @@ export default function ReaderPage() {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [prevPage, nextPage, goToPage, totalPages, navigate, bookId]);
+  }, [prevPage, nextPage, goToPage, totalPages, navigate, bookId, jumpOpen]);
 
   // Prevent right-click / context menu
   const onContextMenu = (event: React.MouseEvent) => {
@@ -343,9 +363,9 @@ export default function ReaderPage() {
     );
   }
 
-  const apiErr = errorObj ? ApiError.from(errorObj) : null;
+  const apiErr = pageApiError ?? (errorObj ? ApiError.from(errorObj) : null);
   const isNotOwned = (!isPreview && metaData && !(metaData as EbookReaderMeta).owned) || apiErr?.status === 403;
-  const isDeviceLimit = apiErr?.status === 409 && (apiErr.message?.toLowerCase().includes("device") || apiErr.fieldErrors?.device);
+  const isDeviceLimit = apiErr?.status === 409 && (apiErr.message?.toLowerCase().includes("device") || Boolean(apiErr.fieldErrors?.device));
   const isProcessing = (!isPreview && metaData && (metaData as EbookReaderMeta).status === "processing") || (apiErr?.status === 409 && !isDeviceLimit);
   const isFailed = !isPreview && metaData && (metaData as EbookReaderMeta).status === "failed";
 

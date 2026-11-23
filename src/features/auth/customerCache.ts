@@ -9,5 +9,6 @@ const CUSTOMER_QUERY_ROOTS = new Set([
 /** Remove private data (and in-flight requests) before another customer uses this browser. */
 export function clearCustomerCache(client: QueryClient) {
   client.removeQueries({ predicate: (query) => CUSTOMER_QUERY_ROOTS.has(String(query.queryKey[0])) });
+  client.removeQueries({ queryKey: ["newsletter", "customer"] });
   setCoupon(null);
 }

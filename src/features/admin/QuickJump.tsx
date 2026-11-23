@@ -7,6 +7,7 @@ import { opsApi } from "@/api/endpoints/staffOps";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { navFor } from "./adminNav";
+import { portalPath, usePortal } from "./portal";
 import { useStaff } from "./staffSession";
 
 /*
@@ -18,7 +19,10 @@ import { useStaff } from "./staffSession";
 
 type Item = { key: string; group: "Pages" | "Orders" | "Books" | "Customers"; label: string; detail?: string; to: string; Icon: React.ComponentType<{ className?: string }> };
 
-const EXTRA_PAGES = [{ to: "/admin/security", label: "Security & sessions" }, { to: "/admin/assistant", label: "Staff assistant" }];
+const EXTRA_PAGES = [
+  { path: "security", label: "Security & sessions" },
+  { path: "assistant", label: "Staff assistant" },
+];
 
 export function QuickJump() {
   const [open, setOpen] = useState(false);
@@ -54,6 +58,7 @@ export function QuickJump() {
 
 function JumpDialog({ onClose }: { onClose: () => void }) {
   const session = useStaff();
+  const portal = usePortal();
   const navigate = useNavigate();
   const listId = useId();
   const [text, setText] = useState("");
@@ -67,7 +72,10 @@ function JumpDialog({ onClose }: { onClose: () => void }) {
 
   const items: Item[] = useMemo(() => {
     const needle = q.toLowerCase();
-    const pages = [...navFor(session?.user.role).flatMap((g) => g.items), ...EXTRA_PAGES.map((p) => ({ ...p, Icon: Search }))]
+    const pages = [
+      ...navFor(session?.user.role, portal).flatMap((g) => g.items),
+      ...EXTRA_PAGES.map((p) => ({ to: portalPath(portal, p.path), label: p.label, Icon: Search })),
+    ]
       .filter((p) => !needle || p.label.toLowerCase().includes(needle))
       .slice(0, needle ? 6 : 8)
       .map((p) => ({ key: `page:${p.to}`, group: "Pages" as const, label: p.label, to: p.to, Icon: p.Icon }));
@@ -75,14 +83,14 @@ function JumpDialog({ onClose }: { onClose: () => void }) {
     return [
       ...pages,
       ...(orders.data?.data ?? []).map((o) => ({
-        key: `order:${o.id}`, group: "Orders" as const, label: o.order_number ?? `#${o.id}`, detail: o.customer?.name ?? o.customer?.email ?? undefined, to: `/admin/orders/${o.id}`, Icon: Package,
+        key: `order:${o.id}`, group: "Orders" as const, label: o.order_number ?? `#${o.id}`, detail: o.customer?.name ?? o.customer?.email ?? undefined, to: portalPath(portal, `orders/${o.id}`), Icon: Package,
       })),
-      ...(books.data?.data ?? []).map((b) => ({ key: `book:${b.id}`, group: "Books" as const, label: b.title, to: `/admin/books/${b.id}`, Icon: BookCopy })),
+      ...(books.data?.data ?? []).map((b) => ({ key: `book:${b.id}`, group: "Books" as const, label: b.title, to: portalPath(portal, `books/${b.id}`), Icon: BookCopy })),
       ...(customers.data?.data ?? []).map((c) => ({
-        key: `customer:${c.id}`, group: "Customers" as const, label: c.name, detail: c.email ?? c.phone ?? undefined, to: `/admin/customers/${c.id}`, Icon: UserRound,
+        key: `customer:${c.id}`, group: "Customers" as const, label: c.name, detail: c.email ?? c.phone ?? undefined, to: portalPath(portal, `customers/${c.id}`), Icon: UserRound,
       })),
     ];
-  }, [q, search, session?.user.role, orders.data, books.data, customers.data]);
+  }, [q, search, session?.user.role, portal, orders.data, books.data, customers.data]);
 
   const current = Math.min(active, Math.max(items.length - 1, 0));
   const go = (item: Item | undefined) => {

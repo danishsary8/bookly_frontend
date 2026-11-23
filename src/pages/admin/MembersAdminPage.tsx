@@ -52,6 +52,7 @@ const AVAILABLE_PERMISSIONS: Array<{ key: string; label: string; detail: string 
   { key: "customers:view", label: "View Customers", detail: "View customer profiles, tags, and orders." },
   { key: "customers:manage", label: "Manage Customers", detail: "Add customer notes, edit tags, and manage customer accounts." },
   { key: "reviews:manage", label: "Manage Reviews", detail: "Approve, hide, or moderate customer book reviews." },
+  { key: "support:manage", label: "Manage Support", detail: "View and reply to customer support conversations and manage assistant FAQs." },
 ];
 
 function deviceIcon(device: string) {
@@ -302,7 +303,9 @@ function MemberLoginHistoryDialog({ member, onClose }: { member: StaffMember; on
   const [page, setPage] = useState(1);
   const historyQuery = useQuery(opsQueries.memberLoginHistory(member.id, { page, per_page: 10 }));
   const historyList = historyQuery.data?.data ?? [];
-  const meta = historyQuery.data?.meta;
+  const meta =
+    historyQuery.data?.meta ??
+    (historyQuery.data as unknown as { current_page?: number; last_page?: number; total?: number } | undefined);
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>

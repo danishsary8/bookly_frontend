@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { SESSION_EXPIRED_EVENT } from "@/api/client";
 import type { SessionKind } from "@/api/session";
+import { isWorkspacePath, portalBase, portalFromPathname, portalPath } from "@/features/admin/portal";
 import { withNext } from "@/lib/forms";
 import { toast } from "@/stores/toast";
 import { getDict } from "@/i18n";
@@ -35,11 +36,12 @@ export function SessionWatcher() {
         queryClient.removeQueries({ queryKey: ["staff"] });
         if (repeat) return;
         shownAt = Date.now();
-        const next = here.current.startsWith("/admin") ? here.current : "/admin";
+        const portal = portalFromPathname(here.current);
+        const next = isWorkspacePath(here.current) ? here.current : portalBase(portal);
         toast.info({
-          title: "Your staff session ended",
+          title: portal === "admin" ? "Your admin session ended" : "Your staff session ended",
           description: "Sign in again to carry on. Sessions last 12 hours.",
-          action: { label: "Sign in", href: `/admin/login?next=${encodeURIComponent(next)}` },
+          action: { label: "Sign in", href: `${portalPath(portal, "login")}?next=${encodeURIComponent(next)}` },
           duration: 10_000,
         });
         return;

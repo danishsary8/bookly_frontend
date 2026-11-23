@@ -102,6 +102,8 @@ export default function KhqrPayPage() {
     if (!paid) return;
     void queryClient.invalidateQueries({ queryKey: orderKeys.order(orderId) });
     void queryClient.invalidateQueries({ queryKey: ["orders"] });
+    void queryClient.invalidateQueries({ queryKey: ["ebooks", "library"] });
+    void queryClient.invalidateQueries({ queryKey: ["account", "coupons"] });
     const timer = window.setTimeout(() => navigate(`/account/orders/${orderId}`, { replace: true }), 3500);
     return () => window.clearTimeout(timer);
   }, [paid, orderId, navigate, queryClient]);

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Pagination } from "@/components/ui/pagination";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { usePortalPath } from "@/features/admin/portal";
 import { ListState, ListTabs, SearchBox, Segmented, TableCard, td, th, thead } from "@/features/admin/listKit";
 import { ReopenDialog } from "@/features/admin/ReopenAccount";
 import { useReopenCustomer } from "@/features/admin/useReopenCustomer";
@@ -31,6 +32,7 @@ const SIGN_IN: Record<string, string> = { password: "Password", google: "Google"
  */
 export default function CustomersAdminPage() {
   const { get, page, set, hrefFor } = useListParams();
+  const toPortal = usePortalPath();
   const [params] = useSearchParams();
   const q = get("q");
   const tag = get("tag");
@@ -174,7 +176,7 @@ export default function CustomersAdminPage() {
             {list.map((c) => (
               <tr key={c.id} className="hover:bg-surface-2/60">
                 <th scope="row" className={`${td} font-normal`}>
-                  <Link to={`/admin/customers/${c.id}`} className="font-semibold underline-offset-4 hover:text-primary hover:underline">
+                  <Link to={toPortal(`customers/${c.id}`)} className="font-semibold underline-offset-4 hover:text-primary hover:underline">
                     {c.name}
                   </Link>
                   <span className="block text-sm text-muted-foreground">{c.email ?? c.phone}</span>

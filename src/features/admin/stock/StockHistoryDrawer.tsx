@@ -9,6 +9,7 @@ import { Drawer, DrawerBody, DrawerContent, DrawerHeader, DrawerTitle } from "@/
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { formatLabel } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
+import { usePortalPath } from "@/features/admin/portal";
 import { formatUsd } from "@/stores/currency";
 
 interface VariantInfo {
@@ -29,6 +30,7 @@ export function StockHistoryDrawer({
   onOpenChange: (open: boolean) => void;
 }) {
   const [page, setPage] = useState(1);
+  const toPortal = usePortalPath();
   const variantId = variant?.id ?? 0;
 
   const history = useQuery({
@@ -147,14 +149,14 @@ export function StockHistoryDrawer({
                           <td className="max-w-[180px] px-3 py-2.5 text-xs">
                             {m.reference?.type === "order" ? (
                               <Link
-                                to={`/admin/orders/${m.reference.id}`}
+                                to={toPortal(`orders/${m.reference.id}`)}
                                 className="font-semibold text-primary underline-offset-2 hover:underline"
                               >
                                 {m.reference.order_number ?? `Order #${m.reference.id}`}
                               </Link>
                             ) : m.reference?.type === "return" ? (
                               <Link
-                                to={`/admin/returns/${m.reference.id}`}
+                                to={toPortal(`returns/${m.reference.id}`)}
                                 className="font-semibold text-primary underline-offset-2 hover:underline"
                               >
                                 Return #{m.reference.id}

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { usePortalPath } from "@/features/admin/portal";
 import { ListState, SearchBox, Segmented } from "@/features/admin/listKit";
 import { useListParams } from "@/features/admin/useListParams";
 import { orderDate } from "@/features/orders/format";
@@ -25,6 +26,7 @@ type Show = (typeof SHOW)[number]["value"];
 
 function ReviewRow({ review }: { review: StaffReview }) {
   const queryClient = useQueryClient();
+  const toPortal = usePortalPath();
   const toggle = useMutation({
     mutationFn: () => (review.is_visible ? opsApi.hideReview(review.id) : opsApi.showReview(review.id)),
     onSuccess: (saved) => {
@@ -47,13 +49,13 @@ function ReviewRow({ review }: { review: StaffReview }) {
           <span className="text-sm text-muted-foreground">{orderDate(review.created_at)}</span>
         </div>
         <p className="text-[15px]">
-          <Link to={`/admin/books/${review.book.id}`} className="font-semibold underline-offset-4 hover:text-primary hover:underline">
+          <Link to={toPortal(`books/${review.book.id}`)} className="font-semibold underline-offset-4 hover:text-primary hover:underline">
             {review.book.title ?? "Deleted book"}
           </Link>
           <span className="text-muted-foreground">
             {" "}
             · by{" "}
-            <Link to={`/admin/customers/${review.customer.id}`} className="underline-offset-4 hover:text-primary hover:underline">
+            <Link to={toPortal(`customers/${review.customer.id}`)} className="underline-offset-4 hover:text-primary hover:underline">
               {review.customer.name}
             </Link>
           </span>

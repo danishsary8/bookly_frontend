@@ -13,11 +13,18 @@ export interface MenuCounts {
   low_stock: number;
 }
 
-/** Which menu item shows which count. */
+/** Which menu item shows which count (matches both /admin/* and /staff/* paths). */
+const ORDERS_COUNT = { key: "pending_orders" as const, label: (n: number) => `${n} pending ${n === 1 ? "order" : "orders"}` };
+const RETURNS_COUNT = { key: "open_returns" as const, label: (n: number) => `${n} open ${n === 1 ? "return" : "returns"}` };
+const STOCK_COUNT = { key: "low_stock" as const, label: (n: number) => `${n} low on stock` };
+
 export const COUNT_FOR: Record<string, { key: keyof MenuCounts; label: (n: number) => string }> = {
-  "/admin/orders": { key: "pending_orders", label: (n) => `${n} pending ${n === 1 ? "order" : "orders"}` },
-  "/admin/returns": { key: "open_returns", label: (n) => `${n} open ${n === 1 ? "return" : "returns"}` },
-  "/admin/stock": { key: "low_stock", label: (n) => `${n} low on stock` },
+  "/admin/orders": ORDERS_COUNT,
+  "/staff/orders": ORDERS_COUNT,
+  "/admin/returns": RETURNS_COUNT,
+  "/staff/returns": RETURNS_COUNT,
+  "/admin/stock": STOCK_COUNT,
+  "/staff/stock": STOCK_COUNT,
 };
 
 export function useMenuCounts(enabled: boolean) {

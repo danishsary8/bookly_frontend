@@ -15,6 +15,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { usePortalPath } from "@/features/admin/portal";
 import { orderDate, orderDateTime } from "@/features/orders/format";
 import { formatLabel } from "@/lib/catalog";
 import { formatUsd } from "@/stores/currency";
@@ -188,17 +189,18 @@ function ReturnProgress({ status }: { status: StaffReturn["status"] }) {
  */
 export default function ReturnAdminPage() {
   const id = Number(useParams().id);
+  const toPortal = usePortalPath();
   const valid = Number.isInteger(id) && id > 0;
   const item = useQuery({ ...opsQueries.return(id), enabled: valid });
   const [action, setAction] = useState<Action | null>(null);
   const t = useT().dict.returnsAdmin;
   const back = (
-    <Link to="/admin/returns" className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+    <Link to={toPortal("returns")} className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline">
       <ArrowLeft className="size-4" aria-hidden="true" /> All returns
     </Link>
   );
 
-  if (!valid || (item.isError && ApiError.from(item.error).kind === "not_found")) return <NotFoundState what="return" backTo="/admin/returns" backLabel="All returns" />;
+  if (!valid || (item.isError && ApiError.from(item.error).kind === "not_found")) return <NotFoundState what="return" backTo={toPortal("returns")} backLabel="All returns" />;
   if (item.isError) return <ErrorState error={item.error} onRetry={() => item.refetch()} headingLevel="h1" showHomeLink={false} />;
   if (!item.data)
     return (
@@ -234,7 +236,7 @@ export default function ReturnAdminPage() {
         <span className="flex flex-wrap items-center gap-2">
           <ReturnStatusBadge status={r.status} />
           Order
-          <Link to={`/admin/orders/${r.order_id}`} className="font-semibold tabular-nums text-primary underline-offset-4 hover:underline">
+          <Link to={toPortal(`orders/${r.order_id}`)} className="font-semibold tabular-nums text-primary underline-offset-4 hover:underline">
             {r.order_number}
           </Link>
           · requested {orderDate(r.requested_at)}
@@ -290,7 +292,7 @@ export default function ReturnAdminPage() {
                         <span>
                           Code{" "}
                           <Link
-                            to={`/admin/coupons?q=${encodeURIComponent(r.store_credit.code ?? "")}`}
+                            to={toPortal(`coupons?q=${encodeURIComponent(r.store_credit.code ?? "")}`)}
                             className="font-mono font-semibold text-primary underline-offset-4 hover:underline"
                           >
                             {r.store_credit.code}
@@ -340,7 +342,7 @@ export default function ReturnAdminPage() {
           </h2>
           {r.customer ? (
             <>
-              <Link to={`/admin/customers/${r.customer.id}`} className="font-semibold text-primary underline-offset-4 hover:underline">
+              <Link to={toPortal(`customers/${r.customer.id}`)} className="font-semibold text-primary underline-offset-4 hover:underline">
                 {r.customer.name}
               </Link>
               <p className="text-[15px] text-muted-foreground">{r.customer.email}</p>

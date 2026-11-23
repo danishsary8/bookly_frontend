@@ -25,10 +25,12 @@ const count = (n: number) => Math.round(n).toLocaleString("en-US");
 const dateFmt = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Phnom_Penh" });
 const SPEEDS: InventoryDays[] = [7, 14, 30, 60, 90];
 
-export function InventoryTab() {
+export function InventoryTab({ days: controlledDays, onDaysChange }: { days?: InventoryDays; onDaysChange?: (days: InventoryDays) => void } = {}) {
   const { dict } = useT();
   const t = dict.inventoryReport;
-  const [days, setDays] = useState<InventoryDays>(30);
+  const [internalDays, setInternalDays] = useState<InventoryDays>(30);
+  const days = controlledDays ?? internalDays;
+  const setDays = onDaysChange ?? setInternalDays;
   const query = useQuery(inventoryQuery(days));
 
   if (query.isError && ApiError.from(query.error).status === 404) {

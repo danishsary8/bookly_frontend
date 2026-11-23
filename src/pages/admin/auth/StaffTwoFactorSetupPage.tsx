@@ -11,18 +11,20 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StaffAuthFrame } from "@/features/admin/StaffAuthFrame";
 import { useStaffSignOut } from "@/features/admin/staffSession";
-import { adminNext } from "@/features/admin/adminNext";
+import { portalNext, portalPath, usePortal, type Portal } from "@/features/admin/portal";
 import { toast } from "@/stores/toast";
 
 /** The setup key in groups of four, easier to type into an app by hand. */
 const grouped = (secret: string) => secret.replace(/(.{4})/g, "$1 ").trim();
 
 /*
- * /admin/two-factor: first sign-in for a staff member. Shows a QR code for the
- * authenticator app (and the key to type by hand), then confirms with a code.
- * The QR library is loaded only here.
+ * /admin/two-factor and /staff/two-factor: first sign-in for a workspace member.
+ * Shows a QR code for the authenticator app (and the key to type by hand), then
+ * confirms with a code. The QR library is loaded only here.
  */
-export default function StaffTwoFactorSetupPage() {
+export default function StaffTwoFactorSetupPage({ portal }: { portal?: Portal } = {}) {
+  const routePortal = usePortal();
+  const activePortal = portal ?? routePortal;
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const signOut = useStaffSignOut();
@@ -57,7 +59,7 @@ export default function StaffTwoFactorSetupPage() {
     onSuccess: (result) => {
       updateSessionUser("staff", result.staff);
       toast.success({ title: "Two-step verification is on", description: "From now on you'll enter a code from your app when you sign in." });
-      navigate(adminNext(params.get("next")), { replace: true });
+      navigate(portalNext(activePortal, params.get("next")), { replace: true });
     },
     onError: (error) => {
       setCode("");
@@ -89,10 +91,11 @@ export default function StaffTwoFactorSetupPage() {
 
   return (
     <StaffAuthFrame
+      portal={activePortal}
       title="Set up two-step verification"
-      lead="Staff accounts need a code from an authenticator app (such as Google Authenticator, Microsoft Authenticator or 1Password) at every sign-in."
+      lead={`${activePortal === "admin" ? "Admin" : "Staff"} accounts need a code from an authenticator app (such as Google Authenticator, Microsoft Authenticator or 1Password) at every sign-in.`}
       footer={
-        <Button variant="link" onClick={() => void signOut().then(() => navigate("/admin/login", { replace: true }))}>
+        <Button variant="link" onClick={() => void signOut().then(() => navigate(portalPath(activePortal, "login"), { replace: true }))}>
           Sign out and do this later
         </Button>
       }

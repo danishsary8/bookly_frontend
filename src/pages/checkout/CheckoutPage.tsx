@@ -164,6 +164,10 @@ export default function CheckoutPage() {
       queryClient.removeQueries({ queryKey: cartKeys.cart() });
       queryClient.removeQueries({ queryKey: ["cart", "preview"] });
       queryClient.removeQueries({ queryKey: ["orders"] });
+      void queryClient.invalidateQueries({ queryKey: ["account", "coupons"] });
+      void queryClient.invalidateQueries({ queryKey: ["account", "store-credits"] });
+      void queryClient.invalidateQueries({ queryKey: ["account", "referrals"] });
+      void queryClient.invalidateQueries({ queryKey: ["ebooks", "library"] });
       // A KHQR order waits for payment: straight to its QR page.
       if (order.payment_method === "khqr" && order.status === "pending") navigate(`/account/orders/${order.id}/pay`, { replace: true });
       // The order's lines carry no covers, so the cart's go along for the thank-you page (display only).
@@ -210,6 +214,10 @@ export default function CheckoutPage() {
   const data = preview.data;
   // The offer/coupon part of the discount; the KHQR part has its own row.
   const otherDiscount = Math.max(0, Number(data?.discount?.usd ?? 0) - Number(data?.khqr_discount?.usd ?? 0));
+  const otherDiscountKhr =
+    data?.discount?.khr != null
+      ? String(Math.max(0, Math.round(Number(data.discount.khr) - Number(data.khqr_discount?.khr ?? 0))))
+      : null;
   const blocked = cart.data.can_checkout === false || data?.can_checkout === false;
   // A retry after a lost response replays the same key, so it never depends on today's cart.
   const ready = (preview.data?.requires_shipping === false || phoneValid) && Boolean(addressId) && (unconfirmed || (Boolean(data) && !blocked && !preview.isFetching && !(paymentMethod === "cod" && codBlocked)));
@@ -302,7 +310,7 @@ export default function CheckoutPage() {
             </Step>
           </div>
 
-          <aside aria-labelledby="checkout-summary" className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:col-span-5 xl:col-span-4">
+          <aside aria-labelledby="checkout-summary" className="checkout-summary-aside lg:sticky lg:col-span-5 xl:col-span-4">
             <FreeGiftLine gift={data?.free_gift} />
             <div className="checkout-summary-card shop-card grid gap-4 rounded-2xl border border-border bg-card p-5 short:gap-3 short:py-4 sm:px-6">
               <div className="checkout-summary-heading group flex items-end justify-between gap-4">
@@ -365,7 +373,7 @@ export default function CheckoutPage() {
                   {otherDiscount > 0 ? (
                     <Row
                       label={data.applied === "offer" && data.offer ? offerLineText(dict, data.offer) : k.discount}
-                      amount={{ usd: otherDiscount.toFixed(2), khr: null }}
+                      amount={{ usd: otherDiscount.toFixed(2), khr: otherDiscountKhr }}
                       negative
                       className="text-success"
                     />
@@ -387,7 +395,9 @@ export default function CheckoutPage() {
                     />
                   ) : null}
                   {Number(data.tax?.usd) > 0 ? <Row label={<span className="text-muted-foreground">{k.tax}</span>} amount={data.tax} /> : null}
-                  {Number(data.referral_discount?.usd) > 0 ? <div className="flex justify-between gap-3 text-sm text-success"><dt>{dict.credit.referralDiscount}</dt><dd>{formatMoney(data.referral_discount?.usd, data.referral_discount?.khr, currency)}</dd></div> : null}
+                  {Number(data.referral_discount?.usd) > 0 ? (
+                    <Row label={dict.credit.referralDiscount} amount={data.referral_discount} negative className="text-success" />
+                  ) : null}
                   {Number(data.credit_used?.usd) > 0 ? <><Row label={dict.credit.used} amount={data.credit_used} negative /><Row label={dict.credit.due} amount={data.payment_due} /></> : null}
                   <div className="checkout-grand-total mt-1.5 flex items-baseline justify-between gap-4 border-t border-border pt-3">
                     <dt className="font-semibold">{k.total}</dt>
@@ -413,7 +423,7 @@ export default function CheckoutPage() {
 
               <div className="checkout-summary-actions">
                 <CtaGlare block>
-                  <Button variant="default" size="lg" className="group h-12 w-full justify-between rounded-xl px-4 text-sm font-semibold" onClick={() => { setFormError(null); place.mutate(); }} disabled={!ready} loading={place.isPending}>
+                  <Button variant="cta" size="lg" className="group h-12 w-full justify-between rounded-xl px-4 text-sm font-semibold" onClick={() => { setFormError(null); place.mutate(); }} disabled={!ready} loading={place.isPending}>
                     {place.isPending ? dict.checkout.placingOrder : paymentMethod === "khqr" ? k.placeAndPay : dict.checkout.placeOrder}
                     <ArrowRight className="size-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transform-none" aria-hidden="true" />
                   </Button>
@@ -428,8 +438,8 @@ export default function CheckoutPage() {
               </div>
               {shipsSomething && data?.estimated_delivery ? (
                 <div className="checkout-arrival checkout-summary-arrival flex items-start gap-3 rounded-xl border border-border bg-card px-4 py-3">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-lapis-tint text-primary">
-                    <Truck className="size-[18px]" aria-hidden="true" />
+                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-lapis-tint text-primary">
+                    <Truck className="size-4" aria-hidden="true" />
                   </span>
                   <div className="grid min-w-0 gap-0.5">
                     <p className="text-sm font-semibold leading-snug text-foreground">
@@ -437,11 +447,6 @@ export default function CheckoutPage() {
                     </p>
                     <p className="text-sm leading-snug text-muted-foreground">{k.estDelivery(data.estimated_delivery.formatted)}</p>
                   </div>
-                  {data.is_free_shipping ? (
-                    <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded bg-success-tint px-2 py-1 text-xs font-bold uppercase tracking-[0.08em] text-success">
-                      <Check className="size-3.5" aria-hidden="true" /> {dict.shopping.freeDelivery}
-                    </span>
-                  ) : null}
                 </div>
               ) : null}
             </div>

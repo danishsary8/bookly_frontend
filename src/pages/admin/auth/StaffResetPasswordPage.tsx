@@ -11,23 +11,26 @@ import { PasswordChecklist } from "@/features/auth/PasswordChecklist";
 import { ResendCode } from "@/features/auth/ResendCode";
 import { forgotPasswordSchema, resetPasswordSchema, type ForgotPasswordValues, type ResetPasswordValues } from "@/features/auth/schemas";
 import { StaffAuthFrame } from "@/features/admin/StaffAuthFrame";
+import { portalLabel, portalPath, usePortal, type Portal } from "@/features/admin/portal";
 import { applyApiErrors } from "@/lib/forms";
 import { toast } from "@/stores/toast";
 
-const backToSignIn = (
-  <Link to="/admin/login" className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
-    Back to staff sign in
-  </Link>
-);
-
 /*
- * /admin/reset-password: email → 6-digit code + new password, on one page.
- * Two-step verification stays on after a reset (the API's rule): a reset email
+ * /admin/reset-password and /staff/reset-password: email → 6-digit code + new password,
+ * on one page. Two-step verification stays on after a reset (the API's rule): a reset email
  * alone never opens a staff account.
  * "I already have a code" skips sending: new staff get a setup code (72 hours)
  * in their invitation email, and sending a fresh code would cancel it.
  */
-export default function StaffResetPasswordPage() {
+export default function StaffResetPasswordPage({ portal }: { portal?: Portal } = {}) {
+  const routePortal = usePortal();
+  const activePortal = portal ?? routePortal;
+  const loginHref = portalPath(activePortal, "login");
+  const backToSignIn = (
+    <Link to={loginHref} className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline">
+      Back to {portalLabel(activePortal).toLowerCase()} sign in
+    </Link>
+  );
   const navigate = useNavigate();
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [hadCode, setHadCode] = useState(false);
@@ -71,7 +74,7 @@ export default function StaffResetPasswordPage() {
           ? { title: "Password saved", description: "Sign in with it. If two-step verification isn't set up yet, you'll do that next." }
           : { title: "Password updated", description: "Sign in with your new password and your authenticator code." },
       );
-      navigate("/admin/login", { replace: true });
+      navigate(loginHref, { replace: true });
     } catch (error) {
       const message = applyApiErrors(error, reset.setError, ["code", "password", "password_confirmation"]);
       if (message && /code/i.test(message)) reset.setError("code", { type: "server", message });
@@ -81,7 +84,7 @@ export default function StaffResetPasswordPage() {
 
   if (!sentTo) {
     return (
-      <StaffAuthFrame title="Reset your password" lead="Enter your work email and we'll send you a 6-digit code." footer={backToSignIn}>
+      <StaffAuthFrame portal={activePortal} title="Reset your password" lead="Enter your work email and we'll send you a 6-digit code." footer={backToSignIn}>
         <form onSubmit={(event) => void ask.handleSubmit(sendCode)(event)} noValidate className="grid gap-5">
           {formError ? <FormAlert ref={alertRef} title={formError} /> : null}
           <TextField label="Work email" type="email" autoComplete="username" inputMode="email" error={ask.formState.errors.email?.message} {...ask.register("email")} />
@@ -101,6 +104,7 @@ export default function StaffResetPasswordPage() {
 
   return (
     <StaffAuthFrame
+      portal={activePortal}
       title={hadCode ? "Choose your password" : "Set a new password"}
       lead={
         hadCode ? (

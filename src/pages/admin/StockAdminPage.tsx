@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Pagination } from "@/components/ui/pagination";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { usePortalPath } from "@/features/admin/portal";
 import { RestockDialog } from "@/features/admin/stock/RestockDialog";
 import { StockHistoryDrawer } from "@/features/admin/stock/StockHistoryDrawer";
 import { formatLabel } from "@/lib/catalog";
@@ -24,6 +25,7 @@ type FilterStatus = "all" | "low" | "out";
 
 export default function StockAdminPage() {
   const [params, setParams] = useSearchParams();
+  const toPortal = usePortalPath();
   const q = params.get("q") ?? "";
   const rawStatus = params.get("status");
   const status: FilterStatus = rawStatus === "low" || rawStatus === "out" ? rawStatus : "all";
@@ -101,7 +103,7 @@ export default function StockAdminPage() {
               className={cn(
                 "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 status === "low"
-                  ? "bg-warning text-warning-foreground shadow-xs"
+                  ? "bg-warning-tint text-warning shadow-xs"
                   : "text-muted-foreground hover:bg-secondary hover:text-foreground"
               )}
             >
@@ -113,7 +115,7 @@ export default function StockAdminPage() {
               className={cn(
                 "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 status === "out"
-                  ? "bg-destructive text-destructive-foreground shadow-xs"
+                  ? "bg-destructive-tint text-destructive shadow-xs"
                   : "text-muted-foreground hover:bg-secondary hover:text-foreground"
               )}
             >
@@ -185,7 +187,7 @@ export default function StockAdminPage() {
                         <CoverThumb src={item.cover_image_url} className="w-9 shrink-0" />
                         <div className="min-w-0">
                           <Link
-                            to={`/admin/books/${item.book_id}`}
+                            to={toPortal(`books/${item.book_id}`)}
                             className="block truncate font-semibold text-foreground underline-offset-2 hover:text-primary hover:underline"
                           >
                             {item.book_title}

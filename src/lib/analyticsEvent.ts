@@ -7,7 +7,7 @@ import type { BeforeSendEvent } from "@vercel/analytics/react";
  */
 export function cleanEvent(event: BeforeSendEvent): BeforeSendEvent | null {
   const url = new URL(event.url);
-  if (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) return null;
+  if (url.pathname === "/admin" || url.pathname.startsWith("/admin/") || url.pathname === "/staff" || url.pathname.startsWith("/staff/")) return null;
   url.search = "";
   url.hash = "";
   return { ...event, url: url.toString() };

@@ -35,10 +35,35 @@ function useOpenedOnce(panel: ShellPanel, which: ShellPanel) {
 function PageFallback() {
   const { dict } = useT();
   return (
-    <SkeletonGroup label={dict.shell.loadingPage} className="container-shell grid gap-4 py-12">
-      <Skeleton className="h-3.5 w-48" />
-      <Skeleton className="h-9 w-[40%]" />
-      <Skeleton className="h-5 w-[70%]" />
+    <SkeletonGroup
+      label={dict.shell.loadingPage}
+      className="container-shell grid min-h-[60vh] content-start gap-8 py-10 sm:py-12"
+    >
+      <div className="grid gap-3">
+        <Skeleton className="h-3.5 w-36 rounded-full" />
+        <Skeleton className="h-9 w-[min(22rem,75%)] rounded-lg" />
+        <Skeleton className="h-4 w-[min(32rem,92%)] rounded-full" />
+      </div>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div
+            key={i}
+            className={cn(
+              "grid gap-3 rounded-xl border border-border bg-card p-3",
+              i === 3 && "hidden lg:grid",
+              i === 2 && "hidden sm:grid",
+            )}
+          >
+            <Skeleton className="aspect-[2/3] w-full rounded-md" />
+            <Skeleton className="h-3 w-1/3 rounded-full" />
+            <Skeleton className="h-4 w-4/5 rounded-md" />
+            <div className="mt-1 flex items-center justify-between gap-2">
+              <Skeleton className="h-4 w-16 rounded-full" />
+              <Skeleton className="size-9 rounded-lg" />
+            </div>
+          </div>
+        ))}
+      </div>
     </SkeletonGroup>
   );
 }

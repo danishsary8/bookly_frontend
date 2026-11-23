@@ -309,7 +309,7 @@ export interface DailySales {
 export interface StaffNotification {
   id: string;
   type: string;
-  data: { message?: string; book_id?: number; title?: string; format?: string; stock_quantity?: number };
+  data: { message?: string; book_id?: number; order_id?: number; title?: string; format?: string; stock_quantity?: number };
   read_at: string | null;
   created_at: string;
 }
@@ -423,7 +423,8 @@ export const staffKeys = {
 };
 
 export const staffAuthApi = {
-  login: (email: string, password: string) => api.post<StaffLoginResult>("/staff/auth/login", { email, password }),
+  login: (email: string, password: string, portal?: StaffRole) =>
+    api.post<StaffLoginResult>("/staff/auth/login", portal ? { email, password, portal } : { email, password }),
   challenge: (challenge_token: string, code: string) => api.post<StaffSignedIn>("/staff/auth/two-factor/challenge", { challenge_token, code }),
   setupTwoFactor: () => api.post<TwoFactorSetup>("/staff/auth/two-factor/setup", {}),
   confirmTwoFactor: (code: string) => api.post<{ message: string; staff: StaffUser }>("/staff/auth/two-factor/confirm", { code }),

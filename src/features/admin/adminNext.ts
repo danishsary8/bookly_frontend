@@ -1,9 +1,6 @@
-import { safeNext } from "@/lib/forms";
+import { portalNext } from "./portal";
 
-const AUTH_PAGES = /^\/admin\/(login|two-factor|reset-password)(\/|$)/;
+export { portalNext };
 
-/** Where to go after signing in: an /admin page from ?next=, never back to an auth page. */
-export const adminNext = (next: string | null | undefined) => {
-  const safe = safeNext(next, "");
-  return safe.startsWith("/admin") && !AUTH_PAGES.test(safe) ? safe : "/admin";
-};
+/** Where to go after signing in on /admin: an /admin page from ?next=, never back to an auth page. */
+export const adminNext = (next: string | null | undefined) => portalNext("admin", next);

@@ -17,7 +17,7 @@ export function EbookPanel({ book }: { book: StaffBook }) {
   const isAdmin = useStaff()?.user.role === "admin";
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadPercent, setUploadPercent] = useState<number | null>(null);
-  const [previewInput, setPreviewInput] = useState<string>("");
+  const [previewInput, setPreviewInput] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
 
@@ -99,7 +99,8 @@ export function EbookPanel({ book }: { book: StaffBook }) {
   const handleSavePreview = (e: React.FormEvent) => {
     e.preventDefault();
     if (!ebook) return;
-    const trimmed = previewInput.trim();
+    const raw = previewInput !== null ? previewInput : ebook.preview_pages ? String(ebook.preview_pages) : "";
+    const trimmed = raw.trim();
     if (trimmed === "") {
       previewMutation.mutate(null);
       return;
@@ -209,8 +210,8 @@ export function EbookPanel({ book }: { book: StaffBook }) {
                 type="number"
                 min="1"
                 max={ebook.page_count}
-                placeholder={ebook.preview_pages ? String(ebook.preview_pages) : `Default (${ebook.preview_limit})`}
-                value={previewInput}
+                placeholder={`Default (${ebook.preview_limit})`}
+                value={previewInput !== null ? previewInput : ebook.preview_pages ? String(ebook.preview_pages) : ""}
                 onChange={(e) => {
                   setPreviewInput(e.target.value);
                   setPreviewError(null);

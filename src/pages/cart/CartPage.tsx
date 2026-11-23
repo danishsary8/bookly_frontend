@@ -1,6 +1,6 @@
 import "./cart-page.css";
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, ArrowLeft, ArrowRight, BadgePercent, ShieldCheck, ShoppingBag, TicketPercent } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, BadgePercent, ShieldCheck, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { catalogQueries } from "@/api/endpoints/catalog";
@@ -25,8 +25,8 @@ import { cartTotals } from "@/features/offers/cartTotals";
 import { CouponNotUsedNote, OfferNudge } from "@/features/offers/offerText";
 import { offerLineText } from "@/features/offers/offerLineText";
 import { PromoReminder } from "@/features/promotions/PromoReminder";
-import { KhqrHint, RewardCouponSuggestion, RewardNudge } from "@/features/rewards/RewardBits";
-import { useUsableRewardCoupon } from "@/features/rewards/useUsableRewardCoupon";
+import { KhqrHint, RewardNudge } from "@/features/rewards/RewardBits";
+import { useUsableRewardCoupons } from "@/features/rewards/useUsableRewardCoupon";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
@@ -59,7 +59,6 @@ function Summary({ check, setCheck, ctaRef }: { check: CouponCheck | null; setCh
   const c = dict.cartPage;
   const { cart } = useUsableCart();
   const coupon = useCoupon();
-  const [couponOpen, setCouponOpen] = useState(false);
   const data = cart.data!;
   const totals = cartTotals(data, coupon && check ? check : null);
   const discount = totals.discount;
@@ -67,12 +66,7 @@ function Summary({ check, setCheck, ctaRef }: { check: CouponCheck | null; setCh
   const freeDelivery = totals.freeShipping?.is_free === true;
   // Changes whenever lines or quantities change, so the coupon is re-checked.
   const cartVersion = (data.items ?? []).map((i) => `${i.id}:${i.quantity}`).join(",") + `|${data.subtotal_usd}`;
-  const showCoupon = Boolean(coupon) || couponOpen;
-  const reward = useUsableRewardCoupon();
-
-  useEffect(() => {
-    if (couponOpen && !coupon) document.getElementById("coupon-code")?.focus();
-  }, [couponOpen, coupon]);
+  const savedCoupons = useUsableRewardCoupons();
 
   return (
     <aside aria-labelledby="summary-title" className="shop-card overflow-hidden rounded-2xl border border-border bg-card lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
@@ -90,23 +84,7 @@ function Summary({ check, setCheck, ctaRef }: { check: CouponCheck | null; setCh
         <FreeGiftLine gift={data.free_gift} />
         <OfferNudge nudge={data.pricing?.nudge} className="short:py-1.5" />
         <CartDeliveryEstimate version={cartVersion} coupon={coupon} className="short:gap-2" barClassName="short:gap-1.5 short:p-2.5" />
-        {showCoupon ? (
-          <div id="cart-coupon">
-            <CouponField cartVersion={cartVersion} onChecked={setCheck} />
-          </div>
-        ) : reward ? (
-          <RewardCouponSuggestion coupon={reward} />
-        ) : (
-          <button
-            type="button"
-            aria-expanded={false}
-            aria-controls="cart-coupon"
-            onClick={() => setCouponOpen(true)}
-            className="-my-1 inline-flex min-h-11 items-center gap-2 justify-self-start rounded-md text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:min-h-9"
-          >
-            <TicketPercent className="size-4" aria-hidden="true" /> {c.haveCoupon}
-          </button>
-        )}
+        <CouponField cartVersion={cartVersion} onChecked={setCheck} savedCoupons={savedCoupons} />
         <CouponNotUsedNote code={totals.couponNotUsed} />
         <dl className="grid gap-1.5 border-t border-border pt-3 text-[15px] short:gap-1 short:pt-2.5">
           <div className="flex justify-between gap-4">
@@ -156,7 +134,7 @@ function Summary({ check, setCheck, ctaRef }: { check: CouponCheck | null; setCh
             to="/checkout"
             aria-disabled={blocked || undefined}
             tabIndex={blocked ? -1 : undefined}
-            className={cn(buttonVariants({ variant: "default", size: "lg" }), "h-12 w-full rounded-xl text-sm font-semibold", blocked && "pointer-events-none opacity-40")}
+            className={cn(buttonVariants({ variant: "cta", size: "lg" }), "h-12 w-full rounded-xl text-sm font-semibold", blocked && "pointer-events-none opacity-40")}
           >
             {dict.cart.checkout} <ArrowRight aria-hidden="true" />
           </Link>
@@ -207,14 +185,14 @@ function StickyCheckoutBar({ totals, visible, barRef }: { totals: Totals; visibl
 
 /* Shows the bar while the summary's button is below the screen (never at lg and up). Writes the bar's height to
    --bottom-bar on <html> so the page's padding and the support bubble can make room. */
-function useStickyBar() {
+function useStickyBar(ready: boolean) {
   const ctaRef = useRef<HTMLAnchorElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const cta = ctaRef.current;
-    if (!cta || typeof IntersectionObserver === "undefined") return;
+    if (!ready || !cta || typeof IntersectionObserver === "undefined") return;
     const wide = window.matchMedia("(min-width: 1024px)");
     let below = false;
     const update = () => setVisible(below && !wide.matches);
@@ -228,7 +206,7 @@ function useStickyBar() {
       io.disconnect();
       wide.removeEventListener("change", update);
     };
-  });
+  }, [ready]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -254,7 +232,8 @@ function CartContents() {
   const [confirmClear, setConfirmClear] = useState(false);
   const [check, setCheck] = useState<CouponCheck | null>(null);
   const totals = useCartTotals(check);
-  const bar = useStickyBar();
+  const hasItems = Boolean(cart.data?.items?.length && totals);
+  const bar = useStickyBar(hasItems);
 
   if (cart.isPending) {
     return (

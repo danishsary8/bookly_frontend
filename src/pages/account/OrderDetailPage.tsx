@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Banknote, FileText, RotateCcw, Star, XCircle, QrCode } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { orderQueries } from "@/api/endpoints/orders";
 import { ApiError } from "@/api/errors";
-import type { Order } from "@/api/types";
+import { useSession } from "@/api/session";
+import type { Customer, Order } from "@/api/types";
 import { NotFoundState } from "@/components/catalog/NotFoundState";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { BuyAgainButton } from "@/features/orders/BuyAgainButton";
 import { CancelOrderDialog } from "@/features/orders/CancelOrderDialog";
 import { DeliveryAddressCard, OrderItemsCard } from "@/features/orders/OrderSummary";
 import { OrderTimeline } from "@/features/orders/OrderTimeline";
+import { markOrderSeen } from "@/features/orders/orderNotifications";
 import { RewardCouponCard } from "@/features/rewards/RewardBits";
 import { orderDate } from "@/features/orders/format";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -57,11 +59,16 @@ function ReturnEntry({ order }: { order: Order }) {
 export default function OrderDetailPage() {
   const id = Number(useParams().id);
   const valid = Number.isInteger(id) && id > 0;
+  const session = useSession<Customer>("customer");
   const order = useQuery({ ...orderQueries.order(id), enabled: valid });
   const [cancelOpen, setCancelOpen] = useState(false);
   const { dict, locale } = useT();
   const t = dict.orders;
   useDocumentTitle(order.data ? t.orderNumber(order.data.order_number ?? "") : t.order);
+
+  useEffect(() => {
+    if (order.data) markOrderSeen(session?.user?.id, order.data);
+  }, [order.data, session?.user?.id]);
 
   if (!valid || (order.isError && ApiError.from(order.error).kind === "not_found")) {
     return <NotFoundState what={dict.nouns.whatOrder} backTo="/account/orders" backLabel={t.seeAll} />;
@@ -136,7 +143,12 @@ export default function OrderDetailPage() {
                 : undefined
             }
           />
-          <OrderTimeline history={o.status_history ?? []} />
+          <OrderTimeline
+            history={o.status_history ?? []}
+            status={o.status}
+            paymentMethod={o.payment_method}
+            estimatedDelivery={o.estimated_delivery}
+          />
         </div>
         <div className="grid content-start gap-6">
           <RewardCouponCard coupon={o.reward_coupon} />

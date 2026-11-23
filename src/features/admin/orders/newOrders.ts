@@ -2,6 +2,7 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { opsApi } from "@/api/endpoints/staffOps";
 import type { StaffUser } from "@/api/endpoints/staff";
+import { portalPath, type Portal } from "@/features/admin/portal";
 import { toast } from "@/stores/toast";
 
 /*
@@ -43,7 +44,8 @@ export function useIsNewOrder() {
 export const canViewOrders = (user: StaffUser | undefined) =>
   !!user && (user.role === "admin" || !user.permissions || user.permissions.includes("orders:view"));
 
-export function useNewOrderWatch(user: StaffUser | undefined) {
+export function useNewOrderWatch(user: StaffUser | undefined, portal?: Portal) {
+  const activePortal: Portal = portal ?? (user?.role === "staff" ? "staff" : "admin");
   const queryClient = useQueryClient();
   const newest = useQuery({
     queryKey: ["staff", "new-order-watch"],
@@ -69,9 +71,9 @@ export function useNewOrderWatch(user: StaffUser | undefined) {
     toast.info({
       title: count === 1 ? `New order ${top.order_number}` : `${count} new orders`,
       description: count === 1 ? [top.customer?.name, top.item_count === 1 ? "1 item" : `${top.item_count} items`].filter(Boolean).join(" · ") : undefined,
-      action: { label: count === 1 ? "View order" : "View orders", href: count === 1 ? `/admin/orders/${id}` : "/admin/orders" },
+      action: { label: count === 1 ? "View order" : "View orders", href: count === 1 ? portalPath(activePortal, `orders/${id}`) : portalPath(activePortal, "orders") },
     });
     void queryClient.invalidateQueries({ queryKey: ["staff", "orders"] });
     void queryClient.invalidateQueries({ queryKey: ["staff", "dashboard"] });
-  }, [newest.data, queryClient]);
+  }, [newest.data, queryClient, activePortal]);
 }

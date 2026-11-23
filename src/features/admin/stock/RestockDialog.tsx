@@ -11,6 +11,7 @@ import { FormAlert } from "@/components/form/FormAlert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatLabel } from "@/lib/catalog";
+import { usePortalPath } from "@/features/admin/portal";
 import { toast } from "@/stores/toast";
 
 interface RestockVariantInfo {
@@ -53,6 +54,7 @@ export function RestockDialog({
   onRestocked?: () => void;
 }) {
   const queryClient = useQueryClient();
+  const toPortal = usePortalPath();
   const { dict } = useT();
   const ts = dict.suppliers;
   // Active suppliers to pick from; on an API without suppliers (404) the free-text field stays.
@@ -201,7 +203,7 @@ export function RestockDialog({
                   value={values.supplier_choice}
                   onChange={(e) => set({ supplier_choice: e.target.value })}
                   error={values.supplier_choice !== "other" ? errors.supplier : undefined}
-                  hint={<Link to="/admin/suppliers" className="font-semibold text-primary underline-offset-4 hover:underline">{ts.manage}</Link>}
+                  hint={<Link to={toPortal("suppliers")} className="font-semibold text-primary underline-offset-4 hover:underline">{ts.manage}</Link>}
                 >
                   <option value="">{ts.pickerNone}</option>
                   {own ? (

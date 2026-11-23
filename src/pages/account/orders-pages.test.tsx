@@ -7,6 +7,8 @@ import { ApiError } from "@/api/errors";
 import { clearSession, setSession } from "@/api/session";
 import type { Cart, Customer, Order, OwnReview, Paginated, ReturnableItems, ReturnRequest } from "@/api/types";
 import { Toaster } from "@/components/ui/toaster";
+import { OrderTimeline } from "@/features/orders/OrderTimeline";
+import { getUnreadOrderIds, markOrdersSeen, readSeenOrderStatuses, useOrderNotifications } from "@/features/orders/orderNotifications";
 import { YourReview } from "@/features/reviews/YourReview";
 import LegacyOrderRedirect from "@/routes/LegacyOrderRedirect";
 import { renderWithProviders } from "@/test/render";
@@ -104,6 +106,7 @@ const app = (route: string) =>
   );
 
 beforeEach(() => {
+  localStorage.clear();
   setSession("customer", { token: "t", expiresAt: null, user: customer });
   vi.spyOn(ordersApi, "orders").mockImplementation(async (params = {}) => page([pending, delivered].filter((o) => !params.status || o.status === params.status)));
   vi.spyOn(ordersApi, "order").mockImplementation(async (id) => ({ ...[pending, delivered].find((o) => o.id === id)! }));
@@ -345,5 +348,70 @@ describe("reviews", () => {
     await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Delete review" }));
     expect(remove).toHaveBeenCalledWith(5);
     expect(await screen.findByText("Review deleted")).toBeInTheDocument();
+  });
+});
+
+describe("Orders search, notifications, and redesigned timeline", () => {
+  it("filters orders by book title and clears the search", async () => {
+    const user = userEvent.setup();
+    app("/account/orders");
+    await screen.findByRole("list", { name: "Your orders" });
+
+    const search = screen.getByLabelText("Search orders");
+    await user.type(search, "Baskervilles");
+    await waitFor(() => expect(within(screen.getByRole("list", { name: "Your orders" })).getAllByRole("listitem")).toHaveLength(1));
+    expect(screen.getByRole("link", { name: /ORD-8/ })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /ORD-7/ })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Clear search" }));
+    await waitFor(() => expect(within(screen.getByRole("list", { name: "Your orders" })).getAllByRole("listitem")).toHaveLength(2));
+  });
+
+  it("alerts on active or changed order statuses and clears once orders are checked", async () => {
+    function BadgeProbe() {
+      const { unreadCount } = useOrderNotifications();
+      return <output data-testid="unread-count">{unreadCount}</output>;
+    }
+
+    // First visit: only active order (pending #7) counts as unread, not finished delivered #8.
+    expect(getUnreadOrderIds([pending, delivered], null)).toEqual(new Set([7]));
+
+    // Visiting OrdersPage marks loaded orders seen and clears the live badge count.
+    renderWithProviders(
+      <>
+        <BadgeProbe />
+        <OrdersPage />
+      </>,
+      { route: "/account/orders" },
+    );
+    await screen.findByRole("list", { name: "Your orders" });
+    await waitFor(() => expect(screen.getByTestId("unread-count")).toHaveTextContent("0"));
+    expect(readSeenOrderStatuses(customer.id!)).toEqual({ "7": "pending", "8": "delivered" });
+
+    // When order #7 moves to shipped, it re-alerts until marked seen again.
+    const shipped: Order = { ...pending, status: "shipped" };
+    expect(getUnreadOrderIds([shipped, delivered], readSeenOrderStatuses(customer.id!))).toEqual(new Set([7]));
+    markOrdersSeen(customer.id, [shipped, delivered]);
+    expect(getUnreadOrderIds([shipped, delivered], readSeenOrderStatuses(customer.id!)).size).toBe(0);
+  });
+
+  it("renders the milestone tracker headline, estimate, and activity log on OrderTimeline", () => {
+    renderWithProviders(
+      <OrderTimeline
+        status="shipped"
+        paymentMethod="cod"
+        estimatedDelivery={{ formatted: "Mon, 23 Nov", days_min: 1, days_max: 2 }}
+        history={[
+          { status: "pending", note: "Order placed.", created_at: "2026-11-20T08:00:00Z" },
+          { status: "processing", note: "Packed at warehouse.", created_at: "2026-11-21T09:30:00Z" },
+          { status: "shipped", note: "Handed to courier.", created_at: "2026-11-22T10:15:00Z" },
+        ]}
+      />,
+    );
+    const region = screen.getByRole("region", { name: "Timeline" });
+    expect(region).toHaveTextContent("On the way");
+    expect(region).toHaveTextContent("Est. delivery: Mon, 23 Nov");
+    expect(region).toHaveTextContent("Order placed.");
+    expect(region).toHaveTextContent("Handed to courier.");
   });
 });

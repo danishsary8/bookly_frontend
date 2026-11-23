@@ -7,7 +7,7 @@ import LegacyAdminRedirect from "./LegacyAdminRedirect";
 import LegacyBrowseRedirect from "./LegacyBrowseRedirect";
 import LegacyOrderRedirect from "./LegacyOrderRedirect";
 import { GuestOnly, RequireCustomer, RequireVerified } from "./guards";
-import { RequireAdminRole, RequireStaff, RequireStaffSetup, StaffGuestOnly } from "./adminGuards";
+import { RequirePortal, RequireStaffSetup, StaffGuestOnly } from "./adminGuards";
 
 const Home = lazy(() => import("../pages/HomePage"));
 const CartPage = lazy(() => import("../pages/cart/CartPage"));
@@ -64,6 +64,7 @@ const LookupPage = lazy(() => import("../pages/admin/LookupPage"));
 const OrdersAdminPage = lazy(() => import("../pages/admin/OrdersAdminPage"));
 const OrderAdminPage = lazy(() => import("../pages/admin/OrderAdminPage"));
 const OrderDocumentsPrintPage = lazy(() => import("../pages/admin/OrderDocumentsPrintPage"));
+const DailySalesPrintPage = lazy(() => import("../pages/admin/DailySalesPrintPage"));
 const ReturnsAdminPage = lazy(() => import("../pages/admin/ReturnsAdminPage"));
 const ReturnAdminPage = lazy(() => import("../pages/admin/ReturnAdminPage"));
 const ReviewsAdminPage = lazy(() => import("../pages/admin/ReviewsAdminPage"));
@@ -115,6 +116,40 @@ const EnglishArea = () => (
   </EnglishOnly>
 );
 
+const sharedWorkspaceRoutes = (
+  <>
+    <Route index element={<DashboardPage />} />
+    <Route path="books" element={<AdminBooksPage />} />
+    <Route path="stock" element={<StockAdminPage />} />
+    <Route path="suppliers" element={<SuppliersPage />} />
+    <Route path="books/new" element={<BookEditPage />} />
+    <Route path="books/:id" element={<BookEditPage key="edit" />} />
+    <Route path="authors" element={<LookupPage key="authors" kind="authors" />} />
+    <Route path="categories" element={<LookupPage key="categories" kind="categories" />} />
+    <Route path="publishers" element={<LookupPage key="publishers" kind="publishers" />} />
+    <Route path="series" element={<LookupPage key="series" kind="series" />} />
+    <Route path="orders" element={<OrdersAdminPage />} />
+    <Route path="orders/:id" element={<OrderAdminPage />} />
+    <Route path="returns" element={<ReturnsAdminPage />} />
+    <Route path="returns/:id" element={<ReturnAdminPage />} />
+    <Route path="reviews" element={<ReviewsAdminPage />} />
+    <Route path="support" element={<SupportInboxPage />} />
+    <Route path="assistant" element={<AssistantPage />} />
+    <Route path="assistant/knowledge" element={<AssistantKnowledgePage />} />
+    <Route path="coupons" element={<CouponsAdminPage />} />
+    <Route path="offers" element={<OffersAdminPage />} />
+    <Route path="promotions" element={<PromotionsAdminPage />} />
+    <Route path="rewards" element={<RewardsAdminPage />} />
+    <Route path="gifts" element={<GiftsPage />} />
+    <Route path="ratings" element={<RatingsPage />} />
+    <Route path="reading-lists" element={<ReadingListPicksPage />} />
+    <Route path="collections" element={<CollectionsAdminPage />} />
+    <Route path="customers" element={<CustomersAdminPage />} />
+    <Route path="customers/:id" element={<CustomerAdminPage />} />
+    <Route path="security" element={<StaffSecurityPage />} />
+  </>
+);
+
 const AppRoutes = () => {
   // Prefetch the book page while idle so the cover morph never waits on a lazy chunk.
   useEffect(() => {
@@ -132,7 +167,9 @@ const AppRoutes = () => {
         <Route path="/orders" element={<Navigate to="/account/orders" replace />} />
         <Route path="/orders/:id" element={<LegacyOrderRedirect />} />
         <Route path="/invoices" element={<Navigate to="/account/orders" replace />} />
-                <Route path="/read/:bookId" element={<ReaderPage />} />
+        <Route element={<RequireVerified />}>
+          <Route path="/read/:bookId" element={<ReaderPage />} />
+        </Route>
         <Route path="/read/:bookId/preview" element={<ReaderPage />} />
         <Route element={<ClientLayout />}>
           <Route path="/" element={<Home />} />
@@ -202,65 +239,52 @@ const AppRoutes = () => {
           <Route element={<RequireVerified />}>
             <Route path="/account/orders/:id/invoice" element={<InvoicePrintPage />} />
           </Route>
-          {/* Staff (V2 admin). */}
-          <Route element={<StaffGuestOnly />}>
-            <Route path="/admin/login" element={<StaffLoginPage />} />
-            <Route path="/admin/reset-password" element={<StaffResetPasswordPage />} />
+          {/* Admin portal (/admin/*) — administrators only. */}
+          <Route element={<StaffGuestOnly portal="admin" />}>
+            <Route path="/admin/login" element={<StaffLoginPage portal="admin" />} />
+            <Route path="/admin/reset-password" element={<StaffResetPasswordPage portal="admin" />} />
           </Route>
-          <Route element={<RequireStaffSetup />}>
-            <Route path="/admin/two-factor" element={<StaffTwoFactorSetupPage />} />
+          <Route element={<RequireStaffSetup portal="admin" />}>
+            <Route path="/admin/two-factor" element={<StaffTwoFactorSetupPage portal="admin" />} />
           </Route>
-          <Route element={<RequireStaff />}>
-            {/* Printable sheets sit outside the admin frame so only the paper prints. */}
+          <Route element={<RequirePortal portal="admin" />}>
+            {/* Printable sheets sit outside the workspace frame so only the paper prints. */}
             <Route path="/admin/print" element={<OrderDocumentsPrintPage />} />
-            <Route element={<RequireAdminRole />}>
-              <Route path="/admin/reports/print" element={<DashboardPrintPage />} />
-            </Route>
+            <Route path="/admin/print/daily-sales" element={<DailySalesPrintPage />} />
+            <Route path="/admin/reports/print" element={<DashboardPrintPage />} />
             <Route path="/admin" element={<AdminShell />}>
-              <Route index element={<DashboardPage />} />
-              <Route path="books" element={<AdminBooksPage />} />
-              <Route path="stock" element={<StockAdminPage />} />
-              <Route path="suppliers" element={<SuppliersPage />} />
+              {sharedWorkspaceRoutes}
               <Route path="settings" element={<SettingsPage />} />
-              <Route path="books/new" element={<BookEditPage />} />
-              <Route path="books/:id" element={<BookEditPage key="edit" />} />
-              <Route path="authors" element={<LookupPage key="authors" kind="authors" />} />
-              <Route path="categories" element={<LookupPage key="categories" kind="categories" />} />
-              <Route path="publishers" element={<LookupPage key="publishers" kind="publishers" />} />
-              <Route path="series" element={<LookupPage key="series" kind="series" />} />
-              <Route path="orders" element={<OrdersAdminPage />} />
-              <Route path="orders/:id" element={<OrderAdminPage />} />
-              <Route path="returns" element={<ReturnsAdminPage />} />
-              <Route path="returns/:id" element={<ReturnAdminPage />} />
-              <Route path="reviews" element={<ReviewsAdminPage />} />
-              <Route path="support" element={<SupportInboxPage />} />
-              <Route path="assistant" element={<AssistantPage />} />
-              <Route path="assistant/knowledge" element={<AssistantKnowledgePage />} />
-              <Route path="coupons" element={<CouponsAdminPage />} />
-              <Route path="offers" element={<OffersAdminPage />} />
               <Route path="offers/new" element={<OfferEditPage />} />
               <Route path="offers/:id" element={<OfferEditPage />} />
-              <Route path="promotions" element={<PromotionsAdminPage />} />
-              <Route path="rewards" element={<RewardsAdminPage />} />
-              <Route path="gifts" element={<GiftsPage />} />
-              <Route path="ratings" element={<RatingsPage />} />
-              <Route path="reading-lists" element={<ReadingListPicksPage />} />
-              <Route path="collections" element={<CollectionsAdminPage />} />
               <Route path="collections/new" element={<CollectionEditPage />} />
               <Route path="collections/:id" element={<CollectionEditPage />} />
-              <Route path="customers" element={<CustomersAdminPage />} />
-              <Route path="customers/:id" element={<CustomerAdminPage />} />
-              <Route path="security" element={<StaffSecurityPage />} />
-              <Route element={<RequireAdminRole />}>
-                <Route path="referrals" element={<ReferralsAdminPage />} />
-                <Route path="newsletter" element={<NewsletterAdminPage />} />
-                <Route path="reports" element={<ReportsPage />} />
-                <Route path="purchases" element={<PurchaseListPage />} />
-                <Route path="members" element={<MembersAdminPage />} />
-                <Route path="exchange-rates" element={<ExchangeRatesPage />} />
-                <Route path="audit-log" element={<AuditLogPage />} />
-                <Route path="trash" element={<TrashAdminPage />} />
-              </Route>
+              <Route path="referrals" element={<ReferralsAdminPage />} />
+              <Route path="newsletter" element={<NewsletterAdminPage />} />
+              <Route path="reports" element={<ReportsPage />} />
+              <Route path="purchases" element={<PurchaseListPage />} />
+              <Route path="members" element={<MembersAdminPage />} />
+              <Route path="exchange-rates" element={<ExchangeRatesPage />} />
+              <Route path="audit-log" element={<AuditLogPage />} />
+              <Route path="trash" element={<TrashAdminPage />} />
+              <Route path="*" element={<Navigate to="/admin" replace />} />
+            </Route>
+          </Route>
+
+          {/* Staff portal (/staff/*) — staff members only. */}
+          <Route element={<StaffGuestOnly portal="staff" />}>
+            <Route path="/staff/login" element={<StaffLoginPage portal="staff" />} />
+            <Route path="/staff/reset-password" element={<StaffResetPasswordPage portal="staff" />} />
+          </Route>
+          <Route element={<RequireStaffSetup portal="staff" />}>
+            <Route path="/staff/two-factor" element={<StaffTwoFactorSetupPage portal="staff" />} />
+          </Route>
+          <Route element={<RequirePortal portal="staff" />}>
+            <Route path="/staff/print" element={<OrderDocumentsPrintPage />} />
+            <Route path="/staff/print/daily-sales" element={<DailySalesPrintPage />} />
+            <Route path="/staff" element={<AdminShell />}>
+              {sharedWorkspaceRoutes}
+              <Route path="*" element={<Navigate to="/staff" replace />} />
             </Route>
           </Route>
         </Route>

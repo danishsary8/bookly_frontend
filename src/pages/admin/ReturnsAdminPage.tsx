@@ -7,6 +7,7 @@ import { opsQueries } from "@/api/endpoints/staffOps";
 import { ReturnStatusBadge } from "@/components/orders/ReturnStatusBadge";
 import { Pagination } from "@/components/ui/pagination";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { usePortalPath } from "@/features/admin/portal";
 import { ListState, SearchBox, Segmented, TableCard, td, th, thead } from "@/features/admin/listKit";
 import { useListParams } from "@/features/admin/useListParams";
 import { orderDate } from "@/features/orders/format";
@@ -23,6 +24,7 @@ type Filter = (typeof FILTERS)[number];
  */
 export default function ReturnsAdminPage() {
   const t = useT().dict.returnsAdmin;
+  const toPortal = usePortalPath();
   const STATUSES = [
     { value: "open" as const, label: t.newRequests },
     { value: "approved" as const, label: t.toRefund },
@@ -65,7 +67,7 @@ export default function ReturnsAdminPage() {
             {list.map((r) => (
               <tr key={r.id} className="hover:bg-surface-2/60">
                 <th scope="row" className={`${td} whitespace-nowrap font-normal`}>
-                  <Link to={`/admin/returns/${r.id}`} className="font-semibold underline-offset-4 hover:text-primary hover:underline">
+                  <Link to={toPortal(`returns/${r.id}`)} className="font-semibold underline-offset-4 hover:text-primary hover:underline">
                     Return #{r.id}
                   </Link>
                   <span className="block text-sm tabular-nums text-muted-foreground">{r.order_number}</span>
@@ -90,7 +92,7 @@ export default function ReturnsAdminPage() {
                 </td>
                 <td className={`${td} whitespace-nowrap text-sm text-muted-foreground`}>{orderDate(r.requested_at)}</td>
                 <td className={td}>
-                  <Link to={`/admin/returns/${r.id}`} className={buttonVariants({ variant: r.status === "requested" || r.status === "approved" ? "default" : "outline", size: "sm" })} aria-label={`${t.review} return #${r.id}`}>
+                  <Link to={toPortal(`returns/${r.id}`)} className={buttonVariants({ variant: r.status === "requested" || r.status === "approved" ? "default" : "outline", size: "sm" })} aria-label={`${t.review} return #${r.id}`}>
                     <Eye aria-hidden="true" /> {t.review}
                   </Link>
                 </td>

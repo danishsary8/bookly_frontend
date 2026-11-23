@@ -8,6 +8,7 @@ import { AdminPage } from "@/features/admin/AdminPage";
 import type { AdminTone } from "@/features/admin/adminNav";
 import { RecentOrders } from "@/features/admin/dashboard/RecentOrders";
 import { useMenuCounts } from "@/features/admin/menuCounts";
+import { usePortalPath } from "@/features/admin/portal";
 import { AnimatedNumber } from "@/features/admin/dashboard/AnimatedNumber";
 import { useT } from "@/i18n";
 
@@ -25,6 +26,7 @@ const greetingKey = (hour: number) => (hour < 12 ? "morning" : hour < 18 ? "afte
 export function StaffDashboard({ user }: { user?: StaffUser }) {
   const { dict, locale } = useT();
   const t = dict.staffHome;
+  const toPortal = usePortalPath();
   const counts = useMenuCounts(true);
   const reducedMotion = useReducedMotion();
   const firstName = user?.name.split(" ")[0];
@@ -33,9 +35,9 @@ export function StaffDashboard({ user }: { user?: StaffUser }) {
   const hour = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone: "Asia/Phnom_Penh" }).format(now));
 
   const tasks: Task[] = [
-    can(user, "orders:view") && { to: "/admin/orders?status=pending", label: t.orders, hint: t.ordersHint, value: counts.data?.pending_orders, Icon: Package, tone: "blue" as const },
-    can(user, "orders:view") && { to: "/admin/returns", label: t.returns, hint: t.returnsHint, value: counts.data?.open_returns, Icon: RotateCcw, tone: "amber" as const },
-    can(user, "catalog:view") && { to: "/admin/stock?status=low", label: t.stock, hint: t.stockHint, value: counts.data?.low_stock, Icon: Boxes, tone: "rose" as const },
+    can(user, "orders:view") && { to: toPortal("orders?status=pending"), label: t.orders, hint: t.ordersHint, value: counts.data?.pending_orders, Icon: Package, tone: "blue" as const },
+    can(user, "orders:view") && { to: toPortal("returns"), label: t.returns, hint: t.returnsHint, value: counts.data?.open_returns, Icon: RotateCcw, tone: "amber" as const },
+    can(user, "catalog:view") && { to: toPortal("stock?status=low"), label: t.stock, hint: t.stockHint, value: counts.data?.low_stock, Icon: Boxes, tone: "rose" as const },
   ].filter(Boolean) as Task[];
   const busyTasks = tasks.filter((task) => (task.value ?? 0) > 0);
   const waiting = busyTasks.length;
@@ -43,12 +45,12 @@ export function StaffDashboard({ user }: { user?: StaffUser }) {
   const summary = counts.isPending ? null : waiting === 0 ? t.clear : waiting === 1 ? t.busyOne : t.busyMany.replace("{n}", String(waiting));
 
   const quick = [
-    { show: can(user, "orders:view"), to: "/admin/orders", label: t.allOrders, Icon: Package, tone: "blue" },
-    { show: can(user, "customers:view"), to: "/admin/customers", label: t.customers, Icon: Users, tone: "blue" },
-    { show: can(user, "support:manage"), to: "/admin/support", label: t.support, Icon: Headset, tone: "teal" },
-    { show: can(user, "catalog:view"), to: "/admin/books", label: t.books, Icon: BookCopy, tone: "amber" },
-    { show: can(user, "catalog:manage"), to: "/admin/books/new", label: t.newBook, Icon: BookPlus, tone: "violet" },
-    { show: can(user, "catalog:view"), to: "/admin/stock", label: t.stockPage, Icon: Boxes, tone: "rose" },
+    { show: can(user, "orders:view"), to: toPortal("orders"), label: t.allOrders, Icon: Package, tone: "blue" },
+    { show: can(user, "customers:view"), to: toPortal("customers"), label: t.customers, Icon: Users, tone: "blue" },
+    { show: can(user, "support:manage"), to: toPortal("support"), label: t.support, Icon: Headset, tone: "teal" },
+    { show: can(user, "catalog:view"), to: toPortal("books"), label: t.books, Icon: BookCopy, tone: "amber" },
+    { show: can(user, "catalog:manage"), to: toPortal("books/new"), label: t.newBook, Icon: BookPlus, tone: "violet" },
+    { show: can(user, "catalog:view"), to: toPortal("stock"), label: t.stockPage, Icon: Boxes, tone: "rose" },
   ].filter((item) => item.show);
 
   const enter = (index: number) => ({

@@ -21,6 +21,7 @@ import { BookImportDialog } from "@/features/admin/books/BookImportDialog";
 import { BookState } from "@/features/admin/books/BookState";
 import { BulkActionsDialog, type BulkActionType } from "@/features/admin/books/BulkActionsDialog";
 import { useStaff } from "@/features/admin/staffSession";
+import { usePortalPath } from "@/features/admin/portal";
 import { orderDate } from "@/features/orders/format";
 import { formatLabel } from "@/lib/catalog";
 import { rangeSummary } from "@/lib/pagination";
@@ -55,6 +56,7 @@ function FormatsCell({ book }: { book: StaffBook }) {
  */
 export default function BooksPage() {
   const [preview, setPreview] = useState<StaffBook | null>(null);
+  const toPortal = usePortalPath();
   const queryClient = useQueryClient();
   const staffSession = useStaff();
   const isAdmin = staffSession?.user?.role === "admin";
@@ -166,7 +168,7 @@ export default function BooksPage() {
               </Button>
             </>
           ) : null}
-          <Link to="/admin/books/new" className={buttonVariants()}>
+          <Link to={toPortal("books/new")} className={buttonVariants()}>
             <BookPlus aria-hidden="true" /> New book
           </Link>
         </div>
@@ -322,7 +324,7 @@ export default function BooksPage() {
                       <div className="flex items-center gap-3">
                         <CoverThumb src={book.variants.find((v) => v.cover_image_url)?.cover_image_url} className="w-10 shrink-0" />
                         <span className="grid min-w-0 gap-0.5">
-                          <Link to={`/admin/books/${book.id}`} className="font-semibold underline-offset-4 hover:text-primary hover:underline">
+                          <Link to={toPortal(`books/${book.id}`)} className="font-semibold underline-offset-4 hover:text-primary hover:underline">
                             <Highlight text={book.title} query={q} />
                           </Link>
                           <span className="text-sm text-muted-foreground"><Highlight text={book.authors.map((a) => a.name).join(", ") || "No author"} query={q} /></span>
@@ -337,7 +339,7 @@ export default function BooksPage() {
                       <BookState book={book} />
                     </td>
                     <td data-label="Updated" className="catalogue-updated px-4 py-3 text-sm text-muted-foreground">{orderDate(book.updated_at)}</td>
-                    <td className="catalogue-row-actions px-4 py-3"><div className="catalogue-actions"><Button size="sm" variant="outline" aria-label={`View details for ${book.title}`} onClick={() => setPreview(book)}><Eye aria-hidden="true" />Details</Button><Link aria-label={`Edit ${book.title}`} to={`/admin/books/${book.id}`} className={buttonVariants({ variant: "ghost", size: "sm" })}><Pencil aria-hidden="true" />Edit</Link></div></td>
+                    <td className="catalogue-row-actions px-4 py-3"><div className="catalogue-actions"><Button size="sm" variant="outline" aria-label={`View details for ${book.title}`} onClick={() => setPreview(book)}><Eye aria-hidden="true" />Details</Button><Link aria-label={`Edit ${book.title}`} to={toPortal(`books/${book.id}`)} className={buttonVariants({ variant: "ghost", size: "sm" })}><Pencil aria-hidden="true" />Edit</Link></div></td>
                   </tr>
                 );
               })}
@@ -346,19 +348,22 @@ export default function BooksPage() {
         </div>
       )}
       <Pagination page={meta?.current_page ?? 1} lastPage={meta?.last_page ?? 1} hrefFor={hrefFor} />
-      <Dialog open={preview !== null} onOpenChange={(open) => { if (!open) setPreview(null); }}><AdminFormDialogContent>{preview ? <><DialogHeader><DialogTitle>{preview.title}</DialogTitle><DialogDescription>Book details at a glance. Open the editor to manage this book and its formats.</DialogDescription></DialogHeader><div className="catalogue-book-preview"><CoverThumb src={preview.variants.find((v) => v.cover_image_url)?.cover_image_url} className="w-24" /><div className="grid min-w-0 gap-3"><p className="text-sm text-muted-foreground">{preview.authors.map((a) => a.name).join(", ") || "No author"}</p><BookState book={preview} /><FormatsCell book={preview} /><p className="text-sm text-muted-foreground">Updated {orderDate(preview.updated_at)} · {preview.sold_recent ?? 0} sold in 90 days</p></div></div><DialogFooter><DialogClose asChild><Button variant="outline">Close</Button></DialogClose><Link to={`/admin/books/${preview.id}`} className={buttonVariants()}><Pencil aria-hidden="true" />Edit book</Link></DialogFooter></> : null}</AdminFormDialogContent></Dialog>
+      <Dialog open={preview !== null} onOpenChange={(open) => { if (!open) setPreview(null); }}><AdminFormDialogContent>{preview ? <><DialogHeader><DialogTitle>{preview.title}</DialogTitle><DialogDescription>Book details at a glance. Open the editor to manage this book and its formats.</DialogDescription></DialogHeader><div className="catalogue-book-preview"><CoverThumb src={preview.variants.find((v) => v.cover_image_url)?.cover_image_url} className="w-24" /><div className="grid min-w-0 gap-3"><p className="text-sm text-muted-foreground">{preview.authors.map((a) => a.name).join(", ") || "No author"}</p><BookState book={preview} /><FormatsCell book={preview} /><p className="text-sm text-muted-foreground">Updated {orderDate(preview.updated_at)} · {preview.sold_recent ?? 0} sold in 90 days</p></div></div><DialogFooter><DialogClose asChild><Button variant="outline">Close</Button></DialogClose><Link to={toPortal(`books/${preview.id}`)} className={buttonVariants()}><Pencil aria-hidden="true" />Edit book</Link></DialogFooter></> : null}</AdminFormDialogContent></Dialog>
 
       {/* Bulk actions modal */}
-      <BulkActionsDialog
-        books={selectedBooks}
-        action={bulkAction}
-        isAdmin={Boolean(isAdmin)}
-        onClose={() => setBulkAction(null)}
-        onSuccess={() => {
-          setSelectedIds([]);
-          void queryClient.invalidateQueries({ queryKey: ["staff", "books"] });
-        }}
-      />
+      {bulkAction ? (
+        <BulkActionsDialog
+          key={bulkAction}
+          books={selectedBooks}
+          action={bulkAction}
+          isAdmin={Boolean(isAdmin)}
+          onClose={() => setBulkAction(null)}
+          onSuccess={() => {
+            setSelectedIds([]);
+            void queryClient.invalidateQueries({ queryKey: ["staff", "books"] });
+          }}
+        />
+      ) : null}
 
       {/* CSV Import modal */}
       <BookImportDialog

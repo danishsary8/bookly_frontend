@@ -56,17 +56,29 @@ const app = (route: string) =>
   renderWithProviders(
     <>
       <Routes>
-        <Route element={<StaffGuestOnly />}>
-          <Route path="/admin/login" element={<StaffLoginPage />} />
+        <Route element={<StaffGuestOnly portal="admin" />}>
+          <Route path="/admin/login" element={<StaffLoginPage portal="admin" />} />
         </Route>
-        <Route element={<RequireStaffSetup />}>
-          <Route path="/admin/two-factor" element={<StaffTwoFactorSetupPage />} />
+        <Route element={<RequireStaffSetup portal="admin" />}>
+          <Route path="/admin/two-factor" element={<StaffTwoFactorSetupPage portal="admin" />} />
         </Route>
-        <Route element={<RequireStaff />}>
+        <Route element={<RequireStaff portal="admin" />}>
           <Route path="/admin" element={<DashboardPage />} />
           <Route path="/admin/books/new" element={<BookEditPage />} />
           <Route path="/admin/books/:id" element={<BookEditPage key="edit" />} />
           <Route path="/admin/authors" element={<LookupPage kind="authors" />} />
+        </Route>
+        <Route element={<StaffGuestOnly portal="staff" />}>
+          <Route path="/staff/login" element={<StaffLoginPage portal="staff" />} />
+        </Route>
+        <Route element={<RequireStaffSetup portal="staff" />}>
+          <Route path="/staff/two-factor" element={<StaffTwoFactorSetupPage portal="staff" />} />
+        </Route>
+        <Route element={<RequireStaff portal="staff" />}>
+          <Route path="/staff" element={<DashboardPage />} />
+          <Route path="/staff/books/new" element={<BookEditPage />} />
+          <Route path="/staff/books/:id" element={<BookEditPage key="edit" />} />
+          <Route path="/staff/authors" element={<LookupPage kind="authors" />} />
         </Route>
       </Routes>
       <Where />
@@ -148,11 +160,11 @@ describe("StaffLoginPage", () => {
       expires_at: null,
     });
     vi.spyOn(staffAuthApi, "setupTwoFactor").mockReturnValue(new Promise(() => {}));
-    app("/admin/login");
+    app("/staff/login");
     await user.type(screen.getByLabelText("Work email"), "staff@bookly.test");
     await user.type(screen.getByLabelText("Password", { selector: "input" }), "Staffpass123");
     await user.click(screen.getByRole("button", { name: "Continue" }));
-    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/admin/two-factor"));
+    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/staff/two-factor"));
   });
 });
 
@@ -164,7 +176,7 @@ describe("StaffTwoFactorSetupPage", () => {
     const confirm = vi.spyOn(staffAuthApi, "confirmTwoFactor").mockResolvedValue({ message: "ok", staff: { ...staff, two_factor_enabled: true } });
     vi.spyOn(staffApi, "summary").mockReturnValue(new Promise(() => {}));
     vi.spyOn(staffApi, "sales").mockReturnValue(new Promise(() => {}));
-    app("/admin/two-factor");
+    app("/staff/two-factor");
     expect(await screen.findByText("ABCD EFGH IJKL MNOP")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Turn on and continue" }));
     expect(screen.getByText("Enter the 6-digit code from your authenticator app.")).toBeInTheDocument();
@@ -172,7 +184,7 @@ describe("StaffTwoFactorSetupPage", () => {
     await user.keyboard("123456");
     await user.click(screen.getByRole("button", { name: "Turn on and continue" }));
     expect(confirm).toHaveBeenCalledWith("123456");
-    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent(/^\/admin$/));
+    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent(/^\/staff$/));
     expect(getSession<StaffUser>("staff")?.user.two_factor_enabled).toBe(true);
   });
 });
@@ -327,10 +339,10 @@ describe("dashboard", () => {
     const summarySpy = vi.spyOn(staffApi, "summary").mockResolvedValue(summary);
     const salesSpy = vi.spyOn(staffApi, "sales").mockResolvedValue(days);
     const healthSpy = vi.spyOn(staffApi, "health").mockReturnValue(new Promise(() => {}));
-    app("/admin");
+    app("/staff");
 
     expect(await screen.findByRole("heading", { name: "To do" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Orders to process/ })).toHaveAttribute("href", "/admin/orders?status=pending");
+    expect(screen.getByRole("link", { name: /Orders to process/ })).toHaveAttribute("href", "/staff/orders?status=pending");
     expect(screen.queryByText("$50.50")).not.toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "System health" })).not.toBeInTheDocument();
     expect(summarySpy).not.toHaveBeenCalled();
@@ -404,7 +416,7 @@ describe("books", () => {
     vi.spyOn(catalogApi, "categories").mockResolvedValue([]);
     vi.spyOn(catalogApi, "publishers").mockResolvedValue(page([]));
     vi.spyOn(catalogApi, "seriesList").mockResolvedValue(page([]));
-    app("/admin/books/6");
+    app("/staff/books/6");
     expect(await screen.findByRole("button", { name: "Edit Paperback" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Delete Paperback" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Delete book/ })).not.toBeInTheDocument();

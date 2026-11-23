@@ -76,6 +76,26 @@ describe("Cart: reward nudge, KHQR hint and a saved reward coupon", () => {
     expect(getCoupon()).toBe("THANKS-K7M2Q9");
     expect(await within(summary).findByRole("button", { name: "Remove coupon THANKS-K7M2Q9" })).toBeInTheDocument();
   });
+
+  it("lets the customer enter another coupon code even when they already have a reward coupon", async () => {
+    vi.spyOn(rewardsApi, "myCoupons").mockResolvedValue([coupon()]);
+    vi.spyOn(cartApi, "checkCoupon").mockResolvedValue({ code: "SAVE20", type: "percentage", value: "20.00", subtotal_usd: "10.00", discount_usd: "2.00", discount_khr: "8200", total_before_shipping_usd: "8.00", total_before_shipping_khr: "0", applied: "coupon", best_discount_usd: "2.00", best_discount_khr: "8200", best_total_before_shipping_usd: "8.00", best_total_before_shipping_khr: "0" } as never);
+    const user = userEvent.setup();
+    app("/cart");
+    const summary = await screen.findByRole("complementary", { name: "Order summary" });
+    expect(await within(summary).findByRole("button", { name: "Apply coupon THANKS-K7M2Q9" })).toBeInTheDocument();
+
+    // Open manual code input while saved coupon is visible and apply another code
+    await user.click(within(summary).getByRole("button", { name: "Enter another code" }));
+    await user.type(within(summary).getByLabelText("Coupon code"), "save20");
+    await user.click(within(summary).getByRole("button", { name: "Apply" }));
+    expect(await within(summary).findByRole("button", { name: "Remove coupon SAVE20" })).toBeInTheDocument();
+    expect(getCoupon()).toBe("SAVE20");
+
+    // Can also click Change to switch back to their saved coupon
+    await user.click(within(summary).getByRole("button", { name: "Change" }));
+    expect(within(summary).getByRole("button", { name: "Apply coupon THANKS-K7M2Q9" })).toBeInTheDocument();
+  });
 });
 
 describe("Checkout: KHQR saving and the cash on delivery limit", () => {

@@ -1,5 +1,6 @@
 import { Inbox, MessageSquareText, RefreshCw } from "lucide-react";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { usePortalPath } from "@/features/admin/portal";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,14 +13,14 @@ import { SupportTools } from "@/features/support/SupportTools";
 import { useT } from "@/i18n";
 
 function StaffConversation({ id }: { id: number }) {
-  const { dict } = useT(); const t = dict.support; const query = useConversation(id, true); const conversation = query.data?.value.data;
+  const { dict } = useT(); const t = dict.support; const toPortal = usePortalPath(); const query = useConversation(id, true); const conversation = query.data?.value.data;
   const options = useQuery({ queryKey: ["support", "staff-options"], queryFn: supportApi.staff });
   const templates = useQuery({ queryKey: ["support", "templates"], queryFn: supportApi.templates });
   const client = useQueryClient(); const action = useMutation({ mutationFn: (fn: () => Promise<unknown>) => fn(), onSuccess: () => client.invalidateQueries({ queryKey: ["support"] }) });
   return <div className="work-inbox-detail">
     {conversation ? <aside className="work-customer-details">
       <div className="grid gap-1"><p className="font-semibold break-words [overflow-wrap:anywhere]">{conversation.customer?.name ?? t.guest}</p><p className="text-muted-foreground break-words [overflow-wrap:anywhere]">{conversation.customer?.email}</p>
-      {conversation.order_id ? <Link className="inline-flex min-h-11 items-center text-primary underline" to={`/admin/orders/${conversation.order_id}`}>{t.orderLink} #{conversation.order_id}</Link> : null}</div>
+      {conversation.order_id ? <Link className="inline-flex min-h-11 items-center text-primary underline" to={toPortal(`orders/${conversation.order_id}`)}>{t.orderLink} #{conversation.order_id}</Link> : null}</div>
       <label className="grid gap-1">{t.assignee}<select className={supportField} disabled={action.isPending} value={conversation.assigned_staff_id ?? ""} onChange={(event) => action.mutate(() => supportApi.assign(id, event.target.value ? Number(event.target.value) : null))}><option value="">{t.unassigned}</option>{options.data?.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
       <label className="grid gap-1">{t.statusLabel}<select className={supportField} disabled={action.isPending} value={conversation.status} onChange={(event) => action.mutate(() => supportApi.status(id, event.target.value as Conversation["status"], true))}>{Object.entries(t.status).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label>
       {action.isError ? <p role="alert" className="text-destructive">{t.error}</p> : null}

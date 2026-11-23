@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { InlineError } from "@/components/ui/error-state";
 import { orderDateTime } from "@/features/orders/format";
 import { cn } from "@/lib/utils";
+import { usePortalPath } from "./portal";
 
 /*
  * Header bell: low-stock notifications from the API (refreshed every minute).
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
  */
 export function NotificationsBell() {
   const queryClient = useQueryClient();
+  const toPortal = usePortalPath();
   const notifications = useQuery(staffQueries.notifications());
   const unread = notifications.data?.meta.unread_count ?? 0;
   const refresh = () => void queryClient.invalidateQueries({ queryKey: staffKeys.notifications() });
@@ -55,7 +57,17 @@ export function NotificationsBell() {
                   <li key={n.id}>
                     <Popover.Close asChild>
                       <Link
-                        to={n.type === "low_order_rating" ? "/admin/ratings" : n.type === "low_gift_stock" ? "/admin/gifts" : n.data.book_id ? `/admin/books/${n.data.book_id}` : "/admin/books"}
+                        to={
+                          n.type === "paid_after_cancel" && n.data.order_id
+                            ? toPortal(`orders/${n.data.order_id}`)
+                            : n.type === "low_order_rating"
+                              ? toPortal("ratings")
+                              : n.type === "low_gift_stock"
+                                ? toPortal("gifts")
+                                : n.data.book_id
+                                  ? toPortal(`books/${n.data.book_id}`)
+                                  : toPortal("books")
+                        }
                         onClick={() => !n.read_at && readOne.mutate(n.id)}
                         className={cn(
                           "flex gap-3 rounded-md px-3 py-2.5 text-[15px] outline-none transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring",

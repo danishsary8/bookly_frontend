@@ -1,5 +1,20 @@
 import { queryOptions } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import { api, http } from "../client";
+import { ApiError } from "../errors";
+
+async function normalizeBlobError(err: unknown): Promise<never> {
+  if (isAxiosError(err) && err.response?.data instanceof Blob) {
+    try {
+      const text = await err.response.data.text();
+      err.response.data = JSON.parse(text);
+    } catch {
+      // Non-JSON blob error: let ApiError.from handle the status.
+    }
+    throw ApiError.from(err);
+  }
+  throw err;
+}
 import type { BookCard } from "../types";
 
 const DEVICE_STORAGE_KEY = "bookly:reader-device";
@@ -96,21 +111,29 @@ export const ebookApi = {
    */
   fetchPageBlobUrl: async (bookId: number, page: number): Promise<string> => {
     const deviceId = getReaderDeviceId();
-    const res = await http.get(`/reader/${bookId}/pages/${page}`, {
-      responseType: "blob",
-      headers: { "X-Reader-Device": deviceId },
-    });
-    return URL.createObjectURL(res.data as Blob);
+    try {
+      const res = await http.get(`/reader/${bookId}/pages/${page}`, {
+        responseType: "blob",
+        headers: { "X-Reader-Device": deviceId },
+      });
+      return URL.createObjectURL(res.data as Blob);
+    } catch (err) {
+      return normalizeBlobError(err);
+    }
   },
 
   /**
    * Fetches a preview page image as a blob URL (public, no account needed).
    */
   fetchPreviewPageBlobUrl: async (bookId: number, page: number): Promise<string> => {
-    const res = await http.get(`/reader/${bookId}/preview/pages/${page}`, {
-      responseType: "blob",
-    });
-    return URL.createObjectURL(res.data as Blob);
+    try {
+      const res = await http.get(`/reader/${bookId}/preview/pages/${page}`, {
+        responseType: "blob",
+      });
+      return URL.createObjectURL(res.data as Blob);
+    } catch (err) {
+      return normalizeBlobError(err);
+    }
   },
 
   saveProgress: (bookId: number, page: number) =>
@@ -151,7 +174,7 @@ export const ebookApi = {
     api.delete<void>(`/staff/books/${bookId}/ebook`),
 
   resetCustomerDevices: (customerId: number) =>
-    api.post<{ data: { cleared: number } }>(`/staff/customers/${customerId}/ebook-devices/reset`).then((r) => r.data),
+    api.post<{ data: { reset?: number; cleared?: number } }>(`/staff/customers/${customerId}/ebook-devices/reset`).then((r) => r.data),
 };
 
 export const ebookQueries = {

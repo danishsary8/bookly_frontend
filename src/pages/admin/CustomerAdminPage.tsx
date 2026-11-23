@@ -27,6 +27,7 @@ import { ConfirmDialog, Dialog, DialogClose, DialogContent, DialogDescription, D
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { usePortalPath } from "@/features/admin/portal";
 import { ReopenDialog } from "@/features/admin/ReopenAccount";
 import { useReopenCustomer } from "@/features/admin/useReopenCustomer";
 import { useStaff } from "@/features/admin/staffSession";
@@ -183,6 +184,7 @@ export default function CustomerAdminPage() {
   const [confirmResetDevices, setConfirmResetDevices] = useState(false);
   const reopen = useReopenCustomer(() => setConfirmReopen(false));
   const navigate = useNavigate();
+  const toPortal = usePortalPath();
   const remove = useMutation({
     mutationFn: () => opsApi.deleteCustomer(id),
     onSuccess: () => {
@@ -193,7 +195,7 @@ export default function CustomerAdminPage() {
         title: `${name}'s sign-up was deleted`,
         description: "That email can be used to sign up again.",
       });
-      navigate("/admin/customers?view=unverified", { replace: true });
+      navigate(toPortal("customers?view=unverified"), { replace: true });
     },
     onError: (error) =>
       toast.error({
@@ -223,9 +225,10 @@ export default function CustomerAdminPage() {
   const resetDevices = useMutation({
     mutationFn: () => ebookApi.resetCustomerDevices(id),
     onSuccess: (res) => {
+      const count = res.reset ?? res.cleared ?? 0;
       toast.success({
         title: "Ebook devices reset",
-        description: `Cleared ${res.cleared} registered device(s).`,
+        description: `Cleared ${count} registered device(s).`,
       });
       setConfirmResetDevices(false);
     },
@@ -249,7 +252,7 @@ export default function CustomerAdminPage() {
   });
   const back = (
     <Link
-      to="/admin/customers"
+      to={toPortal("customers")}
       className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline"
     >
       <ArrowLeft className="size-4" aria-hidden="true" /> All customers
@@ -263,7 +266,7 @@ export default function CustomerAdminPage() {
     return (
       <NotFoundState
         what="customer"
-        backTo="/admin/customers"
+        backTo={toPortal("customers")}
         backLabel="All customers"
       />
     );
@@ -479,7 +482,7 @@ export default function CustomerAdminPage() {
               </h2>
               {orderCount ? (
                 <Link
-                  to={`/admin/orders?q=${encodeURIComponent(c.email ?? c.name)}`}
+                  to={toPortal(`orders?q=${encodeURIComponent(c.email ?? c.name)}`)}
                   className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
                 >
                   All their orders
@@ -491,7 +494,7 @@ export default function CustomerAdminPage() {
                 {c.recent_orders.map((o) => (
                   <li key={o.id}>
                     <Link
-                      to={`/admin/orders/${o.id}`}
+                      to={toPortal(`orders/${o.id}`)}
                       className="flex flex-wrap items-center justify-between gap-3 py-2.5 outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <span className="grid">
@@ -520,7 +523,7 @@ export default function CustomerAdminPage() {
               </p>
             )}
           </section>
-          <CustomerNotesPanel customerId={id} />
+          <CustomerNotesPanel key={id} customerId={id} />
           {isAdmin && !closed ? (
             <section
               aria-labelledby="danger-zone"
@@ -592,7 +595,7 @@ export default function CustomerAdminPage() {
               "nothing yet"}
           </p>
         </section>
-        <CustomerTagsEditor customerId={id} initialTags={c.tags} />
+        <CustomerTagsEditor key={c.id} customerId={id} initialTags={c.tags} />
       </div>
       <ConfirmDialog
         open={confirm}
@@ -627,7 +630,7 @@ export default function CustomerAdminPage() {
         open={confirmClose}
         onOpenChange={setConfirmClose}
         onClosed={(saved) => {
-          queryClient.setQueryData(opsKeys.customer(id), saved);
+          queryClient.setQueryData(opsKeys.customer(id), (old: StaffCustomer | undefined) => (old ? { ...old, ...saved } : saved));
           void queryClient.invalidateQueries({ queryKey: ["staff", "customers"] });
         }}
       />

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Banknote, Download, FileText, ListChecks, Package, Printer, QrCode, X } from "lucide-react";
+import { Banknote, Download, FileText, ListChecks, Package, Printer, QrCode, ReceiptText, Truck, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { opsApi, opsQueries } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
@@ -40,7 +40,8 @@ const placedDay = (value: string | null | undefined) => {
 const thc = th.replace("px-5", "px-3.5");
 const tdc = td.replace("px-5", "px-3.5");
 const placedTime = (value: string | null | undefined) => (value ? timeOnly.format(new Date(value)) : "");
-import { MAX_PRINT, staffPrintPath } from "@/features/orders/documents/printLinks";
+import { MAX_PRINT, staffDailySalesPrintPath, staffPrintPath } from "@/features/orders/documents/printLinks";
+import { usePortal, usePortalPath } from "@/features/admin/portal";
 import { rangeSummary } from "@/lib/pagination";
 import { formatUsd } from "@/stores/currency";
 import { toast } from "@/stores/toast";
@@ -117,8 +118,21 @@ function ExportDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
   );
 }
 
+const FINISHED_STATUSES = new Set<OrderStatus>(["delivered", "cancelled", "returned"]);
+
 /** Ticked orders and what to do with them (print, change status); the ticks stay while paging or filtering. */
-function SelectionBar({ ids, onStatus, onClear }: { ids: number[]; onStatus: () => void; onClear: () => void }) {
+function SelectionBar({
+  ids,
+  packableIds,
+  onStatus,
+  onClear,
+}: {
+  ids: number[];
+  packableIds: number[];
+  onStatus: () => void;
+  onClear: () => void;
+}) {
+  const portal = usePortal();
   return (
     <div role="region" aria-label="Selected orders" className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-lapis-tint px-4 py-3">
       <p className="font-semibold tabular-nums">
@@ -128,10 +142,19 @@ function SelectionBar({ ids, onStatus, onClear }: { ids: number[]; onStatus: () 
         <Button size="sm" onClick={onStatus}>
           <ListChecks aria-hidden="true" /> Change status
         </Button>
-        <a href={staffPrintPath("packing-slip", ids)} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline", size: "sm" })}>
-          <Printer aria-hidden="true" /> Print packing slips
+        {packableIds.length > 0 ? (
+          <a href={staffPrintPath("packing-slip", packableIds, true, portal)} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <Printer aria-hidden="true" /> Print packing slips
+          </a>
+        ) : (
+          <Button variant="outline" size="sm" disabled title="Packing slips are only needed for orders not yet delivered or cancelled">
+            <Printer aria-hidden="true" /> Print packing slips
+          </Button>
+        )}
+        <a href={staffPrintPath("manifest", ids, true, portal)} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline", size: "sm" })}>
+          <Truck aria-hidden="true" /> Delivery sheet
         </a>
-        <a href={staffPrintPath("invoice", ids)} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline", size: "sm" })}>
+        <a href={staffPrintPath("invoice", ids, true, portal)} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline", size: "sm" })}>
           <FileText aria-hidden="true" /> Print invoices
         </a>
         <Button variant="ghost" size="sm" onClick={onClear}>
@@ -187,8 +210,9 @@ export default function OrdersAdminPage() {
   const isNew = useIsNewOrder();
   const [exporting, setExporting] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
-  // The next steps each ticked order allows, kept while paging, so the bulk dialog offers only steps that fit.
+  // The next steps and statuses each ticked order has, kept while paging, so bulk actions fit.
   const [allowedById, setAllowedById] = useState<Record<number, OrderStatus[]>>({});
+  const [statusById, setStatusById] = useState<Record<number, OrderStatus | undefined>>({});
   const [changing, setChanging] = useState(false);
   // One order, one step: the same confirm dialog as the order page (note for the timeline included).
   const [step, setStep] = useState<{ order: { id?: number; order_number?: string }; to: OrderStatus } | null>(null);
@@ -199,8 +223,26 @@ export default function OrdersAdminPage() {
   const pageIds = list.map((o) => o.id!);
   const onPage = pageIds.filter((id) => selected.includes(id)).length;
   const full = selected.length >= MAX_PRINT;
-  const remember = (ids: number[]) =>
-    setAllowedById((current) => ({ ...current, ...Object.fromEntries(list.filter((o) => ids.includes(o.id!)).map((o) => [o.id!, (o as { allowed_next_statuses?: OrderStatus[] }).allowed_next_statuses ?? []])) }));
+  const remember = (ids: number[]) => {
+    const matched = list.filter((o) => ids.includes(o.id!));
+    setAllowedById((current) => ({ ...current, ...Object.fromEntries(matched.map((o) => [o.id!, (o as { allowed_next_statuses?: OrderStatus[] }).allowed_next_statuses ?? []])) }));
+    setStatusById((current) => ({ ...current, ...Object.fromEntries(matched.map((o) => [o.id!, o.status])) }));
+  };
+  const packableIds = selected.filter((id) => {
+    const st = statusById[id];
+    return !st || !FINISHED_STATUSES.has(st);
+  });
+  const portal = usePortal();
+  const toPortal = usePortalPath();
+  const dailyPrintHref = staffDailySalesPrintPath(
+    {
+      from: from || today(),
+      to: to || from || today(),
+      status,
+      pay: paymentMethod,
+    },
+    portal,
+  );
   const toggle = (id: number, on: boolean) => {
     remember([id]);
     setSelectedRaw(id, on);
@@ -219,11 +261,16 @@ export default function OrdersAdminPage() {
       title="Orders"
       lead={meta && meta.total ? rangeSummary(meta.from, meta.to, meta.total, meta.total === 1 ? "order" : "orders") : "Every order, newest first."}
       actions={
-        isAdmin ? (
-          <Button variant="outline" onClick={() => setExporting(true)}>
-            <Download aria-hidden="true" /> Export CSV
-          </Button>
-        ) : null
+        <div className="flex flex-wrap items-center gap-2">
+          <Link to={dailyPrintHref} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline" })}>
+            <ReceiptText aria-hidden="true" /> {from || to ? "Print sales register" : "Today's sales"}
+          </Link>
+          {isAdmin ? (
+            <Button variant="outline" onClick={() => setExporting(true)}>
+              <Download aria-hidden="true" /> Export CSV
+            </Button>
+          ) : null}
+        </div>
       }
     >
       {/* grid-cols-1: the filter rows scroll inside themselves instead of making the page wider than a phone. */}
@@ -259,7 +306,7 @@ export default function OrdersAdminPage() {
             onChange={(v) => set({ pay: v === "all" ? undefined : v })}
           />
         </div>
-        {selected.length ? <SelectionBar ids={selected} onStatus={() => setChanging(true)} onClear={() => setSelected([])} /> : null}
+        {selected.length ? <SelectionBar ids={selected} packableIds={packableIds} onStatus={() => setChanging(true)} onClear={() => setSelected([])} /> : null}
       </div>
 
       <ListState
@@ -301,7 +348,7 @@ export default function OrdersAdminPage() {
                   </label>
                 </td>
                 <th scope="row" className={`${tdc} font-normal`}>
-                  <Link to={`/admin/orders/${o.id}`} className="whitespace-nowrap font-semibold tabular-nums underline-offset-4 hover:text-primary hover:underline">
+                  <Link to={toPortal(`orders/${o.id}`)} className="whitespace-nowrap font-semibold tabular-nums underline-offset-4 hover:text-primary hover:underline">
                     {o.order_number}
                   </Link>
                   {isNew(o.id) ? (

@@ -1,17 +1,18 @@
 import { m, useReducedMotion } from "motion/react";
 import { transitions } from "@/lib/motion";
 import { groupFor } from "./adminNav";
+import { portalFromPathname, portalLabel } from "./portal";
 import { useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { RefreshNote } from "./RefreshNote";
 import "./workspace.css";
 
-/** Top of an admin screen: the page's h1, an optional one-line description, and actions on the right. */
+/** Top of a workspace screen: the page's h1, an optional one-line description, and actions on the right. */
 export function AdminPage({ title, lead, actions, back, children }: { title: string; lead?: ReactNode; actions?: ReactNode; back?: ReactNode; children: ReactNode }) {
-  useDocumentTitle(`${title} · Staff`);
-  const reducedMotion = useReducedMotion();
   const { pathname } = useLocation();
+  useDocumentTitle(`${title} · ${portalLabel(portalFromPathname(pathname))}`);
+  const reducedMotion = useReducedMotion();
   const group = groupFor(pathname);
   return (
     <m.div data-work-area={group?.label} className="admin-page mx-auto grid w-full max-w-[1440px] grid-cols-[minmax(0,1fr)] gap-6" initial={reducedMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={transitions.page}>

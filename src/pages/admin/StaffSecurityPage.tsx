@@ -21,8 +21,10 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Pagination } from "@/components/ui/pagination";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { usePortalPath } from "@/features/admin/portal";
 import { ListState, TableCard, td, th, thead } from "@/features/admin/listKit";
-import { useStaff, useStaffSignOut } from "@/features/admin/staffSession";
+import { clearSession } from "@/api/session";
+import { useStaff } from "@/features/admin/staffSession";
 import { useListParams } from "@/features/admin/useListParams";
 import { orderDateTime } from "@/features/orders/format";
 import { toast } from "@/stores/toast";
@@ -80,8 +82,8 @@ function loginStatusBadge(status: StaffLoginHistoryItem["status"]) {
 export default function StaffSecurityPage() {
   const session = useStaff();
   const user = session?.user;
-  const signOut = useStaffSignOut();
   const navigate = useNavigate();
+  const toPortal = usePortalPath();
   const queryClient = useQueryClient();
   const { page, hrefFor } = useListParams();
 
@@ -105,9 +107,10 @@ export default function StaffSecurityPage() {
     mutationFn: () => staffApi.revokeOtherSessions(),
     onSuccess: (res) => {
       void queryClient.invalidateQueries({ queryKey: staffKeys.sessions() });
+      const count = typeof res?.revoked_count === "number" ? res.revoked_count : null;
       toast.success({
         title: "Signed out other sessions",
-        description: `${res.revoked_count} other session${res.revoked_count === 1 ? "" : "s"} revoked.`,
+        description: count !== null ? `${count} other session${count === 1 ? "" : "s"} revoked.` : "All other sessions were signed out.",
       });
     },
     onError: () => toast.error({ title: "Could not sign out other sessions" }),
@@ -115,10 +118,11 @@ export default function StaffSecurityPage() {
 
   const revokeAllMutation = useMutation({
     mutationFn: () => staffApi.revokeAllSessions(),
-    onSuccess: async () => {
+    onSuccess: () => {
       toast.success("All sessions signed out. Please sign in again.");
-      await signOut();
-      navigate("/admin/login", { replace: true });
+      clearSession("staff");
+      queryClient.removeQueries({ predicate: (query) => query.queryKey[0] === "staff" });
+      navigate(toPortal("login"), { replace: true });
     },
     onError: () => toast.error({ title: "Could not sign out of all sessions" }),
   });
@@ -126,7 +130,9 @@ export default function StaffSecurityPage() {
   const sessions: StaffSession[] = sessionsQuery.data ?? [];
   const otherSessions = sessions.filter((s) => !s.is_current);
   const historyList = historyQuery.data?.data ?? [];
-  const historyMeta = historyQuery.data?.meta;
+  const historyMeta =
+    historyQuery.data?.meta ??
+    (historyQuery.data as unknown as { current_page?: number; last_page?: number; total?: number } | undefined);
 
   return (
     <AdminPage

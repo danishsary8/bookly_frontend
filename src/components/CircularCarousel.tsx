@@ -50,8 +50,9 @@ export default function CircularCarousel({ items, cardWidth = 180, aspectRatio =
   // rests in the middle between steps.
   const dwell = Math.min(6000, Math.max(2200, (360 / n / Math.max(1, speed)) * 1000));
 
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const cards = useRef<(HTMLDivElement | null)[]>([]);
-  const st = useRef({ pos: 0, target: null as number | null, hover: false, drag: null as null | { x: number; pos: number }, front: -1, holdUntil: 0 });
+  const st = useRef({ pos: 0, target: null as number | null, hover: false, drag: null as null | { x: number; pos: number }, front: -1, holdUntil: 0, inView: true, tabVisible: true });
   const report = useRef(onActiveChange);
   useEffect(() => {
     report.current = onActiveChange;
@@ -73,8 +74,26 @@ export default function CircularCarousel({ items, cardWidth = 180, aspectRatio =
   useEffect(() => {
     let frame = 0;
     let last = performance.now();
+    const el = rootRef.current;
+    const io =
+      typeof IntersectionObserver !== "undefined" && el
+        ? new IntersectionObserver(([entry]) => {
+            st.current.inView = entry?.isIntersecting ?? true;
+          })
+        : null;
+    if (io && el) io.observe(el);
+    const onVis = () => {
+      st.current.tabVisible = document.visibilityState === "visible";
+    };
+    document.addEventListener("visibilitychange", onVis);
+
     const loop = (now: number) => {
       const m = st.current;
+      if (!m.inView || !m.tabVisible) {
+        last = now;
+        frame = requestAnimationFrame(loop);
+        return;
+      }
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       if (m.target !== null) {
@@ -124,7 +143,11 @@ export default function CircularCarousel({ items, cardWidth = 180, aspectRatio =
       frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      io?.disconnect();
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, [n, spacing, radius, dwell, reduce]);
 
   const onPointerDown = (e: React.PointerEvent) => {
@@ -166,6 +189,7 @@ export default function CircularCarousel({ items, cardWidth = 180, aspectRatio =
 
   return (
     <div
+      ref={rootRef}
       aria-hidden="true"
       className={cn("circular-carousel relative size-full select-none overflow-hidden [perspective:1400px] [touch-action:pan-y]", intro === "rise" && !reduce && "circular-rise", className)}
       onPointerEnter={() => (st.current.hover = true)}

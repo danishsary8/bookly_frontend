@@ -15,6 +15,7 @@ import { NotificationsBell } from "./NotificationsBell";
 import { useNewOrderWatch } from "./orders/newOrders";
 import { useAdminAutoRefresh } from "./autoRefresh";
 import { useStaff, useStaffSignOut } from "./staffSession";
+import { portalBase, portalLabel, portalPath, usePortal } from "./portal";
 import { ThemeToggle } from "@/components/shell/ThemeToggle";
 import "./admin.css";
 import { SupportMenuBadge } from "@/features/support/SupportMenuBadge";
@@ -24,21 +25,24 @@ const itemClass =
   "flex min-h-11 cursor-pointer select-none items-center gap-3 rounded-md px-3 text-[15px] text-foreground outline-none data-[highlighted]:bg-secondary";
 
 function Wordmark({ onRail = false }: { onRail?: boolean }) {
+  const portal = usePortal();
   return (
-    <Link to="/admin" className={cn("flex items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring", onRail && "admin-rail-brand")}>
+    <Link to={portalBase(portal)} className={cn("flex items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring", onRail && "admin-rail-brand")}>
       <span className={cn("grid size-9 shrink-0 place-items-center rounded-[10px]", onRail ? "bg-primary text-gold shadow-[0_6px_14px_-8px_rgb(20_32_122/0.7)]" : "bg-primary text-primary-foreground")}><BookOpen className="size-5" aria-hidden="true" /></span>
       <span className="admin-brand-label admin-brand-word font-display text-[1.55rem] leading-none text-primary">Bookly</span>
-      <span className={cn("admin-brand-label rounded-md px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.18em] max-sm:sr-only", "bg-lapis text-on-lapis")}>Staff</span>
+      <span className={cn("admin-brand-label rounded-md px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.18em] max-sm:sr-only", "bg-lapis text-on-lapis")}>{portalLabel(portal)}</span>
     </Link>
   );
 }
 
 function Nav({ onNavigate, collapsed = false }: { onNavigate?: () => void; collapsed?: boolean }) {
   const session = useStaff();
+  const portal = usePortal();
   const counts = useMenuCounts(Boolean(session)).data;
+  const supportPath = portalPath(portal, "support");
   return (
-    <nav aria-label="Admin" className="admin-navigation grid gap-5">
-      {navFor(session?.user.role).map((group) => (
+    <nav aria-label={portalLabel(portal)} className="admin-navigation grid gap-5">
+      {navFor(session?.user.role, portal).map((group) => (
         <div key={group.label} data-tone={group.tone} className="grid gap-0.5">
           <p className="admin-nav-group flex items-center gap-2 px-3 pb-1.5 text-[11px] font-bold uppercase tracking-[0.16em]">
             <span className="admin-nav-group-dot" aria-hidden="true" />
@@ -55,7 +59,7 @@ function Nav({ onNavigate, collapsed = false }: { onNavigate?: () => void; colla
             >
               <Icon className="size-[18px] shrink-0" aria-hidden="true" />
               <span className="admin-nav-label truncate">{label}</span>
-              {to === "/admin/support" ? <SupportMenuBadge /> : null}
+              {to === supportPath ? <SupportMenuBadge /> : null}
               {(() => {
                 const badge = COUNT_FOR[to];
                 const n = badge && counts ? counts[badge.key] : 0;
@@ -76,6 +80,7 @@ function Nav({ onNavigate, collapsed = false }: { onNavigate?: () => void; colla
 
 function UserMenu() {
   const session = useStaff();
+  const portal = usePortal();
   const signOut = useStaffSignOut();
   const navigate = useNavigate();
   const user = session?.user;
@@ -101,7 +106,7 @@ function UserMenu() {
           </div>
           <DropdownMenu.Separator className="my-1 h-px bg-border" />
           <DropdownMenu.Item asChild className={itemClass}>
-            <Link to="/admin/security">
+            <Link to={portalPath(portal, "security")}>
               <ShieldCheck className="size-[18px] text-muted-foreground" aria-hidden="true" /> Security & sessions
             </Link>
           </DropdownMenu.Item>
@@ -110,7 +115,7 @@ function UserMenu() {
               <ExternalLink className="size-[18px] text-muted-foreground" aria-hidden="true" /> View the shop
             </Link>
           </DropdownMenu.Item>
-          <DropdownMenu.Item className={itemClass} onSelect={() => void signOut().then(() => navigate("/admin/login", { replace: true }))}>
+          <DropdownMenu.Item className={itemClass} onSelect={() => void signOut().then(() => navigate(portalPath(portal, "login"), { replace: true }))}>
             <LogOut className="size-[18px] text-muted-foreground" aria-hidden="true" /> Sign out
           </DropdownMenu.Item>
         </DropdownMenu.Content>
@@ -147,7 +152,8 @@ export function AdminShell() {
     catch { /* The menu still works when browser storage is unavailable. */ }
   };
   const session = useStaff();
-  useNewOrderWatch(session?.user);
+  const portal = usePortal();
+  useNewOrderWatch(session?.user, portal);
   useAdminAutoRefresh(Boolean(session));
 
   return (

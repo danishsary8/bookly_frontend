@@ -70,7 +70,8 @@ export default function TrashAdminPage() {
   };
 
   const items = data?.data ?? [];
-  const meta = data?.meta;
+  const rawMeta = data?.meta ?? (data as unknown as { current_page?: number; last_page?: number; total?: number } | undefined);
+  const meta = rawMeta && typeof rawMeta.last_page === "number" ? rawMeta : undefined;
 
   const typeBadge = (type: string) => {
     switch (type) {

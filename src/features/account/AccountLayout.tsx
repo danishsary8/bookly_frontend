@@ -1,5 +1,5 @@
 import "./account.css";
-import { useId } from "react";
+import { useId, useState } from "react";
 import { ArrowUpRight, BookHeart, BookOpen, ChevronDown, ChevronRight, Heart, KeyRound, LayoutDashboard, LifeBuoy, LogOut, MapPin, MessageSquareText, Package, RotateCcw, TicketPercent, UserPlus, UserRound, type LucideIcon } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { m } from "motion/react";
@@ -8,8 +8,10 @@ import { shopFeaturesQuery } from "@/api/endpoints/credit";
 import { useSession } from "@/api/session";
 import type { Customer } from "@/api/types";
 import { FrozenOutlet } from "@/components/motion/FrozenOutlet";
-import { useSignOut } from "@/components/shell/useSignOut";
+import { SignOutDialog } from "@/components/shell/SignOutDialog";
+import { CountBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useOrderNotifications } from "@/features/orders/orderNotifications";
 import { cn } from "@/lib/utils";
 import { useT, type Translations } from "@/i18n";
 
@@ -58,7 +60,7 @@ function label(dict: Translations, key: SectionKey) {
   return key === "support" ? dict.support.title : key === "referrals" ? dict.credit.referrals : dict.account[key];
 }
 
-function SectionLinks({ visible, onNavigate }: { visible: (key: SectionKey) => boolean; onNavigate?: () => void }) {
+function SectionLinks({ visible, unreadOrders, onNavigate }: { visible: (key: SectionKey) => boolean; unreadOrders: number; onNavigate?: () => void }) {
   const { dict } = useT();
   const instanceId = useId();
   return (
@@ -73,26 +75,31 @@ function SectionLinks({ visible, onNavigate }: { visible: (key: SectionKey) => b
               {dict.accountNav.groups[group.key]}
             </p>
             <ul aria-labelledby={id} className="grid gap-0.5">
-              {sections.map(({ to, key, Icon, end }) => (
-                <li key={to}>
-                  <NavLink
-                    to={to}
-                    end={end}
-                    onClick={onNavigate}
-                    className={({ isActive }) =>
-                      cn(
-                        "account-nav-link relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-[15px] font-medium lg:min-h-10 outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring",
-                        isActive
-                          ? "bg-lapis-tint font-semibold text-primary after:absolute after:inset-y-2 after:left-0 after:w-[3px] after:rounded-full after:bg-primary"
-                          : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                      )
-                    }
-                  >
-                    <Icon className="size-[18px] shrink-0" aria-hidden="true" />
-                    {label(dict, key)}
-                  </NavLink>
-                </li>
-              ))}
+              {sections.map(({ to, key, Icon, end }) => {
+                const badge = key === "orders" ? unreadOrders : 0;
+                return (
+                  <li key={to}>
+                    <NavLink
+                      to={to}
+                      end={end}
+                      onClick={onNavigate}
+                      className={({ isActive }) =>
+                        cn(
+                          "account-nav-link relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-[15px] font-medium lg:min-h-10 outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring",
+                          isActive
+                            ? "bg-lapis-tint font-semibold text-primary after:absolute after:inset-y-2 after:left-0 after:w-[3px] after:rounded-full after:bg-primary"
+                            : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                        )
+                      }
+                    >
+                      <Icon className="size-[18px] shrink-0" aria-hidden="true" />
+                      <span className="min-w-0 flex-1 truncate">{label(dict, key)}</span>
+                      <CountBadge count={badge} className="badge-pop ml-auto" aria-hidden="true" />
+                      {badge > 0 ? <span className="sr-only"> ({dict.shell.orderUpdates(badge)})</span> : null}
+                    </NavLink>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         );
@@ -104,7 +111,8 @@ function SectionLinks({ visible, onNavigate }: { visible: (key: SectionKey) => b
 export function AccountLayout() {
   const session = useSession<Customer>("customer");
   const flags = useQuery(shopFeaturesQuery());
-  const signOut = useSignOut();
+  const { unreadCount: unreadOrders } = useOrderNotifications();
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
   const { pathname } = useLocation();
   const { dict } = useT();
   const user = session?.user;
@@ -132,9 +140,9 @@ export function AccountLayout() {
               <span className="truncate text-xs text-muted-foreground">{who}</span>
             </span>
           </div>
-          <SectionLinks visible={visible} />
+          <SectionLinks visible={visible} unreadOrders={unreadOrders} />
           <NavLink to="/books" className="account-back-to-shop"><BookOpen aria-hidden="true" />{dict.account.browseBooks}<ArrowUpRight aria-hidden="true" /></NavLink>
-          <Button variant="ghost" onClick={() => void signOut()} className="mt-3 w-full justify-start gap-3 border-t border-border px-3 pt-2 font-medium text-muted-foreground">
+          <Button variant="ghost" onClick={() => setConfirmSignOut(true)} className="mt-3 w-full justify-start gap-3 border-t border-border px-3 pt-2 font-medium text-muted-foreground hover:bg-destructive-tint hover:text-destructive">
             <LogOut aria-hidden="true" /> {dict.account.signOut}
           </Button>
         </nav>
@@ -152,12 +160,13 @@ export function AccountLayout() {
                 <span className="block text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">{dict.account.eyebrow}</span>
                 <span className="block truncate font-semibold">{label(dict, current.key)}</span>
               </span>
+              {current.key !== "orders" ? <CountBadge count={unreadOrders} aria-hidden="true" /> : null}
               <span className="text-sm font-semibold text-primary">{dict.accountNav.menu}</span>
               <ChevronDown className="size-5 text-primary transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
             </summary>
             <div className="border-t border-border p-3">
-              <SectionLinks visible={visible} />
-              <Button variant="ghost" onClick={() => void signOut()} className="mt-3 w-full justify-start gap-3 border-t border-border px-3 pt-2 font-medium text-muted-foreground">
+              <SectionLinks visible={visible} unreadOrders={unreadOrders} />
+              <Button variant="ghost" onClick={() => setConfirmSignOut(true)} className="mt-3 w-full justify-start gap-3 border-t border-border px-3 pt-2 font-medium text-muted-foreground hover:bg-destructive-tint hover:text-destructive">
                 <LogOut aria-hidden="true" /> {dict.account.signOut}
               </Button>
             </div>
@@ -172,6 +181,7 @@ export function AccountLayout() {
           </m.div>
         </div>
       </div>
+      <SignOutDialog open={confirmSignOut} onOpenChange={setConfirmSignOut} user={user} />
     </div>
   );
 }
@@ -183,37 +193,46 @@ export function AccountLayout() {
 export function AccountMenuList() {
   const session = useSession<Customer>("customer");
   const flags = useQuery(shopFeaturesQuery());
-  const signOut = useSignOut();
+  const { unreadCount: unreadOrders } = useOrderNotifications();
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
   const { dict } = useT();
   const user = session?.user;
   const demo = user?.email === "demo@bookly.test";
   const visible = (key: SectionKey) => (key === "referrals" ? Boolean(flags.data?.referrals && user?.email_verified) && !demo : key !== "overview");
   return (
-    <nav aria-label={dict.account.nav} className="account-menu-list grid gap-5 lg:hidden">
-      {groups.map((group) => {
-        const sections = group.sections.filter((s) => visible(s.key));
-        if (sections.length === 0) return null;
-        const id = `account-menu-${group.key}`;
-        return (
-          <div key={group.key} className="grid gap-2">
-            <p id={id} className="px-1 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">{dict.accountNav.groups[group.key]}</p>
-            <ul aria-labelledby={id} className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-              {sections.map(({ to, key, Icon }) => (
-                <li key={to}>
-                  <NavLink to={to} className="flex min-h-[3.25rem] items-center gap-3 px-4 text-[15px] font-medium outline-none transition-colors hover:bg-secondary focus-visible:bg-secondary focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
-                    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-lapis-tint text-primary"><Icon className="size-[18px]" aria-hidden="true" /></span>
-                    <span className="min-w-0 flex-1 truncate">{label(dict, key)}</span>
-                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          </div>
-        );
-      })}
-      <button type="button" onClick={() => void signOut()} className="flex min-h-[3.25rem] items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 text-[15px] font-semibold text-destructive outline-none transition-colors hover:bg-destructive-tint focus-visible:ring-2 focus-visible:ring-ring">
-        <LogOut className="size-[18px]" aria-hidden="true" /> {dict.account.signOut}
-      </button>
-    </nav>
+    <>
+      <nav aria-label={dict.account.nav} className="account-menu-list grid gap-5 lg:hidden">
+        {groups.map((group) => {
+          const sections = group.sections.filter((s) => visible(s.key));
+          if (sections.length === 0) return null;
+          const id = `account-menu-${group.key}`;
+          return (
+            <div key={group.key} className="grid gap-2">
+              <p id={id} className="px-1 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">{dict.accountNav.groups[group.key]}</p>
+              <ul aria-labelledby={id} className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+                {sections.map(({ to, key, Icon }) => {
+                  const badge = key === "orders" ? unreadOrders : 0;
+                  return (
+                    <li key={to}>
+                      <NavLink to={to} className="flex min-h-[3.25rem] items-center gap-3 px-4 text-[15px] font-medium outline-none transition-colors hover:bg-secondary focus-visible:bg-secondary focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+                        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-lapis-tint text-primary"><Icon className="size-[18px]" aria-hidden="true" /></span>
+                        <span className="min-w-0 flex-1 truncate">{label(dict, key)}</span>
+                        <CountBadge count={badge} className="badge-pop shrink-0" aria-hidden="true" />
+                        {badge > 0 ? <span className="sr-only"> ({dict.shell.orderUpdates(badge)})</span> : null}
+                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                      </NavLink>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        })}
+        <button type="button" onClick={() => setConfirmSignOut(true)} className="flex min-h-[3.25rem] items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 text-[15px] font-semibold text-destructive outline-none transition-colors hover:bg-destructive-tint focus-visible:ring-2 focus-visible:ring-ring">
+          <LogOut className="size-[18px]" aria-hidden="true" /> {dict.account.signOut}
+        </button>
+      </nav>
+      <SignOutDialog open={confirmSignOut} onOpenChange={setConfirmSignOut} user={user} />
+    </>
   );
 }

@@ -1,16 +1,20 @@
-import { BookOpen, Heart, House, Library, Package, PenLine, Sparkles, TrendingUp, UserRound, type LucideIcon } from "lucide-react";
+import { useState } from "react";
+import { BookOpen, Heart, House, Library, LogOut, Package, PenLine, Sparkles, TrendingUp, UserRound, type LucideIcon } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useSession } from "@/api/session";
+import type { Customer } from "@/api/types";
 import { Drawer, DrawerBody, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { CountBadge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { useOrderNotifications } from "@/features/orders/orderNotifications";
 import { cn } from "@/lib/utils";
 import { closeShellPanel, openShellPanel, useShellPanel } from "@/stores/shell";
 import { CurrencySwitch } from "./CurrencySwitch";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { LiveSearch } from "./LiveSearch";
+import { SignOutDialog } from "./SignOutDialog";
 import { ThemeSwitch } from "./ThemeToggle";
 import { MOBILE_MENU_ID, accountNav, isActivePath, primaryNav } from "./nav";
-import { useSignOut } from "./useSignOut";
 import { useT } from "@/i18n";
 
 /*
@@ -35,11 +39,13 @@ const groupLabel = "px-3 pb-1 text-xs font-bold uppercase tracking-[0.14em] text
 export function MobileMenu() {
   const panel = useShellPanel();
   const location = useLocation();
-  const session = useSession("customer");
-  const signOut = useSignOut();
+  const session = useSession<Customer>("customer");
+  const { unreadCount: unreadOrders } = useOrderNotifications();
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
   const { dict } = useT();
 
   return (
+    <>
     <Drawer open={panel === "menu"} onOpenChange={(open) => (open ? openShellPanel("menu") : closeShellPanel())}>
       <DrawerContent id={MOBILE_MENU_ID} side="right" aria-describedby={undefined}>
         <DrawerHeader>
@@ -84,6 +90,7 @@ export function MobileMenu() {
               {accountNav.map((item) => {
                 const active = isActivePath(location.pathname, item.to);
                 const label = dict.navLinks[item.label];
+                const badge = item.to === "/account/orders" ? unreadOrders : 0;
                 return (
                   <li key={item.to}>
                     <NavLink
@@ -93,7 +100,9 @@ export function MobileMenu() {
                       className={linkClass(active)}
                     >
                       {(() => { const Icon = ICONS[item.to] ?? UserRound; return <Icon aria-hidden="true" />; })()}
-                      {label}
+                      <span className="min-w-0 flex-1 truncate">{label}</span>
+                      <CountBadge count={badge} className="ml-auto" aria-hidden="true" />
+                      {badge > 0 ? <span className="sr-only"> ({dict.shell.orderUpdates(badge)})</span> : null}
                     </NavLink>
                   </li>
                 );
@@ -111,12 +120,13 @@ export function MobileMenu() {
           {session ? (
             <Button
               variant="outline"
-              className="w-full"
+              className="w-full text-destructive hover:bg-destructive-tint hover:text-destructive"
               onClick={() => {
                 closeShellPanel();
-                void signOut();
+                setConfirmSignOut(true);
               }}
             >
+              <LogOut className="size-[18px]" aria-hidden="true" />
               {dict.nav.signOut}
             </Button>
           ) : (
@@ -127,5 +137,7 @@ export function MobileMenu() {
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
+    <SignOutDialog open={confirmSignOut} onOpenChange={setConfirmSignOut} user={session?.user} />
+    </>
   );
 }

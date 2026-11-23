@@ -53,6 +53,7 @@ export function EmailChanger({ current, hasPassword, pending = null, onDone }: {
       const response = await accountApi.confirmEmail(values.code);
       if (response.customer) queryClient.setQueryData(accountKeys.me(), response.customer);
       await queryClient.invalidateQueries({ queryKey: accountKeys.me() });
+      void queryClient.invalidateQueries({ queryKey: accountKeys.sessions() });
       toast.success({ title: current ? t.emailChanged : t.emailAdded, description: t.emailChangedLead });
       onDone();
     } catch (error) {

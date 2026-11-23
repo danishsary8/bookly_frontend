@@ -29,18 +29,22 @@ export function PromoPopup() {
 
   useEffect(() => {
     if (!promotion || quiet || !promoStorage.shouldShow(promotion.id)) return;
+    let openTimer: number | undefined;
     // Wait for the splash to leave, then a short beat so the page is seen first.
     const timer = window.setInterval(() => {
       if (document.documentElement.hasAttribute("data-splash")) return;
       window.clearInterval(timer);
-      window.setTimeout(() => {
+      openTimer = window.setTimeout(() => {
         if (!promoStorage.shouldShow(promotion.id)) return;
         promoStorage.markSeen(promotion.id);
         void promotionsApi.view(promotion.id);
         setOpen(true);
       }, OPEN_AFTER_MS);
     }, 300);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearInterval(timer);
+      if (openTimer !== undefined) window.clearTimeout(openTimer);
+    };
   }, [promotion, quiet]);
 
   if (!promotion) return null;

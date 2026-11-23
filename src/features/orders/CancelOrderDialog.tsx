@@ -25,6 +25,10 @@ export function CancelOrderDialog({ order, open, onOpenChange }: { order: Order;
     onSuccess: (updated) => {
       queryClient.setQueryData(orderKeys.order(order.id!), updated);
       void queryClient.invalidateQueries({ queryKey: ["orders"] });
+      void queryClient.invalidateQueries({ queryKey: ["account", "store-credits"] });
+      void queryClient.invalidateQueries({ queryKey: ["account", "coupons"] });
+      void queryClient.invalidateQueries({ queryKey: ["account", "referrals"] });
+      void queryClient.invalidateQueries({ queryKey: ["payments", "khqr", order.id!] });
       onOpenChange(false);
       setReason("");
       toast.success({ title: t.cancelled(order.order_number ?? ""), description: t.cancelledLead });

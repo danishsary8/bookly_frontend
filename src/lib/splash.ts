@@ -2,13 +2,13 @@ import { brand } from "@/config/brand";
 import { getLanguage, translations } from "@/i18n";
 
 /*
- * The splash (markup + CSS in index.html, switched on by public/splash-boot.js) draws an open book in gold ink and sets the name letter by letter.
- * Once the app has rendered, this fills in the translated tagline, waits for the drawing and a short rest (it never holds
- * a ready app longer than that), then fades the splash out. A click, tap or key press skips it straight away.
+ * The splash (markup + CSS in index.html, switched on by public/splash-boot.js) shows a clean Lapis & Paper
+ * Bookly loading screen once per tab. Once the app renders, this fills in the translated tagline, waits briefly
+ * so the transition feels calm (never longer than ~1.2s), then dissolves out. Any click, tap or key press skips it.
  */
-const OPEN_MS = 2420; // drawn and named by ~2.2s, a short rest, then the 0.58s exit: gone at 3s in all
-const STILL_MS = 300; // reduced motion: a short look at a static page
-const EXIT_MS = 580;
+const OPEN_MS = 1150;
+const STILL_MS = 250; // reduced motion: brief static screen
+const EXIT_MS = 320;
 export const SPLASH_SEEN_KEY = "bookly-splash-seen";
 
 export function dismissSplash(): void {

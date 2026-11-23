@@ -1,12 +1,13 @@
 import { useState, type ReactNode } from "react";
-import { AlertTriangle, BarChart3, Boxes, CheckCircle2, CircleDollarSign, Download, FileSpreadsheet, FolderTree, Gift, Hourglass, LineChart, MapPin, PenTool, PiggyBank, Printer, Receipt, RotateCcw, ShoppingBag, Tag, Ticket, TrendingUp, Trophy, Truck, Undo2, UserPlus, Users, Wallet, XCircle } from "lucide-react";
+import { AlertTriangle, BarChart3, Boxes, CheckCircle2, CircleDollarSign, Download, FileSpreadsheet, FolderTree, Gift, Hourglass, LineChart, MapPin, PenTool, PiggyBank, Printer, Receipt, ReceiptText, RotateCcw, ShoppingBag, Tag, Ticket, TrendingUp, Trophy, Truck, Undo2, UserPlus, Users, Wallet, XCircle } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
-import { inventoryApi, reportsApi, type ReportGroup, type ReportName, type ReportRange } from "@/api/endpoints/reports";
+import { inventoryApi, reportsApi, type InventoryDays, type ReportGroup, type ReportName, type ReportRange } from "@/api/endpoints/reports";
 import { ApiError } from "@/api/errors";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { day, daysIn, rangeDays, rangeFromParams, rangeToParams } from "@/features/admin/dashboardRange";
+import { staffDailySalesPrintPath } from "@/features/orders/documents/printLinks";
 import { BarList, ColumnChart, DataTable, TrendChart, type Point } from "@/features/admin/reports/charts";
 import { Change, CustomRange, Khr, Panel, PeriodPicker } from "@/features/admin/reportKit";
 import { AnimatedNumber } from "@/features/admin/dashboard/AnimatedNumber";
@@ -683,6 +684,7 @@ export default function ReportsPage() {
   const [picking, setPicking] = useState(range.period === "custom");
   const [exporting, setExporting] = useState(false);
   const [exportingExcel, setExportingExcel] = useState(false);
+  const [inventoryDays, setInventoryDays] = useState<InventoryDays>(30);
   const active = picking ? "custom" : range.period;
   const tabParam = params.get("tab");
   const tab: ReportName = isTab(tabParam) ? tabParam : "sales";
@@ -710,7 +712,7 @@ export default function ReportsPage() {
     setExporting(true);
     try {
       const group = tab === "sales" || tab === "profit" ? profitGroup : undefined;
-      const blob = tab === "inventory" ? await inventoryApi.csv(30) : await reportsApi.csv(tab, group ? { ...days, group } : days);
+      const blob = tab === "inventory" ? await inventoryApi.csv(inventoryDays) : await reportsApi.csv(tab, group ? { ...days, group } : days);
       const url = URL.createObjectURL(blob);
       const a = Object.assign(document.createElement("a"), { href: url, download: `report-${tab}-${days.from}-to-${days.to}.csv` });
       a.click();
@@ -749,10 +751,21 @@ export default function ReportsPage() {
       title="Reports"
       lead={`${day(days.from)}${days.from !== days.to ? ` to ${day(days.to)}` : ""} · Phnom Penh time · revenue counts delivered orders, less refunds`}
       actions={
-        <Link to={`/admin/reports/print?${new URLSearchParams(rangeToParams(range)).toString()}`} className="dash-purchase-link inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-primary underline-offset-4 hover:underline">
-          <Printer className="size-4" aria-hidden="true" />
-          {dict.dashboardPrint.open}
-        </Link>
+        <div className="flex flex-wrap items-center gap-1">
+          <Link
+            to={staffDailySalesPrintPath({ from: days.from, to: days.to })}
+            target="_blank"
+            rel="noopener"
+            className="dash-purchase-link inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            <ReceiptText className="size-4" aria-hidden="true" />
+            Sales register
+          </Link>
+          <Link to={`/admin/reports/print?${new URLSearchParams(rangeToParams(range)).toString()}`} className="dash-purchase-link inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+            <Printer className="size-4" aria-hidden="true" />
+            {dict.dashboardPrint.open}
+          </Link>
+        </div>
       }
     >
       <div className="dash-toolbar">
@@ -805,7 +818,7 @@ export default function ReportsPage() {
         <TabsContent value="customers">{tab === "customers" ? <CustomersTab range={days} versus={versus} /> : null}</TabsContent>
         <TabsContent value="coupons">{tab === "coupons" ? <CouponsTab range={days} /> : null}</TabsContent>
         <TabsContent value="offers">{tab === "offers" ? <OffersTab range={days} /> : null}</TabsContent>
-        <TabsContent value="inventory">{tab === "inventory" ? <InventoryTab /> : null}</TabsContent>
+        <TabsContent value="inventory">{tab === "inventory" ? <InventoryTab days={inventoryDays} onDaysChange={setInventoryDays} /> : null}</TabsContent>
         <TabsContent value="profit">{tab === "profit" ? <ProfitTab range={days} versus={versus} group={profitGroup} onGroup={setGroup} /> : null}</TabsContent>
       </Tabs>
     </AdminPage>

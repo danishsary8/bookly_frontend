@@ -51,6 +51,7 @@ import { mainCover, pendingCover } from "@/features/admin/books/pendingCover";
 import { ImageUploadField } from "@/components/ui/ImageUploadField";
 import { StockHistoryDrawer } from "@/features/admin/stock/StockHistoryDrawer";
 import { useStaff } from "@/features/admin/staffSession";
+import { usePortalPath } from "@/features/admin/portal";
 import { FormSection } from "@/features/admin/books/FormSection";
 import { PricingFields } from "@/features/admin/books/PricingFields";
 import { MONEY, profitOf, suggestSku } from "@/features/admin/books/pricing";
@@ -63,18 +64,22 @@ import { cn } from "@/lib/utils";
 import { formatUsd } from "@/stores/currency";
 import { toast } from "@/stores/toast";
 
-const back = (
-  <Link
-    to="/admin/books"
-    className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline"
-  >
-    <ArrowLeft className="size-4" aria-hidden="true" /> All books
-  </Link>
-);
+function BackToBooks() {
+  const toPortal = usePortalPath();
+  return (
+    <Link
+      to={toPortal("books")}
+      className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+    >
+      <ArrowLeft className="size-4" aria-hidden="true" /> All books
+    </Link>
+  );
+}
 
 /** Title, authors, categories, publisher, series, language, pages, date and description. */
 function DetailsForm({ book }: { book: StaffBook | null }) {
   const navigate = useNavigate();
+  const toPortal = usePortalPath();
   const queryClient = useQueryClient();
   const staffSession = useStaff();
   const isAdmin = staffSession?.user?.role === "admin";
@@ -159,7 +164,7 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
           pendingCover.set(saved.id, newCover);
         }
         void queryClient.invalidateQueries({ queryKey: staffKeys.book(saved.id) });
-        navigate(`/admin/books/${saved.id}`, { replace: true, state: formatSaved ? null : { addFormat: true, cover: newCover } });
+        navigate(toPortal(`books/${saved.id}`), { replace: true, state: formatSaved ? null : { addFormat: true, cover: newCover } });
       }
     } catch (error) {
       const message = applyApiErrors(error, setError, [
@@ -742,6 +747,7 @@ function DangerZone({ book }: { book: StaffBook }) {
 /* /admin/books/new and /admin/books/:id. */
 export default function BookEditPage() {
   const { dict } = useT();
+  const toPortal = usePortalPath();
   const params = useParams();
   const isNew = params.id === undefined;
   const id = Number(params.id);
@@ -757,7 +763,7 @@ export default function BookEditPage() {
       <AdminPage
         title="New book"
         lead={dict.bookForm.newLead}
-        back={back}
+        back={<BackToBooks />}
       >
         <div className="max-w-3xl">
           <DetailsForm book={null} />
@@ -771,7 +777,7 @@ export default function BookEditPage() {
     (book.isError && ApiError.from(book.error).kind === "not_found")
   ) {
     return (
-      <NotFoundState what="book" backTo="/admin/books" backLabel="All books" />
+      <NotFoundState what="book" backTo={toPortal("books")} backLabel="All books" />
     );
   }
   if (book.isError)
@@ -804,7 +810,7 @@ export default function BookEditPage() {
           <BookState book={b} /> {b.authors.map((a) => a.name).join(", ")}
         </span>
       }
-      back={back}
+      back={<BackToBooks />}
       actions={
         b.is_visible && !b.deleted_at ? (
           <Link

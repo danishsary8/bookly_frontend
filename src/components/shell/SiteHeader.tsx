@@ -14,6 +14,7 @@ import { transitions } from "@/lib/motion";
 import { LiveSearch } from "./LiveSearch";
 import { MOBILE_MENU_ID, isActivePath } from "./nav";
 import { useCartCount } from "./useCartCount";
+import { useOrderNotifications } from "@/features/orders/orderNotifications";
 import { useT } from "@/i18n";
 
 /*
@@ -77,6 +78,12 @@ function useHeaderScroll(routeKey: string, panelOpen: boolean) {
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update);
     };
+    // Reveal the header when an action targets it (e.g. fly-to-cart morph) without altering normal scroll-hide.
+    const onPeek = () => {
+      direction = 0;
+      distance = 0;
+      setHidden(false);
+    };
     // Reveal after navigation or closing a panel without jumping the page.
     frame = requestAnimationFrame(() => {
       frame = 0;
@@ -84,8 +91,10 @@ function useHeaderScroll(routeKey: string, panelOpen: boolean) {
       setScrolled(window.scrollY > 8);
     });
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("bookly:header-peek", onPeek);
     return () => {
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("bookly:header-peek", onPeek);
       cancelAnimationFrame(frame);
     };
   }, [routeKey, panelOpen]);
@@ -102,6 +111,7 @@ export function SiteHeader() {
   const location = useLocation();
   const panel = useShellPanel();
   const count = useCartCount();
+  const { unreadCount: unreadOrders } = useOrderNotifications();
   const signedIn = Boolean(useSession("customer"));
   const { dict } = useT();
   const { headerRef, scrolled, hidden, reveal } = useHeaderScroll(location.key, Boolean(panel));
@@ -189,12 +199,24 @@ export function SiteHeader() {
           {/* Phones and tablets: the account is one tap away next to the bag (owner 2026-11-16). */}
           <Link
             to={signedIn ? "/account" : "/login"}
-            aria-label={signedIn ? dict.shell.profile : dict.nav.signIn}
+            aria-label={
+              signedIn
+                ? unreadOrders > 0
+                  ? `${dict.shell.profile}, ${dict.shell.orderUpdates(unreadOrders)}`
+                  : dict.shell.profile
+                : dict.nav.signIn
+            }
             title={signedIn ? dict.shell.profile : dict.nav.signIn}
             className="relative grid size-11 place-items-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
           >
             <CircleUserRound className="size-[22px]" aria-hidden="true" />
-            {signedIn ? <span aria-hidden="true" className="absolute right-2 top-2 size-2 rounded-full bg-success ring-2 ring-background" /> : null}
+            {signedIn && unreadOrders > 0 ? (
+              <span key={unreadOrders} className="badge-pop absolute right-0.5 top-0.5">
+                <CountBadge count={unreadOrders} aria-hidden="true" />
+              </span>
+            ) : signedIn ? (
+              <span aria-hidden="true" className="absolute right-2 top-2 size-2 rounded-full bg-success ring-2 ring-background" />
+            ) : null}
           </Link>
           <Button
             variant="ghost"

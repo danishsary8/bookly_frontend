@@ -84,7 +84,7 @@ export function useAddToCart({ openDrawer = false }: { openDrawer?: boolean } = 
         title: getDict().cartPage.added,
         description: [book.title, line?.format ? formatName(getDict(), line.format) : null].filter(Boolean).join(" · "),
         // With the drawer already open the toast only confirms (and announces) the addition.
-        action: openDrawer ? undefined : { label: getDict().cartPage.viewCart, onClick: () => openShellPanel("cart") },
+        action: openDrawer ? undefined : { label: getDict().cartPage.viewCart, href: "/cart" },
       });
     },
     onError: (error) => {
