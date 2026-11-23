@@ -57,9 +57,11 @@ type DialogContentProps = Omit<React.ComponentProps<typeof DialogPrimitive.Conte
   size?: keyof typeof sizes
   /** Hide the corner close button (e.g. confirm dialogs that have Cancel). */
   hideClose?: boolean
+  /** Optional class override for the outer fixed viewport wrapper (e.g. bottom-right anchored chat widget). */
+  containerClassName?: string
 }
 
-function DialogContent({ className, children, size = "md", hideClose = false, onCloseAutoFocus, ...props }: DialogContentProps) {
+function DialogContent({ className, containerClassName, children, size = "md", hideClose = false, onCloseAutoFocus, ...props }: DialogContentProps) {
   const open = React.useContext(OpenContext)
   const returnFocus = useReturnFocus(open, onCloseAutoFocus)
   return (
@@ -74,7 +76,7 @@ function DialogContent({ className, children, size = "md", hideClose = false, on
               exit={{ opacity: 0, transition: transitions.exit }}
             />
           </DialogPrimitive.Overlay>
-          <div className="pointer-events-none fixed inset-0 z-(--z-dialog) grid place-items-center overflow-y-auto p-4">
+          <div className={cn("pointer-events-none fixed inset-0 z-(--z-dialog) grid place-items-center overflow-y-auto p-4", containerClassName)}>
             <DialogPrimitive.Content asChild forceMount onCloseAutoFocus={returnFocus} {...props}>
               <m.div
                 data-slot="dialog-content"

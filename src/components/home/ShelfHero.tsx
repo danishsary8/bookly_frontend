@@ -754,11 +754,15 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
             const bw = widths[v % n];
             const bd = H * (2 / 3) * (0.9 + item.tall * 0.1);
             const top = H / 2 - bh;
-            // Keep subtitles on the paper label; the narrow spine carries the main title.
-            const spineTitle = item.title.split(/:\s+/)[0];
-            const long = spineTitle.length > 24;
-            // A long title needs the whole spine width, so it never sits in the narrower label.
-            const binding = item.binding === "label" && spineTitle.length > 16 ? "rules" : item.binding;
+            // Keep subtitles on the paper label; the narrow spine carries a clean single-line main title.
+            const rawMain = item.title.split(/\s*[:(–—-]\s+/)[0].trim() || item.title.trim();
+            const maxChars = item.binding === "label" ? 20 : 25;
+            const spineTitle = rawMain.length > maxChars
+              ? `${rawMain.slice(0, maxChars - 1).replace(/\s+\S*$/, "") || rawMain.slice(0, maxChars - 1)}…`
+              : rawMain;
+            const len = spineTitle.length;
+            const fontScale = len > 20 ? 0.21 : len > 15 ? 0.24 : len > 11 ? 0.27 : 0.30;
+            const binding = item.binding;
             return (
               <div
                 key={`${shown.row}-${item.id}-${v}`}
@@ -795,10 +799,10 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
                   <span aria-hidden="true" className="shelf-headband shelf-headband-bottom" />
                   <span aria-hidden="true" className="shelf-rules" />
                   {binding === "bands" ? <span aria-hidden="true" className="shelf-band" /> : null}
-                  <span className={cn("shelf-label grid place-items-center", binding === "label" && "shelf-label-panel")}>
+                  <span className={cn("shelf-label flex items-center justify-center overflow-hidden", binding === "label" && "shelf-label-panel")}>
                     <span
-                      className="shelf-title max-h-full overflow-hidden text-center font-display leading-[1.45] tracking-[0.015em] [text-orientation:mixed] [writing-mode:vertical-rl]"
-                      style={{ fontSize: Math.max(10, Math.min(17, bw * (long ? 0.25 : 0.32))), maxWidth: bw * (binding === "label" ? 0.68 : 0.78) }}
+                      className="shelf-title max-h-full overflow-hidden text-ellipsis whitespace-nowrap text-center font-display leading-none tracking-[0.025em] [text-orientation:mixed] [writing-mode:vertical-rl]"
+                      style={{ fontSize: Math.max(9.5, Math.min(14.5, bw * fontScale)) }}
                     >
                       {spineTitle}
                     </span>

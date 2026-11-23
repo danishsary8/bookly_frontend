@@ -66,7 +66,7 @@ export const km: Translations = {
     edit: "កែសម្រួល",
     lowGift: "ស្តុកកាដូនៅសល់តិច",
     quantityRange: "បញ្ចូលចំនួនគត់ពី 1 ដល់ 20។",
-    rows: { education: "?????", mixed: "គ្រប់ប្រភេទ", best_sellers: "សៀវភៅលក់ដាច់", new_arrivals: "សៀវភៅទើបមកដល់", coming_soon: "នឹងមកដល់ឆាប់ៗ", ebook_deals: "សៀវភៅអេឡិចត្រូនិកតម្លៃក្រោម $5" },
+    rows: { education: "ការអប់រំ", mixed: "គ្រប់ប្រភេទ", best_sellers: "សៀវភៅលក់ដាច់", new_arrivals: "សៀវភៅទើបមកដល់", coming_soon: "នឹងមកដល់ឆាប់ៗ", ebook_deals: "សៀវភៅអេឡិចត្រូនិកតម្លៃក្រោម $5" },
     viewAll: "មើលទាំងអស់",
     categoryBest: (name: string) => `សៀវភៅលក់ដាច់ក្នុង ${name}`,
     sold: (n: number) => `លក់បាន ${n} ក្បាលក្នុងរយៈពេល 90 ថ្ងៃចុងក្រោយ`,
