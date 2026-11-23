@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, BookOpen, BookX, CalendarClock, Clock3, Eye, Heart, RotateCcw, Share2, ShoppingBag, Truck, Wallet } from "lucide-react";
+import { Bell, BookHeart, BookOpen, BookX, CalendarClock, Check, Clock3, Eye, Heart, Plus, RotateCcw, Share2, ShoppingBag, Truck, Wallet } from "lucide-react";
+import { Popover } from "radix-ui";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { ebookQueries } from "@/api/endpoints/ebooks";
+import { readingListsApi } from "@/api/endpoints/readingLists";
 import { stockAlertQueries, stockAlertsApi } from "@/api/endpoints/stockAlerts";
 import { ApiError } from "@/api/errors";
 import { useSession } from "@/api/session";
@@ -96,6 +98,144 @@ function BookFavorite({ book }: { book: BookCard }) {
   return <Button variant="outline" size="lg" onClick={() => wishlist.toggle(book)} aria-pressed={saved} aria-label={`${label}: ${book.title ?? ""}`} className="detail-cover-favorite"><Heart className={cn("size-[18px]", saved && "fill-current")} aria-hidden="true" /><span>{label}</span></Button>;
 }
 
+function AddToReadingListMenu({ bookId }: { bookId: number }) {
+  const { dict, lang } = useT();
+  const session = useSession<Customer>("customer");
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+
+  const lists = useQuery({
+    queryKey: ["reading-lists", "own"],
+    queryFn: readingListsApi.own,
+    enabled: Boolean(session?.token && open),
+  });
+
+  const refresh = () => void queryClient.invalidateQueries({ queryKey: ["reading-lists"] });
+
+  const toggleBook = useMutation({
+    mutationFn: async ({ listId, hasBook }: { listId: number; hasBook: boolean }) => {
+      if (hasBook) {
+        await readingListsApi.removeBook(listId, bookId);
+      } else {
+        await readingListsApi.add(listId, bookId);
+      }
+      return !hasBook;
+    },
+    onSuccess: (added) => {
+      refresh();
+      toast.success(added ? (lang === "km" ? "បានបន្ថែមទៅបញ្ជីអាន" : "Added to reading list") : (lang === "km" ? "បានដកចេញពីបញ្ជីអាន" : "Removed from reading list"));
+    },
+    onError: (err) => toast.error(ApiError.from(err).message),
+  });
+
+  const createAndAdd = useMutation({
+    mutationFn: async () => {
+      const created = await readingListsApi.create({ title: newTitle.trim() });
+      await readingListsApi.add(created.id, bookId);
+      return created;
+    },
+    onSuccess: () => {
+      setNewTitle("");
+      refresh();
+      toast.success(lang === "km" ? "បានបង្កើតបញ្ជីអាន និងបន្ថែមសៀវភៅ" : "Created reading list and added book");
+    },
+    onError: (err) => toast.error(ApiError.from(err).message),
+  });
+
+  const label = dict.readingLists.title;
+
+  if (!session?.token) {
+    return (
+      <Button
+        variant="outline"
+        size="icon-lg"
+        className="detail-share-button"
+        onClick={() => navigate(withNext("/login", location.pathname))}
+        aria-label={label}
+        title={label}
+      >
+        <BookHeart className="size-5" aria-hidden="true" />
+      </Button>
+    );
+  }
+
+  return (
+    <Popover.Root open={open} onOpenChange={setOpen}>
+      <Popover.Trigger asChild>
+        <Button variant="outline" size="icon-lg" className="detail-share-button" aria-label={label} title={label}>
+          <BookHeart className="size-5" aria-hidden="true" />
+        </Button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          align="end"
+          sideOffset={8}
+          className="nav-pop z-(--z-popover) grid w-72 gap-3 rounded-2xl border border-border bg-card p-4 text-foreground shadow-overlay outline-none"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+            <Link to="/account/lists" className="text-xs font-semibold text-primary underline-offset-4 hover:underline">
+              {lang === "km" ? "គ្រប់គ្រង" : "Manage"}
+            </Link>
+          </div>
+          {lists.isPending ? (
+            <p className="py-2 text-xs text-muted-foreground">{dict.common.loading}</p>
+          ) : (lists.data?.length ?? 0) > 0 ? (
+            <ul className="grid max-h-44 gap-1 overflow-y-auto">
+              {lists.data?.map((list) => {
+                const hasBook = list.books.some((entry) => entry.book?.id === bookId);
+                return (
+                  <li key={list.id}>
+                    <button
+                      type="button"
+                      disabled={toggleBook.isPending}
+                      onClick={() => toggleBook.mutate({ listId: list.id, hasBook })}
+                      className={cn(
+                        "flex min-h-10 w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        hasBook && "bg-lapis-tint/60 font-semibold text-primary",
+                      )}
+                    >
+                      <span className="truncate">{list.title}</span>
+                      {hasBook ? <Check className="size-4 shrink-0 text-primary" aria-hidden="true" /> : <Plus className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="text-xs text-muted-foreground">{dict.accountEmpty.listsTitle}</p>
+          )}
+          <form
+            className="flex gap-1.5 border-t border-border pt-2.5"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (newTitle.trim() && !createAndAdd.isPending) createAndAdd.mutate();
+            }}
+          >
+            <input
+              type="text"
+              required
+              maxLength={100}
+              value={newTitle}
+              onChange={(event) => setNewTitle(event.target.value)}
+              placeholder={dict.readingLists.listTitle}
+              aria-label={dict.readingLists.listTitle}
+              className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-background px-2.5 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            <Button type="submit" size="sm" className="h-9 px-2.5 text-xs" loading={createAndAdd.isPending} disabled={!newTitle.trim()}>
+              <Plus className="size-3.5" aria-hidden="true" />
+              {dict.readingLists.create}
+            </Button>
+          </form>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
+
 function Purchase({ book }: { book: BookDetail }) {
   const currency = useCurrency();
   const { dict } = useT();
@@ -169,6 +309,14 @@ function Purchase({ book }: { book: BookDetail }) {
 
   const mainButton = useRef<HTMLDivElement>(null);
   const [showBar, setShowBar] = useState(false);
+  useEffect(() => {
+    const root = document.documentElement;
+    if (showBar) root.style.setProperty("--bottom-bar", "4.75rem");
+    else root.style.removeProperty("--bottom-bar");
+    return () => {
+      root.style.removeProperty("--bottom-bar");
+    };
+  }, [showBar]);
   // A scroll check rather than an IntersectionObserver: a jump from below the fold to above it
   // (End key, a fast fling) never crosses the observer's threshold and would leave the bar hidden.
   useEffect(() => {
@@ -276,6 +424,7 @@ function Purchase({ book }: { book: BookDetail }) {
             </Button>
           </CtaGlare>
         )}
+        {book.id ? <AddToReadingListMenu bookId={book.id} /> : null}
         <Button variant="outline" size="icon-lg" className="detail-share-button" onClick={() => setShareOpen(true)} aria-label={b.shareBook} title={b.shareBook}>
           <Share2 className="size-5" aria-hidden="true" />
         </Button>

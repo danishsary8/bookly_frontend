@@ -95,7 +95,7 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
           {book.recommendation_reason === "similar" ? <SimilarThemeBadge /> : null}
         </div>
         {outOfStock ? null : (
-          <div className="pointer-events-none absolute bottom-2 left-2 right-2 flex transition-opacity duration-200 group-hover:opacity-0 [@media(hover:none)]:hidden">
+          <div className="pointer-events-none absolute bottom-2 left-2 right-14 flex transition-opacity duration-200 group-hover:opacity-0">
             <OfferBadge offer={book.offer} className="max-w-full overflow-hidden text-ellipsis tracking-[0.06em]" />
           </div>
         )}
@@ -107,7 +107,7 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
             aria-pressed={saved}
             aria-label={dict.cards.saveToWishlist(title)}
             className={cn(
-              "absolute right-2 top-2 grid size-10 place-items-center rounded-full bg-card/95 shadow-sm backdrop-blur-sm transition-[opacity,color,transform] hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "absolute right-2 top-2 grid size-11 place-items-center rounded-full bg-card/95 shadow-sm backdrop-blur-sm transition-[opacity,color,transform] hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               saved ? "text-accent-text opacity-100" : cn("text-foreground hover:text-accent-text", reveal),
             )}
           >
@@ -123,8 +123,8 @@ export function BookCard({ book, instanceKey, saved = false, adding = false, onA
             aria-busy={adding || undefined}
             aria-label={dict.cards.addToCart(title)}
             className={cn(
-              "absolute bottom-2 right-2 inline-flex h-10 items-center justify-center gap-2 rounded-full bg-primary px-3.5 text-sm font-semibold text-primary-foreground shadow-md transition-[opacity,translate,filter] hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-80",
-              "translate-y-1 group-hover:translate-y-0 group-focus-within:translate-y-0 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:size-10 [@media(hover:none)]:px-0",
+              "absolute bottom-2 right-2 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-3.5 text-sm font-semibold text-primary-foreground shadow-md transition-[opacity,translate,filter] hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-80",
+              "translate-y-1 group-hover:translate-y-0 group-focus-within:translate-y-0 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:size-11 [@media(hover:none)]:px-0",
               adding ? "opacity-100" : reveal,
             )}
           >

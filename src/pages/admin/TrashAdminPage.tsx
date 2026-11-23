@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { RotateCcw, Trash2 } from "lucide-react";
+import { RotateCcw, Trash2, X } from "lucide-react";
 import { staffApi, staffQueries, type TrashItem } from "@/api/endpoints/staff";
 import { ApiError } from "@/api/errors";
 import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ErrorState } from "@/components/ui/error-state";
 import { Pagination } from "@/components/ui/pagination";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
-import { Segmented, TableCard, td, th, thead } from "@/features/admin/listKit";
+import { SearchBox, Segmented, TableCard, td, th, thead } from "@/features/admin/listKit";
 import { toast } from "@/stores/toast";
 
 const TYPE_OPTIONS = [
@@ -36,14 +37,23 @@ export default function TrashAdminPage() {
   );
 
   const [restoringId, setRestoringId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+
+  const itemKey = (item: TrashItem) => `${item.type}:${item.id}`;
+
+  const invalidateAll = () => {
+    void queryClient.invalidateQueries({ queryKey: ["staff", "trash"] });
+    void queryClient.invalidateQueries({ queryKey: ["staff", "books"] });
+    void queryClient.invalidateQueries({ queryKey: ["catalog"] });
+  };
 
   const restoreMutation = useMutation({
     mutationFn: (item: TrashItem) => staffApi.restoreTrash(item.type, item.id),
     onSuccess: (res, item) => {
       toast.success(res.message || `Restored "${item.name}"`);
-      void queryClient.invalidateQueries({ queryKey: ["staff", "trash"] });
-      void queryClient.invalidateQueries({ queryKey: ["staff", "books"] });
-      void queryClient.invalidateQueries({ queryKey: ["catalog"] });
+      setSelectedKeys((prev) => prev.filter((k) => k !== itemKey(item)));
+      invalidateAll();
     },
     onError: (err) => {
       toast.error({
@@ -52,6 +62,29 @@ export default function TrashAdminPage() {
       });
     },
     onSettled: () => setRestoringId(null),
+  });
+
+  const bulkRestoreMutation = useMutation({
+    mutationFn: async (toRestore: TrashItem[]) => {
+      let restored = 0;
+      for (const item of toRestore) {
+        await staffApi.restoreTrash(item.type, item.id);
+        restored += 1;
+      }
+      return restored;
+    },
+    onSuccess: (count) => {
+      toast.success(`Restored ${count} ${count === 1 ? "item" : "items"}`);
+      setSelectedKeys([]);
+      invalidateAll();
+    },
+    onError: (err) => {
+      invalidateAll();
+      toast.error({
+        title: "Bulk restore interrupted",
+        description: ApiError.from(err).message,
+      });
+    },
   });
 
   const handleTypeChange = (nextType: string) => {
@@ -69,7 +102,17 @@ export default function TrashAdminPage() {
     setParams(next);
   };
 
-  const items = data?.data ?? [];
+  const allItems = data?.data ?? [];
+  const q = searchQuery.trim().toLowerCase();
+  const items = q
+    ? allItems.filter(
+        (item) =>
+          item.name.toLowerCase().includes(q) ||
+          item.type.toLowerCase().includes(q),
+      )
+    : allItems;
+  const selectedItems = items.filter((item) => selectedKeys.includes(itemKey(item)));
+  const allOnPageSelected = items.length > 0 && selectedItems.length === items.length;
   const rawMeta = data?.meta ?? (data as unknown as { current_page?: number; last_page?: number; total?: number } | undefined);
   const meta = rawMeta && typeof rawMeta.last_page === "number" ? rawMeta : undefined;
 
@@ -102,12 +145,42 @@ export default function TrashAdminPage() {
       }
     >
       <div className="space-y-4">
-        <Segmented
-          label="Filter by item type"
-          value={typeParam}
-          options={TYPE_OPTIONS}
-          onChange={handleTypeChange}
-        />
+        <div className="work-toolbar">
+          <Segmented
+            label="Filter by item type"
+            value={typeParam}
+            options={TYPE_OPTIONS}
+            onChange={handleTypeChange}
+          />
+          <SearchBox
+            label="Search trash"
+            value={searchQuery}
+            placeholder="Filter by name or type…"
+            onSearch={setSearchQuery}
+            className="max-w-xs"
+          />
+        </div>
+
+        {selectedItems.length > 0 ? (
+          <div role="region" aria-label="Selected trash items" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-lapis-tint px-4 py-2.5">
+            <p className="text-sm font-semibold tabular-nums">
+              {selectedItems.length} selected
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                loading={bulkRestoreMutation.isPending}
+                onClick={() => bulkRestoreMutation.mutate(selectedItems)}
+              >
+                <RotateCcw className="size-3.5" aria-hidden="true" />
+                Restore selected ({selectedItems.length})
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedKeys([])}>
+                <X className="size-3.5" aria-hidden="true" /> Clear
+              </Button>
+            </div>
+          </div>
+        ) : null}
 
         {isLoading ? (
           <SkeletonGroup label="Loading trash items…" className="grid gap-2">
@@ -125,7 +198,7 @@ export default function TrashAdminPage() {
         ) : items.length === 0 ? (
           <EmptyState
             icon={Trash2}
-            title="The trash is empty"
+            title={q ? `No deleted items matching "${searchQuery}"` : "The trash is empty"}
             description="No deleted catalog items found in the 30-day retention window."
             className="rounded-xl border border-dashed border-border"
           />
@@ -133,6 +206,15 @@ export default function TrashAdminPage() {
           <TableCard minWidth={640}>
             <thead className={thead}>
               <tr>
+                <th className={`${th} w-10`}>
+                  <Checkbox
+                    aria-label="Select all items on page"
+                    checked={allOnPageSelected}
+                    onCheckedChange={(on) =>
+                      setSelectedKeys(on ? items.map(itemKey) : [])
+                    }
+                  />
+                </th>
                 <th className={th}>Item</th>
                 <th className={th}>Type</th>
                 <th className={th}>Deleted Date</th>
@@ -143,8 +225,21 @@ export default function TrashAdminPage() {
             <tbody className="divide-y divide-border">
               {items.map((item) => {
                 const badge = typeBadge(item.type);
+                const key = itemKey(item);
+                const isSelected = selectedKeys.includes(key);
                 return (
                   <tr key={`${item.type}-${item.id}`} className="hover:bg-muted/25">
+                    <td className={td}>
+                      <Checkbox
+                        aria-label={`Select ${item.name}`}
+                        checked={isSelected}
+                        onCheckedChange={(on) =>
+                          setSelectedKeys((prev) =>
+                            on ? [...prev, key] : prev.filter((k) => k !== key),
+                          )
+                        }
+                      />
+                    </td>
                     <td className={`${td} font-medium text-foreground`}>
                       {item.name}
                     </td>

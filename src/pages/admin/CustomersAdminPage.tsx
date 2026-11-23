@@ -55,7 +55,12 @@ export default function CustomersAdminPage() {
   );
   const meta = customers.data?.meta;
   const counts = meta?.counts;
-  const list = customers.data?.data ?? [];
+  const rawList = customers.data?.data ?? [];
+  const [sortBy, setSortBy] = useState<"newest" | "orders">("newest");
+  const list =
+    sortBy === "orders"
+      ? [...rawList].sort((a, b) => (b.orders_count ?? 0) - (a.orders_count ?? 0))
+      : rawList;
   const pending = view === "unverified";
   const isAdmin = useStaff()?.user.role === "admin";
   const canDelete = pending && isAdmin;
@@ -142,6 +147,17 @@ export default function CustomersAdminPage() {
           onChange={(v) => set({ show: v === "all" ? undefined : v })}
         />
         )}
+        {!pending ? (
+          <Segmented
+            label="Sort"
+            value={sortBy}
+            options={[
+              { value: "newest", label: "Newest" },
+              { value: "orders", label: "Most orders" },
+            ]}
+            onChange={(v) => setSortBy(v as "newest" | "orders")}
+          />
+        ) : null}
       </div>
       <ListState
         query={customers}

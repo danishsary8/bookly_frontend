@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Search, X } from "lucide-react";
+import { ArrowRight, Clock, Search, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import type { BookCard } from "@/api/types";
@@ -12,7 +12,7 @@ import { highlightParts } from "@/lib/highlight";
 import { cn } from "@/lib/utils";
 import { searchPath } from "./nav";
 import { formatMoney, useCurrency } from "@/stores/currency";
-import { addRecentSearch } from "@/stores/recentSearches";
+import { addRecentSearch, clearRecentSearches, removeRecentSearch, useRecentSearches } from "@/stores/recentSearches";
 import { useT } from "@/i18n";
 
 /*
@@ -63,7 +63,9 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
   const total = results.data?.meta?.total ?? books.length;
   const waiting = query.trim().length >= MIN_QUERY && (query.trim() !== term || results.isFetching) && books.length === 0;
   const showSkeleton = useSkeletonVisible(waiting);
+  const recentSearches = useRecentSearches();
   const expanded = open && query.trim().length >= MIN_QUERY;
+  const showRecent = open && query.trim().length < MIN_QUERY && recentSearches.length > 0;
   const optionCount = books.length + 1; // + "See all results"
 
   // Close when the route changes (a result was opened) and on a click outside.
@@ -74,13 +76,13 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
   }
 
   useEffect(() => {
-    if (!expanded) return;
+    if (!expanded && !showRecent) return;
     const onPointerDown = (event: PointerEvent) => {
       if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
     };
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, [expanded]);
+  }, [expanded, showRecent]);
 
   useEffect(() => {
     if (!shortcut) return;
@@ -127,7 +129,7 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
         submit();
         break;
       case "Escape":
-        if (expanded) {
+        if (expanded || showRecent) {
           event.preventDefault();
           setOpen(false);
           setActive(-1);
@@ -201,6 +203,52 @@ export function LiveSearch({ id, shortcut = false, onNavigate, className, inputC
         >
           <X className="size-4" aria-hidden="true" />
         </button>
+      ) : null}
+
+      {showRecent ? (
+        <div className="ui-pop absolute inset-x-0 top-[calc(100%+6px)] z-(--z-popover) min-w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-overlay" data-state="open">
+          <div className="mb-2 flex items-center justify-between gap-2 px-1">
+            <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              <Clock className="size-3.5" aria-hidden="true" />
+              {dict.search.recentSearches}
+            </span>
+            <button
+              type="button"
+              onClick={() => clearRecentSearches()}
+              className="text-xs font-semibold text-primary underline-offset-4 hover:underline"
+            >
+              {dict.search.clearRecent}
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {recentSearches.map((item) => (
+              <span
+                key={item}
+                className="inline-flex items-center rounded-full border border-border bg-surface-2/60 text-sm text-foreground transition-colors hover:border-primary/40 hover:bg-lapis-tint/40"
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery(item);
+                    addRecentSearch(item);
+                    go(searchPath(item));
+                  }}
+                  className="px-3 py-1 font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-l-full"
+                >
+                  {item}
+                </button>
+                <button
+                  type="button"
+                  aria-label={`${dict.shell.clearSearch}: ${item}`}
+                  onClick={() => removeRecentSearch(item)}
+                  className="grid size-7 place-items-center rounded-r-full pr-1 text-muted-foreground hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <X className="size-3.5" aria-hidden="true" />
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
       ) : null}
 
       {expanded ? (

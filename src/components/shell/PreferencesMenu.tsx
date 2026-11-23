@@ -27,7 +27,7 @@ export function PreferencesMenu({ className, compact = false }: { className?: st
         )}
       >
         <Globe className="size-4 text-muted-foreground" aria-hidden="true" />
-        <span aria-hidden="true" className={cn("whitespace-nowrap", compact && "hidden xl:inline")}>
+        <span aria-hidden="true" className={cn("whitespace-nowrap", compact && "hidden md:inline")}>
           {lang.toUpperCase()} · {currency === "USD" ? "$" : "៛"}
         </span>
         <ChevronDown className="size-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" aria-hidden="true" />

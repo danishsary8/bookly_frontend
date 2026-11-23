@@ -53,13 +53,18 @@ export function BulkActionsDialog({
   const [publishAt, setPublishAt] = useState<string>("");
 
   // Variants state
+  const [formatFilter, setFormatFilter] = useState<string>("all"); // "all" | "paperback" | "hardcover" | "ebook" | "audiobook"
   const [stockQuantity, setStockQuantity] = useState<string>("");
   const [lowStockThreshold, setLowStockThreshold] = useState<string>("");
   const [isActive, setIsActive] = useState<string>("keep"); // "keep" | "active" | "inactive"
   const [priceUsd, setPriceUsd] = useState<string>("");
 
   const bookIds = books.map((b) => b.id);
-  const variantIds = books.flatMap((b) => b.variants.map((v) => v.id));
+  const variantIds = books.flatMap((b) =>
+    b.variants
+      .filter((v) => formatFilter === "all" || v.format === formatFilter)
+      .map((v) => v.id),
+  );
 
   const bookMutation = useMutation({
     mutationFn: (payload: {
@@ -148,6 +153,10 @@ export function BulkActionsDialog({
             : null,
       });
     } else if (action === "variants") {
+      if (variantIds.length === 0) {
+        setError("None of the selected books have a matching format for this filter.");
+        return;
+      }
       if (variantIds.length > 100) {
         setError(
           `These books have ${variantIds.length} formats; one change can cover at most 100. Select fewer books.`,
@@ -355,6 +364,38 @@ export function BulkActionsDialog({
 
             {action === "variants" ? (
               <div className="grid gap-3">
+                <div className="grid gap-1.5">
+                  <label className="text-sm font-semibold">Apply to Format</label>
+                  <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Apply to format">
+                    {[
+                      { val: "all", label: "All formats" },
+                      { val: "paperback", label: "Paperback" },
+                      { val: "hardcover", label: "Hardcover" },
+                      { val: "ebook", label: "Ebook" },
+                      { val: "audiobook", label: "Audiobook" },
+                    ].map((opt) => (
+                      <label
+                        key={opt.val}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors",
+                          formatFilter === opt.val
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-card text-foreground hover:bg-surface-2",
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name="bulk_format_filter"
+                          value={opt.val}
+                          checked={formatFilter === opt.val}
+                          onChange={() => setFormatFilter(opt.val)}
+                          className="sr-only"
+                        />
+                        <span>{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
                 <TextField
                   label="Set stock quantity (all physical formats)"
                   type="number"

@@ -131,7 +131,7 @@ describe("OrdersPage", () => {
     const list = await screen.findByRole("list", { name: "Your orders" });
     expect(within(list).getAllByRole("listitem")).toHaveLength(2);
     expect(within(list).getByRole("link", { name: /ORD-7/ })).toHaveAttribute("href", "/account/orders/7");
-    await user.selectOptions(screen.getByLabelText("Show"), "delivered");
+    await user.click(screen.getByRole("button", { name: "Delivered" }));
     expect(screen.getByTestId("where")).toHaveTextContent("/account/orders?status=delivered");
     await waitFor(() => expect(within(screen.getByRole("list", { name: "Your orders" })).getAllByRole("listitem")).toHaveLength(1));
     expect(ordersApi.orders).toHaveBeenLastCalledWith(expect.objectContaining({ status: "delivered" }));

@@ -215,7 +215,15 @@ export default function OrderAdminPage() {
           ) : null}
           <StaffNoteCard order={o} />
           <DeliveryAddressCard address={o.shipping_address} title="Deliver to" />
-          <OrderPaymentCard order={o} isAdmin={session?.user.role === "admin"} />
+          <OrderPaymentCard
+            order={o}
+            isAdmin={session?.user.role === "admin"}
+            canConfirmPayment={
+              session?.user.role === "admin" ||
+              !session?.user.permissions ||
+              session.user.permissions.includes("orders:manage")
+            }
+          />
         </div>
       </div>
       {step ? <StatusDialog key={step} order={o} to={step} onClose={() => setStep(null)} /> : null}

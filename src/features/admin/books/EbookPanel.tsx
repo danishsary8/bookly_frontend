@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, BookOpen, CheckCircle2, FileUp, Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { AlertCircle, BookOpen, CheckCircle2, FileUp, Loader2, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { ebookApi, ebookKeys, ebookQueries } from "@/api/endpoints/ebooks";
-import type { StaffBook } from "@/api/endpoints/staff";
+import { staffApi, staffKeys, type StaffBook } from "@/api/endpoints/staff";
 import { ApiError } from "@/api/errors";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,42 @@ export function EbookPanel({ book }: { book: StaffBook }) {
   const [previewInput, setPreviewInput] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
+  const [ebookPrice, setEbookPrice] = useState<string>(() => {
+    const firstPrice = book.variants[0]?.price_usd;
+    return firstPrice ? String(firstPrice) : "9.99";
+  });
+
+  const hasEbookVariant = book.variants.some((v) => v.format === "ebook");
+
+  const createVariantMutation = useMutation({
+    mutationFn: async () => {
+      const baseSlug = (book.title || `BOOK-${book.id}`)
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, 18);
+      const sku = `${baseSlug || "BOOK"}-${book.id}-EBK`;
+      const cover = book.variants.find((v) => v.cover_image_url)?.cover_image_url ?? null;
+      return await staffApi.createVariant(book.id, {
+        format: "ebook",
+        sku,
+        price_usd: ebookPrice.trim() || "9.99",
+        cover_image_url: cover,
+        is_active: true,
+      });
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: staffKeys.book(book.id) });
+      void queryClient.invalidateQueries({ queryKey: ["staff", "books"] });
+      toast.success("Ebook format created and put on sale");
+    },
+    onError: (err) => {
+      toast.error({
+        title: "Couldn't create Ebook format",
+        description: ApiError.from(err).message,
+      });
+    },
+  });
 
   const ebookQuery = useQuery({
     ...ebookQueries.staffEbook(book.id),
@@ -187,6 +223,39 @@ export function EbookPanel({ book }: { book: StaffBook }) {
             <p className="rounded bg-destructive-tint p-2 text-xs text-destructive">
               {ebook.error}
             </p>
+          ) : null}
+
+          {!hasEbookVariant ? (
+            <div className="grid gap-2.5 rounded-lg border border-primary/30 bg-lapis-tint/45 p-3 text-xs">
+              <p className="font-semibold text-foreground">
+                No Ebook format on sale yet
+              </p>
+              <p className="text-muted-foreground">
+                Add an Ebook format with a price so customers can buy and read this PDF.
+              </p>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1.5 font-medium text-foreground">
+                  <span>USD $</span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={ebookPrice}
+                    onChange={(e) => setEbookPrice(e.target.value)}
+                    aria-label="Ebook price USD"
+                    className="h-8 w-20 rounded-md border border-input bg-card px-2 text-xs tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                </label>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-8 text-xs"
+                  loading={createVariantMutation.isPending}
+                  onClick={() => createVariantMutation.mutate()}
+                >
+                  <Plus className="size-3.5" aria-hidden="true" /> Create Ebook format
+                </Button>
+              </div>
+            </div>
           ) : null}
 
           <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">

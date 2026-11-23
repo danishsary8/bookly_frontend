@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Crown, ShoppingBag } from "lucide-react";
+import { ArrowRight, Crown, ShoppingBag, Star } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import type { BookCard } from "@/api/types";
@@ -155,6 +155,15 @@ export function TopRated() {
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-display text-[15px] leading-tight">{book.title}</span>
                       <span className="block truncate text-xs text-muted-foreground">{authorNames(book.authors) || h.unknownAuthor}</span>
+                    </span>
+                    <span className="hidden shrink-0 items-center gap-2.5 text-xs tabular-nums sm:inline-flex">
+                      {hasScore(book) ? (
+                        <span className="inline-flex items-center gap-1 font-semibold text-foreground/85">
+                          <Star className="size-3.5 fill-gold text-gold" aria-hidden="true" />
+                          {scoreOf(book).toFixed(1)}
+                        </span>
+                      ) : null}
+                      <span className="font-semibold text-muted-foreground">{price(book)}</span>
                     </span>
                     <ArrowRight className={cn("size-4 shrink-0 transition-[opacity,transform] duration-200 motion-reduce:transition-none", i === front ? "text-primary opacity-100" : "text-muted-foreground opacity-0 group-hover:translate-x-0.5 group-hover:opacity-100 group-focus-visible:opacity-100")} aria-hidden="true" />
                   </button>

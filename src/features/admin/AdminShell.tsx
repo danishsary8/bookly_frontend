@@ -1,14 +1,14 @@
 import { Suspense, useState } from "react";
 import { BookOpen, ChevronDown, ExternalLink, LogOut, Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck, UserRound } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { RouteErrorBoundary } from "@/components/ErrorBoundary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerBody, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { navFor } from "./adminNav";
+import { groupFor, navFor } from "./adminNav";
 import { COUNT_FOR, badgeText, useMenuCounts } from "./menuCounts";
 import { QuickJump } from "./QuickJump";
 import { NotificationsBell } from "./NotificationsBell";
@@ -38,42 +38,98 @@ function Wordmark({ onRail = false }: { onRail?: boolean }) {
 function Nav({ onNavigate, collapsed = false }: { onNavigate?: () => void; collapsed?: boolean }) {
   const session = useStaff();
   const portal = usePortal();
+  const { pathname } = useLocation();
+  const activeGroupLabel = groupFor(pathname)?.label;
   const counts = useMenuCounts(Boolean(session)).data;
   const supportPath = portalPath(portal, "support");
+
+  const [closedGroups, setClosedGroups] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem("bookly.admin.navGroups");
+      return raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const toggleGroup = (label: string) => {
+    setClosedGroups((prev) => {
+      const next = { ...prev, [label]: !prev[label] };
+      try {
+        localStorage.setItem("bookly.admin.navGroups", JSON.stringify(next));
+      } catch {
+        /* ignore storage errors */
+      }
+      return next;
+    });
+  };
+
   return (
-    <nav aria-label={portalLabel(portal)} className="admin-navigation grid gap-5">
-      {navFor(session?.user.role, portal).map((group) => (
-        <div key={group.label} data-tone={group.tone} className="grid gap-0.5">
-          <p className="admin-nav-group flex items-center gap-2 px-3 pb-1.5 text-[11px] font-bold uppercase tracking-[0.16em]">
-            <span className="admin-nav-group-dot" aria-hidden="true" />
-            {group.label}
-          </p>
-          {group.items.map(({ to, label, Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              title={collapsed ? label : undefined}
-              onClick={onNavigate}
-              className="admin-nav-link relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14.5px] font-medium outline-none"
+    <nav aria-label={portalLabel(portal)} className="admin-navigation grid gap-3.5">
+      {navFor(session?.user.role, portal).map((group) => {
+        const isCurrentGroup = group.label === activeGroupLabel;
+        const isGroupOpen = collapsed || isCurrentGroup || !closedGroups[group.label];
+        const groupCount = group.items.reduce((sum, item) => {
+          const badge = COUNT_FOR[item.to];
+          return sum + (badge && counts ? counts[badge.key] : 0);
+        }, 0);
+
+        return (
+          <div key={group.label} data-tone={group.tone} className="grid gap-0.5">
+            <button
+              type="button"
+              onClick={() => toggleGroup(group.label)}
+              aria-expanded={isGroupOpen}
+              className="admin-nav-group flex min-h-8 w-full items-center justify-between gap-2 rounded-md px-3 py-1 text-left text-[11px] font-bold uppercase tracking-[0.16em] transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <Icon className="size-[18px] shrink-0" aria-hidden="true" />
-              <span className="admin-nav-label truncate">{label}</span>
-              {to === supportPath ? <SupportMenuBadge /> : null}
-              {(() => {
-                const badge = COUNT_FOR[to];
-                const n = badge && counts ? counts[badge.key] : 0;
-                return n > 0 ? (
-                  <span className="admin-nav-count ml-auto min-w-6 rounded-full px-1.5 py-0.5 text-center text-xs font-bold tabular-nums">
-                    <span aria-hidden="true">{badgeText(n)}</span>
-                    <span className="sr-only">, {badge.label(n)}</span>
+              <span className="flex items-center gap-2 truncate">
+                <span className="admin-nav-group-dot shrink-0" aria-hidden="true" />
+                <span className="truncate">{group.label}</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                {!isGroupOpen && groupCount > 0 ? (
+                  <span className="admin-nav-count min-w-5 rounded-full px-1.5 py-0.2 text-center text-[10px] font-bold tabular-nums">
+                    {badgeText(groupCount)}
                   </span>
-                ) : null;
-              })()}
-            </NavLink>
-          ))}
-        </div>
-      ))}
+                ) : null}
+                <ChevronDown
+                  className={cn(
+                    "size-3.5 shrink-0 transition-transform duration-200",
+                    !isGroupOpen && "-rotate-90",
+                  )}
+                  aria-hidden="true"
+                />
+              </span>
+            </button>
+            {isGroupOpen
+              ? group.items.map(({ to, label, Icon, end }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    end={end}
+                    title={collapsed ? label : undefined}
+                    onClick={onNavigate}
+                    className="admin-nav-link relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-[14.5px] font-medium outline-none"
+                  >
+                    <Icon className="size-[18px] shrink-0" aria-hidden="true" />
+                    <span className="admin-nav-label truncate">{label}</span>
+                    {to === supportPath ? <SupportMenuBadge /> : null}
+                    {(() => {
+                      const badge = COUNT_FOR[to];
+                      const n = badge && counts ? counts[badge.key] : 0;
+                      return n > 0 ? (
+                        <span className="admin-nav-count ml-auto min-w-6 rounded-full px-1.5 py-0.5 text-center text-xs font-bold tabular-nums">
+                          <span aria-hidden="true">{badgeText(n)}</span>
+                          <span className="sr-only">, {badge.label(n)}</span>
+                        </span>
+                      ) : null;
+                    })()}
+                  </NavLink>
+                ))
+              : null}
+          </div>
+        );
+      })}
     </nav>
   );
 }

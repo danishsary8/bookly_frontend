@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { accountPage, useAccountPageBounds } from "@/features/account/pagination";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, ChevronDown, ChevronRight, ChevronUp, Package, QrCode, Search, X } from "lucide-react";
+import { BookOpen, ChevronDown, ChevronRight, ChevronUp, Package, QrCode, Search, Star, X } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { orderQueries } from "@/api/endpoints/orders";
 import { useSession } from "@/api/session";
 import type { Customer, Order, OrderItem, OrderStatus } from "@/api/types";
 import { EmptyState } from "@/components/EmptyState";
-import { SelectField } from "@/components/form/Field";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
@@ -19,7 +18,7 @@ import { getUnreadOrderIds, markOrdersSeen, readSeenOrderStatuses } from "@/feat
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import useSkeletonVisible from "@/hooks/useSkeletonVisible";
 import { cn } from "@/lib/utils";
-import { formatMoney, formatUsd, useCurrency } from "@/stores/currency";
+import { formatMoney, useCurrency } from "@/stores/currency";
 import { formatName, rangeText, useT, type Translations } from "@/i18n";
 
 const PER_PAGE = 10;
@@ -84,6 +83,13 @@ function OrderRow({ order, query, isUpdated }: { order: Order; query: string; is
   const hiddenCount = items.length - visibleItems.length;
   const stepIndex = STEPS.indexOf(order.status as (typeof STEPS)[number]);
   const showProgress = stepIndex >= 0;
+  const delivered = order.status === "delivered";
+  const rateNum =
+    Number(order.total_usd) > 0 && Number(order.total_khr) > 0
+      ? Number(order.total_khr) / Number(order.total_usd)
+      : 4100;
+  const toKhrApprox = (usdStr: string | null | undefined) =>
+    usdStr ? String(Math.round((Number(usdStr) * rateNum) / 100) * 100) : null;
   const showPayNow =
     order.payment_method === "khqr" &&
     order.payment_status === "pending" &&
@@ -161,12 +167,21 @@ function OrderRow({ order, query, isUpdated }: { order: Order; query: string; is
                     </span>
                   ) : null}
                   {item.quantity ? <span className="tabular-nums font-medium">{t.qtyShort(item.quantity)}</span> : null}
-                  {item.unit_price_usd ? <span className="tabular-nums">· {formatUsd(item.unit_price_usd)}</span> : null}
+                  {item.unit_price_usd ? <span className="tabular-nums">· {formatMoney(item.unit_price_usd, toKhrApprox(item.unit_price_usd), currency)}</span> : null}
+                  {delivered && item.book_id ? (
+                    <Link
+                      to={`/books/${item.book_id}#your-review`}
+                      className="inline-flex items-center gap-1 rounded-full bg-lapis-tint/70 px-2 py-0.5 text-xs font-semibold text-primary transition-colors hover:bg-lapis-tint"
+                    >
+                      <Star className="size-3 fill-gold text-gold" aria-hidden="true" />
+                      {t.reviewBook}
+                    </Link>
+                  ) : null}
                 </div>
               </div>
               {item.subtotal_usd ? (
                 <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground/90">
-                  {formatUsd(item.subtotal_usd)}
+                  {formatMoney(item.subtotal_usd, toKhrApprox(item.subtotal_usd), currency)}
                 </span>
               ) : null}
             </div>
@@ -295,21 +310,6 @@ export default function OrdersPage() {
           : meta && meta.total
             ? rangeText(dict, meta.from, meta.to, meta.total, dict.nouns.order(meta.total))
             : t.lead
-      }
-      action={
-        <SelectField
-          label={t.show}
-          value={status ?? ""}
-          onChange={(event) => setStatusFilter(isStatus(event.target.value) ? event.target.value : undefined)}
-          containerClassName="w-48"
-        >
-          <option value="">{t.all}</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {dict.orderStatus[s]}
-            </option>
-          ))}
-        </SelectField>
       }
     >
       {/* Search + 1-click status filter pills */}

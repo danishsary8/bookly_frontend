@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Banknote, Download, FileText, ListChecks, Package, Printer, QrCode, ReceiptText, Truck, X } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Banknote, Download, FileText, ListChecks, Package, PackageCheck, Printer, QrCode, ReceiptText, Truck, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { opsApi, opsQueries } from "@/api/endpoints/staffOps";
 import { ApiError } from "@/api/errors";
@@ -124,12 +124,18 @@ const FINISHED_STATUSES = new Set<OrderStatus>(["delivered", "cancelled", "retur
 function SelectionBar({
   ids,
   packableIds,
+  processableIds,
   onStatus,
+  onPrintAndProcess,
+  processingBusy,
   onClear,
 }: {
   ids: number[];
   packableIds: number[];
+  processableIds: number[];
   onStatus: () => void;
+  onPrintAndProcess: () => void;
+  processingBusy?: boolean;
   onClear: () => void;
 }) {
   const portal = usePortal();
@@ -142,6 +148,11 @@ function SelectionBar({
         <Button size="sm" onClick={onStatus}>
           <ListChecks aria-hidden="true" /> Change status
         </Button>
+        {processableIds.length > 0 ? (
+          <Button size="sm" variant="outline" loading={processingBusy} onClick={onPrintAndProcess}>
+            <PackageCheck aria-hidden="true" /> Print packing slips & mark Processing ({processableIds.length})
+          </Button>
+        ) : null}
         {packableIds.length > 0 ? (
           <a href={staffPrintPath("packing-slip", packableIds, true, portal)} target="_blank" rel="noopener" className={buttonVariants({ variant: "outline", size: "sm" })}>
             <Printer aria-hidden="true" /> Print packing slips
@@ -176,7 +187,7 @@ function NextSteps({ allowed, number, short, t, onPick }: { allowed: OrderStatus
         const { Icon, label } = STEPS[s]!;
         return (
           <Button key={s} size="sm" variant="outline" className="min-h-11 min-w-11 gap-1.5 whitespace-nowrap px-3" aria-label={t.nextFor.replace("{step}", label).replace("{n}", number)} title={label} onClick={() => onPick(s)}>
-            <Icon aria-hidden="true" /> <span className="hidden min-[1360px]:inline">{short[s] ?? label}</span>
+            <Icon aria-hidden="true" /> <span className="hidden lg:inline">{short[s] ?? label}</span>
           </Button>
         );
       })}
@@ -198,6 +209,7 @@ function NextSteps({ allowed, number, short, t, onPick }: { allowed: OrderStatus
 export default function OrdersAdminPage() {
   const session = useStaff();
   const isAdmin = session?.user.role === "admin";
+  const queryClient = useQueryClient();
   const { get, page, set, hrefFor } = useListParams();
   const rawStatus = get("status");
   const status = isStatus(rawStatus) ? rawStatus : undefined;
@@ -232,8 +244,29 @@ export default function OrdersAdminPage() {
     const st = statusById[id];
     return !st || !FINISHED_STATUSES.has(st);
   });
+  const processableIds = selected.filter((id) => (allowedById[id] ?? []).includes("processing"));
   const portal = usePortal();
   const toPortal = usePortalPath();
+
+  const printAndProcessMutation = useMutation({
+    mutationFn: async (idsToProcess: number[]) => {
+      window.open(staffPrintPath("packing-slip", idsToProcess, true, portal), "_blank", "noopener");
+      return await opsApi.bulkOrderStatus(idsToProcess, "processing", "Packing slip printed");
+    },
+    onSuccess: (res) => {
+      void queryClient.invalidateQueries({ queryKey: ["staff", "orders"] });
+      void queryClient.invalidateQueries({ queryKey: ["staff", "dashboard"] });
+      if (res.updated.length) {
+        toast.success({
+          title: `Printed & moved ${res.updated.length} ${res.updated.length === 1 ? "order" : "orders"} to Processing`,
+        });
+      }
+      setSelected(res.failed.map((f) => f.id));
+    },
+    onError: (err) => {
+      toast.error(ApiError.from(err).message);
+    },
+  });
   const dailyPrintHref = staffDailySalesPrintPath(
     {
       from: from || today(),
@@ -306,7 +339,17 @@ export default function OrdersAdminPage() {
             onChange={(v) => set({ pay: v === "all" ? undefined : v })}
           />
         </div>
-        {selected.length ? <SelectionBar ids={selected} packableIds={packableIds} onStatus={() => setChanging(true)} onClear={() => setSelected([])} /> : null}
+        {selected.length ? (
+          <SelectionBar
+            ids={selected}
+            packableIds={packableIds}
+            processableIds={processableIds}
+            onStatus={() => setChanging(true)}
+            onPrintAndProcess={() => printAndProcessMutation.mutate(processableIds)}
+            processingBusy={printAndProcessMutation.isPending}
+            onClear={() => setSelected([])}
+          />
+        ) : null}
       </div>
 
       <ListState

@@ -21,6 +21,7 @@ import { useT } from "@/i18n";
 // they load when first opened, or earlier when the browser is idle.
 const loadCartDrawer = () => import("./CartDrawer");
 const PromoPopup = lazy(() => import("@/features/promotions/PromoPopup").then((mod) => ({ default: mod.PromoPopup })));
+const SupportBubble = lazy(() => import("@/features/support/SupportBubble").then((mod) => ({ default: mod.SupportBubble })));
 const loadMobileMenu = () => import("./MobileMenu");
 const CartDrawer = lazy(() => loadCartDrawer().then((mod) => ({ default: mod.CartDrawer })));
 const MobileMenu = lazy(() => loadMobileMenu().then((mod) => ({ default: mod.MobileMenu })));
@@ -111,10 +112,10 @@ export function SiteShell({ children }: { children: ReactNode }) {
       {/* Home and the shopping pages (cart, checkout, confirmation) run their warm paper right down to the footer
           (their own bottom padding replaces the footer gap). pages/shopping.md. */}
       <SiteFooter className={pathname === "/" || shopPaper ? "mt-0" : undefined} />
-      {/* The floating Support button is switched off for now (owner, 2026-11); features/support stays for later. */}
       <Suspense fallback={null}>
         {cartOpened ? <CartDrawer /> : null}
         {menuOpened ? <MobileMenu /> : null}
+        <SupportBubble />
         {/* Promotion pop-up (owner 2026-11-12): loads on its own, shows only when a promotion is live. */}
         <PromoPopup />
       </Suspense>

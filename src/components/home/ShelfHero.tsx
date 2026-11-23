@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useReducedMotion } from "motion/react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, ShoppingBag } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { catalogApi, catalogQueries, type BookFilters } from "@/api/endpoints/catalog";
 import type { BookCard } from "@/api/types";
+import { useAddToCart } from "@/components/catalog/useCatalogActions";
 import { ReaderScore } from "@/components/ReaderScore";
 import { cn } from "@/lib/utils";
 import { formatMoney, useCurrency } from "@/stores/currency";
@@ -365,6 +366,7 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
   const { dict } = useT();
   const h = dict.homePage;
   const currency = useCurrency();
+  const cart = useAddToCart();
   const navigate = useNavigate();
   const reduce = useReducedMotion() ?? false;
 
@@ -795,8 +797,8 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
                   {binding === "bands" ? <span aria-hidden="true" className="shelf-band" /> : null}
                   <span className={cn("shelf-label grid place-items-center", binding === "label" && "shelf-label-panel")}>
                     <span
-                      className="shelf-title max-h-full overflow-hidden text-center font-display leading-[1.25] tracking-[0.015em] [text-orientation:mixed] [writing-mode:vertical-rl]"
-                      style={{ fontSize: Math.max(10, Math.min(17, bw * (long ? 0.25 : 0.32))), maxWidth: bw * (binding === "label" ? 0.62 : 0.72) }}
+                      className="shelf-title max-h-full overflow-hidden text-center font-display leading-[1.45] tracking-[0.015em] [text-orientation:mixed] [writing-mode:vertical-rl]"
+                      style={{ fontSize: Math.max(10, Math.min(17, bw * (long ? 0.25 : 0.32))), maxWidth: bw * (binding === "label" ? 0.68 : 0.78) }}
                     >
                       {spineTitle}
                     </span>
@@ -878,7 +880,20 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
             {price ? <span className="whitespace-nowrap font-display text-[1.6rem] leading-none tabular-nums text-[#FBF6EC]">{price}</span> : null}
             {book ? <ReaderScore book={book} showCount={false} className="text-[13px] text-[#F1DCBC] [&_.text-foreground]:text-[#FBF6EC]" /> : null}
           </div>
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-2">
+            {book && book.in_stock !== false ? (
+              <button
+                type="button"
+                onClick={() => cart.add(book)}
+                disabled={cart.pendingBookId === book.id}
+                aria-label={h.addToCart}
+                title={h.addToCart}
+                className="inline-flex h-11 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#FBF6EC] px-4 text-sm font-semibold text-[#1B1A2E] shadow-sm transition-[filter,transform] hover:brightness-105 active:scale-[0.97] disabled:opacity-70"
+              >
+                <ShoppingBag className="size-4 shrink-0" aria-hidden="true" />
+                <span className="hidden sm:inline">{h.addToCart}</span>
+              </button>
+            ) : null}
             <Link to={href} className="inline-flex h-11 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#F1DCBC]/45 px-4 text-sm font-semibold text-[#FBF6EC] transition-colors hover:bg-white/10">
               {book ? h.viewBook : dict.shopExtras.viewAll}
             </Link>

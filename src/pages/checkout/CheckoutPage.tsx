@@ -453,6 +453,36 @@ export default function CheckoutPage() {
           </aside>
         </div>
       </div>
+
+      {/* Mobile sticky grand total & place-order bar (< lg) */}
+      {data ? (
+        <div className="fixed inset-x-0 bottom-0 z-(--z-header) border-t border-border bg-card/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-sm lg:hidden">
+          <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-xs font-medium text-muted-foreground">
+                {k.total}
+                {Number(data.khqr_discount?.usd) > 0 ? ` · −${percentLabel(data.khqr_discount_percent ?? "0")}% KHQR` : ""}
+              </p>
+              <p className="font-display text-[1.45rem] leading-tight tabular-nums text-foreground">
+                {formatMoney(data.total?.usd, data.total?.khr, currency)}
+              </p>
+            </div>
+            <Button
+              variant="cta"
+              className="shrink-0 gap-1.5 rounded-xl px-4"
+              onClick={() => {
+                setFormError(null);
+                place.mutate();
+              }}
+              disabled={!ready}
+              loading={place.isPending}
+            >
+              {place.isPending ? dict.checkout.placingOrder : paymentMethod === "khqr" ? k.placeAndPay : dict.checkout.placeOrder}
+              <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

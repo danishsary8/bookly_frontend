@@ -411,9 +411,12 @@ export function PackingSlipSheet({ doc }: { doc: Doc }) {
         ) : null}
       </div>
 
-      <div className="print-keep-together grid grid-cols-2 gap-6 pt-6 text-sm">
-        <p className="border-t border-foreground pt-2">Packed by</p>
-        <p className="border-t border-foreground pt-2">Date</p>
+      <div className="print-keep-together flex flex-wrap items-end justify-between gap-6 pt-6 text-sm">
+        <div className="grid flex-1 grid-cols-2 gap-6">
+          <p className="border-t border-foreground pt-2">Packed by</p>
+          <p className="border-t border-foreground pt-2">Date</p>
+        </div>
+        <InvoiceQrCode doc={doc} />
       </div>
     </Sheet>
   );

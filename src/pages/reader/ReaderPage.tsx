@@ -12,11 +12,12 @@ import {
   Moon,
   RefreshCw,
   ShoppingBag,
+  Star,
   Sun,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { ebookApi, ebookKeys, ebookQueries, type EbookReaderMeta, type EbookPreviewMeta } from "@/api/endpoints/ebooks";
 import { ApiError } from "@/api/errors";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -38,10 +39,9 @@ export default function ReaderPage() {
 }
 
 function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean }) {
-  const { dict } = useT();
+  const { dict, lang } = useT();
   const e = dict.ebook;
   const r = dict.readerUi;
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const [theme, setTheme] = useState<SurroundTheme>(() => {
@@ -79,7 +79,7 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
     hideTimer.current = window.setTimeout(() => setChromeHidden(true), 3000);
   }, []);
   useEffect(() => {
-    const events = ["mousemove", "pointerdown", "keydown", "focusin"] as const;
+    const events = ["mousemove", "keydown", "focusin"] as const;
     for (const name of events) window.addEventListener(name, wake, { passive: true });
     hideTimer.current = window.setTimeout(() => setChromeHidden(true), 3000);
     return () => {
@@ -315,13 +315,13 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
         event.preventDefault();
         goToPage(totalPages);
       } else if (event.key === "Escape") {
-        navigate(`/books/${bookId}`);
+        setChromeHidden((prev) => !prev);
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [prevPage, nextPage, goToPage, totalPages, navigate, bookId, jumpOpen]);
+  }, [prevPage, nextPage, goToPage, totalPages, jumpOpen]);
 
   // Prevent right-click / context menu
   const onContextMenu = (event: React.MouseEvent) => {
@@ -342,6 +342,36 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
   const toggleFitWidth = () => {
     setFitWidth((prev) => !prev);
     if (!fitWidth) setZoomLevel(100);
+  };
+
+  const cycleMobileZoom = () => {
+    if (fitWidth) {
+      setFitWidth(false);
+      setZoomLevel(125);
+    } else if (zoomLevel < 150) {
+      setZoomLevel(150);
+    } else {
+      setFitWidth(true);
+      setZoomLevel(100);
+    }
+  };
+
+  const handleCanvasTap = (event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (!rect.width) return;
+    const ratio = (event.clientX - rect.left) / rect.width;
+    if (ratio < 0.22 && currentPage > 1) {
+      prevPage();
+    } else if (ratio > 0.78 && currentPage < totalPages) {
+      nextPage();
+    } else {
+      setChromeHidden((prev) => {
+        const next = !prev;
+        window.clearTimeout(hideTimer.current);
+        if (!next) hideTimer.current = window.setTimeout(() => setChromeHidden(true), 3000);
+        return next;
+      });
+    }
   };
 
   // Theme colours live in index.css (.reader-dark / -light / -sepia); the page only reads the variables.
@@ -400,7 +430,7 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
             <Link to={`/books/${bookId}`} className={buttonVariants({ variant: "outline" })}>
               {dict.common.back}
             </Link>
-            <Link to="/account/ebooks" className={buttonVariants()}>
+            <Link to="/account/ebooks#devices" className={buttonVariants()}>
               {e.manageDevices}
             </Link>
           </div>
@@ -507,6 +537,18 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
 
         {/* View Options & Theme */}
         <div className="flex items-center gap-1 sm:gap-2">
+          {/* Mobile compact zoom cycle button */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-label={e.zoomIn}
+            onClick={cycleMobileZoom}
+            className={cn("h-10 px-2 text-xs font-semibold tabular-nums sm:hidden", ghostTone)}
+          >
+            {fitWidth ? "100%" : `${zoomLevel}%`}
+          </Button>
+
           {/* Zoom controls */}
           <div className="hidden sm:flex items-center gap-1 border-r border-border/40 pr-2">
             <Button
@@ -615,13 +657,14 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
           <ChevronRight className="size-6" aria-hidden="true" />
         </button>
 
-        {/* Canvas wrapper */}
+        {/* Canvas wrapper: tap left/right 22% edges to turn page, or tap center to toggle toolbars */}
         <div
+          onClick={handleCanvasTap}
           style={{
             width: fitWidth ? "100%" : `${zoomLevel}%`,
             maxWidth: fitWidth ? "860px" : undefined,
           }}
-          className="relative mx-auto flex flex-col items-center transition-[width] duration-150"
+          className="relative mx-auto flex cursor-pointer flex-col items-center transition-[width] duration-150"
         >
           {pageLoading ? (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/50 backdrop-blur-xs rounded-lg">
@@ -645,11 +688,31 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
 
           {/* End of Preview Callout */}
           {isLastPreviewPage ? (
-            <div className="mt-8 w-full rounded-2xl border border-(--reader-line) bg-(--reader-bar) p-6 text-center">
+            <div onClick={(ev) => ev.stopPropagation()} className="mt-8 w-full rounded-2xl border border-(--reader-line) bg-(--reader-bar) p-6 text-center">
               <h2 className="font-display text-xl">{e.previewLimitReached}</h2>
               <p className="mt-2 text-sm opacity-80">{e.previewLimitReachedLead}</p>
               <Link to={`/books/${bookId}`} className={cn(buttonVariants({ variant: "cta" }), "mt-4")}>
                 <ShoppingBag className="size-4" aria-hidden="true" /> {e.buyEbook}
+              </Link>
+            </div>
+          ) : !isPreview && currentPage >= totalPages ? (
+            <div onClick={(ev) => ev.stopPropagation()} className="mt-8 w-full rounded-2xl border border-(--reader-line) bg-(--reader-bar) p-6 text-center">
+              <div className="mx-auto mb-2 flex justify-center gap-1 text-gold" aria-hidden="true">
+                {Array.from({ length: 5 }, (_, idx) => (
+                  <Star key={idx} className="size-5 fill-current" />
+                ))}
+              </div>
+              <h2 className="font-display text-xl">
+                {lang === "km" ? "បានអានចប់សៀវភៅនេះហើយមែនទេ?" : "Finished reading this book?"}
+              </h2>
+              <p className="mt-1.5 text-sm opacity-80">
+                {lang === "km"
+                  ? "ចែករំលែកការវាយតម្លៃរបស់អ្នក ដើម្បីជួយមិត្តអ្នកអានដទៃទៀតជ្រើសរើសសៀវភៅល្អៗ។"
+                  : "Share your thoughts and star rating to help fellow readers discover their next great read."}
+              </p>
+              <Link to={`/books/${bookId}#your-review`} className={cn(buttonVariants({ variant: "cta" }), "mt-4 gap-2")}>
+                <Star className="size-4 fill-current" aria-hidden="true" />
+                {dict.bookDetail.writeReview}
               </Link>
             </div>
           ) : null}

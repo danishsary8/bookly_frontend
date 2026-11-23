@@ -82,8 +82,9 @@ function MarkPaidDialog({ order, onClose }: { order: StaffOrder; onClose: () => 
   );
 }
 
-export function OrderPaymentCard({ order, isAdmin }: { order: StaffOrder; isAdmin: boolean }) {
+export function OrderPaymentCard({ order, isAdmin, canConfirmPayment }: { order: StaffOrder; isAdmin: boolean; canConfirmPayment?: boolean }) {
   const [marking, setMarking] = useState(false);
+  const canMark = canConfirmPayment ?? isAdmin;
   const khqr = order.payment_method === "khqr";
   const rows = (order.payments ?? []).filter((p) => p.provider === "bakong");
   const late = rows.find((p) => p.paid_after_cancel);
@@ -131,12 +132,12 @@ export function OrderPaymentCard({ order, isAdmin }: { order: StaffOrder; isAdmi
             <p className="text-sm text-muted-foreground">{order.payment_status === "succeeded" ? "Paid" : "Waiting for payment"}</p>
           )}
           {waiting ? (
-            isAdmin ? (
+            canMark ? (
               <Button variant="outline" onClick={() => setMarking(true)} className="mt-1 w-fit">
                 <BadgeCheck aria-hidden="true" /> Mark as paid
               </Button>
             ) : (
-              <p className="text-sm text-muted-foreground">Waiting for the customer to pay. Only admins can mark it as paid by hand.</p>
+              <p className="text-sm text-muted-foreground">Waiting for the customer to pay. Staff with order management permission can mark it as paid by hand.</p>
             )
           ) : null}
         </>

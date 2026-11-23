@@ -84,6 +84,7 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
   const staffSession = useStaff();
   const isAdmin = staffSession?.user?.role === "admin";
   const [formError, setFormError] = useState<string | null>(null);
+  const [catSearch, setCatSearch] = useState("");
   const [names, setNames] = useState<Record<number, string>>(() =>
     Object.fromEntries((book?.authors ?? []).map((a) => [a.id, a.name])),
   );
@@ -267,31 +268,50 @@ function DetailsForm({ book }: { book: StaffBook | null }) {
         <Controller
           control={control}
           name="category_ids"
-          render={({ field }) => (
-            <fieldset className="grid gap-2">
-              <legend className="mb-1 text-sm font-semibold">Categories</legend>
-              {categories.isPending ? (
-                <Skeleton className="h-11" />
-              ) : (
-                <div className="grid gap-x-4 rounded-md border border-border bg-surface-2/40 px-3 py-1 sm:grid-cols-2 lg:grid-cols-3">
-                  {(categories.data ?? []).map((c) => {
-                    const checked = field.value.includes(c.id!);
-                    return (
-                      <label key={c.id} className="flex min-h-11 cursor-pointer items-center gap-3 text-[15px]">
-                        <Checkbox
-                          checked={checked}
-                          onCheckedChange={(on) =>
-                            field.onChange(on ? [...field.value, c.id!] : field.value.filter((v) => v !== c.id))
-                          }
-                        />
-                        {c.name}
-                      </label>
-                    );
-                  })}
+          render={({ field }) => {
+            const allCats = categories.data ?? [];
+            const q = catSearch.trim().toLowerCase();
+            const filteredCats = q ? allCats.filter((c) => (c.name ?? "").toLowerCase().includes(q)) : allCats;
+            return (
+              <fieldset className="grid gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <legend className="text-sm font-semibold">
+                    Categories {field.value.length > 0 ? <span className="ml-1 rounded-full bg-lapis-tint px-2 py-0.5 text-xs font-semibold text-primary tabular-nums">{field.value.length}</span> : null}
+                  </legend>
+                  {allCats.length > 6 ? (
+                    <input
+                      type="search"
+                      value={catSearch}
+                      onChange={(e) => setCatSearch(e.target.value)}
+                      placeholder="Filter categories…"
+                      aria-label="Filter categories"
+                      className="h-8 w-48 rounded-md border border-input bg-card px-2.5 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                  ) : null}
                 </div>
-              )}
-            </fieldset>
-          )}
+                {categories.isPending ? (
+                  <Skeleton className="h-11" />
+                ) : (
+                  <div className="grid max-h-52 gap-x-4 overflow-y-auto rounded-md border border-border bg-surface-2/40 px-3 py-1 sm:grid-cols-2 lg:grid-cols-3">
+                    {filteredCats.map((c) => {
+                      const checked = field.value.includes(c.id!);
+                      return (
+                        <label key={c.id} className="flex min-h-10 cursor-pointer items-center gap-2.5 text-sm">
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(on) =>
+                              field.onChange(on ? [...field.value, c.id!] : field.value.filter((v) => v !== c.id))
+                            }
+                          />
+                          <span className="truncate">{c.name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </fieldset>
+            );
+          }}
         />
       </FormSection>
 

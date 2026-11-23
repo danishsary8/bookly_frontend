@@ -95,12 +95,13 @@ export interface Offer {
   gift_id?: number | null;
   gift_quantity?: number;
   min_subtotal?: string | null;
+  amount_off?: string | null;
   /** Set offer: every volume of the target series in one order. */
   whole_series?: boolean;
   free_delivery?: boolean;
   id: number;
   name: string;
-    type: "buy_n_percent" | "gift";
+  type: "buy_n_percent" | "buy_n_amount" | "gift";
   applies_to: "all" | "selected";
   min_quantity: number;
   percent_off: string;
@@ -114,10 +115,11 @@ export interface Offer {
   orders_count: number;
 }
 export type OfferInput = Partial<{
-  type: "buy_n_percent" | "gift";
+  type: "buy_n_percent" | "buy_n_amount" | "gift";
   gift_id: number | null;
   gift_quantity: number;
   min_subtotal: string | null;
+  amount_off: string | null;
   whole_series: boolean;
   free_delivery: boolean;
   name: string;

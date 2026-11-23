@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Boxes, History, PackagePlus, Search } from "lucide-react";
+import { AlertTriangle, Boxes, History, PackagePlus } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { staffQueries, type StockItem } from "@/api/endpoints/staff";
 import { CoverThumb } from "@/components/CoverThumb";
@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Pagination } from "@/components/ui/pagination";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
+import { SearchBox } from "@/features/admin/listKit";
 import { usePortalPath } from "@/features/admin/portal";
 import { RestockDialog } from "@/features/admin/stock/RestockDialog";
 import { StockHistoryDrawer } from "@/features/admin/stock/StockHistoryDrawer";
@@ -30,7 +31,6 @@ export default function StockAdminPage() {
   const rawStatus = params.get("status");
   const status: FilterStatus = rawStatus === "low" || rawStatus === "out" ? rawStatus : "all";
   const page = Math.max(1, Number(params.get("page")) || 1);
-  const [draft, setDraft] = useState(q);
 
   const [restockVariant, setRestockVariant] = useState<StockItem | null>(null);
   const [historyVariant, setHistoryVariant] = useState<StockItem | null>(null);
@@ -54,11 +54,6 @@ export default function StockAdminPage() {
       else merged.delete(k);
     }
     setParams(merged, { replace: true });
-  };
-
-  const handleSearch = (event: FormEvent) => {
-    event.preventDefault();
-    go({ q: draft.trim() || undefined, page: undefined });
   };
 
   const handleStatusChange = (newStatus: FilterStatus) => {
@@ -123,18 +118,15 @@ export default function StockAdminPage() {
             </button>
           </div>
 
-          {/* Search */}
-          <form onSubmit={handleSearch} className="relative w-full max-w-xs">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-            <input
-              type="search"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder="Title, SKU or ISBN…"
-              aria-label="Search stock"
-              className="h-10 w-full rounded-md border border-border bg-card pl-9 pr-3 text-sm text-foreground outline-none transition-colors duration-150 placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring"
-            />
-          </form>
+          {/* Live debounced search */}
+          <SearchBox
+            label="Search stock"
+            value={q}
+            placeholder="Title, SKU or ISBN…"
+            busy={stockQuery.isFetching}
+            onSearch={(next) => go({ q: next || undefined, page: undefined })}
+            className="max-w-xs"
+          />
         </div>
 
         {stockQuery.isPending ? (
@@ -160,7 +152,7 @@ export default function StockAdminPage() {
             }
             action={
               q || status !== "all" ? (
-                <Button variant="outline" onClick={() => { setDraft(""); go({ q: undefined, status: undefined, page: undefined }); }}>
+                <Button variant="outline" onClick={() => go({ q: undefined, status: undefined, page: undefined })}>
                   Clear filters
                 </Button>
               ) : null

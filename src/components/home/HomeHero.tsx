@@ -38,6 +38,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
   const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
+  const swipeStartRef = useRef<number | null>(null);
   const current = books[index % Math.max(books.length, 1)];
   // The slideshow only runs while the hero is on screen: no slide changes (or image loads) once scrolled past.
   const sectionRef = useRef<HTMLElement>(null);
@@ -189,6 +190,18 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                   </button>
                 </> : null}
               <div
+                onPointerDown={(e) => {
+                  swipeStartRef.current = e.clientX;
+                }}
+                onPointerUp={(e) => {
+                  if (swipeStartRef.current === null) return;
+                  const dx = e.clientX - swipeStartRef.current;
+                  swipeStartRef.current = null;
+                  if (Math.abs(dx) > 36) step(dx < 0 ? 1 : -1);
+                }}
+                onPointerCancel={() => {
+                  swipeStartRef.current = null;
+                }}
                 onPointerMove={(e) => {
                   if (reduceMotion || e.pointerType !== "mouse") return;
                   const r = e.currentTarget.getBoundingClientRect();
@@ -199,7 +212,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                   e.currentTarget.style.setProperty("--tilt-y", "0deg");
                   e.currentTarget.style.setProperty("--tilt-x", "0deg");
                 }}
-                className="hero-stack relative mx-auto w-[min(210px,56%,calc((100svh-26rem)*0.5))] min-w-[140px] sm:w-[min(300px,60%)] lg:w-[min(340px,60%,calc((var(--hero-panel-height)-14rem)*0.6))]"
+                className="hero-stack relative mx-auto w-[min(210px,56%,calc((100svh-26rem)*0.5))] min-w-[140px] [touch-action:pan-y] sm:w-[min(300px,60%)] lg:w-[min(340px,60%,calc((var(--hero-panel-height)-15.5rem)*0.6))]"
               >
                 <span className="pointer-events-none absolute left-1/2 top-[42%] -z-10 size-[210%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(130_160_255/0.3),transparent)]" aria-hidden="true" />
                 <div className="relative aspect-[2/3] [perspective:1400px]">
@@ -262,7 +275,7 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
                     </div>
                   </div>
 
-                  <div className="mt-5 flex items-center justify-center gap-3">
+                  <div className="mt-5 flex items-center justify-center gap-3 short:mt-3.5">
                     <Link to={`/books/${current.id}`} className="group/vb relative inline-flex h-11 min-w-36 items-center justify-center gap-3 overflow-hidden rounded-full border border-on-lapis-muted/40 bg-on-lapis/5 px-6 text-sm font-semibold text-on-lapis transition-colors hover:border-on-lapis-muted/70 hover:bg-on-lapis/10 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold">
                       {h.viewBook} <ArrowRight className="size-4 transition-transform duration-200 group-hover/vb:translate-x-0.5" aria-hidden="true" />
                       {/* the slide timer runs along the bottom edge of the button */}

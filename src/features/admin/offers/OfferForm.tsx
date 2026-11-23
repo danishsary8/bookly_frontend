@@ -1,6 +1,6 @@
 import { useDeferredValue, useState, type FormEvent, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Info, Search, Snail, Tag, TrendingDown, X } from "lucide-react";
+import { CheckCircle2, DollarSign, Gift, Info, Percent, Search, Snail, Sparkles, Tag, TrendingDown, X } from "lucide-react";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { staffApi } from "@/api/endpoints/staff";
 import { opsApi, type Offer, type OfferInput, type OfferTargetType } from "@/api/endpoints/staffOps";
@@ -43,8 +43,37 @@ const pct = (percent: string | number) => String(Number(percent));
 const TYPE_LABEL: Record<OfferTargetType, string> = { book: "Book", category: "Category", series: "Series" };
 
 /** The sentence customers see on a book page (the shop writes the same words in en.ts `offers.bookLine`). */
-const customerSentence = (n: number, percent: string, label: string | null, endsAt: string | null) =>
-  `${label ? `Buy any ${n} from ${label}, save ${percent}%.` : `Buy any ${n} or more books in this offer, save ${percent}% on each.`} Mix and match: they don't have to be the same book.${endsAt ? ` Ends ${orderDate(endsAt)}.` : ""}`;
+const customerSentence = ({
+  type,
+  n,
+  percent,
+  amount,
+  label,
+  endsAt,
+}: {
+  type: "buy_n_percent" | "buy_n_amount" | "gift";
+  n: number;
+  percent: string;
+  amount: string;
+  label: string | null;
+  endsAt: string | null;
+}) => {
+  const endsText = endsAt ? ` Ends ${orderDate(endsAt)}.` : "";
+  if (type === "buy_n_amount") {
+    const formatted = Number(amount) > 0 ? `$${Number(amount).toFixed(2)}` : "$0.00";
+    if (n === 1) {
+      return label ? `Buy any book from ${label}, save ${formatted}.${endsText}` : `Save ${formatted} on this book.${endsText}`;
+    }
+    return `${label ? `Buy any ${n} from ${label}, save ${formatted}.` : `Buy any ${n} or more books in this offer, save ${formatted} off your order.`} Mix and match: they don't have to be the same book.${endsText}`;
+  }
+  if (type === "gift") {
+    return `Get a free gift with qualifying orders.${endsText}`;
+  }
+  if (n === 1) {
+    return label ? `Buy any book from ${label}, save ${percent}%.${endsText}` : `Save ${percent}% on this book.${endsText}`;
+  }
+  return `${label ? `Buy any ${n} from ${label}, save ${percent}%.` : `Buy any ${n} or more books in this offer, save ${percent}% on each.`} Mix and match: they don't have to be the same book.${endsText}`;
+};
 
 const toLocalInput = (iso: string | null) =>
   iso ? new Date(new Date(iso).getTime() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16) : "";
@@ -284,10 +313,11 @@ function promoRows(
 }
 
 type Values = {
-  type: "buy_n_percent" | "gift";
+  type: "buy_n_percent" | "buy_n_amount" | "gift";
   gift_id: string;
   gift_quantity: string;
   min_subtotal: string;
+  amount_off: string;
   whole_series: boolean;
   free_delivery: boolean;
   name: string;
@@ -311,6 +341,7 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
     gift_id: String(offer?.gift_id ?? ""),
     gift_quantity: String(offer?.gift_quantity ?? 1),
     min_subtotal: offer?.min_subtotal ?? "",
+    amount_off: offer?.amount_off ? String(Number(offer.amount_off)) : "3.00",
     whole_series: offer?.whole_series ?? false,
     free_delivery: offer?.free_delivery ?? false,
     name: offer?.name ?? "",
@@ -337,7 +368,7 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
     onError: (err) => {
       const apiError = ApiError.from(err);
       const next: Errors = {};
-      for (const f of ["name", "applies_to", "min_quantity", "percent_off", "starts_at", "ends_at", "max_orders", "targets", "gift_id", "gift_quantity", "min_subtotal", "type", "whole_series"] as const) {
+      for (const f of ["name", "applies_to", "min_quantity", "percent_off", "amount_off", "starts_at", "ends_at", "max_orders", "targets", "gift_id", "gift_quantity", "min_subtotal", "type", "whole_series"] as const) {
         const m = apiError.field(f);
         if (m) next[f] = m;
       }
@@ -348,16 +379,40 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
 
   const n = Number(v.min_quantity);
   const percentOk = /^\d+(\.\d{1,2})?$/.test(v.percent_off.trim()) && Number(v.percent_off) > 0 && Number(v.percent_off) <= 50;
+  const amountOk = /^\d+(\.\d{1,2})?$/.test(v.amount_off.trim()) && Number(v.amount_off) > 0 && Number(v.amount_off) <= 5000;
   const single = v.targets.length === 1 && v.targets[0].type !== "book" ? v.targets[0].label : null;
-  const set_ = v.type !== "gift" && v.whole_series; // a set offer: every volume of the chosen series
-  const previewOk = v.type !== "gift" && (set_ || (Number.isInteger(n) && n >= 2 && n <= 20)) && percentOk;
+  const set_ = v.type === "buy_n_percent" && v.whole_series; // a set offer: every volume of the chosen series
+  const previewOk =
+    v.type === "gift"
+      ? Boolean(v.gift_id)
+      : (set_ || (Number.isInteger(n) && n >= 1 && n <= 20)) &&
+        (v.type === "buy_n_amount" ? amountOk : percentOk);
+
+  const badgeLabel = () => {
+    if (v.type === "buy_n_amount") {
+      const amt = Number(v.amount_off) > 0 ? `$${Number(v.amount_off).toFixed(Number(v.amount_off) % 1 === 0 ? 0 : 2)}` : "$0";
+      return n === 1 ? `Save ${amt}` : `Buy ${n}, save ${amt}`;
+    }
+    if (v.type === "gift") {
+      return "Free gift";
+    }
+    if (set_) return `Full set: save ${pct(v.percent_off)}%`;
+    return n === 1 ? `Save ${pct(v.percent_off)}%` : `Buy ${n}, save ${pct(v.percent_off)}%`;
+  };
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const e: Errors = {};
     if (!v.name.trim()) e.name = "Give the offer a name (only staff see it).";
-    if (!set_ && !(Number.isInteger(n) && n >= (v.type === "gift" ? 1 : 2) && n <= 20)) e.min_quantity = v.type === "gift" ? t.quantityRange : "Enter a whole number from 2 to 20.";
-    if (v.type !== "gift" && !percentOk) e.percent_off = "Enter a percent above 0 and at most 50, like 10 or 12.5.";
+    if (!set_ && !(Number.isInteger(n) && n >= 1 && n <= 20)) {
+      e.min_quantity = "Enter a whole number from 1 to 20.";
+    }
+    if (v.type === "buy_n_percent" && !percentOk) {
+      e.percent_off = "Enter a percent above 0 and at most 50, like 10 or 15.";
+    }
+    if (v.type === "buy_n_amount" && !amountOk) {
+      e.amount_off = "Enter an amount above $0 (e.g. 3.00 for $3 off).";
+    }
     if (v.type === "gift" && !v.gift_id) e.gift_id = t.giftType;
     if (v.max_orders.trim() && !(/^\d+$/.test(v.max_orders.trim()) && Number(v.max_orders) >= 1)) e.max_orders = "Enter a whole number, 1 or more.";
     if (v.starts_at && v.ends_at && v.ends_at <= v.starts_at) e.ends_at = "The end must be after the start.";
@@ -366,13 +421,14 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
     setErrors(e);
     if (Object.keys(e).length) return;
     save.mutate({
-      ...(v.type === "gift" || offer?.type === "gift" ? { type: v.type } : {}),
-      ...(v.type === "gift" ? { gift_id: Number(v.gift_id), gift_quantity: Number(v.gift_quantity), min_subtotal: v.min_subtotal || null } : {}),
       name: v.name.trim(),
       applies_to: v.applies_to,
       ...(set_ ? {} : { min_quantity: n }),
-      ...(v.type !== "gift" ? { whole_series: v.whole_series, free_delivery: v.free_delivery } : {}),
-      percent_off: v.type === "gift" ? "0.00" : v.percent_off.trim(),
+      whole_series: v.whole_series,
+      free_delivery: v.free_delivery,
+      percent_off: v.type === "buy_n_percent" ? v.percent_off.trim() : "0.00",
+      ...(v.type === "buy_n_amount" ? { type: "buy_n_amount" as const, amount_off: v.amount_off.trim() } : {}),
+      ...(v.type === "gift" ? { type: "gift" as const, gift_id: Number(v.gift_id), gift_quantity: Number(v.gift_quantity), min_subtotal: v.min_subtotal || null } : {}),
       starts_at: v.starts_at ? new Date(v.starts_at).toISOString() : null,
       ends_at: v.ends_at ? new Date(v.ends_at).toISOString() : null,
       max_orders: v.max_orders.trim() ? Number(v.max_orders) : null,
@@ -385,19 +441,168 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
     <form onSubmit={submit} noValidate className="offer-form grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
       <div className="grid min-w-0 grid-cols-1 gap-6">
         {errors.form ? <FormAlert title={errors.form} /> : null}
-        <Section id="offer-basics" title="Offer" hint="Customers get it by themselves when the cart has enough books from it. It never adds up with a coupon: the customer gets the bigger one.">
-          <TextField label="Name" hint="Only staff see it (lists and reports)." value={v.name} onChange={(e) => set({ name: e.target.value })} error={errors.name} maxLength={100} />
-          <SelectField label={t.offerType} value={v.type} onChange={(e) => set({ type: e.target.value as Values["type"] })}>
-            <option value="buy_n_percent">{t.percentType}</option>
-            <option value="gift">{t.giftType}</option>
-          </SelectField>
+
+        {/* Quick promotion templates */}
+        <div className="rounded-2xl border border-accent/25 bg-gradient-to-r from-accent/[0.08] via-card to-card p-4 sm:p-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2.5 mb-3 border-b border-border/50">
+            <span className="text-xs font-bold uppercase tracking-wider text-accent-text flex items-center gap-1.5">
+              <Sparkles className="size-3.5" aria-hidden="true" />
+              Quick Promotion Templates
+            </span>
+            <span className="text-xs text-muted-foreground">Click a preset to quickly fill the offer</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => set({
+                type: "buy_n_percent",
+                min_quantity: "1",
+                percent_off: "15",
+                name: "Clearance: 15% off single book",
+                applies_to: "selected",
+              })}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:border-accent hover:text-accent-text transition-colors shadow-2xs"
+            >
+              <Snail className="size-3 text-warning" />
+              Clearance (Buy 1, save 15%)
+            </button>
+            <button
+              type="button"
+              onClick={() => set({
+                type: "buy_n_amount",
+                min_quantity: "2",
+                amount_off: "3.00",
+                name: "Bundle Deal: Buy 2, save $3",
+              })}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:border-accent hover:text-accent-text transition-colors shadow-2xs"
+            >
+              <DollarSign className="size-3 text-accent" />
+              Bundle Deal (Buy 2, save $3)
+            </button>
+            <button
+              type="button"
+              onClick={() => set({
+                type: "buy_n_percent",
+                min_quantity: "3",
+                percent_off: "20",
+                name: "Volume Saver: Buy 3, save 20%",
+              })}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:border-accent hover:text-accent-text transition-colors shadow-2xs"
+            >
+              <Percent className="size-3 text-emerald-500" />
+              Multi-Buy (Buy 3, save 20%)
+            </button>
+          </div>
+        </div>
+
+        <Section id="offer-basics" title="Offer Details" hint="Customers receive this discount automatically at checkout when their cart matches. It does not stack with coupon codes (the best discount wins).">
+          <TextField label="Name" hint="Only staff see this name (in admin lists and analytics reports)." value={v.name} onChange={(e) => set({ name: e.target.value })} error={errors.name} maxLength={100} />
+
+          <div className="grid gap-3">
+            <SelectField
+              label={t.offerType}
+              value={v.type}
+              onChange={(e) => set({ type: e.target.value as "buy_n_percent" | "buy_n_amount" | "gift" })}
+            >
+              <option value="buy_n_percent">{t.percentType}</option>
+              <option value="buy_n_amount">{t.amountType}</option>
+              <option value="gift">{t.giftType}</option>
+            </SelectField>
+
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+              <button
+                type="button"
+                onClick={() => set({ type: "buy_n_percent" })}
+                className={cn(
+                  "flex items-start gap-3 rounded-xl border p-3 text-left transition-all",
+                  v.type === "buy_n_percent"
+                    ? "border-accent bg-accent/[0.08] ring-2 ring-accent/30 shadow-2xs"
+                    : "border-border bg-card hover:bg-surface-2/60"
+                )}
+              >
+                <div className={cn("grid size-8 shrink-0 place-items-center rounded-lg", v.type === "buy_n_percent" ? "bg-accent text-accent-foreground" : "bg-surface-2 text-muted-foreground")}>
+                  <Percent className="size-4" />
+                </div>
+                <div className="grid gap-0.5 min-w-0">
+                  <span className="text-sm font-semibold text-foreground">{t.percentType}</span>
+                  <span className="text-xs text-muted-foreground">Save % on books</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => set({ type: "buy_n_amount" })}
+                className={cn(
+                  "flex items-start gap-3 rounded-xl border p-3 text-left transition-all",
+                  v.type === "buy_n_amount"
+                    ? "border-accent bg-accent/[0.08] ring-2 ring-accent/30 shadow-2xs"
+                    : "border-border bg-card hover:bg-surface-2/60"
+                )}
+              >
+                <div className={cn("grid size-8 shrink-0 place-items-center rounded-lg", v.type === "buy_n_amount" ? "bg-accent text-accent-foreground" : "bg-surface-2 text-muted-foreground")}>
+                  <DollarSign className="size-4" />
+                </div>
+                <div className="grid gap-0.5 min-w-0">
+                  <span className="text-sm font-semibold text-foreground">{t.amountType}</span>
+                  <span className="text-xs text-muted-foreground">Save fixed $ off</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => set({ type: "gift" })}
+                className={cn(
+                  "flex items-start gap-3 rounded-xl border p-3 text-left transition-all",
+                  v.type === "gift"
+                    ? "border-accent bg-accent/[0.08] ring-2 ring-accent/30 shadow-2xs"
+                    : "border-border bg-card hover:bg-surface-2/60"
+                )}
+              >
+                <div className={cn("grid size-8 shrink-0 place-items-center rounded-lg", v.type === "gift" ? "bg-accent text-accent-foreground" : "bg-surface-2 text-muted-foreground")}>
+                  <Gift className="size-4" />
+                </div>
+                <div className="grid gap-0.5 min-w-0">
+                  <span className="text-sm font-semibold text-foreground">{t.giftType}</span>
+                  <span className="text-xs text-muted-foreground">Free physical item</span>
+                </div>
+              </button>
+            </div>
+          </div>
         </Section>
 
-        <Section id="offer-discount" title="Discount">
+        <Section id="offer-discount" title="Discount Rules">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {set_ ? null : <TextField label="Buy at least (books)" inputMode="numeric" value={v.min_quantity} onChange={(e) => set({ min_quantity: e.target.value })} error={errors.min_quantity} hint={v.type === "gift" ? "1 to 20" : "2 to 20"} />}
-            {v.type !== "gift" ? <TextField label="Percent off each book" inputMode="decimal" value={v.percent_off} onChange={(e) => set({ percent_off: e.target.value })} error={errors.percent_off} hint="Up to 50" /> : null}
+            {set_ ? null : (
+              <TextField
+                label="Buy at least (books)"
+                inputMode="numeric"
+                value={v.min_quantity}
+                onChange={(e) => set({ min_quantity: e.target.value })}
+                error={errors.min_quantity}
+                hint={v.min_quantity === "1" ? "1 book (Single-book clearance deal)" : "1 to 20 books (enter 1 to discount single books)"}
+              />
+            )}
+            {v.type === "buy_n_percent" ? (
+              <TextField
+                label="Percent off each book (%)"
+                inputMode="decimal"
+                value={v.percent_off}
+                onChange={(e) => set({ percent_off: e.target.value })}
+                error={errors.percent_off}
+                hint="Up to 50%"
+              />
+            ) : v.type === "buy_n_amount" ? (
+              <TextField
+                label={t.amountOff}
+                inputMode="decimal"
+                value={v.amount_off}
+                onChange={(e) => set({ amount_off: e.target.value })}
+                error={errors.amount_off}
+                hint={t.amountOffHint}
+              />
+            ) : null}
           </div>
+
           {v.type === "gift" ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <SelectField label={t.giftType} value={v.gift_id} onChange={(e) => set({ gift_id: e.target.value })} error={errors.gift_id} containerClassName="sm:col-span-2">
@@ -412,27 +617,29 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
               <TextField label={t.minSubtotal} inputMode="decimal" value={v.min_subtotal} onChange={(e) => set({ min_subtotal: e.target.value })} error={errors.min_subtotal} />
             </div>
           ) : (
-            <div className="grid gap-2">
-              <label className="flex min-h-11 items-start gap-3 rounded-lg border border-border p-3 text-[15px] has-[:checked]:border-primary/40 has-[:checked]:bg-primary/[0.05]">
-                <input type="checkbox" className="mt-1 size-4" checked={v.whole_series} onChange={(e) => set({ whole_series: e.target.checked, ...(e.target.checked ? { applies_to: "selected" as const } : {}) })} />
-                <span>
-                  Full set offer
-                  <span className="block text-sm text-muted-foreground">The discount applies only when every volume of a chosen series is in one order. Choose series below.</span>
-                </span>
-              </label>
+            <div className="grid gap-2.5 pt-2">
+              {v.type === "buy_n_percent" ? (
+                <label className="flex min-h-11 items-start gap-3 rounded-xl border border-border p-3 text-[15px] has-[:checked]:border-primary/40 has-[:checked]:bg-primary/[0.05] transition-colors">
+                  <input type="checkbox" className="mt-1 size-4" checked={v.whole_series} onChange={(e) => set({ whole_series: e.target.checked, ...(e.target.checked ? { applies_to: "selected" as const } : {}) })} />
+                  <span>
+                    Full set offer
+                    <span className="block text-sm text-muted-foreground">The discount applies only when every volume of a chosen series is in one order. Choose series below.</span>
+                  </span>
+                </label>
+              ) : null}
               {errors.whole_series ? <p className="text-sm text-destructive">{errors.whole_series}</p> : null}
-              <label className="flex min-h-11 items-start gap-3 rounded-lg border border-border p-3 text-[15px] has-[:checked]:border-primary/40 has-[:checked]:bg-primary/[0.05]">
+              <label className="flex min-h-11 items-start gap-3 rounded-xl border border-border p-3 text-[15px] has-[:checked]:border-primary/40 has-[:checked]:bg-primary/[0.05] transition-colors">
                 <input type="checkbox" className="mt-1 size-4" checked={v.free_delivery} onChange={(e) => set({ free_delivery: e.target.checked })} />
                 <span>
                   Free delivery
-                  <span className="block text-sm text-muted-foreground">Orders that get this offer pay no delivery fee.</span>
+                  <span className="block text-sm text-muted-foreground">Orders that receive this offer pay zero delivery fee.</span>
                 </span>
               </label>
             </div>
           )}
         </Section>
 
-        <Section id="offer-books" title="Which books">
+        <Section id="offer-books" title="Which Books">
           <Segmented
             label="Which books"
             value={v.applies_to}
@@ -445,45 +652,105 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
           {v.applies_to === "selected" ? <TargetPicker value={v.targets} onChange={(targets) => set({ targets })} error={errors.targets} n={set_ ? 0 : Number(v.min_quantity) || 0} percent={v.percent_off} /> : null}
         </Section>
 
-        <Section id="offer-when" title="When and how many">
+        <Section id="offer-when" title="Scheduling & Limits">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TextField label="Starts" optional type="datetime-local" value={v.starts_at} onChange={(e) => set({ starts_at: e.target.value })} error={errors.starts_at} />
             <TextField label="Ends" optional type="datetime-local" value={v.ends_at} onChange={(e) => set({ ends_at: e.target.value })} error={errors.ends_at} />
-            <TextField label="Orders allowed" optional inputMode="numeric" hint="Empty for no limit." value={v.max_orders} onChange={(e) => set({ max_orders: e.target.value })} error={errors.max_orders} />
+            <TextField label="Max orders allowed" optional inputMode="numeric" hint="Leave empty for unlimited orders." value={v.max_orders} onChange={(e) => set({ max_orders: e.target.value })} error={errors.max_orders} />
           </div>
         </Section>
       </div>
 
+      {/* Right Column: Adjusted Orange Preview Card & Status */}
       <aside className="grid min-w-0 grid-cols-1 gap-4 xl:sticky xl:top-24">
-        <section aria-labelledby="offer-preview" className="grid gap-3 desk-card rounded-xl border border-border bg-card p-5">
-          <h2 id="offer-preview" className="font-sans text-[1.0625rem] font-semibold tracking-normal">
-            What customers see
-          </h2>
+        <section aria-labelledby="offer-preview" className="grid gap-3.5 desk-card rounded-2xl border border-accent/30 bg-gradient-to-b from-accent/[0.04] to-card p-5 shadow-xs">
+          <div className="flex items-center justify-between gap-2 border-b border-border/70 pb-3">
+            <h2 id="offer-preview" className="font-sans text-[0.9375rem] font-semibold tracking-tight text-foreground flex items-center gap-2">
+              <Sparkles className="size-4 text-accent" aria-hidden="true" />
+              What customers see
+            </h2>
+            <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[11px] font-bold tracking-wider text-accent-text uppercase">
+              Live Preview
+            </span>
+          </div>
+
           {previewOk ? (
-            <>
-              <div>
-                <SaleBadge label={set_ ? `Full set: save ${pct(v.percent_off)}%` : `Buy ${n}, save ${pct(v.percent_off)}%`} />
+            <div className="grid gap-3.5">
+              {/* Notched Sale Badge */}
+              <div className="flex items-center">
+                <SaleBadge label={badgeLabel()} />
               </div>
-              <p className="flex items-start gap-2 text-[15px] font-medium text-accent-text">
-                <Tag className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                {set_
-                  ? `Buy all volumes of ${single ?? "the series"} together, save ${pct(v.percent_off)}%.`
-                  : customerSentence(n, pct(v.percent_off), v.applies_to === "selected" ? single : null, v.ends_at ? new Date(v.ends_at).toISOString() : null)}
-                {v.free_delivery ? " + free delivery." : null}
-              </p>
-            </>
+
+              {/* Customer marketing line */}
+              <div className="rounded-xl border border-accent/25 bg-accent/[0.06] p-3.5 text-[14px] leading-relaxed text-accent-text">
+                <p className="flex items-start gap-2.5 font-medium">
+                  <Tag className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" />
+                  <span>
+                    {set_
+                      ? `Buy all volumes of ${single ?? "the series"} together, save ${pct(v.percent_off)}%.`
+                      : customerSentence({
+                          type: v.type,
+                          n,
+                          percent: pct(v.percent_off),
+                          amount: v.amount_off,
+                          label: v.applies_to === "selected" ? single : null,
+                          endsAt: v.ends_at ? new Date(v.ends_at).toISOString() : null,
+                        })}
+                    {v.free_delivery ? " + free delivery." : null}
+                  </span>
+                </p>
+              </div>
+
+              {/* Price Example Simulation Box */}
+              <div className="rounded-xl border border-border/70 bg-surface-2/60 p-3 text-xs">
+                <div className="flex items-center justify-between text-muted-foreground pb-1 border-b border-border/40">
+                  <span>Cart example</span>
+                  <span className="font-mono">{n === 1 ? "1 book ($15.00)" : `${n} books ($15.00 each)`}</span>
+                </div>
+                <div className="flex items-center justify-between pt-1.5 font-medium">
+                  <span className="text-muted-foreground">Discount applied:</span>
+                  <span className="font-bold text-accent-text tabular-nums">
+                    {v.type === "buy_n_amount"
+                      ? `−$${Number(v.amount_off || 0).toFixed(2)}`
+                      : `−$${((15 * n * Number(v.percent_off || 0)) / 100).toFixed(2)} (${pct(v.percent_off)}%)`}
+                  </span>
+                </div>
+              </div>
+            </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Fill in the number of books and the percent to see the preview.</p>
+            <div className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+              Fill in the number of books and discount to see the customer preview.
+            </div>
           )}
-          <p className="border-t border-border pt-3 text-sm text-muted-foreground">
-            {v.applies_to === "all" ? "Covers every book in the shop." : v.targets.length ? `Covers ${v.targets.length} chosen ${v.targets.length === 1 ? "item" : "items"}.` : "No books chosen yet."}
-          </p>
+
+          <div className="border-t border-border/60 pt-3 text-xs text-muted-foreground flex items-center gap-1.5">
+            <Info className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <span>
+              {v.applies_to === "all"
+                ? "Applies to every book in the store."
+                : v.targets.length
+                  ? `Applies to ${v.targets.length} chosen ${v.targets.length === 1 ? "item" : "items"}.`
+                  : "No target books chosen yet."}
+            </span>
+          </div>
         </section>
-        <label className="flex min-h-11 items-center justify-between gap-4 desk-card rounded-xl border border-border bg-card px-5 py-3">
-          <span className="grid">
-            <span className="font-semibold">On</span>
-            <span className="text-sm text-muted-foreground">Off stops new orders getting it; orders that got it keep their discount.</span>
-          </span>
+
+        {/* Status On/Off Card */}
+        <label className="flex min-h-12 items-center justify-between gap-4 desk-card rounded-2xl border border-border bg-card p-4 transition-colors hover:border-border/80">
+          <div className="grid">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm">Status</span>
+              <span className={cn(
+                "rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider",
+                v.is_active ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+              )}>
+                {v.is_active ? "Active" : "Paused"}
+              </span>
+            </div>
+            <span className="text-xs text-muted-foreground mt-0.5">
+              {v.is_active ? "Live in store for matching orders." : "Paused — new orders won't receive it."}
+            </span>
+          </div>
           <Switch checked={v.is_active} onCheckedChange={(checked) => set({ is_active: checked })} />
         </label>
       </aside>

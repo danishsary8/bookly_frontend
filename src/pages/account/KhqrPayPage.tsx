@@ -66,7 +66,7 @@ export default function KhqrPayPage() {
   const { id } = useParams();
   const orderId = Number(id);
   const valid = Number.isInteger(orderId) && orderId > 0;
-  const { dict, locale } = useT();
+  const { dict, locale, lang } = useT();
   const t = dict.pay;
   useDocumentTitle(t.docTitle);
   const navigate = useNavigate();
@@ -309,6 +309,11 @@ export default function KhqrPayPage() {
             {t.viewOrder}
           </Link>
         </div>
+        <p className="rounded-xl border border-border/80 bg-surface-2/50 px-3.5 py-2.5 text-xs leading-relaxed text-muted-foreground">
+          {lang === "km"
+            ? "គន្លឹះសម្រាប់ទូរស័ព្ទ៖ ចុច «ទាញយក QR» រួចបើកកម្មវិធី ABA ឬ Bakong → ចុច Scan → ជ្រើសរើសរូបភាព QR ពី Gallery របស់អ្នក។"
+            : "Paying on this phone? Tap “Download QR”, then open ABA or Bakong → tap Scan → choose the saved QR image from your photo gallery."}
+        </p>
         {data.mode === "test" ? (
           <Button onClick={() => simulate.mutate()} loading={simulate.isPending} className="h-auto min-h-11 w-full whitespace-normal py-2.5 text-center">
             <FlaskConical aria-hidden="true" /> {t.simulate}
