@@ -105,7 +105,7 @@ describe("Checkout: KHQR saving and the cash on delivery limit", () => {
     expect((await screen.findAllByText("Save $0.30")).length).toBeGreaterThan(0);
     await user.click(screen.getByRole("radio", { name: /Bakong KHQR/ }));
     expect(await screen.findByText("KHQR discount (3%)")).toBeInTheDocument();
-    expect(await screen.findByText("$11.20")).toBeInTheDocument();
+    expect((await screen.findAllByText("$11.20"))[0]).toBeInTheDocument();
     expect(cartApi.preview).toHaveBeenLastCalledWith(null, 11, undefined, false, "khqr");
   });
 

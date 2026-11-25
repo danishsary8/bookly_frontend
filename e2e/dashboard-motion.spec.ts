@@ -83,13 +83,16 @@ test("dashboard charts morph between periods and expose exact hover, keyboard an
   await expect(page.locator(".dash-kpi-amount > p").first()).toHaveText("$35.00");
   const books = page.getByRole("region", { name: "Books sold", exact: true });
   await scrollToChart(books);
-  // The bars are still settling after the period change: hover again until the tooltip opens for the first day.
+  // The bars animate after the period change. A bar that moves out from under the pointer closes its tooltip
+  // (180ms after leaving), so wait for the first bar to settle, then hover until the tooltip opens and stays open.
+  await expect(books.locator(".dash-daily-bar").first()).toHaveCSS("height", "0px");
   await expect(async () => {
     await page.mouse.move(0, 0);
     await books.locator(".dash-daily-bar-hit").first().hover();
     await expect(page.getByRole("tooltip")).toContainText("0 copies", { timeout: 1000 });
+    await page.waitForTimeout(300);
+    await expect(page.getByRole("tooltip")).toContainText("0 copies", { timeout: 100 });
   }).toPass({ timeout: 10_000 });
-  await expect(books.locator(".dash-daily-bar").first()).toHaveCSS("height", "0px");
   expect(await page.getByRole("tooltip").evaluate((node) => node.parentElement === document.body)).toBe(true);
   await page.getByRole("tooltip").hover();
   await page.waitForTimeout(250); // A tooltip must remain open while the pointer is over it.

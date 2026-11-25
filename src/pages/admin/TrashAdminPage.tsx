@@ -263,7 +263,7 @@ export default function TrashAdminPage() {
                           item.days_until_purge <= 3
                             ? "bg-destructive/15 text-destructive"
                             : item.days_until_purge <= 7
-                              ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                              ? "bg-amber-500/15 text-amber-800 dark:text-amber-400"
                               : "bg-surface-2 text-muted-foreground"
                         }`}
                       >

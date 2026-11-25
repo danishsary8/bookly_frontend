@@ -61,7 +61,7 @@ test("customer: book → cart → cash on delivery → order page", async ({ pag
   await page.goto(`/books/${book!.id}`);
   await expect(page.getByRole("heading", { level: 1, name: book!.title })).toBeVisible();
   await page.getByRole("button", { name: "Add to cart" }).first().click();
-  await expect(page.getByRole("button", { name: "View cart" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "View cart" })).toBeVisible();
 
   await page.goto("/checkout");
   await expect(page.getByRole("heading", { level: 1, name: "Checkout" })).toBeVisible();
