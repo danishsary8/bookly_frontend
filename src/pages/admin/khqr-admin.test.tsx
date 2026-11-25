@@ -77,13 +77,21 @@ describe("order payment box", () => {
     expect(await within(screen.getByRole("region", { name: "Payment" })).findByText(/confirmed by staff/)).toBeInTheDocument();
   });
 
-  it("staff see the codes but cannot mark paid", async () => {
-    signIn(staff);
+  it("staff with order management permission can mark paid", async () => {
+    signIn({ ...staff, permissions: ["orders:manage"] });
+    vi.spyOn(opsApi, "order").mockResolvedValue(waiting);
+    app("/admin/orders/9");
+    const box = await screen.findByRole("region", { name: "Payment" });
+    expect(within(box).getByRole("button", { name: "Mark as paid" })).toBeInTheDocument();
+  });
+
+  it("staff without order management permission see the codes but cannot mark paid", async () => {
+    signIn({ ...staff, permissions: ["orders:view"] });
     vi.spyOn(opsApi, "order").mockResolvedValue(waiting);
     app("/admin/orders/9");
     const box = await screen.findByRole("region", { name: "Payment" });
     expect(within(box).queryByRole("button", { name: "Mark as paid" })).not.toBeInTheDocument();
-    expect(within(box).getByText(/Only admins can mark it as paid/)).toBeInTheDocument();
+    expect(within(box).getByText(/Staff with order management permission can mark it as paid/)).toBeInTheDocument();
   });
 
   it("flags a payment that came after the cancel", async () => {

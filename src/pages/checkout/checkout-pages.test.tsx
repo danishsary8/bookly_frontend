@@ -131,7 +131,7 @@ describe("CheckoutPage", () => {
     const user = userEvent.setup(); app("/checkout");
     await user.click(await screen.findByRole("checkbox", { name: /Use credit balance/ }));
     await screen.findByText("$22.48");
-    await user.click(screen.getByRole("button", { name: "Place order" }));
+    await user.click(screen.getAllByRole("button", { name: "Place order" })[0]);
     await waitFor(() => expect(place).toHaveBeenCalledWith(expect.objectContaining({ use_credit: true, expected_payment_due_usd: "22.48" }), expect.any(String)));
   });
   it("lets the courier phone be edited separately and blocks an invalid number", async () => {
@@ -142,10 +142,10 @@ describe("CheckoutPage", () => {
     expect(phone).toHaveValue(home.phone);
     await user.clear(phone);
     await user.type(phone, "abc");
-    expect(screen.getByRole("button", { name: "Place order" })).toBeDisabled();
+    expect(screen.getAllByRole("button", { name: "Place order" })[0]).toBeDisabled();
     await user.clear(phone);
     await user.type(phone, "+855 87 123 456");
-    await user.click(screen.getByRole("button", { name: "Place order" }));
+    await user.click(screen.getAllByRole("button", { name: "Place order" })[0]);
     expect(place).toHaveBeenCalledWith(expect.objectContaining({ delivery_phone: "+855 87 123 456" }), expect.any(String));
   });
 
@@ -160,7 +160,7 @@ describe("CheckoutPage", () => {
     expect(screen.getByRole("radio", { name: /Home/ })).toBeChecked();
     expect(screen.getByRole("radio", { name: /Cash on delivery/ })).toBeChecked();
     expect(screen.getByRole("radio", { name: /Card/ })).toBeDisabled();
-    await user.click(screen.getByRole("button", { name: "Place order" }));
+    await user.click(screen.getAllByRole("button", { name: "Place order" })[0]);
     expect(place).toHaveBeenCalledWith({ address_id: 11, payment_method: "cod", delivery_phone: "012345678", coupon_code: "WELCOME10" }, expect.any(String));
     expect(await screen.findByRole("heading", { level: 1, name: /Thank you/ })).toBeInTheDocument();
     expect(screen.getByText(/BK-000042/)).toBeInTheDocument();
@@ -176,7 +176,7 @@ describe("CheckoutPage", () => {
     expect(screen.getByText("0/300")).toBeInTheDocument();
     await user.type(noteField, "Call before delivery");
     expect(screen.getByText("20/300")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Place order" }));
+    await user.click(screen.getAllByRole("button", { name: "Place order" })[0]);
     expect(place).toHaveBeenCalledWith(
       expect.objectContaining({ delivery_note: "Call before delivery" }),
       expect.any(String),
@@ -205,18 +205,18 @@ describe("CheckoutPage", () => {
       .mockResolvedValueOnce(order);
     vi.spyOn(ordersApi, "order").mockResolvedValue(order);
     app("/checkout");
-    const button = await screen.findByRole("button", { name: "Place order" });
+    const button = (await screen.findAllByRole("button", { name: "Place order" }))[0];
     await waitFor(() => expect(button).toBeEnabled());
 
     await user.click(button);
     expect(await screen.findByText("Only 1 left in stock.")).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole("button", { name: "Place order" })).toBeEnabled());
+    await waitFor(() => expect(screen.getAllByRole("button", { name: "Place order" })[0]).toBeEnabled());
 
     // The order went through but the response was lost; the cart is empty on the server now.
     vi.mocked(cartApi.cart).mockResolvedValue({ ...cart, items: [], item_count: 0, can_checkout: false });
-    await user.click(screen.getByRole("button", { name: "Place order" }));
+    await user.click(screen.getAllByRole("button", { name: "Place order" })[0]);
     expect(await screen.findByText("We couldn't confirm your order")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Place order" }));
+    await user.click(screen.getAllByRole("button", { name: "Place order" })[0]);
 
     expect(await screen.findByRole("heading", { level: 1, name: /Thank you/ })).toBeInTheDocument();
     const [first, second, third] = place.mock.calls.map((call) => call[1]);

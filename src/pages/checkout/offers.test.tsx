@@ -153,8 +153,8 @@ describe("Checkout with an automatic offer", () => {
     const place = vi.spyOn(cartApi, "placeOrder").mockResolvedValue(order);
     app("/checkout");
     expect(await screen.findByText("Offer: buy 2, save 15%")).toBeInTheDocument();
-    expect(screen.getByText("$48.50")).toBeInTheDocument();
-    await user.click(await screen.findByRole("button", { name: /Place order/ }));
+    expect(screen.getAllByText("$48.50")[0]).toBeInTheDocument();
+    await user.click((await screen.findAllByRole("button", { name: /Place order/ }))[0]);
     await waitFor(() => expect(place).toHaveBeenCalled());
     expect(place.mock.calls[0][0]).toMatchObject({ offer_id: 3, address_id: home.id });
     expect(await screen.findByText("Offer: buy 2, save 15%")).toBeInTheDocument();
@@ -173,7 +173,7 @@ describe("Checkout with an automatic offer", () => {
       new ApiError({ kind: "validation", status: 422, message: "Invalid", fieldErrors: { offer_id: ["This offer has just ended. Check your new total, then place the order."] } }),
     );
     app("/checkout");
-    await user.click(await screen.findByRole("button", { name: /Place order/ }));
+    await user.click((await screen.findAllByRole("button", { name: /Place order/ }))[0]);
     expect(await screen.findByText("This offer has just ended. Check your new total, then place the order.")).toBeInTheDocument();
   });
 
@@ -182,7 +182,7 @@ describe("Checkout with an automatic offer", () => {
     vi.spyOn(cartApi, "preview").mockResolvedValue({ ...preview, applied: undefined, offer: undefined, discount: amount("0.00"), total: amount("51.50") });
     const place = vi.spyOn(cartApi, "placeOrder").mockResolvedValue({ ...order, offer: null, discount_usd: "0.00" });
     app("/checkout");
-    await user.click(await screen.findByRole("button", { name: /Place order/ }));
+    await user.click((await screen.findAllByRole("button", { name: /Place order/ }))[0]);
     await waitFor(() => expect(place).toHaveBeenCalled());
     expect(place.mock.calls[0][0]).not.toHaveProperty("offer_id");
   });

@@ -95,7 +95,7 @@ describe("checkout payment choice", () => {
     const khqr = await screen.findByRole("radio", { name: /Bakong KHQR.*15 minutes.*Test mode/ });
     await waitFor(() => expect(khqr).toBeEnabled());
     await user.click(khqr);
-    await user.click(screen.getByRole("button", { name: "Place order and pay" }));
+    await user.click(screen.getAllByRole("button", { name: "Place order and pay" })[0]);
     await waitFor(() => expect(place).toHaveBeenCalled());
     expect(place.mock.calls[0][0]).toMatchObject({ payment_method: "khqr", address_id: 11 });
     await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/account/orders/42/pay"));
