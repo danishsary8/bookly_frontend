@@ -48,11 +48,16 @@
 .detail-cart-glare { flex: 0 1 15rem; width: 15rem; min-width: 12rem; border-radius: .7rem !important; }
 .detail-add-button { min-height: 3.4rem; font-size: .95rem; transition: background-color 220ms ease, box-shadow 220ms ease, transform 220ms ease; }
 .detail-add-button:hover:not(:disabled) { box-shadow: 0 10px 24px -14px var(--accent); }
-.detail-promises { gap: 1rem; padding-top: 1.25rem; }
-.detail-promises li { gap: .625rem; }
-.detail-promises li > svg { width: 1.1rem; height: 1.1rem; margin-top: .15rem; }
-.detail-promises li > span { min-width: 0; font-size: .75rem; line-height: 1.6; }
-.detail-promises li > span > span:first-child { margin-bottom: .15rem; font-size: .8rem; }
+/* Delivery, payment and returns: one soft panel, three cells split by hairlines, each icon in a lapis-tint disc. */
+.detail-promises { margin-top: .25rem; border: 1px solid var(--border); border-radius: 1rem; background: color-mix(in srgb, var(--card) 70%, transparent); overflow: hidden; }
+.detail-promises li { align-items: center; gap: .7rem; padding: .9rem .95rem; }
+.detail-promises li + li { border-top: 1px solid var(--border); }
+@media (min-width: 640px) { .detail-promises li + li { border-top: 0; border-left: 1px solid var(--border); } }
+@media (min-width: 768px) and (max-width: 1023px) { .detail-promises li + li { border-left: 0; border-top: 1px solid var(--border); } }
+.detail-promise-icon { display: grid; place-items: center; flex-shrink: 0; width: 2.25rem; height: 2.25rem; border-radius: 9999px; background: var(--lapis-tint); color: var(--primary); }
+.detail-promise-icon > svg { width: 1.05rem; height: 1.05rem; }
+.detail-promises li > span:last-child { min-width: 0; font-size: .75rem; line-height: 1.5; }
+.detail-promises li > span:last-child > span:first-child { margin-bottom: .1rem; font-size: .8125rem; }
 
 .detail-book-stage { display: flex; justify-content: center; padding: 1rem 1.5rem; background: transparent; border: 0; border-radius: 0; }
 .detail-book-aura { mask-image: radial-gradient(ellipse at center, #000 10%, transparent 65%); }
@@ -92,18 +97,22 @@
 .detail-content-tabs [data-slot='tabs-trigger'][data-state='active']::after { content: ''; position: absolute; bottom: 0; inset-inline: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--primary); }
 .detail-content-tabs [data-slot='tabs-trigger'] > span[aria-hidden='true'] { display: none; }
 .detail-content-tabs [data-slot='tabs-content'][data-state='active'] { animation: detail-panel-in 300ms ease both; padding-top: 0; }
-.detail-story { position: relative; align-items: start; column-gap: clamp(2rem, 5vw, 5rem); padding: clamp(1.5rem, 3vw, 3rem); border: 1px solid var(--border); border-radius: 1.25rem; background: color-mix(in srgb, var(--card) 78%, transparent); box-shadow: 0 8px 28px -20px rgb(20 16 10 / .18); }
+/* "About this book": a soft raised card with a thin gold-to-vermilion rule on top, a serif drop-cap and fact tiles. */
+.detail-story { position: relative; align-items: start; column-gap: clamp(2rem, 5vw, 5.5rem); padding: clamp(1.75rem, 3.5vw, 3.5rem); border: 1px solid color-mix(in srgb, var(--border) 85%, transparent); border-radius: 1.5rem; background: linear-gradient(180deg, var(--card), color-mix(in srgb, var(--card) 82%, var(--background))); box-shadow: 0 1px 0 rgb(255 255 255 / .55) inset, 0 28px 56px -36px rgb(20 32 122 / .28); overflow: hidden; }
+.detail-story::before { content: ''; position: absolute; inset: 0 clamp(1.75rem, 3.5vw, 3.5rem) auto; height: 2px; border-radius: 0 0 2px 2px; background: linear-gradient(90deg, var(--gold), var(--accent-text)); opacity: .85; }
 .detail-story > div:first-child { padding-top: .25rem; }
 .detail-story > div:first-child > p { display: flex; align-items: center; gap: .65rem; font-size: .75rem; letter-spacing: .16em; }
 .detail-story > div:first-child > p::before { content: ''; width: 1.5rem; height: 2px; background: var(--accent-text); }
-.detail-story h2 { max-width: 12ch; font-size: clamp(1.8rem, 2.5vw, 2.6rem); line-height: 1.12; }
-.detail-story > div:last-child > div { max-width: 65ch; font-size: 1rem; line-height: 1.85; }
-.detail-story-facts { gap: 0; margin-top: 1.75rem; padding-top: 1.25rem; }
-.detail-story-facts > div { min-width: 0; padding-inline: .75rem; border-left: 1px solid var(--border); overflow-wrap: anywhere; }
-@media (min-width: 640px) { .detail-story-facts > div { padding-inline: 1.25rem; } }
-.detail-story-facts > div:first-child { padding-left: 0; border-left: 0; }
-.detail-story-facts dt { color: var(--muted-foreground); text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; }
-.detail-story-facts dd { margin-top: .5rem; font-size: .875rem; font-weight: 500; }
+.detail-story h2 { max-width: 12ch; font-size: clamp(2rem, 2.8vw, 2.85rem); line-height: 1.08; }
+.detail-story-text { font-size: 1.0625rem; line-height: 1.85; }
+html[lang='en'] .detail-story-text.has-dropcap::first-letter { float: left; margin: .35rem .6rem 0 0; font-family: var(--font-display); font-size: 3.6em; line-height: .78; color: var(--primary); }
+.detail-story-facts { gap: .75rem; margin-top: 2rem; }
+.detail-story-facts > div { min-width: 0; padding: 1rem 1.1rem; border: 1px solid var(--border); border-radius: 1rem; background: color-mix(in srgb, var(--lapis-tint) 38%, var(--card)); overflow-wrap: anywhere; transition: border-color .2s, transform .2s; }
+.detail-story-facts > div:hover { border-color: color-mix(in srgb, var(--primary) 30%, var(--border)); transform: translateY(-1px); }
+.detail-story-facts dt { display: flex; align-items: center; gap: .45rem; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: .12em; font-size: .7rem; font-weight: 600; }
+.detail-story-facts dt > svg { width: .95rem; height: .95rem; color: var(--primary); }
+.detail-story-facts dd { margin-top: .45rem; font-size: .95rem; font-weight: 600; color: var(--foreground); }
+@media (prefers-reduced-motion: reduce) { .detail-story-facts > div { transition: none; } .detail-story-facts > div:hover { transform: none; } }
 .detail-spec-row dd { overflow-wrap: anywhere; min-width: 0; }
 .detail-specifications { display: grid; column-gap: 3rem; grid-template-columns: repeat(2,minmax(0,1fr)); }
 .detail-specifications .detail-spec-row { border-top: 1px solid var(--border); }
@@ -129,8 +138,8 @@
   .detail-buy-card { padding-top: .85rem; }
   .book-purchase { gap: .85rem; }
   .detail-price-heading > p:last-child { max-width: 20rem; }
-  .detail-promises { padding-top: .85rem; gap: .75rem; }
-  .detail-promises li > span { line-height: 1.45; }
+  .detail-promises li { padding-block: .75rem; }
+  .detail-promises li > span:last-child { line-height: 1.45; }
   /* Keep multiple editions readable without making the purchase panel taller. */
   .detail-formats > div { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); max-width: 38rem; gap: .625rem; }
   .detail-formats .detail-format-option { width: auto; min-height: 4.5rem; padding: .65rem .8rem; grid-template-columns: 1.25rem minmax(0, 1fr) auto; gap: .25rem .5rem; }
@@ -157,12 +166,11 @@
   .detail-title-block { gap: .6rem; }
   .detail-title-block #book-title { font-size: clamp(1.8rem, 2.7vw, 2.3rem); }
   .book-purchase { gap: .9rem; }
-  .detail-promises { padding-top: 1rem; }
   .detail-product-grid { margin-top: 1rem; }
   .detail-product-info { gap: .85rem; }
   .detail-buy-card { padding-top: .85rem; }
   .detail-stage-cell { min-height: 25rem; }
-  .detail-promises li > span { line-height: 1.45; }
+  .detail-promises li > span:last-child { line-height: 1.45; }
 }
 @media (max-width: 639px) {
   .detail-book-stage { min-height: 0; padding: .25rem 0 0; }

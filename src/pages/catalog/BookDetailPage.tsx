@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, BookHeart, BookOpen, BookX, CalendarClock, Check, Clock3, Eye, Heart, Plus, RotateCcw, Share2, ShoppingBag, Truck, Wallet } from "lucide-react";
+import { Bell, BookHeart, BookOpen, BookX, Building2, CalendarClock, Check, Clock3, Eye, Globe, Heart, Plus, RotateCcw, Share2, ShoppingBag, Truck, Wallet } from "lucide-react";
 import { Popover } from "radix-ui";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
@@ -451,23 +451,23 @@ function Purchase({ book }: { book: BookDetail }) {
         </div>
       ) : null}
 
-      <ul className="detail-promises grid gap-4 border-t border-border pt-5 text-sm sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3">
-        <li className="flex items-start gap-2.5">
-          <Wallet className="mt-0.5 size-[18px] shrink-0 text-primary" aria-hidden="true" />
+      <ul className="detail-promises grid text-sm sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-[1fr_1.6fr_1fr]">
+        <li className="flex items-center">
+          <span className="detail-promise-icon" aria-hidden="true"><Wallet /></span>
           <span>
             <span className="block font-semibold">{b.cod}</span>
             <span className="text-muted-foreground">{b.codLead}</span>
           </span>
         </li>
-        <li className="flex items-start gap-2.5">
-          <Truck className="mt-0.5 size-[18px] shrink-0 text-primary" aria-hidden="true" />
+        <li className="flex items-center">
+          <span className="detail-promise-icon" aria-hidden="true"><Truck /></span>
           <span>
             <span className="block font-semibold">{b.delivery}</span>
             <span className="text-muted-foreground">{b.deliveryLead}</span>
           </span>
         </li>
-        <li className="flex items-start gap-2.5">
-          <RotateCcw className="mt-0.5 size-[18px] shrink-0 text-primary" aria-hidden="true" />
+        <li className="flex items-center">
+          <span className="detail-promise-icon" aria-hidden="true"><RotateCcw /></span>
           <span>
             <span className="block font-semibold">{b.returns}</span>
             <span className="text-muted-foreground">{b.returnsLead}</span>
@@ -801,7 +801,14 @@ export default function BookDetailPage() {
           <TabsContent value="description">
             <div className="detail-story grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
               <div><p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{dict.bookDetail.description}</p><h2 className="font-display text-[clamp(1.6rem,2.5vw,2.2rem)] leading-tight tracking-tight">{b.about}</h2></div>
-              <div><div className="max-w-[65ch] whitespace-pre-line text-[17px] leading-[1.9] text-foreground">{book.description || b.noDescription}</div><dl className="detail-story-facts mt-8 grid grid-cols-3 gap-5 border-t border-border pt-6"><div><dt>{b.language}</dt><dd>{displayLanguage(book.language, locale)}</dd></div>{book.page_count ? <div><dt>{b.pages}</dt><dd>{book.page_count}</dd></div> : null}{book.publisher ? <div><dt>{b.publisher}</dt><dd>{book.publisher.name}</dd></div> : null}</dl></div>
+              <div>
+                <div className={cn("detail-story-text max-w-[65ch] whitespace-pre-line text-foreground", (book.description?.length ?? 0) > 160 && "has-dropcap")}>{book.description || b.noDescription}</div>
+                <dl className="detail-story-facts grid grid-cols-1 sm:grid-cols-3">
+                  <div><dt><Globe aria-hidden="true" />{b.language}</dt><dd>{displayLanguage(book.language, locale)}</dd></div>
+                  {book.page_count ? <div><dt><BookOpen aria-hidden="true" />{b.pages}</dt><dd>{book.page_count}</dd></div> : null}
+                  {book.publisher ? <div><dt><Building2 aria-hidden="true" />{b.publisher}</dt><dd>{book.publisher.name}</dd></div> : null}
+                </dl>
+              </div>
             </div>
           </TabsContent>
           <TabsContent value="details">

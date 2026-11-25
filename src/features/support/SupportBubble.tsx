@@ -22,24 +22,28 @@ export function SupportBubble() {
   const unread = conversations.data?.value.meta?.total ?? 0;
   if (hidden) return null;
   return (
-    <div className="fixed bottom-5 right-5 z-(--z-header) translate-y-[calc(var(--bottom-bar,0px)*-1)] transition-transform duration-(--dur-toggle) motion-reduce:transition-none print:hidden">
+    <div className="fixed bottom-5 right-5 z-(--z-header) translate-y-[calc(var(--bottom-bar,0px)*-1)] transition-transform duration-(--dur-toggle) motion-reduce:transition-none print:hidden lg:bottom-6 lg:right-6">
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
+          {/* A round button the size of the corner widget on the left: small enough not to sit on page content. */}
           <Button
             aria-label={t.open}
-            className="h-12 gap-2.5 rounded-full px-5 shadow-[0_14px_30px_-10px_rgb(20_32_122/0.65)] ring-1 ring-white/15 transition-transform hover:-translate-y-0.5"
+            title={t.title}
+            className="relative size-14 rounded-full p-0 shadow-[0_14px_30px_-10px_rgb(20_32_122/0.65)] ring-1 ring-white/15 transition-transform hover:-translate-y-0.5"
           >
-            <MessageSquareText aria-hidden="true" className="size-5" />
-            <span className="font-semibold">{t.title}</span>
+            <MessageSquareText aria-hidden="true" className="size-6" />
             {unread ? (
-              <span aria-label={`${t.unread}: ${unread}`} className="rounded-full bg-accent px-2 py-0.5 text-xs font-bold text-accent-foreground">
+              <span
+                aria-label={`${t.unread}: ${unread}`}
+                className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 text-[11px] font-bold leading-none text-accent-foreground ring-2 ring-background"
+              >
                 {unread}
               </span>
             ) : null}
           </Button>
         </DialogTrigger>
         <DialogContent
-          containerClassName="sm:items-end sm:justify-items-end sm:pb-20 sm:pr-5"
+          containerClassName="sm:items-end sm:justify-items-end sm:pb-[5.5rem] sm:pr-5 lg:pb-24 lg:pr-6"
           className="flex max-h-[min(85dvh,640px)] w-[min(94vw,430px)] flex-col overflow-hidden rounded-2xl border-border/80 p-0 shadow-overlay [&>[aria-label]]:text-primary-foreground [&>[aria-label]]:hover:bg-white/15 [&>[aria-label]]:hover:text-white"
           onClickCapture={(event) => {
             if (event.target instanceof Element && event.target.closest("a[href]")) setOpen(false);

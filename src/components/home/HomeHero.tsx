@@ -142,10 +142,10 @@ export function HomeHero({ featured, label }: { featured: BookCard[] | undefined
           <div className="mt-5 flex flex-row flex-nowrap items-center justify-center gap-x-3 sm:mt-8 sm:flex-wrap sm:justify-start sm:gap-6 sm:gap-x-8 short:mt-6">
               <Link
                 to="/books"
-                className="hero-catalogue-cta relative isolate inline-flex h-[3.25rem] w-auto shrink-0 items-center gap-4 overflow-hidden whitespace-nowrap rounded-full bg-[#FBF6EC] py-1.5 pl-6 pr-1.5 text-[15px] sm:pl-6 sm:text-[15px] font-semibold leading-none text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
+                className="hero-catalogue-cta relative isolate inline-flex h-[3.25rem] w-auto shrink-0 items-center gap-4 overflow-hidden whitespace-nowrap rounded-full bg-[#FBF6EC] py-1.5 pl-6 pr-1.5 text-[15px] sm:pl-6 sm:text-[15px] lg:h-14 lg:min-w-[15.5rem] lg:justify-between lg:gap-8 lg:pl-8 lg:text-base font-semibold leading-none text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
               >
                 <span className="relative">{dict.home.browseCatalogue}</span>
-                <span className="relative grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+                <span className="relative grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground lg:size-11">
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </span>
               </Link>

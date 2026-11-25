@@ -126,9 +126,9 @@ export function VolumePicker({ currentBookId, series, className }: VolumePickerP
                 {/* Status chip over thumbnail */}
                 {isOwned ? (
                   <span className="absolute top-1 left-1">
-                    <Badge tone="success" shape="solid" size="sm" className="h-5 px-1.5 text-xs">
-                      <Check className="size-3" aria-hidden="true" />
-                      {vDict.owned}
+                    <Badge tone="success" shape="solid" size="sm" className="size-5 justify-center rounded-full p-0">
+                      <Check className="size-3" strokeWidth={3} aria-hidden="true" />
+                      <span className="sr-only">{vDict.owned}</span>
                     </Badge>
                   </span>
                 ) : isInCart ? (
