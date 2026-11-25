@@ -54,3 +54,27 @@ it("suggests the book's own publisher first when restocking (owner 2026-11-17)",
   await waitFor(() => expect(select.value).toBe("7"));
   expect([...select.querySelectorAll("optgroup")].map((g) => g.label)).toEqual(["This book's publisher", "Distributors and wholesalers"]);
 });
+
+it("shows the unit cost only to admins, because the API refuses it from staff", async () => {
+  const { RestockDialog } = await import("@/features/admin/stock/RestockDialog");
+  const { staffApi } = await import("@/api/endpoints/staff");
+  vi.spyOn(suppliersApi, "list").mockResolvedValue([monument]);
+  const restock = vi.spyOn(staffApi, "restockVariant").mockResolvedValue({ variant: {}, movement: { change_qty: 5 } } as never);
+
+  setSession("staff", { token: "t", expiresAt: null, user: { id: 2, name: "Staff", email: "s@b.test", role: "staff", two_factor_enabled: true } });
+  const staffView = renderWithProviders(<RestockDialog variant={{ id: 9, sku: "D-1", stock_quantity: 0 }} open onOpenChange={() => {}} />);
+  await userEvent.type(await screen.findByLabelText(/Quantity received/), "5");
+  expect(screen.queryByLabelText(/Cost per unit/)).not.toBeInTheDocument();
+  await userEvent.selectOptions(await screen.findByLabelText(/^Supplier/), "Monument Books");
+  await userEvent.click(screen.getByRole("button", { name: "Confirm restock" }));
+  await waitFor(() => expect(restock).toHaveBeenCalledWith(9, expect.objectContaining({ unit_cost_usd: null })));
+  staffView.unmount();
+
+  setSession("staff", { token: "t", expiresAt: null, user: { id: 1, name: "Admin", email: "a@b.test", role: "admin", two_factor_enabled: true } });
+  renderWithProviders(<RestockDialog variant={{ id: 9, sku: "D-1", stock_quantity: 0 }} open onOpenChange={() => {}} />);
+  await userEvent.type(await screen.findByLabelText(/Quantity received/), "5");
+  await userEvent.type(screen.getByLabelText(/Cost per unit/), "4.50");
+  await userEvent.selectOptions(await screen.findByLabelText(/^Supplier/), "Monument Books");
+  await userEvent.click(screen.getByRole("button", { name: "Confirm restock" }));
+  await waitFor(() => expect(restock).toHaveBeenLastCalledWith(9, expect.objectContaining({ unit_cost_usd: "4.50" })));
+});

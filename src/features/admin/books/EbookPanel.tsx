@@ -233,7 +233,7 @@ export function EbookPanel({ book }: { book: StaffBook }) {
               <p className="text-muted-foreground">
                 Add an Ebook format with a price so customers can buy and read this PDF.
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <label className="flex items-center gap-1.5 font-medium text-foreground">
                   <span>USD $</span>
                   <input

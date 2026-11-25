@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatLabel } from "@/lib/catalog";
 import { usePortalPath } from "@/features/admin/portal";
+import { useStaff } from "@/features/admin/staffSession";
 import { toast } from "@/stores/toast";
 
 interface RestockVariantInfo {
@@ -55,6 +56,8 @@ export function RestockDialog({
 }) {
   const queryClient = useQueryClient();
   const toPortal = usePortalPath();
+  // The API refuses a unit cost from anyone but an admin, so only admins see the field.
+  const isAdmin = useStaff()?.user.role === "admin";
   const { dict } = useT();
   const ts = dict.suppliers;
   // Active suppliers to pick from; on an API without suppliers (404) the free-text field stays.
@@ -140,7 +143,7 @@ export function RestockDialog({
       quantity: qty,
       ...(chosenId ? { supplier_id: chosenId } : {}),
       supplier: chosenId ? null : picker && values.supplier_choice !== "other" ? null : values.supplier.trim() || null,
-      unit_cost_usd: values.unit_cost_usd.trim() || null,
+      unit_cost_usd: isAdmin ? values.unit_cost_usd.trim() || null : null,
       note: values.note.trim() || null,
     });
   };
@@ -184,16 +187,18 @@ export function RestockDialog({
               placeholder="e.g. 50"
             />
 
-            <TextField
-              label="Cost per unit (admins only see this later)"
-              optional
-              inputMode="decimal"
-              value={values.unit_cost_usd}
-              onChange={(e) => set({ unit_cost_usd: e.target.value })}
-              error={errors.unit_cost_usd}
-              placeholder="e.g. 4.50"
-              hint="Unit purchase cost in USD. Kept private from staff."
-            />
+            {isAdmin ? (
+              <TextField
+                label="Cost per unit (admins only see this later)"
+                optional
+                inputMode="decimal"
+                value={values.unit_cost_usd}
+                onChange={(e) => set({ unit_cost_usd: e.target.value })}
+                error={errors.unit_cost_usd}
+                placeholder="e.g. 4.50"
+                hint="Unit purchase cost in USD. Kept private from staff."
+              />
+            ) : null}
 
             {picker ? (
               <div className="grid gap-2">
