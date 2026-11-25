@@ -130,6 +130,13 @@ export default function OrderDetailPage() {
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="grid content-start gap-6">
+          {/* Where it is first: the timeline answers the first question about an order, then what was in it. */}
+          <OrderTimeline
+            history={o.status_history ?? []}
+            status={o.status}
+            paymentMethod={o.payment_method}
+            estimatedDelivery={o.estimated_delivery}
+          />
           <OrderItemsCard
             order={o}
             totalLabel={o.payment_status === "succeeded" ? t.totalPaid : t.total}
@@ -142,12 +149,6 @@ export default function OrderDetailPage() {
                   )
                 : undefined
             }
-          />
-          <OrderTimeline
-            history={o.status_history ?? []}
-            status={o.status}
-            paymentMethod={o.payment_method}
-            estimatedDelivery={o.estimated_delivery}
           />
         </div>
         <div className="grid content-start gap-6">

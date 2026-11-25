@@ -350,17 +350,18 @@ function Purchase({ book }: { book: BookDetail }) {
         <p className="font-display text-[2.441rem] leading-none tabular-nums text-foreground">
           {variant ? formatMoney(variant.price_usd, variant.price_khr, currency) : formatMoney(book.price_from_usd, book.price_from_khr, currency)}
         </p>
+        {/* Low stock and "sold in 90 days" sit on the price line (one row less above the buy button). */}
+        {variant?.low_stock_remaining || book.sold_count ? (
+          <div className="detail-price-chips flex flex-wrap items-center gap-2">
+            {variant?.low_stock_remaining ? <LowStockBadge remaining={variant.low_stock_remaining} /> : null}
+            {book.sold_count ? <span className="rounded-full bg-lapis-tint px-2.5 py-0.5 text-sm font-medium text-primary">{dict.shopExtras.sold(book.sold_count)}</span> : null}
+          </div>
+        ) : null}
         <p className={cn("text-sm", buyable ? "text-success" : "text-destructive")}>
           {!variant ? b.notAvailable : !buyable ? dict.bookDetail.outOfStock : digital ? b.download : dict.bookDetail.inStock}
         </p>
         </div>
         {buyable ? <BookOfferLine offer={book.offer} className="mt-1" /> : null}
-        {variant?.low_stock_remaining || book.sold_count ? (
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            {variant?.low_stock_remaining ? <LowStockBadge remaining={variant.low_stock_remaining} /> : null}
-            {book.sold_count ? <p className="rounded-full bg-lapis-tint px-2.5 py-0.5 text-sm font-medium text-primary">{dict.shopExtras.sold(book.sold_count)}</p> : null}
-          </div>
-        ) : null}
       </div>
 
       {variants.length > 0 ? <FormatPicker variants={variants} value={variantId} onChange={setVariantId} name={`format-${book.id}`} /> : null}

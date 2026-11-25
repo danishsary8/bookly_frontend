@@ -289,6 +289,7 @@ export const km: Translations = {
   },
   accountNav: {
     menu: "ម៉ឺនុយ",
+    directory: "គ្រប់គ្រងគណនីរបស់អ្នក",
     groups: { shopping: "ការបញ្ជាទិញ និងការទិញ", library: "បណ្ណាល័យរបស់អ្នក", settings: "ការកំណត់", help: "ជំនួយ" },
   },
   accountEmpty: {

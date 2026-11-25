@@ -285,6 +285,7 @@ export const en = {
   },
   accountNav: {
     menu: "Menu",
+    directory: "Manage your account",
     groups: { shopping: "Orders & shopping", library: "Your library", settings: "Settings", help: "Help" },
   },
   accountEmpty: {

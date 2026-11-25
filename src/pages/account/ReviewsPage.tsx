@@ -2,7 +2,9 @@ import { accountPage, useAccountPageBounds } from "@/features/account/pagination
 import { useQuery } from "@tanstack/react-query";
 import { MessageSquareText, PenLine, Trash2 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
+import { catalogQueries } from "@/api/endpoints/catalog";
 import { orderQueries } from "@/api/endpoints/orders";
+import { BookCover } from "@/components/catalog/BookCover";
 import { EmptyState } from "@/components/EmptyState";
 import { StarRating } from "@/components/StarRating";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -36,6 +38,10 @@ export default function ReviewsPage() {
   const meta = reviews.data?.meta;
   useAccountPageBounds(meta, reviews.isPlaceholderData);
   const list = reviews.data?.data ?? [];
+  // Reviews carry only the book's id and title; one request for this page's books gives each review its cover.
+  const ids = [...new Set(list.map((r) => r.book?.id ?? r.book_id).filter((id): id is number => typeof id === "number"))];
+  const books = useQuery({ ...catalogQueries.books({ ids: ids.join(","), per_page: ids.length || 1 }), enabled: ids.length > 0 });
+  const covers = new Map((books.data?.data ?? []).map((b) => [b.id, b.cover_image_url]));
 
   return (
     <AccountSection
@@ -68,23 +74,28 @@ export default function ReviewsPage() {
           {list.map((review) => {
             const bookId = review.book?.id ?? review.book_id;
             return (
-              <li key={review.id} className="grid gap-3 shop-card rounded-2xl border border-border bg-card p-4 sm:p-5">
-                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                  <Link to={`/books/${bookId}`} className="inline-flex min-h-11 items-center font-semibold underline-offset-4 hover:underline">
-                    {review.book?.title ?? a.bookGone}
-                  </Link>
-                  <span className="text-sm text-muted-foreground">{orderDate(review.updated_at ?? review.created_at, locale)}</span>
-                </div>
-                <StarRating value={review.rating} summary={false} />
-                {review.comment ? <p className="whitespace-pre-line text-[15px]">{review.comment}</p> : null}
-                {review.is_visible === false ? <HiddenReviewNote /> : null}
-                <div className="flex flex-wrap gap-2">
-                  <Link to={`/books/${bookId}#your-review`} className={buttonVariants({ variant: "outline", size: "sm" })}>
-                    <PenLine aria-hidden="true" /> {dict.ui.edit}
-                  </Link>
-                  <Button variant="ghost" size="sm" onClick={() => ask(review)}>
-                    <Trash2 aria-hidden="true" /> {dict.ui.delete}
-                  </Button>
+              <li key={review.id} className="account-review shop-card flex gap-4 rounded-2xl border border-border bg-card p-4 sm:gap-5 sm:p-5">
+                <Link to={`/books/${bookId}`} tabIndex={-1} aria-hidden="true" className="w-14 shrink-0 self-start overflow-hidden rounded-[3px] shadow-[0_10px_18px_-12px_rgb(20_16_10/0.6)] sm:w-16">
+                  <BookCover src={bookId ? covers.get(bookId) : null} title={review.book?.title ?? ""} />
+                </Link>
+                <div className="grid min-w-0 flex-1 content-start gap-2">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
+                    <Link to={`/books/${bookId}`} className="font-display text-[1.15rem] leading-snug underline-offset-4 hover:underline">
+                      {review.book?.title ?? a.bookGone}
+                    </Link>
+                    <span className="text-sm text-muted-foreground">{orderDate(review.updated_at ?? review.created_at, locale)}</span>
+                  </div>
+                  <StarRating value={review.rating} summary={false} />
+                  {review.comment ? <p className="whitespace-pre-line text-[15px] leading-relaxed">{review.comment}</p> : null}
+                  {review.is_visible === false ? <HiddenReviewNote /> : null}
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <Link to={`/books/${bookId}#your-review`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                      <PenLine aria-hidden="true" /> {dict.ui.edit}
+                    </Link>
+                    <Button variant="ghost" size="sm" onClick={() => ask(review)} className="text-muted-foreground hover:text-destructive">
+                      <Trash2 aria-hidden="true" /> {dict.ui.delete}
+                    </Button>
+                  </div>
                 </div>
               </li>
             );

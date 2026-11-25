@@ -15,7 +15,9 @@
 .detail-buy-card { padding: 1.1rem 0 0; border-top: 1px solid var(--border); }
 .book-purchase { gap: 1.1rem; }
 .detail-price-block { padding: 0; }
-.detail-price-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.detail-price-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1rem; }
+/* price · chips (low stock, sold) ... status pill on the right */
+.detail-price-heading > .detail-price-chips { margin-right: auto; }
 .detail-price-heading > p:first-child { font-size: clamp(2.2rem, 3vw, 2.8rem); letter-spacing: -.04em; }
 .detail-price-heading > p:last-child { display: inline-flex; align-items: center; gap: .5rem; padding: .45rem .75rem; border: 1px solid color-mix(in srgb, currentColor 22%, transparent); border-radius: 999px; background: color-mix(in srgb, currentColor 7%, transparent); font-size: .8rem; font-weight: 600; line-height: 1.3; }
 .detail-price-heading > p:last-child::before { content: ''; width: .4rem; height: .4rem; border-radius: 50%; background: currentColor; }
@@ -182,6 +184,20 @@ html[lang='en'] .detail-story-text.has-dropcap::first-letter { float: left; marg
   .detail-promise-icon { width: 2rem; height: 2rem; }
   .detail-promises li > span:last-child { line-height: 1.4; }
 }
+/* Very short windows (laptops at 150% zoom, about 1280×620): the tightest spacing that still breathes. */
+@media (min-width: 1024px) and (max-height: 660px) {
+  .detail-title-block { gap: .3rem; }
+  .detail-title-block #book-title { font-size: clamp(1.55rem, 2.1vw, 1.9rem); }
+  .detail-price-heading > p:first-child { font-size: 1.95rem; }
+  .book-purchase { gap: .6rem; }
+  .detail-product-info { gap: .55rem; }
+  .detail-formats .detail-format-option { min-height: 3.25rem; padding-block: .4rem; }
+  .detail-promises li { padding-block: .5rem; }
+  .detail-stage-cell { min-height: 21rem; }
+  .detail-product-grid { margin-top: .2rem; }
+  .detail-buy-card { padding-top: .5rem; }
+  .book-detail-page > nav { padding-bottom: .2rem; }
+}
 @media (min-width: 1024px) and (max-height: 700px) {
   .book-detail-page { padding-top: .35rem; }
   .detail-product-grid { margin-top: .4rem; }
@@ -190,7 +206,7 @@ html[lang='en'] .detail-story-text.has-dropcap::first-letter { float: left; marg
 @media (max-width: 639px) {
   .detail-book-stage { min-height: 0; padding: .25rem 0 0; }
   .detail-cover-column { width: min(52%, 13rem); }
-  .detail-purchase-actions { display: grid; grid-template-columns: minmax(0,1fr) 48px; gap: .625rem; }
+  .detail-purchase-actions { display: grid; grid-template-columns: minmax(0,1fr) 48px 48px; gap: .625rem; }
   .detail-purchase-actions > div:first-child:not(.detail-cart-glare) { grid-column: 1 / -1; }
   .detail-cart-glare { min-width: 0; width: 100%; }
   .detail-promises { grid-template-columns: 1fr; }

@@ -1,6 +1,6 @@
 import "./account.css";
-import { useId, useState } from "react";
-import { ArrowUpRight, BookHeart, BookOpen, ChevronDown, ChevronRight, Heart, KeyRound, LayoutDashboard, LifeBuoy, LogOut, MapPin, MessageSquareText, Package, RotateCcw, TicketPercent, UserPlus, UserRound, type LucideIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, BookHeart, BookOpen, ChevronRight, Heart, KeyRound, LifeBuoy, LogOut, MapPin, MessageSquareText, Package, RotateCcw, TicketPercent, UserPlus, UserRound, type LucideIcon } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { m } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
@@ -10,26 +10,25 @@ import type { Customer } from "@/api/types";
 import { FrozenOutlet } from "@/components/motion/FrozenOutlet";
 import { SignOutDialog } from "@/components/shell/SignOutDialog";
 import { CountBadge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { useOrderNotifications } from "@/features/orders/orderNotifications";
-import { cn } from "@/lib/utils";
 import { useT, type Translations } from "@/i18n";
 
 /*
- * The account area's frame (pages/account.md §1). Laptops: one sidebar card with a lapis "library card" (initial,
- * name, who is signed in) over the links in four labelled groups (shopping, library, settings, help) and Sign out.
- * Phones: a compact menu, one button naming the current section that opens the same grouped links, so a long row of
- * Khmer labels never has to scroll sideways. Each section is its own page with its own URL.
+ * The account area's frame (pages/account.md §1, redesign 2026-11-25): no sidebar. The Overview is the hub (identity,
+ * latest order, shortcuts and every section as grouped tiles). Every other page opens with one slim bar: "← Your
+ * account" back to the hub and pill tabs for the sibling pages of its group (Orders · Returns · Coupons …), which
+ * scroll sideways on phones. Detail pages (an order, a return) keep only their own back link. Content is centred at a
+ * reading width, so each page uses the space the sidebar used to take.
  */
 
 type SectionKey = "overview" | "orders" | "returns" | "coupons" | "referrals" | "ebooks" | "wishlist" | "readingLists" | "reviews" | "profile" | "security" | "addresses" | "support";
 type Section = { to: string; key: SectionKey; Icon: LucideIcon; end?: boolean };
+type GroupKey = keyof Translations["accountNav"]["groups"];
 
-const groups: { key: keyof Translations["accountNav"]["groups"]; sections: Section[] }[] = [
+const groups: { key: GroupKey; sections: Section[] }[] = [
   {
     key: "shopping",
     sections: [
-      { to: "/account", key: "overview", Icon: LayoutDashboard, end: true },
       { to: "/account/orders", key: "orders", Icon: Package },
       { to: "/account/returns", key: "returns", Icon: RotateCcw },
       { to: "/account/coupons", key: "coupons", Icon: TicketPercent },
@@ -60,166 +59,111 @@ function label(dict: Translations, key: SectionKey) {
   return key === "support" ? dict.support.title : key === "referrals" ? dict.credit.referrals : dict.account[key];
 }
 
-function SectionLinks({ visible, unreadOrders, onNavigate }: { visible: (key: SectionKey) => boolean; unreadOrders: number; onNavigate?: () => void }) {
+/** Which sections this customer sees (referrals only when the shop runs them, for verified, non-demo accounts). */
+function useVisibleSections() {
+  const session = useSession<Customer>("customer");
+  const flags = useQuery(shopFeaturesQuery());
+  const user = session?.user;
+  const demo = user?.email === "demo@bookly.test";
+  return (key: SectionKey) => (key === "referrals" ? Boolean(flags.data?.referrals && user?.email_verified) && !demo : true);
+}
+
+/** Sub-page bar: back to the hub, then the sibling pages of this group as pill tabs. */
+function SectionBar({ group, visible, unreadOrders }: { group: (typeof groups)[number]; visible: (key: SectionKey) => boolean; unreadOrders: number }) {
   const { dict } = useT();
-  const instanceId = useId();
+  const { pathname } = useLocation();
+  const sections = group.sections.filter((s) => visible(s.key));
+  const tabs = useRef<HTMLUListElement>(null);
+  // Phones: the tab row scrolls sideways, so bring the current page's tab into view (without moving the page).
+  useEffect(() => {
+    const row = tabs.current;
+    const active = row?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!row || !active || row.scrollWidth <= row.clientWidth) return;
+    row.scrollLeft = Math.max(0, active.offsetLeft - (row.clientWidth - active.offsetWidth) / 2);
+  }, [pathname]);
   return (
-    <div className="grid gap-3">
-      {groups.map((group) => {
-        const sections = group.sections.filter((s) => visible(s.key));
-        if (sections.length === 0) return null;
-        const id = `account-nav-${instanceId}-${group.key}`;
-        return (
-          <div key={group.key} className="grid gap-0.5">
-            <p id={id} className="px-3 pb-1 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-              {dict.accountNav.groups[group.key]}
-            </p>
-            <ul aria-labelledby={id} className="grid gap-0.5">
-              {sections.map(({ to, key, Icon, end }) => {
-                const badge = key === "orders" ? unreadOrders : 0;
-                return (
-                  <li key={to}>
-                    <NavLink
-                      to={to}
-                      end={end}
-                      onClick={onNavigate}
-                      className={({ isActive }) =>
-                        cn(
-                          "account-nav-link relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-[15px] font-medium lg:min-h-10 outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring",
-                          isActive
-                            ? "bg-lapis-tint font-semibold text-primary after:absolute after:inset-y-2 after:left-0 after:w-[3px] after:rounded-full after:bg-primary"
-                            : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                        )
-                      }
-                    >
-                      <Icon className="size-[18px] shrink-0" aria-hidden="true" />
-                      <span className="min-w-0 flex-1 truncate">{label(dict, key)}</span>
-                      <CountBadge count={badge} className="badge-pop ml-auto" aria-hidden="true" />
-                      {badge > 0 ? <span className="sr-only"> ({dict.shell.orderUpdates(badge)})</span> : null}
-                    </NavLink>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        );
-      })}
-    </div>
+    <nav aria-label={dict.account.nav} className="account-bar">
+      <NavLink to="/account" end className="account-bar-back">
+        <ArrowLeft aria-hidden="true" />
+        {dict.account.eyebrow}
+      </NavLink>
+      {sections.length > 1 ? (
+        <ul ref={tabs} className="account-tabs no-scrollbar" aria-label={dict.accountNav.groups[group.key]}>
+          {sections.map(({ to, key, Icon }) => {
+            const badge = key === "orders" ? unreadOrders : 0;
+            return (
+              <li key={to}>
+                <NavLink to={to} className="account-tab">
+                  <Icon aria-hidden="true" />
+                  <span>{label(dict, key)}</span>
+                  <CountBadge count={badge} className="badge-pop" aria-hidden="true" />
+                  {badge > 0 ? <span className="sr-only"> ({dict.shell.orderUpdates(badge)})</span> : null}
+                </NavLink>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+    </nav>
   );
 }
 
 export function AccountLayout() {
-  const session = useSession<Customer>("customer");
-  const flags = useQuery(shopFeaturesQuery());
   const { unreadCount: unreadOrders } = useOrderNotifications();
-  const [confirmSignOut, setConfirmSignOut] = useState(false);
   const { pathname } = useLocation();
-  const { dict } = useT();
-  const user = session?.user;
-  const firstName = user?.name?.split(" ")[0];
-  const who = firstName ? dict.account.signedInAs(user?.email ?? user?.phone ?? firstName) : " ";
-  const demo = user?.email === "demo@bookly.test";
-  const visible = (key: SectionKey) =>
-    key === "referrals" ? Boolean(flags.data?.referrals && user?.email_verified) && !demo : true;
-  const current = groups.flatMap((g) => g.sections).find((s) => (s.end ? pathname === s.to : pathname.startsWith(s.to))) ?? groups[0].sections[0];
-  const CurrentIcon = current.Icon;
+  const visible = useVisibleSections();
+  const parts = pathname.replace(/\/+$/, "").split("/").filter(Boolean);
+  const isHub = parts.length === 1;
+  // Detail pages (an order, a return, a request form) carry their own back link, so they get no section bar.
+  const isDetail = parts.length > 2;
+  const group = groups.find((g) => g.sections.some((s) => pathname.startsWith(s.to)));
+  const current = group?.sections.find((s) => pathname.startsWith(s.to));
 
   return (
-    <div className="account-area container-shell pb-20 pt-6 sm:pt-8 short:pt-4" data-account-page={current.key}>
+    <div className="account-area container-shell pb-20 pt-5 sm:pt-8 short:pt-4" data-account-page={isHub ? "overview" : (current?.key ?? "other")} data-account-hub={isHub || undefined}>
       <div className="account-frame">
-        {/* Laptops: the sidebar card. */}
-        <nav aria-label={dict.account.nav} className="account-sidebar no-scrollbar shop-card sticky top-[calc(var(--header-h)+1rem)] hidden max-h-[calc(100dvh-var(--header-h)-2rem)] self-start overflow-y-auto overscroll-contain rounded-2xl border border-border bg-card p-2.5 lg:block">
-          <div className="account-identity">
-            <span className="pointer-events-none absolute -right-6 -top-10 size-28 rounded-full bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--on-lapis-muted)_45%,transparent),transparent)]" aria-hidden="true" />
-            <span className="account-avatar" aria-hidden="true">
-              {(user?.name ?? "?").trim().charAt(0).toUpperCase()}
-            </span>
-            <span className="relative grid min-w-0">
-              <span className="account-identity-eyebrow">{dict.account.eyebrow}</span>
-              <span className="truncate font-semibold">{user?.name}</span>
-              <span className="truncate text-xs text-muted-foreground">{who}</span>
-            </span>
-          </div>
-          <SectionLinks visible={visible} unreadOrders={unreadOrders} />
-          <NavLink to="/books" className="account-back-to-shop"><BookOpen aria-hidden="true" />{dict.account.browseBooks}<ArrowUpRight aria-hidden="true" /></NavLink>
-          <Button variant="ghost" onClick={() => setConfirmSignOut(true)} className="mt-3 w-full justify-start gap-3 border-t border-border px-3 pt-2 font-medium text-muted-foreground hover:bg-destructive-tint hover:text-destructive">
-            <LogOut aria-hidden="true" /> {dict.account.signOut}
-          </Button>
-        </nav>
-
-        {/* Phones and tablets: one compact menu. Keyed by the path so it closes after choosing a section. */}
-        {/* On the Overview the app-style section list below the content is the menu, so this compact one is not needed. */}
-        <nav aria-label={dict.account.nav} className={cn("lg:hidden", current.key === "overview" && "hidden")}>
-          <p className="mb-2 truncate text-sm text-muted-foreground">{who}</p>
-          <details key={pathname} className="group shop-card rounded-2xl border border-border bg-card">
-            <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 rounded-2xl px-4 outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
-              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-lapis-tint text-primary">
-                <CurrentIcon className="size-[18px]" aria-hidden="true" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">{dict.account.eyebrow}</span>
-                <span className="block truncate font-semibold">{label(dict, current.key)}</span>
-              </span>
-              {current.key !== "orders" ? <CountBadge count={unreadOrders} aria-hidden="true" /> : null}
-              <span className="text-sm font-semibold text-primary">{dict.accountNav.menu}</span>
-              <ChevronDown className="size-5 text-primary transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
-            </summary>
-            <div className="border-t border-border p-3">
-              <SectionLinks visible={visible} unreadOrders={unreadOrders} />
-              <Button variant="ghost" onClick={() => setConfirmSignOut(true)} className="mt-3 w-full justify-start gap-3 border-t border-border px-3 pt-2 font-medium text-muted-foreground hover:bg-destructive-tint hover:text-destructive">
-                <LogOut aria-hidden="true" /> {dict.account.signOut}
-              </Button>
-            </div>
-          </details>
-        </nav>
-
+        {!isHub && !isDetail && group ? <SectionBar group={group} visible={visible} unreadOrders={unreadOrders} /> : null}
         <div className="account-content min-w-0">
           {/* Frozen like the site outlet, so a page fading out keeps showing its own section. */}
-          {/* The sidebar stays; only this part changes between sections (keyed by the address). */}
           <m.div key={pathname} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0, transition: { duration: 0.24, ease: [0.2, 0.8, 0.2, 1] } }}>
             <FrozenOutlet />
           </m.div>
         </div>
       </div>
-      <SignOutDialog open={confirmSignOut} onOpenChange={setConfirmSignOut} user={user} />
     </div>
   );
 }
 
 /**
- * Phones (owner 2026-11-17): the account sections as an app-style grouped list, each row with its icon and a chevron,
- * and Sign out at the end. Shown on the Overview below the content; laptops keep the sidebar.
+ * The hub's section directory (every size): the four groups as cards, each a list of rows with an icon, a one-line
+ * and a chevron (Sign out is AccountSignOut, at the end of the hub).
  */
-export function AccountMenuList() {
-  const session = useSession<Customer>("customer");
-  const flags = useQuery(shopFeaturesQuery());
+export function AccountHubSections() {
   const { unreadCount: unreadOrders } = useOrderNotifications();
-  const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const visible = useVisibleSections();
   const { dict } = useT();
-  const user = session?.user;
-  const demo = user?.email === "demo@bookly.test";
-  const visible = (key: SectionKey) => (key === "referrals" ? Boolean(flags.data?.referrals && user?.email_verified) && !demo : key !== "overview");
   return (
-    <>
-      <nav aria-label={dict.account.nav} className="account-menu-list grid gap-5 lg:hidden">
+    <section aria-labelledby="account-directory" className="grid gap-4">
+      <h2 id="account-directory" className="account-hub-heading">{dict.accountNav.directory}</h2>
+      <div className="account-directory">
         {groups.map((group) => {
           const sections = group.sections.filter((s) => visible(s.key));
           if (sections.length === 0) return null;
-          const id = `account-menu-${group.key}`;
+          const id = `account-group-${group.key}`;
           return (
-            <div key={group.key} className="grid gap-2">
-              <p id={id} className="px-1 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">{dict.accountNav.groups[group.key]}</p>
-              <ul aria-labelledby={id} className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+            <div key={group.key} className="account-group">
+              <p id={id} className="account-group-title">{dict.accountNav.groups[group.key]}</p>
+              <ul aria-labelledby={id}>
                 {sections.map(({ to, key, Icon }) => {
                   const badge = key === "orders" ? unreadOrders : 0;
                   return (
                     <li key={to}>
-                      <NavLink to={to} className="flex min-h-[3.25rem] items-center gap-3 px-4 text-[15px] font-medium outline-none transition-colors hover:bg-secondary focus-visible:bg-secondary focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
-                        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-lapis-tint text-primary"><Icon className="size-[18px]" aria-hidden="true" /></span>
+                      <NavLink to={to} className="account-row">
+                        <span className="account-row-icon" aria-hidden="true"><Icon /></span>
                         <span className="min-w-0 flex-1 truncate">{label(dict, key)}</span>
                         <CountBadge count={badge} className="badge-pop shrink-0" aria-hidden="true" />
                         {badge > 0 ? <span className="sr-only"> ({dict.shell.orderUpdates(badge)})</span> : null}
-                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                        <ChevronRight className="account-row-chevron" aria-hidden="true" />
                       </NavLink>
                     </li>
                   );
@@ -228,11 +172,22 @@ export function AccountMenuList() {
             </div>
           );
         })}
-        <button type="button" onClick={() => setConfirmSignOut(true)} className="flex min-h-[3.25rem] items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 text-[15px] font-semibold text-destructive outline-none transition-colors hover:bg-destructive-tint focus-visible:ring-2 focus-visible:ring-ring">
-          <LogOut className="size-[18px]" aria-hidden="true" /> {dict.account.signOut}
-        </button>
-      </nav>
-      <SignOutDialog open={confirmSignOut} onOpenChange={setConfirmSignOut} user={user} />
-    </>
+      </div>
+    </section>
+  );
+}
+
+/** The hub's last line: Sign out, where people look for it (after everything else on the page). */
+export function AccountSignOut() {
+  const session = useSession<Customer>("customer");
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const { dict } = useT();
+  return (
+    <div className="account-signout-row">
+      <button type="button" onClick={() => setConfirmSignOut(true)} className="account-signout">
+        <LogOut aria-hidden="true" /> {dict.account.signOut}
+      </button>
+      <SignOutDialog open={confirmSignOut} onOpenChange={setConfirmSignOut} user={session?.user} />
+    </div>
   );
 }

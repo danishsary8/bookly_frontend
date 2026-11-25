@@ -14,7 +14,7 @@ import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { buttonVariants } from "@/components/ui/button";
 import { InlineError } from "@/components/ui/error-state";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
-import { AccountMenuList } from "@/features/account/AccountLayout";
+import { AccountHubSections, AccountSignOut } from "@/features/account/AccountLayout";
 import { AccountSection } from "@/features/account/AccountSection";
 import { SecurityChecklist } from "@/features/account/SecurityChecklist";
 import { priceDropSince } from "@/features/account/priceDrop";
@@ -30,7 +30,8 @@ import { useT } from "@/i18n";
 /*
  * Account overview (pages/account.md §3): a dashboard, not a menu. First the latest order and its one next step (pay
  * by KHQR, follow it, or review it), then three live tiles (coupons ready, price drops on saved books, the ebook to
- * continue), quick links, store credit, stock alerts and the recent orders. Every figure comes from the API and
+ * continue), every account section as grouped tiles (the hub's directory), the recent orders, store credit and
+ * stock alerts. Every figure comes from the API and
  * shows a skeleton until its request answers.
  */
 
@@ -173,6 +174,7 @@ export default function AccountOverviewPage() {
 
   return (
     <AccountSection
+      avatar={(customer?.name ?? "?").trim().charAt(0).toUpperCase()}
       title={a.hello(firstName)}
       lead={
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -185,7 +187,6 @@ export default function AccountOverviewPage() {
         </p>
       }
     >
-      <SecurityChecklist />
       {orders.isPending ? (
         <SkeletonGroup label={a.loadingOrders} className={cn(card, "grid gap-3 p-6")}>
           <Skeleton className="h-3 w-32" />
@@ -223,15 +224,14 @@ export default function AccountOverviewPage() {
         <ContinueReading />
       </ul>
 
-      {/* Phones: the menu comes right after the shortcuts, like an app's "Me" tab (owner 2026-11-17). */}
-      <AccountMenuList />
+      {/* The hub's directory: every section, grouped (the sidebar's job before 2026-11-25), on every screen size. */}
+      <AccountHubSections />
 
-
-      <StoreCreditsCard />
-      <StockAlertsCard />
+      {/* A nudge, not the main content: after the directory. */}
+      <SecurityChecklist />
 
       {older.length > 0 ? (
-        <section aria-labelledby="recent-orders" className={cn(card, "p-5 max-lg:hidden sm:p-6")}>
+        <section aria-labelledby="recent-orders" className={cn(card, "p-5 sm:p-6")}>
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <h2 id="recent-orders" className="font-display text-[1.563rem] leading-tight">
               {a.recentOrders}
@@ -247,6 +247,10 @@ export default function AccountOverviewPage() {
           </ul>
         </section>
       ) : null}
+
+      <StoreCreditsCard />
+      <StockAlertsCard />
+      <AccountSignOut />
     </AccountSection>
   );
 }
