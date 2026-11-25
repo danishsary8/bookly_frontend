@@ -186,7 +186,9 @@ describe("Header and cart drawer", () => {
     expect(cartButton).toHaveAttribute("aria-expanded", "true");
     expect(await screen.findByRole("link", { name: "Tom Sawyer" })).toHaveAttribute("href", "/books/7");
     expect(screen.getByText("$14.97", { selector: "span" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Checkout" })).toHaveAttribute("href", "/checkout");
+    // The drawer leads to the cart page (coupons and the summary) rather than straight to checkout.
+    expect(screen.getByRole("link", { name: "View cart" })).toHaveAttribute("href", "/cart");
+    expect(screen.queryByRole("link", { name: "Checkout" })).not.toBeInTheDocument();
   });
 
   it("asks for confirmation before signing out from the account menu", async () => {

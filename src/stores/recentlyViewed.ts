@@ -103,6 +103,9 @@ export const useRecentlyViewed = (excludeId?: number): BookCard[] => {
     enabled: filtered.length > 0,
   });
 
+  // The books query keeps the previous answer while a new one loads, so after "Clear" (no ids, query disabled) it
+  // would still hand back the old books: with no history there is nothing to show.
+  if (filtered.length === 0) return [];
   return query.data?.data ?? [];
 };
 

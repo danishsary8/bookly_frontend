@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useReducedMotion } from "motion/react";
-import { ArrowLeft, ArrowRight, ShoppingBag } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Pause, Play, ShoppingBag } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { catalogApi, catalogQueries, type BookFilters } from "@/api/endpoints/catalog";
 import type { BookCard } from "@/api/types";
@@ -396,6 +396,14 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
   const lifting = useRef(false);
   const st = useRef({ s: n, T: n, lift: new Float32Array(Math.max(total, 1)), hover: -1, tx: 0, ty: 0, mx: 0, my: 0, dragging: false, interacted: false });
   const [active, setActive] = useState(0);
+  // Pause / play (like the hero's slideshow button): the loop reads the ref, the button shows the state.
+  const [shelfPaused, setShelfPaused] = useState(false);
+  const pausedRef = useRef(false);
+  /** The flat "View" chip over the open book's cover (placed each frame from the cover's on-screen box). */
+  const viewChip = useRef<HTMLAnchorElement>(null);
+  useEffect(() => {
+    pausedRef.current = shelfPaused;
+  }, [shelfPaused]);
   const shownIdx = useRef(0);
   const [dir, setDir] = useState(1);
   const geo = useRef({ cum, period, widths, n, total, meanW, gap, d, H, reduce, lipScale: 1 });
@@ -433,6 +441,8 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
     m.tx += ((reduce || !settled ? 0 : m.mx) - m.tx) * (1 - Math.exp(-7 * dt));
     m.ty += ((reduce || !settled ? 0 : m.my) - m.ty) * (1 - Math.exp(-7 * dt));
     const here = centreAt(m.s);
+    let openV = -1;
+    let openO = 0;
     for (let v = 0; v < g.total; v++) {
       const el = tapes.current[v];
       if (!el) continue;
@@ -448,10 +458,34 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
       const target = m.hover === v && Math.abs(r) > 0.5 ? 1 : 0;
       m.lift[v] += (target - m.lift[v]) * (1 - Math.exp(-12 * dt));
       const o = smooth(Math.max(0, 1 - Math.abs(r)));
+      if (o > openO) {
+        openO = o;
+        openV = v;
+      }
       const y = -o * 0.02 * H - m.lift[v] * 0.07 * H;
       el.style.transform = `translate3d(${x}px, ${y}px, ${o * 0.16 * H}px) rotateX(${m.ty * 6 * o}deg) rotateY(${-90 * o + m.tx * 9 * o}deg)`;
       el.style.zIndex = String(Math.round(100 - Math.abs(r) * 4));
       el.style.setProperty("--o", o.toFixed(3));
+    }
+    // "View" sits flat over the open cover's top-right corner (a flat link is clickable everywhere; links inside the
+    // 3D boxes are not hit reliably). It fades in as the cover turns to face you and follows its tilt.
+    const chip = viewChip.current;
+    const box = stage.current;
+    if (chip && box) {
+      const cover = openO > 0.8 ? tapes.current[openV]?.querySelector<HTMLElement>(".shelf-cover") : null;
+      if (cover) {
+        const c = cover.getBoundingClientRect();
+        const s0 = box.getBoundingClientRect();
+        const x = c.right - s0.left - chip.offsetWidth - c.width * 0.07;
+        const y = c.top - s0.top + c.height * 0.05;
+        chip.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+        const fade = Math.max(0, Math.min(1, openO * 6 - 5));
+        chip.style.opacity = fade.toFixed(3);
+        chip.style.pointerEvents = fade > 0.6 ? "auto" : "none";
+      } else {
+        chip.style.opacity = "0";
+        chip.style.pointerEvents = "none";
+      }
     }
     const idx = ((Math.round(m.s) % g.n) + g.n) % g.n;
     if (idx !== shownIdx.current) {
@@ -480,7 +514,7 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
       const total = geo.current.total;
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      if (!reduce && !lifting.current && !m.interacted && !m.dragging && m.hover < 0 && now - idle > AUTOPLAY_MS) {
+      if (!reduce && !pausedRef.current && !lifting.current && !m.interacted && !m.dragging && m.hover < 0 && now - idle > AUTOPLAY_MS) {
         m.T = Math.round(m.T) + 1;
         idle = now;
       }
@@ -705,6 +739,22 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
 
   return (
     <>
+      {/* Pause / play, like the hero slideshow's button: at the bookcase's top-right edge, level with the centred row
+          tabs on wider screens (lifted into their row), on its own line above the case on phones. */}
+      {!reduce ? (
+        <div className="relative z-20 mx-auto mt-2 flex justify-end sm:mt-0 sm:h-0" style={{ width: "calc(100% - 2rem)", maxWidth: width }}>
+          <button
+            type="button"
+            onClick={() => setShelfPaused((value) => !value)}
+            aria-label={shelfPaused ? h.playShelf : h.pauseShelf}
+            aria-pressed={shelfPaused}
+            title={shelfPaused ? h.playShelf : h.pauseShelf}
+            className="shelf-knob shelf-pause sm:absolute sm:bottom-1.5 sm:right-0"
+          >
+            {shelfPaused ? <Play className="size-3.5" aria-hidden="true" /> : <Pause className="size-3.5" aria-hidden="true" />}
+          </button>
+        </div>
+      ) : null}
       {/* The shelf. */}
       <div
         ref={stage}
@@ -742,6 +792,19 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
         <div className="shelf-post pointer-events-none absolute inset-y-0 left-0 z-[205]" style={{ width: CASE_POST }} aria-hidden="true" />
         <div className="shelf-post shelf-post-right pointer-events-none absolute inset-y-0 right-0 z-[205]" style={{ width: CASE_POST }} aria-hidden="true" />
         <div className="shelf-top pointer-events-none absolute inset-x-0 top-0 z-[210]" style={{ height: CASE_TOP }} aria-hidden="true" />
+        {book ? (
+          <Link
+            ref={viewChip}
+            to={href}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="shelf-view group/view absolute left-0 top-0 z-[215]"
+            style={{ opacity: 0, pointerEvents: "none" }}
+            aria-label={`${h.viewBook}: ${shown0?.title ?? ""}`}
+          >
+            {h.viewShort}
+            <ArrowUpRight className="size-3.5 transition-transform duration-200 group-hover/view:-translate-y-px group-hover/view:translate-x-px" aria-hidden="true" />
+          </Link>
+        ) : null}
         {/* the board's front lip: always the nearest thing, so it is drawn flat on top at its projected place */}
         <div ref={lip} className="shelf-lip pointer-events-none absolute inset-x-0 z-[200]" style={{ top: lipTop, height: lipH }} aria-hidden="true" />
         <div ref={unit} className="absolute left-1/2 [transform-style:preserve-3d]" style={{ top: originY }} aria-hidden="true">
@@ -898,9 +961,6 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
                 <span className="hidden sm:inline">{h.addToCart}</span>
               </button>
             ) : null}
-            <Link to={href} className="inline-flex h-11 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#F1DCBC]/45 px-4 text-sm font-semibold text-[#FBF6EC] transition-colors hover:bg-white/10">
-              {book ? h.viewBook : dict.shopExtras.viewAll}
-            </Link>
           </div>
           </div>
         </div>

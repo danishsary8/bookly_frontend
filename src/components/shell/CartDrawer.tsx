@@ -115,17 +115,14 @@ function CartSummary() {
         </div>
         <p className="max-w-[36ch] text-xs leading-relaxed text-muted-foreground">{blocked ? t.fixItems : t.worksOutAtCheckout}</p>
       </div>
+      {/* One way on from here: the cart page, where coupons, gifts and the order summary sit before checkout. */}
       <Link
-        to="/checkout"
+        to="/cart"
         onClick={closeShellPanel}
-        aria-disabled={blocked || undefined}
-        tabIndex={blocked ? -1 : undefined}
-        className={cn(buttonVariants({ variant: "cta", size: "lg" }), "group h-12 w-full gap-2 rounded-xl text-sm font-semibold shadow-sm", blocked && "pointer-events-none opacity-40")}
+        className={cn(buttonVariants({ variant: "default", size: "lg" }), "group h-12 w-full gap-2.5 rounded-xl text-sm font-semibold shadow-[0_10px_24px_-14px_rgb(20_32_122/0.7)]")}
       >
-        {t.checkout} <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transform-none" aria-hidden="true" />
-      </Link>
-      <Link to="/cart" onClick={closeShellPanel} className={cn(buttonVariants({ variant: "outline", size: "lg" }), "h-11 w-full gap-2.5 rounded-xl border-border bg-card text-sm font-semibold text-primary shadow-none hover:border-primary/40 hover:bg-lapis-tint/40")}>
         <ShoppingBag className="size-4" aria-hidden="true" /> {t.viewCart}
+        <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transform-none" aria-hidden="true" />
       </Link>
     </DrawerFooter>
   );
