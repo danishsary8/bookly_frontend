@@ -1,4 +1,4 @@
-import { Inbox, MessageSquareText, RefreshCw } from "lucide-react";
+import { Inbox, MessageSquareText } from "lucide-react";
 import { AdminPage } from "@/features/admin/AdminPage";
 import { usePortalPath } from "@/features/admin/portal";
 import { useState } from "react";
@@ -30,7 +30,7 @@ function StaffConversation({ id }: { id: number }) {
 }
 
 export default function SupportInboxPage() {
-  const { dict } = useT(); const t = dict.support; const session = useStaff(); const client = useQueryClient();
+  const { dict } = useT(); const t = dict.support; const session = useStaff();
   const allowed = !!session && (session.user.role === "admin" || !session.user.permissions || session.user.permissions.includes("support:manage"));
   const [params, setParams] = useSearchParams(); const selected = Number(params.get("conversation")) || 0;
   const [status, setStatus] = useState(""); const [topic, setTopic] = useState(""); const [assigned, setAssigned] = useState(false); const [unread, setUnread] = useState(false); const [page, setPage] = useState(1);
@@ -41,7 +41,6 @@ export default function SupportInboxPage() {
   return <AdminPage title={t.title} lead="One place for customer conversations, follow-ups and resolutions.">
     <div className="work-toolbar" aria-label="Conversation filters"><label>{t.statusLabel}<select className={supportField} value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}><option value="">{t.all}</option>{Object.entries(t.status).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label><label>{t.topic}<select className={supportField} value={topic} onChange={(event) => { setTopic(event.target.value); setPage(1); }}><option value="">{t.all}</option>{Object.entries(t.topics).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label>
       <label className="work-check"><input type="checkbox" checked={assigned} onChange={(event) => { setAssigned(event.target.checked); setPage(1); }} />{t.assigned}</label><label className="work-check"><input type="checkbox" checked={unread} onChange={(event) => { setUnread(event.target.checked); setPage(1); }} />{t.unreadOnly}</label>
-      <Button variant="outline" onClick={() => void client.invalidateQueries({ queryKey: ["support"] })}><RefreshCw className="size-4" aria-hidden="true" />{t.refresh}</Button>
     </div>
     <div className="work-inbox"><div className="work-inbox-list"><h2 className="work-inbox-heading"><span className="flex items-center gap-2"><Inbox className="size-4" aria-hidden="true" />Conversations</span><span className="text-xs font-normal text-muted-foreground">{list.data?.value.meta?.total ?? list.data?.value.data.length ?? 0}</span></h2><ul aria-label="Conversations">{list.data?.value.data.map((item) => <li key={item.id}><button type="button" aria-current={selected === item.id ? "true" : undefined} className="work-conversation-row" onClick={() => setParams({ conversation: String(item.id) })}><span><strong>{t.topics[item.topic]}</strong>{item.unread_count ? <span className="work-unread" aria-label={`${item.unread_count} unread`}>{item.unread_count}</span> : null}</span><span><small>#{item.id} · {item.customer?.name ?? t.guest}</small><small>{t.status[item.status]}</small></span></button></li>)}</ul>{list.isError ? <p role="alert" className="work-inbox-empty">{t.error}</p> : !list.data?.value.data.length ? <div className="work-inbox-empty"><MessageSquareText className="size-6" aria-hidden="true" /><p>{list.isPending ? t.loading : t.empty}</p></div> : null}
     <div className="work-pagination px-3"><Button variant="ghost" disabled={page <= 1} onClick={() => setPage(page - 1)} aria-label={dict.ui.previousPage}>&larr;</Button><span>{page}</span><Button variant="ghost" disabled={page >= (list.data?.value.meta?.last_page ?? 1)} onClick={() => setPage(page + 1)} aria-label={dict.ui.nextPage}>&rarr;</Button></div></div>{selected ? <StaffConversation key={selected} id={selected} /> : <div className="work-empty-conversation desk-card grid place-content-center justify-items-center gap-3 rounded-xl border border-dashed border-border bg-card p-6 text-center"><span className="work-icon"><MessageSquareText className="size-6" aria-hidden="true" /></span><h2 className="text-lg font-semibold">Select a conversation</h2><p className="max-w-xs text-sm text-muted-foreground">Choose a conversation to view its messages and help your customer.</p></div>}</div>

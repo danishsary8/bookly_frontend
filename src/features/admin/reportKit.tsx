@@ -20,14 +20,14 @@ export function Khr({ value, className }: { value?: string | null; className?: s
 
 /**
  * Change against the previous period of the same length. Up is green and down is red, except where more is worse
- * (refunds). The API reports "nothing before, something now" as 100%, which reads better as "New".
+ * (refunds). The API reports "nothing before, something now" as 100%, which reads better as "Up from 0".
  */
 export function Change({ percent, previous, versus, moreIsBetter = true, onDark = false }: { percent?: number; previous?: number; versus: string; moreIsBetter?: boolean | null; onDark?: boolean }) {
   if (percent === undefined || previous === undefined) return null;
   if (previous === 0 && percent !== 0) {
     return (
       <span className={cn("text-sm font-semibold", onDark ? "text-white" : "text-muted-foreground")}>
-        New <span className="font-normal">{versus}</span>
+        Up from 0 <span className="font-normal">{versus}</span>
       </span>
     );
   }
@@ -71,8 +71,9 @@ export function ResultSummary({ items }: { items: Array<{ label: string; value: 
   return (
     <section aria-label="Results on this page" className="grid gap-3">
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Results on this page</p>
-      <dl className="grid gap-3 sm:grid-cols-3">
-        {items.map(({ label, value }) => <div key={label} className="admin-metric desk-card grid gap-2 rounded-xl border border-border bg-card p-4"><dt className="text-sm text-muted-foreground">{label}</dt><dd className="text-2xl font-semibold tabular-nums">{value}</dd></div>)}
+      {/* Phones: the figures stay side by side (compact), so the list itself is not pushed a screen down. */}
+      <dl className="grid grid-cols-3 gap-2 sm:gap-3">
+        {items.map(({ label, value }) => <div key={label} className="admin-metric desk-card grid min-w-0 content-start gap-1 rounded-xl border border-border bg-card px-3 py-2.5 sm:gap-2 sm:p-4"><dt className="text-xs leading-snug text-muted-foreground sm:text-sm">{label}</dt><dd className="text-lg font-semibold tabular-nums sm:text-2xl">{value}</dd></div>)}
       </dl>
     </section>
   );

@@ -187,7 +187,7 @@ function NextSteps({ allowed, number, short, t, onPick }: { allowed: OrderStatus
         const { Icon, label } = STEPS[s]!;
         return (
           <Button key={s} size="sm" variant="outline" className="min-h-11 min-w-11 gap-1.5 whitespace-nowrap px-3" aria-label={t.nextFor.replace("{step}", label).replace("{n}", number)} title={label} onClick={() => onPick(s)}>
-            <Icon aria-hidden="true" /> <span className="hidden lg:inline">{short[s] ?? label}</span>
+            <Icon aria-hidden="true" /> <span className="sm:hidden lg:inline">{short[s] ?? label}</span>
           </Button>
         );
       })}

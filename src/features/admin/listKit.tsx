@@ -197,12 +197,41 @@ export function ListTabs<T extends string>({
 }
 
 /**
- * A table in a card that scrolls sideways on small screens. Pass `label` when the table has no link or button
- * inside: keyboard users can then focus the card to scroll it (WCAG 2.1.1, axe "scrollable-region-focusable").
+ * A table in a card. Laptops: a normal table that scrolls sideways if it must. Phones (the card under 640px wide):
+ * every row becomes a card (admin.css `.admin-table`): the first cell on top, each other cell under a small label
+ * taken from its column heading, the action cell across the bottom. Pass `label` when the table has no link or
+ * button inside: keyboard users can then focus the card to scroll it (WCAG 2.1.1, axe "scrollable-region-focusable").
  */
 export function TableCard({ children, stale, minWidth = 720, label }: { children: ReactNode; stale?: boolean; minWidth?: number; label?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  // Copy each column heading onto its cells (data-label), so the phone card layout can name every value.
+  useEffect(() => {
+    const table = ref.current?.querySelector("table");
+    if (!table) return;
+    const label = () => {
+      const heads = [...table.querySelectorAll<HTMLElement>("thead tr:last-child > th")].map((th) => (th.querySelector("input, [role=\"checkbox\"]") ? "" : (th.textContent ?? "").trim()));
+      table.querySelectorAll<HTMLTableRowElement>("tbody > tr").forEach((row) => {
+        let col = 0;
+        for (const cell of row.cells) {
+          const text = heads[col] ?? "";
+          if (!cell.hasAttribute("data-label") || cell.dataset.autoLabel === "1") {
+            if (text) {
+              cell.setAttribute("data-label", text);
+              cell.dataset.autoLabel = "1";
+            } else if (cell.dataset.autoLabel === "1") cell.removeAttribute("data-label");
+          }
+          col += cell.colSpan || 1;
+        }
+      });
+    };
+    label();
+    const observer = new MutationObserver(label);
+    observer.observe(table, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
   return (
     <div
+      ref={ref}
       className={cn("admin-table relative overflow-x-auto desk-card rounded-xl border border-border bg-card outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background", stale && "opacity-60 transition-opacity")}
       {...(label ? { role: "region", "aria-label": label, tabIndex: 0 } : {})}
     >

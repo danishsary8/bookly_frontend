@@ -454,3 +454,32 @@
   background: color-mix(in oklab, var(--surface-2) 35%, var(--card));
 }
 
+
+/* Phones: TableCard rows become cards (listKit.tsx). The first cell (or the one after a row checkbox) is the title,
+   other cells sit two to a line under their column name, and a cell holding buttons runs along the bottom. */
+.admin-table { container-type: inline-size; container-name: admin-table; }
+@container admin-table (max-width: 640px) {
+  .admin-table table { min-width: 0 !important; }
+  .admin-table table, .admin-table tbody { display: block; }
+  .admin-table thead { position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip-path: inset(50%); white-space: nowrap; }
+  .admin-table tbody > tr { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem 1rem; padding: 1rem; border-bottom: 1px solid var(--border); }
+  .admin-table tbody > tr:last-child { border-bottom: 0; }
+  .admin-table tbody > tr > :is(td, th) { display: block; min-width: 0; padding: 0 !important; text-align: left !important; white-space: normal; }
+  .admin-table tbody > tr > :is(td, th)[data-label]::before { content: attr(data-label); display: block; margin-bottom: .2rem; color: var(--muted-foreground); font-size: .6875rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  .admin-table tbody > tr > :is(td, th):empty { display: none; }
+  /* The title cell spans the card and needs no label. */
+  .admin-table tbody > tr > :is(td, th):first-child:not(:has(:is(input[type="checkbox"], [role="checkbox"]))),
+  .admin-table tbody > tr > :is(td, th):first-child:has(:is(input[type="checkbox"], [role="checkbox"])) + :is(td, th) { grid-column: 1 / -1; }
+  .admin-table tbody > tr > :is(td, th):first-child:not(:has(:is(input[type="checkbox"], [role="checkbox"])))::before,
+  .admin-table tbody > tr > :is(td, th):first-child:has(:is(input[type="checkbox"], [role="checkbox"])) + :is(td, th)::before { display: none; }
+  /* A row checkbox sits in the card's top-left corner; the content moves over to make room. */
+  .admin-table tbody > tr:has(> :first-child :is(input[type="checkbox"], [role="checkbox"])) { padding-left: 3rem; }
+  .admin-table tbody > tr > :first-child:has(:is(input[type="checkbox"], [role="checkbox"])) { position: absolute; left: 1rem; top: 1.05rem; }
+  /* The actions: the last cell with buttons or links-as-buttons, across the card, buttons from the left. */
+  .admin-table tbody > tr > :is(td, th):last-child:has(button, a[class*="rounded"]) { grid-column: 1 / -1; padding-top: .25rem !important; }
+  .admin-table tbody > tr > :is(td, th):last-child:has(button, a[class*="rounded"])::before { display: none; }
+  .admin-table tbody > tr > :is(td, th):last-child > :is(div, span) { justify-content: flex-start !important; }
+  /* Empty and loading rows (one cell across the table) stay as they are. */
+  .admin-table tbody > tr:has(> td[colspan]) { display: block; }
+  .admin-table tbody > tr > td[colspan]::before { display: none; }
+}

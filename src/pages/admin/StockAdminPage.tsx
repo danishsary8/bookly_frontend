@@ -11,7 +11,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Pagination } from "@/components/ui/pagination";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AdminPage } from "@/features/admin/AdminPage";
-import { SearchBox } from "@/features/admin/listKit";
+import { SearchBox, TableCard } from "@/features/admin/listKit";
 import { usePortalPath } from "@/features/admin/portal";
 import { RestockDialog } from "@/features/admin/stock/RestockDialog";
 import { StockHistoryDrawer } from "@/features/admin/stock/StockHistoryDrawer";
@@ -159,8 +159,7 @@ export default function StockAdminPage() {
             }
           />
         ) : (
-          <div className="overflow-x-auto desk-card rounded-xl border border-border bg-card">
-            <table className="w-full text-left text-[15px]">
+          <TableCard minWidth={760}>
               <thead className="border-b border-border bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3">Book & Format</th>
@@ -240,8 +239,7 @@ export default function StockAdminPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
+          </TableCard>
         )}
 
         {meta?.last_page && meta.last_page > 1 ? (
