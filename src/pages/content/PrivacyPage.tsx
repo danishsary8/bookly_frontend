@@ -88,12 +88,19 @@ export default function PrivacyPage() {
           title: "ទិន្នន័យដែលរក្សាទុកក្នុងកម្មវិធីរុករក (Browser)",
           body: (
             <>
-              <p>Bookly មិនប្រើប្រាស់កម្មវិធីតាមដានពាណិជ្ជកម្មឡើយ។ យើងរក្សាទុកតែទិន្នន័យចាំបាច់មួយចំនួនលើឧបករណ៍របស់អ្នក ដើម្បីឱ្យគេហទំព័រដំណើរការល្អ៖</p>
+              <p>Bookly មិនប្រើ cookies សម្រាប់ការផ្សាយពាណិជ្ជកម្ម ឬការតាមដានឡើយ។ យើងរក្សាទុកតែទិន្នន័យចាំបាច់មួយចំនួនលើឧបករណ៍របស់អ្នក ដើម្បីឱ្យគេហទំព័រដំណើរការល្អ៖</p>
               <ul>
                 <li>ស្ថានភាពចូលគណនីរបស់អ្នក (ការចាកចេញនឹងលុបទិន្នន័យនេះ)</li>
                 <li>ជម្រើសរូបិយប័ណ្ណ (ដុល្លារ/រៀល) និងផ្ទៃពណ៌ (ភ្លឺ/ងងឹត)</li>
                 <li>សៀវភៅដែលអ្នកបានមើលថ្មីៗ (បង្ហាញតែនៅលើឧបករណ៍របស់អ្នកប៉ុណ្ណោះ)</li>
               </ul>
+              <p>
+                ដើម្បីដឹងថាទំព័រណាមានអ្នកចូលមើលច្រើន យើងរាប់ចំនួនអ្នកចូលមើលដោយប្រើ Vercel Web Analytics។ វាមិនប្រើ cookies ហើយមិនស្គាល់អត្តសញ្ញាណរបស់អ្នកឡើយ៖
+                វាកត់ត្រាតែទំព័រ (ដោយគ្មានផ្នែកបន្ទាប់ពីសញ្ញា &quot;?&quot; ក្នុងអាសយដ្ឋាន) ប្រទេស និងប្រភេទឧបករណ៍របស់អ្នកប៉ុណ្ណោះ។ ទំព័របុគ្គលិកមិនត្រូវបានរាប់ទេ។
+              </p>
+              <p>
+                នៅពេលមានបញ្ហាកើតឡើង យើងផ្ញើរបាយការណ៍កំហុសទៅសេវាតាមដានកំហុស ដើម្បីជួសជុលវា។ របាយការណ៍នេះមិនរួមបញ្ចូលឈ្មោះ អ៊ីមែល អាសយដ្ឋាន ឬអ្វីដែលអ្នកបានវាយបញ្ចូលឡើយ។
+              </p>
             </>
           ),
         },
@@ -209,13 +216,17 @@ export default function PrivacyPage() {
           title: "What's stored in your browser",
           body: (
             <>
-              <p>Bookly doesn't use advertising or analytics trackers. It keeps a few things on your device so the site works:</p>
+              <p>Bookly doesn't use cookies for advertising or tracking. It keeps a few things on your device so the site works:</p>
               <ul>
                 <li>Your sign-in, so you stay signed in. Signing out removes it.</li>
                 <li>Your choice of currency and light or dark theme.</li>
                 <li>The books you've looked at recently, shown back to you on this device only.</li>
                 <li>While a tab is open: a coupon you've applied, and your email during a password reset.</li>
               </ul>
+              <p>
+                To see which pages are popular, we count visits with Vercel Web Analytics. It uses no cookies and doesn't identify you: it records the
+                page (without anything after the "?" in the address), your country and your type of device. Staff pages aren't counted.
+              </p>
             </>
           ),
         },
@@ -225,7 +236,8 @@ export default function PrivacyPage() {
           body: (
             <p>
               When something breaks on our servers, an error report is sent to our error-monitoring service so we can fix it. It includes your account
-              number if you were signed in, but not your name, email, address, IP address or anything you typed.
+              number if you were signed in, but not your name, email, address, IP address or anything you typed. When something breaks in your browser,
+              a report with the error, the page and your browser details is sent the same way, without your account details.
             </p>
           ),
         },
