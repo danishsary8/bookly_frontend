@@ -159,7 +159,8 @@ describe("CheckoutPage", () => {
     expect(await within(summary).findByText("−$2.59")).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: /Home/ })).toBeChecked();
     expect(screen.getByRole("radio", { name: /Cash on delivery/ })).toBeChecked();
-    expect(screen.getByRole("radio", { name: /Card/ })).toBeDisabled();
+    // Card payments are not offered (no "coming soon" row in the minimal payment list).
+    expect(screen.queryByRole("radio", { name: /Card/ })).not.toBeInTheDocument();
     await user.click(screen.getAllByRole("button", { name: "Place order" })[0]);
     expect(place).toHaveBeenCalledWith({ address_id: 11, payment_method: "cod", delivery_phone: "012345678", coupon_code: "WELCOME10" }, expect.any(String));
     expect(await screen.findByRole("heading", { level: 1, name: /Thank you/ })).toBeInTheDocument();

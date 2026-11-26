@@ -1180,6 +1180,8 @@ export const en = {
     deliveryNote: "Delivery note",
     deliveryNoteHint: "For the courier, e.g. call before delivery",
     review: "Review your items",
+    show: "Show",
+    hide: "Hide",
     editCart: "Edit cart",
     itemsInOrder: "Items in this order",
     line: (format: string, qty: number) => `${format} · Qty ${qty}`,

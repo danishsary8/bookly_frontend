@@ -1186,6 +1186,8 @@ export const km: Translations = {
     deliveryNote: "ចំណាំការដឹកជញ្ជូន",
     deliveryNoteHint: "សម្រាប់អ្នកដឹកជញ្ជូន ឧ. សូមទូរស័ព្ទមុនពេលដឹក",
     review: "ពិនិត្យមុខទំនិញ របស់អ្នក",
+    show: "បង្ហាញ",
+    hide: "លាក់",
     editCart: "កែកន្ត្រក",
     itemsInOrder: "មុខទំនិញក្នុងការបញ្ជាទិញនេះ",
     line: (format: string, qty: number) => `${format} · ចំនួន ${qty}`,

@@ -1,14 +1,14 @@
 import "./checkout-page.css";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, ArrowRight, CalendarClock, Check, Lock, QrCode, TicketPercent, Truck } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, CalendarClock, Check, ChevronDown, Lock, QrCode, TicketPercent, Truck } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { accountQueries } from "@/api/endpoints/account";
 import { cartApi, cartKeys, cartQueries } from "@/api/endpoints/cart";
 import { deliveryQueries } from "@/api/endpoints/delivery";
 import { newIdempotencyKey } from "@/api/client";
 import { ApiError } from "@/api/errors";
-import type { Amount, Order } from "@/api/types";
+import type { Amount, CartLine, Order } from "@/api/types";
 import { PageHeader } from "@/components/catalog/PageHeader";
 import { FreeShippingBar } from "@/components/cart/FreeShippingBar";
 import { CoverThumb } from "@/components/CoverThumb";
@@ -39,8 +39,8 @@ import { shopFeaturesQuery } from "@/api/endpoints/credit";
  * /checkout (verified customers, pages/shopping.md): on the warm paper with the checkout rail beside the title.
  * Three steps on a vertical rail (numbered discs that turn into checks once settled): 1) delivery address (tiles)
  * with the delivery date, note and gift option, 2) payment (cash on delivery; Bakong KHQR when the API lists it),
- * 3) review; a sticky summary with the order's covers, the API's preview (subtotal, discount, shipping, total in
- * display type) and "Place order".
+ * a sticky summary with the order's books (laptops; phones get a disclosure above the steps, so the books are
+ * visible during both steps), the API's preview (subtotal, discount, shipping, total in display type) and "Place order".
  *
  * Placing an order is safe to retry: one Idempotency-Key is kept for this
  * checkout, so if the response is lost (timeout, network) and the customer tries
@@ -74,6 +74,30 @@ function Step({ n, title, children, aside, done, last }: { n: number; title: str
         {children}
       </div>
     </section>
+  );
+}
+
+/** The order's books, compact: shown beside address and payment (summary card on laptops, a disclosure on phones). */
+function ReviewItems({ items, className }: { items: CartLine[]; className?: string }) {
+  const { dict } = useT();
+  const k = dict.checkoutPage;
+  const currency = useCurrency();
+  return (
+    <ul className={cn("checkout-review-items grid gap-3", className)} aria-label={k.itemsInOrder}>
+      {(items ?? []).map((line) => (
+        <li key={line.id} className="flex items-center gap-3">
+          <span className="relative shrink-0 overflow-hidden rounded-[3px] shadow-[0_1px_2px_rgb(20_16_10/0.1),0_8px_14px_-10px_rgb(20_16_10/0.55)]">
+            <CoverThumb src={line.cover_image_url} className="h-[54px] w-9" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="line-clamp-1 text-sm font-semibold leading-snug">{line.book?.title}</p>
+            <p className="text-xs text-muted-foreground">{k.line(formatName(dict, line.format), line.quantity ?? 0)}</p>
+            {line.issues?.length ? <p className="text-xs text-destructive">{line.issues[0].message}</p> : null}
+          </div>
+          <p className="text-sm font-semibold tabular-nums">{formatMoney(line.line_total_usd, line.line_total_khr, currency)}</p>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -236,6 +260,21 @@ export default function CheckoutPage() {
 
         <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-12 lg:gap-10">
           <div className="checkout-sections grid content-start gap-5 lg:col-span-7 xl:col-span-8">
+            {/* Phones: your books stay one tap away while you choose the address and payment. */}
+            <details className="checkout-items-mobile group rounded-2xl border border-border bg-card lg:hidden">
+              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+                <span className="text-sm font-semibold">{k.review} · {dict.cartPage.items(cart.data.item_count ?? 0)}</span>
+                <span className="flex items-center gap-1 text-sm font-semibold text-primary">
+                  <span className="group-open:hidden">{k.show}</span>
+                  <span className="hidden group-open:inline">{k.hide}</span>
+                  <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden="true" />
+                </span>
+              </summary>
+              <div className="grid gap-3 border-t border-border px-4 py-3">
+                <ReviewItems items={items} />
+                <Link to="/cart" className="justify-self-start text-sm font-semibold text-primary underline-offset-4 hover:underline">{k.editCart}</Link>
+              </div>
+            </details>
             <Step n={1} title={shipsSomething ? dict.checkout.deliveryAddress : k.contactAddress} done={Boolean(addressId)}>
               {!shipsSomething ? <p className="-mt-2 text-sm text-muted-foreground">{k.digitalOnly}</p> : null}
               {addresses.isError ? <ErrorState error={addresses.error} onRetry={() => addresses.refetch()} headingLevel="h3" showHomeLink={false} /> : <AddressPicker addresses={list} value={addressId} onChange={setChosenAddress} />}
@@ -271,7 +310,7 @@ export default function CheckoutPage() {
               </div>
             </Step>
 
-            <Step n={2} title={dict.checkout.paymentMethod} done>
+            <Step n={2} title={dict.checkout.paymentMethod} done last>
               {features.data?.referrals && Number(preview.data?.credit_balance?.usd) > 0 ? (
                 <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 has-[:checked]:border-primary has-[:checked]:bg-lapis-tint">
                   <input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} disabled={place.isPending || unconfirmed} className="size-[18px] accent-primary" />
@@ -281,33 +320,6 @@ export default function CheckoutPage() {
               <PaymentOptions value={paymentMethod} onChange={setChosenMethod} khqr={khqr} khqrSaving={khqrSaving} codBlocked={codBlocked} />
             </Step>
 
-            <Step
-              n={3}
-              title={k.review}
-              last
-              aside={
-                <Link to="/cart" className="inline-flex min-h-11 items-center text-[15px] font-semibold text-primary underline-offset-4 hover:underline">
-                  {k.editCart}
-                </Link>
-              }
-            >
-              <ul className="checkout-review-items shop-card grid rounded-2xl border border-border bg-card px-5 [&>li]:py-4 [&>li+li]:border-t [&>li+li]:border-border" aria-label={k.itemsInOrder}>
-                {items.map((line) => (
-                  <li key={line.id} className="flex items-center gap-4">
-                    <span className="relative shrink-0 overflow-hidden rounded-[3px] shadow-[0_1px_2px_rgb(20_16_10/0.1),0_12px_20px_-12px_rgb(20_16_10/0.55)]">
-                      <CoverThumb src={line.cover_image_url} className="h-[84px] w-14" />
-                      <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgb(0_0_0/0.2)_0_3%,rgb(255_255_255/0.16)_4%,transparent_10%)]" aria-hidden="true" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="line-clamp-1 font-display text-[1.15rem] leading-snug">{line.book?.title}</p>
-                      <p className="text-sm text-muted-foreground">{k.line(formatName(dict, line.format), line.quantity ?? 0)}</p>
-                      {line.issues?.length ? <p className="text-sm text-destructive">{line.issues[0].message}</p> : null}
-                    </div>
-                    <p className="font-semibold tabular-nums">{formatMoney(line.line_total_usd, line.line_total_khr, currency)}</p>
-                  </li>
-                ))}
-              </ul>
-            </Step>
           </div>
 
           <aside aria-labelledby="checkout-summary" className="checkout-summary-aside lg:sticky lg:col-span-5 xl:col-span-4">
@@ -321,6 +333,14 @@ export default function CheckoutPage() {
                   <p className="mt-1 text-sm text-muted-foreground">{dict.cartPage.items(cart.data.item_count ?? 0)}</p>
                 </div>
 
+              </div>
+
+              <div className="checkout-summary-items hidden gap-3 border-y border-border py-3 lg:grid">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold">{k.review}</p>
+                  <Link to="/cart" className="inline-flex min-h-8 items-center text-sm font-semibold text-primary underline-offset-4 hover:underline">{k.editCart}</Link>
+                </div>
+                <ReviewItems items={items} className="no-scrollbar max-h-[13.5rem] overflow-y-auto overscroll-contain pr-1" />
               </div>
 
               {formError ? <FormAlert ref={alertRef} title={unconfirmed ? k.unconfirmed : k.notPlaced}>{formError}</FormAlert> : null}
