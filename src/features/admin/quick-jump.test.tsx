@@ -47,7 +47,12 @@ const counts = (answer: unknown) => {
   }) as never);
 };
 
-beforeEach(() => setSession("staff", { token: "t", expiresAt: null, user: admin }));
+// Sidebar groups start folded; these tests read links from every group.
+const openAllNavGroups = () => localStorage.setItem("bookly.admin.navGroups", JSON.stringify(Object.fromEntries(["Overview", "Orders", "Customer care", "Marketing", "Catalogue", "Admin"].map((g) => [g, false]))));
+beforeEach(() => {
+  openAllNavGroups();
+  setSession("staff", { token: "t", expiresAt: null, user: admin });
+});
 afterEach(() => {
   vi.restoreAllMocks();
   clearSession("staff");
@@ -69,6 +74,23 @@ describe("menu badges", () => {
     const nav = screen.getAllByRole("navigation", { name: "Admin" })[0];
     expect(await within(nav).findByRole("link", { name: "Orders" })).toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: "Returns" })).toBeInTheDocument();
+  });
+});
+
+describe("sidebar groups", () => {
+  it("fold every group but the current page's by default, and remember a group the user opens", async () => {
+    localStorage.removeItem("bookly.admin.navGroups");
+    const user = userEvent.setup();
+    counts({ data: { pending_orders: 3, open_returns: 0, low_stock: 0 } });
+    app();
+    const nav = screen.getAllByRole("navigation", { name: "Admin" })[0];
+    await within(nav).findByRole("link", { name: "Dashboard" });
+    const orders = within(nav).getByRole("button", { name: /^Orders/ });
+    expect(orders).toHaveAttribute("aria-expanded", "false");
+    expect(within(nav).queryByRole("link", { name: /^Orders/ })).not.toBeInTheDocument();
+    await user.click(orders);
+    expect(await within(nav).findByRole("link", { name: /^Orders/ })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem("bookly.admin.navGroups") ?? "{}")).toEqual({ Orders: false });
   });
 });
 

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes, useLocation } from "react-router-dom";
@@ -64,6 +64,10 @@ afterEach(() => {
   dismissToast();
   clearSession("staff");
 });
+
+// Sidebar groups start folded; these tests read links from every group.
+const openAllNavGroups = () => localStorage.setItem("bookly.admin.navGroups", JSON.stringify(Object.fromEntries(["Overview", "Orders", "Customer care", "Marketing", "Catalogue", "Admin"].map((g) => [g, false]))));
+beforeEach(openAllNavGroups);
 
 describe("portal helpers", () => {
   it("scopes portalNext strictly to each portal", () => {

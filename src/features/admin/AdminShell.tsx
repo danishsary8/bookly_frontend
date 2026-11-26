@@ -52,9 +52,10 @@ function Nav({ onNavigate, collapsed = false }: { onNavigate?: () => void; colla
     }
   });
 
-  const toggleGroup = (label: string) => {
+  // Groups start folded except the one holding the current page; a group the user opens or closes stays that way.
+  const toggleGroup = (label: string, open: boolean) => {
     setClosedGroups((prev) => {
-      const next = { ...prev, [label]: !prev[label] };
+      const next = { ...prev, [label]: open };
       try {
         localStorage.setItem("bookly.admin.navGroups", JSON.stringify(next));
       } catch {
@@ -68,7 +69,7 @@ function Nav({ onNavigate, collapsed = false }: { onNavigate?: () => void; colla
     <nav aria-label={portalLabel(portal)} className="admin-navigation grid gap-3.5">
       {navFor(session?.user.role, portal).map((group) => {
         const isCurrentGroup = group.label === activeGroupLabel;
-        const isGroupOpen = collapsed || isCurrentGroup || !closedGroups[group.label];
+        const isGroupOpen = collapsed || isCurrentGroup || closedGroups[group.label] === false;
         const groupCount = group.items.reduce((sum, item) => {
           const badge = COUNT_FOR[item.to];
           return sum + (badge && counts ? counts[badge.key] : 0);
@@ -78,7 +79,7 @@ function Nav({ onNavigate, collapsed = false }: { onNavigate?: () => void; colla
           <div key={group.label} data-tone={group.tone} className="grid gap-0.5">
             <button
               type="button"
-              onClick={() => toggleGroup(group.label)}
+              onClick={() => toggleGroup(group.label, isGroupOpen)}
               aria-expanded={isGroupOpen}
               className="admin-nav-group flex min-h-8 w-full items-center justify-between gap-2 rounded-md px-3 py-1 text-left text-[11px] font-bold uppercase tracking-[0.16em] transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
