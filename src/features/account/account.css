@@ -38,7 +38,7 @@
 .account-signout:hover { background: var(--destructive-tint); }
 .account-signout svg { width: 17px; height: 17px; }
 @media (min-width: 768px) { .account-directory { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1280px) { .account-directory { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 960px) { .account-directory { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .account-section { gap: 24px; grid-template-columns: minmax(0, 1fr); }
 /* Long Khmer words (no spaces) must wrap inside the screen instead of widening the column. */
 .account-section h1, .account-section h2, .account-section p { overflow-wrap: anywhere; }

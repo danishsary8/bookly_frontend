@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useReducedMotion } from "motion/react";
-import { ArrowLeft, ArrowRight, ArrowUpRight, Pause, Play, ShoppingBag } from "lucide-react";
+import { ArrowLeft, ArrowRight, Pause, Play, ShoppingBag } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { catalogApi, catalogQueries, type BookFilters } from "@/api/endpoints/catalog";
 import type { BookCard } from "@/api/types";
@@ -38,7 +38,7 @@ const ROW_LINK: Record<RowId, string> = {
   new_arrivals: "/books?sort=newest",
   education: "/categories/education",
   coming_soon: "/books?coming_soon=1&sort=release_soon",
-  ebook_deals: "/books?has_ebook=1&format=ebook&max_price=4.99&sort=price_asc",
+  ebook_deals: "/books?has_ebook=1&format=ebook",
 };
 /** Book-cloth colours for spines until (or unless) a cover's own colour can be read. */
 const CLOTH = ["#14207A", "#7A2E2A", "#2F5D4A", "#C9A24B", "#4C5378", "#8A5A3B", "#1E4E5C", "#5B2A4E", "#E9E1CF", "#A0522D"];
@@ -53,7 +53,7 @@ const ROW_FILTERS: Record<RowId, BookFilters> = {
   new_arrivals: { sort: "newest" },
   education: { sort: "newest" },
   coming_soon: { coming_soon: true, sort: "release_soon" },
-  ebook_deals: { has_ebook: true, format: "ebook", max_price: 4.99, sort: "price_asc" },
+  ebook_deals: { has_ebook: true, format: "ebook" },
 };
 /** The bookcase frame: thickness of the top board and of each upright, in px. */
 const CASE_TOP = 18;
@@ -255,7 +255,7 @@ export function ShelfHero() {
       <div className="relative z-10 flex justify-center px-4 pb-10">
         <Link
           to={ROW_LINK[current]}
-          className="shelf-all group/all inline-flex min-h-12 items-center gap-3 rounded-full bg-primary py-1.5 pl-6 pr-1.5 text-[15px] font-semibold text-primary-foreground shadow-[0_14px_30px_-14px_rgb(20_32_122/0.7)] outline-none transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_34px_-14px_rgb(20_32_122/0.8)] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+          className="shelf-all group/all inline-flex min-h-12 items-center gap-3 rounded-full bg-primary py-1.5 pl-6 pr-1.5 text-[15px] font-semibold text-primary-foreground shadow-[0_14px_30px_-14px_rgb(20_32_122/0.7)] outline-none transition-[transform,box-shadow,background-color] duration-300 ease-out hover:-translate-y-0.5 hover:bg-[color-mix(in_srgb,var(--primary)_84%,#fff)] hover:shadow-[0_18px_34px_-14px_rgb(20_32_122/0.8)] active:translate-y-0 active:bg-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
         >
           {h.seeAllRow(dict.shopExtras.rows[current])}
           <span className="grid size-9 place-items-center rounded-full bg-[#FBF6EC] text-primary">
@@ -802,7 +802,6 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
             aria-label={`${h.viewBook}: ${shown0?.title ?? ""}`}
           >
             {h.viewShort}
-            <ArrowUpRight className="size-3.5 transition-transform duration-200 group-hover/view:-translate-y-px group-hover/view:translate-x-px" aria-hidden="true" />
           </Link>
         ) : null}
         {/* the board's front lip: always the nearest thing, so it is drawn flat on top at its projected place */}

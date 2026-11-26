@@ -1,6 +1,6 @@
-import { useRef, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import type { Category } from "@/api/types";
@@ -9,6 +9,7 @@ import { ScrollProgress } from "@/components/ScrollProgress";
 import { useScrollProgress } from "@/hooks/useScrollProgress";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n";
 
@@ -54,18 +55,59 @@ function Fan({ categoryId }: { categoryId?: number }) {
   );
 }
 
-export function CategoryTiles({ categories, loading }: { categories: Category[] | undefined; loading: boolean }) {
+/** The section header, the same as the book shelves' (New arrivals): eyebrow, title, "All books", then the arrows. */
+function Header({ id, eyebrow, title, allHref, allLabel, arrows }: { id: string; eyebrow: string; title: string; allHref: string; allLabel: string; arrows?: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <p className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          <span className="h-px w-12 bg-current" aria-hidden="true" />
+          {eyebrow}
+        </p>
+        <h2 id={id} className="mt-2 font-display text-[1.953rem] leading-tight">
+          {title}
+        </h2>
+      </div>
+      <div className="flex items-center gap-2">
+        <Link to={allHref} className="inline-flex h-11 items-center gap-1.5 rounded-md px-2 text-[15px] font-semibold text-primary underline-offset-4 hover:underline">
+          {allLabel} <ArrowRight className="size-4" aria-hidden="true" />
+        </Link>
+        {arrows}
+      </div>
+    </div>
+  );
+}
+
+export function CategoryTiles({ categories, loading, headingId, eyebrow, title, allHref, allLabel }: { categories: Category[] | undefined; loading: boolean; headingId: string; eyebrow: string; title: string; allHref: string; allLabel: string }) {
   const { dict } = useT();
   const h = dict.homePage;
   const tree = useQuery(catalogQueries.categoryTree());
   const track = useRef<HTMLUListElement>(null);
   const bar = useScrollProgress(track, [tree.data?.length, categories?.length, loading]);
+  // Like the book shelves: an arrow greys out at its end of the row.
+  const [edges, setEdges] = useState({ start: true, end: false });
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    const update = () => setEdges({ start: el.scrollLeft <= 4, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4 });
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [tree.data?.length, categories?.length, loading]);
+  const header = (arrows?: React.ReactNode) => <Header id={headingId} eyebrow={eyebrow} title={title} allHref={allHref} allLabel={allLabel} arrows={arrows} />;
 
   if ((loading || tree.isPending) && !tree.data) {
     return (
-      <SkeletonGroup label={h.loadingCategories} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {Array.from({ length: KEEP }, (_, i) => <Skeleton key={i} className="h-44 rounded-2xl" />)}
-      </SkeletonGroup>
+      <div className="grid gap-5">
+        {header()}
+        <SkeletonGroup label={h.loadingCategories} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: KEEP }, (_, i) => <Skeleton key={i} className="h-44 rounded-2xl" />)}
+        </SkeletonGroup>
+      </div>
     );
   }
 
@@ -75,9 +117,11 @@ export function CategoryTiles({ categories, loading }: { categories: Category[] 
   const sorted = tops.filter((c) => c.slug && c.count > 0).sort((a, b) => b.count - a.count);
   // Tiles look the same as before; with more than six categories they scroll sideways in a row of 3-column pages
   // (two rows when there are many), so every category is on the home page.
-  const scroll = (dir: number) => track.current?.scrollBy({ left: dir * track.current.clientWidth, behavior: "smooth" });
+  const scroll = (dir: number) => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    track.current?.scrollBy({ left: dir * track.current.clientWidth, behavior: reduce ? "auto" : "smooth" });
+  };
   const many = sorted.length > KEEP;
-  const arrow = "grid size-10 place-items-center rounded-full border border-border bg-card text-foreground transition-[background-color,border-color] hover:border-input hover:bg-muted";
 
   const tile = (category: Top, index: number) => (
     <Link
@@ -99,27 +143,32 @@ export function CategoryTiles({ categories, loading }: { categories: Category[] 
 
   if (!many) {
     return (
-      <Stagger as="ul" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {sorted.map((category, index) => (
-          <StaggerItem as="li" key={category.id} index={index}>
-            {tile(category, index)}
-          </StaggerItem>
-        ))}
-      </Stagger>
+      <div className="grid gap-5">
+        {header()}
+        <Stagger as="ul" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {sorted.map((category, index) => (
+            <StaggerItem as="li" key={category.id} index={index}>
+              {tile(category, index)}
+            </StaggerItem>
+          ))}
+        </Stagger>
+      </div>
     );
   }
 
   return (
-    <div className="grid gap-4">
-      <div className="-mt-[4.25rem] flex items-center justify-end gap-2 pr-28 max-sm:mt-0 max-sm:pr-0">
-        <span className="sr-only">{h.categoryCount(sorted.length)}</span>
-        <button type="button" onClick={() => scroll(-1)} className={arrow} aria-label={h.prevCategories}>
-          <ArrowLeft className="size-4" aria-hidden="true" />
-        </button>
-        <button type="button" onClick={() => scroll(1)} className={arrow} aria-label={h.nextCategories}>
-          <ArrowRight className="size-4" aria-hidden="true" />
-        </button>
-      </div>
+    <div className="grid gap-5">
+      {header(
+        <div className="hidden gap-2 sm:flex">
+          <span className="sr-only">{h.categoryCount(sorted.length)}</span>
+          <Button variant="outline" size="icon" onClick={() => scroll(-1)} disabled={edges.start} aria-label={h.prevCategories}>
+            <ChevronLeft aria-hidden="true" />
+          </Button>
+          <Button variant="outline" size="icon" onClick={() => scroll(1)} disabled={edges.end} aria-label={h.nextCategories}>
+            <ChevronRight aria-hidden="true" />
+          </Button>
+        </div>,
+      )}
       <ul
         ref={track}
         className="shelf-row-more no-scrollbar -mx-2 grid snap-x grid-flow-col grid-rows-2 gap-4 overflow-x-auto px-2 pb-3 pt-1 [grid-auto-columns:82%] sm:[grid-auto-columns:calc((100%-1rem)/2)] xl:[grid-auto-columns:calc((100%-2rem)/3)]"

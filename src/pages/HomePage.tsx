@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, QrCode, RotateCcw, Truck, Wallet } from "lucide-react";
-import { Link } from "react-router-dom";
+import { QrCode, RotateCcw, Truck, Wallet } from "lucide-react";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { BookShelf } from "@/components/catalog/BookShelf";
 import { collectionQueries, collectionText } from "@/api/endpoints/collections";
@@ -30,22 +29,6 @@ import { ErrorState } from "@/components/ui/error-state";
  * so a slow or failing request only affects that section.
  */
 
-function SectionHeading({ id, eyebrow, title, action }: { id: string; eyebrow: string; title: string; action?: React.ReactNode }) {
-  return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <p className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
-          <span className="h-px w-12 bg-current" aria-hidden="true" />
-          {eyebrow}
-        </p>
-        <h2 id={id} className="mt-2 font-display text-[1.953rem] leading-tight">
-          {title}
-        </h2>
-      </div>
-      {action}
-    </div>
-  );
-}
 
 const promises = [
   { Icon: Wallet, title: "cod", text: "codText" },
@@ -129,17 +112,7 @@ export default function HomePage() {
         <ContinueStrip books={recent} />
         <AnimatedContent distance={32} duration={0.7} threshold={0.15}>
           <section aria-labelledby="categories-title">
-            <SectionHeading
-              id="categories-title"
-              eyebrow={h.browse}
-              title={h.byCategory}
-              action={
-                <Link to="/books" className="inline-flex h-11 items-center gap-1.5 px-2 text-[15px] font-semibold text-primary underline-offset-4 hover:underline">
-                  {h.allBooks} <ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
-              }
-            />
-            <CategoryTiles categories={categories.data} loading={categories.isPending} />
+            <CategoryTiles categories={categories.data} loading={categories.isPending} headingId="categories-title" eyebrow={h.browse} title={h.byCategory} allHref="/books" allLabel={h.allBooks} />
           </section>
         </AnimatedContent>
         <AnimatedContent distance={32} duration={0.7} threshold={0.1}>

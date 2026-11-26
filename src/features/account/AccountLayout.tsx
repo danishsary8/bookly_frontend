@@ -1,6 +1,6 @@
 import "./account.css";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, BookHeart, BookOpen, ChevronRight, Heart, KeyRound, LifeBuoy, LogOut, MapPin, MessageSquareText, Package, RotateCcw, TicketPercent, UserPlus, UserRound, type LucideIcon } from "lucide-react";
+import { ArrowLeft, ChevronRight, Gift, Headset, Heart, Library, LogOut, MapPinHouse, ShieldCheck, ShoppingBag, Star, TabletSmartphone, TicketPercent, Undo2, UserRound, type LucideIcon } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { m } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
@@ -29,30 +29,31 @@ const groups: { key: GroupKey; sections: Section[] }[] = [
   {
     key: "shopping",
     sections: [
-      { to: "/account/orders", key: "orders", Icon: Package },
-      { to: "/account/returns", key: "returns", Icon: RotateCcw },
+      { to: "/account/orders", key: "orders", Icon: ShoppingBag },
+      { to: "/account/returns", key: "returns", Icon: Undo2 },
       { to: "/account/coupons", key: "coupons", Icon: TicketPercent },
-      { to: "/account/referrals", key: "referrals", Icon: UserPlus },
+      { to: "/account/referrals", key: "referrals", Icon: Gift },
     ],
   },
   {
     key: "library",
     sections: [
-      { to: "/account/ebooks", key: "ebooks", Icon: BookOpen },
+      { to: "/account/ebooks", key: "ebooks", Icon: TabletSmartphone },
       { to: "/account/wishlist", key: "wishlist", Icon: Heart },
-      { to: "/account/lists", key: "readingLists", Icon: BookHeart },
-      { to: "/account/reviews", key: "reviews", Icon: MessageSquareText },
+      { to: "/account/lists", key: "readingLists", Icon: Library },
+      { to: "/account/reviews", key: "reviews", Icon: Star },
     ],
   },
   {
     key: "settings",
     sections: [
       { to: "/account/profile", key: "profile", Icon: UserRound },
-      { to: "/account/security", key: "security", Icon: KeyRound },
-      { to: "/account/addresses", key: "addresses", Icon: MapPin },
+      { to: "/account/security", key: "security", Icon: ShieldCheck },
+      { to: "/account/addresses", key: "addresses", Icon: MapPinHouse },
+      // Support sits with the settings (owner 2026-11-26): one "Settings & help" group, three balanced columns.
+      { to: "/account/support", key: "support", Icon: Headset },
     ],
   },
-  { key: "help", sections: [{ to: "/account/support", key: "support", Icon: LifeBuoy }] },
 ];
 
 function label(dict: Translations, key: SectionKey) {
