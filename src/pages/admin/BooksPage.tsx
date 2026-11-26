@@ -29,6 +29,7 @@ import { rangeSummary } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
 import { formatUsd } from "@/stores/currency";
 import { toast } from "@/stores/toast";
+import { ApiError } from "@/api/errors";
 
 const PER_PAGE = 20;
 
@@ -75,6 +76,10 @@ export default function BooksPage() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkAction, setBulkAction] = useState<BulkActionType>(null);
   const [pricesOpen, setPricesOpen] = useState(false);
+  /** "Select all N books in this filter": every page, for Change prices (owner 2026-11-26). */
+  const [allMatching, setAllMatching] = useState(false);
+  const [priceBooks, setPriceBooks] = useState<StaffBook[] | null>(null);
+  const [loadingAll, setLoadingAll] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
 
@@ -82,7 +87,8 @@ export default function BooksPage() {
   const sortParam = params.get("sort");
   const sort: BookListSort = sortParam === "most_sold" || sortParam === "least_sold" || sortParam === "title" ? sortParam : "newest";
   const nextSort: BookListSort = sort === "most_sold" ? "least_sold" : sort === "least_sold" ? "newest" : "most_sold";
-  const books = useQuery(staffQueries.books({ q: q || undefined, status: statusParam, trashed, sort: sort === "newest" ? undefined : sort, category_id: categoryId, format: formatParam, stock: stockParam, page, per_page: PER_PAGE }));
+  const listFilters = { q: q || undefined, status: statusParam, trashed, sort: sort === "newest" ? undefined : sort, category_id: categoryId, format: formatParam, stock: stockParam };
+  const books = useQuery(staffQueries.books({ ...listFilters, page, per_page: PER_PAGE }));
   const filtered = Boolean(q || categoryId || formatParam || stockParam);
   const categoryOptions = [
     { value: "", label: "All categories" },
@@ -103,6 +109,7 @@ export default function BooksPage() {
     }
     setParams(merged, { replace: true });
     setSelectedIds([]);
+    setAllMatching(false);
   };
 
   const hrefFor = (p: number) => {
@@ -137,6 +144,7 @@ export default function BooksPage() {
     if (checked) {
       setSelectedIds(Array.from(new Set([...selectedIds, ...list.map((b) => b.id)])));
     } else {
+      setAllMatching(false);
       const pageIds = new Set(list.map((b) => b.id));
       setSelectedIds(selectedIds.filter((id) => !pageIds.has(id)));
     }
@@ -146,11 +154,41 @@ export default function BooksPage() {
     if (checked) {
       setSelectedIds((prev) => [...prev, id]);
     } else {
+      setAllMatching(false);
       setSelectedIds((prev) => prev.filter((item) => item !== id));
     }
   };
 
   const selectedBooks = list.filter((b) => selectedIds.includes(b.id));
+  const total = meta?.total ?? 0;
+  const clearSelection = () => {
+    setSelectedIds([]);
+    setAllMatching(false);
+  };
+
+  /** Change prices: the selected books, or every book in the filter (all pages, 100 at a time). */
+  const openPrices = async () => {
+    if (!allMatching) {
+      setPriceBooks(selectedBooks);
+      setPricesOpen(true);
+      return;
+    }
+    setLoadingAll(true);
+    try {
+      const all: StaffBook[] = [];
+      for (let p = 1; p <= 50; p++) {
+        const res = await staffApi.books({ ...listFilters, page: p, per_page: 100 });
+        all.push(...res.data);
+        if (p >= (res.meta?.last_page ?? 1)) break;
+      }
+      setPriceBooks(all);
+      setPricesOpen(true);
+    } catch (error) {
+      toast.error(ApiError.from(error).message);
+    } finally {
+      setLoadingAll(false);
+    }
+  };
 
   return (
     <AdminPage
@@ -231,10 +269,15 @@ export default function BooksPage() {
       {selectedIds.length > 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3 shadow-xs">
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <span>{selectedIds.length} books selected</span>
+            <span>{allMatching ? `All ${total} books in this filter selected` : `${selectedIds.length} books selected`}</span>
+            {!allMatching && isAdmin && allSelected && total > list.length ? (
+              <button type="button" onClick={() => setAllMatching(true)} className="rounded-md px-1.5 py-0.5 font-semibold text-primary underline-offset-4 hover:underline">
+                Select all {total} books in this filter
+              </button>
+            ) : null}
             <button
               type="button"
-              onClick={() => setSelectedIds([])}
+              onClick={clearSelection}
               className="inline-flex size-6 items-center justify-center rounded-md hover:bg-surface-2"
               title="Clear selection"
             >
@@ -243,26 +286,30 @@ export default function BooksPage() {
             </button>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" size="sm" variant="outline" onClick={() => setBulkAction("categories")}>
-              <Layers className="mr-1.5 size-3.5" aria-hidden="true" />
-              Categories
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={!isAdmin}
-              title={!isAdmin ? "Only administrators can change status" : undefined}
-              onClick={() => setBulkAction("status")}
-            >
-              Status
-            </Button>
-            <Button type="button" size="sm" variant="outline" onClick={() => setBulkAction("variants")}>
-              <Sliders className="mr-1.5 size-3.5" aria-hidden="true" />
-              Stock & Formats
-            </Button>
+            {allMatching ? null : (
+              <>
+                <Button type="button" size="sm" variant="outline" onClick={() => setBulkAction("categories")}>
+                  <Layers className="mr-1.5 size-3.5" aria-hidden="true" />
+                  Categories
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={!isAdmin}
+                  title={!isAdmin ? "Only administrators can change status" : undefined}
+                  onClick={() => setBulkAction("status")}
+                >
+                  Status
+                </Button>
+                <Button type="button" size="sm" variant="outline" onClick={() => setBulkAction("variants")}>
+                  <Sliders className="mr-1.5 size-3.5" aria-hidden="true" />
+                  Stock & Formats
+                </Button>
+              </>
+            )}
             {isAdmin ? (
-              <Button type="button" size="sm" variant="outline" onClick={() => setPricesOpen(true)}>
+              <Button type="button" size="sm" variant={allMatching ? "default" : "outline"} loading={loadingAll} onClick={() => void openPrices()}>
                 <BadgeDollarSign className="mr-1.5 size-3.5" aria-hidden="true" />
                 Change prices
               </Button>
@@ -375,10 +422,10 @@ export default function BooksPage() {
 
       {pricesOpen ? (
         <PriceChangeDialog
-          books={selectedBooks}
+          books={priceBooks ?? []}
           onClose={() => setPricesOpen(false)}
           onSuccess={() => {
-            setSelectedIds([]);
+            clearSelection();
             void queryClient.invalidateQueries({ queryKey: ["staff", "books"] });
           }}
         />
