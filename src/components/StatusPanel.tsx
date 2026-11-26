@@ -11,7 +11,7 @@ type Action = { to: string; label: string };
 /*
  * One centred sheet on the warm paper for the "a link from an email did something" pages (pages/content.md):
  * newsletter confirm / unsubscribe, stop cart reminders. Icon disc (spinner; the Seal that draws its check; a
- * broken link for an expired or wrong link; an alert for a failure), a Gloock title, one sentence, then one main
+ * broken link for an expired or wrong link; an alert for a failure), a Fraunces title, one sentence, then one main
  * action (success: the next step, vermilion; failure: Try again) and one quiet link.
  */
 export function StatusPanel({

@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/** Reading styles for the article column: 68ch measure, Gloock h2, 17px body. */
+/** Reading styles for the article column: 68ch measure, Fraunces h2, 17px body. */
 export const proseClass = cn(
   "max-w-[68ch] text-[1.0625rem] leading-[1.75]",
   "[&_p]:mt-4 [&_p:first-child]:mt-0",

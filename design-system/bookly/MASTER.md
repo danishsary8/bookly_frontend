@@ -12,7 +12,7 @@
 
 ## 1. Concept — "Lapis & Vermilion"
 
-A modern gallery in ultramarine with one red-hot mark. Lapis is the house colour, vermilion is the single call to action, and gold appears only on lapis surfaces. Headings use Gloock, a sharp, high-contrast serif.
+A modern gallery in ultramarine with one red-hot mark. Lapis is the house colour, vermilion is the single call to action, and gold appears only on lapis surfaces. Headings use Fraunces, a warm, readable book serif (changed from Gloock on 2026-11-26 at the owner's request).
 
 | Principle | What it means in practice |
 |---|---|
@@ -23,7 +23,7 @@ A modern gallery in ultramarine with one red-hot mark. Lapis is the house colour
 | **Covers are the imagery** | No stock photos or illustrations. Book covers supply the colour; the UI stays disciplined. |
 | **Hairlines over shadows** | 1px rules define structure; a shadow appears only on hover and overlays. |
 
-**Not this:** full-bleed lapis on every section in light mode, vermilion text blocks, gradient text, decorative gradients outside the hero (§2.1a), glassmorphism, emoji icons, radius > 10px on cards, faux-bold Gloock, shadows on every card at rest, anything cream, beige or sage.
+**Not this:** full-bleed lapis on every section in light mode, vermilion text blocks, gradient text, decorative gradients outside the hero (§2.1a), glassmorphism, emoji icons, radius > 10px on cards, faux-italic headings, shadows on every card at rest, anything cream, beige or sage.
 
 ---
 
@@ -132,23 +132,23 @@ Tints on dark: `color-mix(in oklab, <semantic> 16%, var(--card))`.
 
 | Role | Family | Weights | Notes |
 |---|---|---|---|
-| Display / headings | **Gloock** | 400 only | Sharp wedge serifs, heavy verticals. Set `font-weight: 400` and `font-synthesis: none`: **never faux-bold, never faux-italic.** Emphasis comes from colour or size. Only ≥ 20px. |
+| Display / headings | **Fraunces** (variable) | 600 (hero 650) | Warm book serif with optical sizing (`font-optical-sizing: auto`), more open and readable than Gloock. `font-synthesis: none`: never faux-italic. Emphasis comes from colour or size. Only ≥ 20px. |
 | UI / body | **Hanken Grotesk** | 400, 500, 600, 700 | Unchanged from v1. |
 | Khmer fallback | **Kantumruy Pro** | 400, 600 | Appended to both stacks. |
 
 ```css
---font-display: "Gloock", "Kantumruy Pro", Georgia, serif;
+--font-display: "Fraunces Variable", "Noto Serif Khmer", "Kantumruy Pro", Georgia, serif;
 --font-sans: "Hanken Grotesk", "Kantumruy Pro", system-ui, sans-serif;
 ```
-Fonts are self-hosted (Fontsource packages, imported in `src/fonts.ts`): Gloock 400, Hanken Grotesk 400/500/600/700, Kantumruy Pro 400/600 (Khmer letters only). All `font-display: swap`, split by unicode-range.
+Fonts are self-hosted (Fontsource packages, imported in `src/fonts.ts`): Fraunces Variable (wght + opsz), Hanken Grotesk 400/500/600/700, Kantumruy Pro 400/600 (Khmer letters only). All `font-display: swap`, split by unicode-range.
 
 ### Type scale (major third 1.25, base 16px)
 | Token | Size / line-height | Family | Use |
 |---|---|---|---|
-| `display` | `clamp(2.75rem, 5.5vw, 4.75rem)` / 1.02, −0.02em | Gloock | Home hero only |
-| `h1` | `clamp(2.25rem, 4vw, 3.05rem)` / 1.08 | Gloock | Page titles |
-| `h2` | `clamp(1.75rem, 3vw, 2.45rem)` / 1.12 | Gloock | Section titles |
-| `h3` | 1.563rem / 1.2 | Gloock | Group titles, modal titles, empty-state titles |
+| `display` | `clamp(2.75rem, 5.5vw, 4.75rem)` / 1.02, −0.02em | Fraunces | Home hero only |
+| `h1` | `clamp(2.25rem, 4vw, 3.05rem)` / 1.08 | Fraunces | Page titles |
+| `h2` | `clamp(1.75rem, 3vw, 2.45rem)` / 1.12 | Fraunces | Section titles |
+| `h3` | 1.563rem / 1.2 | Fraunces | Group titles, modal titles, empty-state titles |
 | `h4` | 1.25rem / 1.3 | Hanken 600 | Sub-sections, form groups |
 | `lead` | 1.125rem / 1.6 | Hanken 400 | Intros |
 | `body` | 1rem / 1.6 | Hanken 400 | Default; never below 16px for paragraphs |
@@ -156,7 +156,7 @@ Fonts are self-hosted (Fontsource packages, imported in `src/fonts.ts`): Gloock 
 | `eyebrow` | 0.75rem / 1.2, caps, +0.18em | Hanken 600 | Section labels, colour `--accent-text` (light) / gold (on lapis) |
 | `price` | inherit, `tabular-nums` | Hanken 600 | Money, counts, ratings |
 
-Book titles on cards: Gloock 1.125rem, 2-line clamp.
+Book titles on cards: Fraunces 1.125rem, 2-line clamp.
 
 ---
 
@@ -185,7 +185,7 @@ Timing: 150ms hover/focus · 220ms toggles · 320ms drawers/modals (exits at 70%
 ### React Bits restyle
 | Component | Where | Settings (v2) |
 |---|---|---|
-| **BlurText** | Home hero display; Sign In / Create Account `h1` | words, delay 60ms, from `blur(8px) y:24`, Gloock |
+| **BlurText** | Home hero display; Sign In / Create Account `h1` | words, delay 60ms, from `blur(8px) y:24`, Fraunces |
 | **CountUp** | Hero stat strip, order summary | 1.2s, tabular, gold on lapis / `--primary` on light |
 | **SpotlightCard** | Book cards, featured tiles | `rgba(20, 32, 122, 0.08)` Daylight / `rgba(154, 166, 255, 0.14)` Night |
 | **Carousel** | Home hero slideshow; auth side panel. ("More in this category" on Book Detail is a scroll-snap shelf with prev/next buttons instead, since several covers are visible at once and a one-slide carousel hid them.) | Fluid, loop, 5.5s autoplay, pause/play button, ←/→ keys, pauses on hover and focus, rotateY ±24°, gold active dot 24×8 on lapis |
@@ -247,7 +247,7 @@ Order timeline: 5 steps (pending → delivered) as an ordered list. Reached step
 - Optional action link ("View cart"). `role="status"` (success/info) or `role="alert"` (error). Auto-dismiss after 5s (success/info), paused on hover or focus. Enters 320ms rising 16px; exits at 220ms.
 
 ### 6.6 Empty states
-Centered block, max-width 28rem, padding 48px: 48px line icon in `--primary` on a 96px `--lapis-tint` circle · Gloock h3 · one sentence (muted) · one primary action (+ optional link).
+Centered block, max-width 28rem, padding 48px: 48px line icon in `--primary` on a 96px `--lapis-tint` circle · Fraunces h3 · one sentence (muted) · one primary action (+ optional link).
 | State | Title | Body | Action |
 |---|---|---|---|
 | Empty cart | "Your cart is empty" | "Books you add will wait here until you're ready to check out." | Browse books |
@@ -264,9 +264,9 @@ Centered block, max-width 28rem, padding 48px: 48px line icon in `--primary` on 
 `nav aria-label="Breadcrumb"` > `ol`. 14px/500, links in muted with underline on hover, "/" separators (`aria-hidden`), current page in fg with `aria-current="page"`, truncating with an ellipsis at 24ch. On mobile, collapse to "← Back to {parent}".
 
 ### 6.10 Header & mobile navigation drawer
-- **Header:** 72px (64px mobile), sticky. Daylight: white with a bottom hairline and a lapis Gloock wordmark. Night: `--background` with a hairline. Nav links 15px/500 muted → fg; the active link gets a 2px `--primary` underline. The cart icon has a count badge (vermilion bg, ink text, `aria-label="Cart, 3 items"`).
+- **Header:** 72px (64px mobile), sticky. Daylight: white with a bottom hairline and a lapis Fraunces wordmark. Night: `--background` with a hairline. Nav links 15px/500 muted → fg; the active link gets a 2px `--primary` underline. The cart icon has a count badge (vermilion bg, ink text, `aria-label="Cart, 3 items"`).
 - **Below 900px:** the nav collapses behind a 44×44 menu button (`aria-expanded`, `aria-controls`).
-- **Drawer:** slides from the right, `min(88vw, 360px)` wide, full height, card bg, overlay elevation over a 50% navy scrim. `role="dialog"` + `aria-modal="true"` + labelled "Menu". Focus moves to the close button on open, is trapped inside, and Esc or a scrim click closes and returns focus to the menu button. Contents, top to bottom: search field → nav links (48px rows, Gloock 1.25rem, active one in `--primary` with a 2px leading rule) → divider → Account, Orders, Wishlist → theme toggle → Sign in (primary, full width) or Sign out. Enters at 320ms, exits at 220ms; reduced motion snaps open.
+- **Drawer:** slides from the right, `min(88vw, 360px)` wide, full height, card bg, overlay elevation over a 50% navy scrim. `role="dialog"` + `aria-modal="true"` + labelled "Menu". Focus moves to the close button on open, is trapped inside, and Esc or a scrim click closes and returns focus to the menu button. Contents, top to bottom: search field → nav links (48px rows, Fraunces 1.25rem, active one in `--primary` with a 2px leading rule) → divider → Account, Orders, Wishlist → theme toggle → Sign in (primary, full width) or Sign out. Enters at 320ms, exits at 220ms; reduced motion snaps open.
 
 ### 6.11 Loading skeletons
 - Base `--surface-2`; a highlight sweep (`--card` at 60%) runs every 1.4s left to right. It's replaced by a static fill under reduced motion.
@@ -275,7 +275,7 @@ Centered block, max-width 28rem, padding 48px: 48px line icon in `--primary` on 
 - The container has `aria-busy="true"` and a visually hidden "Loading books…". Show the skeleton only after 150ms (so fast loads don't flash) and for at least 400ms.
 
 ### 6.12 Book card
-SpotlightCard shell, radius 10, 1px border, padding 12 → cover 2:3 (radius 2, lift + translateY −4px on hover) with badges top-left (max 2) and a 44×44 wishlist heart top-right (`aria-pressed`, filled with `--accent-text` when active) → eyebrow category → Gloock title → author (small muted) → star rating → price row (tabular; sale shows the new price in `--accent-text` + the old price struck in muted) + 44×44 add-to-cart icon button. The whole card links to `/books/:id`; the inner buttons stop propagation.
+SpotlightCard shell, radius 10, 1px border, padding 12 → cover 2:3 (radius 2, lift + translateY −4px on hover) with badges top-left (max 2) and a 44×44 wishlist heart top-right (`aria-pressed`, filled with `--accent-text` when active) → eyebrow category → Fraunces title → author (small muted) → star rating → price row (tabular; sale shows the new price in `--accent-text` + the old price struck in muted) + 44×44 add-to-cart icon button. The whole card links to `/books/:id`; the inner buttons stop propagation.
 
 ### 6.13 Footer
 Daylight: `--lapis-tint` bg, lapis wordmark, fg links. Night: `--card` bg with a top hairline. 4 columns → 1 on mobile. The newsletter field uses the standard field spec.
@@ -290,7 +290,7 @@ Checkbox and radio 20px boxes inside a 44px hit row, label clickable, 1px `--inp
 Underline style: a row of 44px-tall triggers, 15px/600 muted → fg, active trigger in fg with a 2px `--primary` indicator that slides between tabs (Motion `layoutId`, 220ms; reduced motion: no slide). Arrow keys move between tabs (Radix Tabs). The row scrolls horizontally on mobile without a visible scrollbar.
 
 ### 6.17 Dialog
-Centered, `min(92vw, 32rem)` (lg 40rem), card bg, radius 10, overlay elevation, padding 24, on `--scrim`. Title Gloock 1.5rem + optional description (muted). Close button 44×44 top-right. Footer: actions right-aligned (primary last), stacked full-width below 640px. Enters 320ms (scale 0.96 → 1 + fade), exits 220ms. `role="dialog"`, `aria-modal`, focus trap, Esc, return focus. **Confirm dialog** variant for destructive actions: destructive button label names the action ("Remove address"), never "OK".
+Centered, `min(92vw, 32rem)` (lg 40rem), card bg, radius 10, overlay elevation, padding 24, on `--scrim`. Title Fraunces 1.5rem + optional description (muted). Close button 44×44 top-right. Footer: actions right-aligned (primary last), stacked full-width below 640px. Enters 320ms (scale 0.96 → 1 + fade), exits 220ms. `role="dialog"`, `aria-modal`, focus trap, Esc, return focus. **Confirm dialog** variant for destructive actions: destructive button label names the action ("Remove address"), never "OK".
 
 ### 6.18 Drawer (generic)
 Same rules as the mobile menu (§6.10): side `right` (default) or `left`, `min(88vw, 400px)`, full height, sticky header (title + close) and optional sticky footer, body scrolls. Used by the cart drawer, the mobile menu and catalogue filters on mobile. Bottom-sheet variant below 640px for filters only.
@@ -332,7 +332,7 @@ A two-option segmented control in the header (and the mobile menu): `role="radio
 
 ## 8. Anti-patterns (reject in review)
 
-Full-bleed lapis everywhere in Daylight · more than one vermilion CTA per view · white text on vermilion · gold on light paper · faux-bold or faux-italic Gloock · status shown by colour alone · placeholder-only inputs · paragraphs under 16px · emoji as icons · autoplay without pause · animating layout properties · shadows at rest · radius > 10px · hard-coded hex in components.
+Full-bleed lapis everywhere in Daylight · more than one vermilion CTA per view · white text on vermilion · gold on light paper · faux-bold or faux-italic Fraunces · status shown by colour alone · placeholder-only inputs · paragraphs under 16px · emoji as icons · autoplay without pause · animating layout properties · shadows at rest · radius > 10px · hard-coded hex in components.
 
 ## 9. Page overrides
 - `pages/header.md`: storefront header (44px search field, no elevation on scroll).

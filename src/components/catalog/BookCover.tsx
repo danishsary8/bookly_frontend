@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 /*
  * 2:3 book cover. Without an image (or when it fails to load) it shows a flat
- * lapis-tint "cover" with the title in Gloock, so a grid never shows a broken
+ * lapis-tint "cover" with the title in Fraunces, so a grid never shows a broken
  * image or an empty grey box (MASTER §6.12).
  */
 

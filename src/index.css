@@ -10,7 +10,7 @@
 /* Bookly design system v3 "Lapis & Vermilion" — see design-system/bookly/MASTER.md */
 @theme {
     --font-sans: "Hanken Grotesk", "Kantumruy Pro", system-ui, sans-serif;
-    --font-display: "Gloock", "Noto Serif Khmer", "Kantumruy Pro", Georgia, serif;
+    --font-display: "Fraunces Variable", "Noto Serif Khmer", "Kantumruy Pro", Georgia, serif;
     /* Motion (MASTER §5) — keep in sync with src/lib/motion.ts */
     --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-standard: cubic-bezier(0.2, 0, 0, 1);
@@ -242,12 +242,13 @@
       color 160ms ease;
   }
 
-  /* Gloock ships one weight: never let the browser fake bold or italic. */
-  h1, h2, h3 {
+  /* Fraunces (owner 2026-11-26): semibold, optical size follows the text size; never a faux italic. */
+  h1, h2, h3, .font-display {
     font-family: var(--font-display);
-    font-weight: 400;
+    font-weight: 600;
+    font-optical-sizing: auto;
     font-synthesis: none;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.012em;
   }
 
   h4, h5, h6 {
@@ -482,7 +483,7 @@
   /* Display type — Home hero only (MASTER §3). */
   .type-display {
     font-family: var(--font-display);
-    font-weight: 400;
+    font-weight: 650;
     font-synthesis: none;
     font-size: clamp(2.75rem, 5.5vw, 4.75rem);
     line-height: 1.02;

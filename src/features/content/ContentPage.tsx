@@ -166,7 +166,7 @@ function StillNeedHelp({ related }: { related: { to: string; label: string }[] }
 }
 
 /*
- * Layout for the help and policy pages (pages/content.md): breadcrumb, eyebrow, the Gloock title and one lead line,
+ * Layout for the help and policy pages (pages/content.md): breadcrumb, eyebrow, the Fraunces title and one lead line,
  * key facts as small cards; then a sticky side menu (every info page, then "On this page" with the section in view
  * marked) beside a ~68ch reading sheet. Phones fold the menu into one button. Legal pages number their sections
  * (clauses are referred to by number) and give each a Back to top link. Every page ends with "Still need help?".

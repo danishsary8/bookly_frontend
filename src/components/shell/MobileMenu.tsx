@@ -19,7 +19,7 @@ import { useT } from "@/i18n";
 
 /*
  * MASTER §6.10 mobile drawer (below 1024px): search → main links (48px rows,
- * Gloock, active one in --primary with a 2px leading rule) → divider → account
+ * Fraunces, active one in --primary with a 2px leading rule) → divider → account
  * links → currency + theme → Sign in / Sign out. Radix Dialog underneath, so
  * focus is trapped and Esc or the scrim closes it and returns focus.
  */

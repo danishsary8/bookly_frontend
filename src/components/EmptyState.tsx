@@ -2,7 +2,7 @@ import type { ComponentType, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /*
- * MASTER §6.6: a line icon on a lapis-tint halo, a Gloock title, one sentence,
+ * MASTER §6.6: a line icon on a lapis-tint halo, a Fraunces title, one sentence,
  * one primary action (plus an optional secondary link).
  */
 

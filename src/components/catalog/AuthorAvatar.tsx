@@ -11,7 +11,7 @@ const initials = (name: string) =>
     .join("")
     .toUpperCase();
 
-/** Author photo, or their initials in Gloock on lapis tint when there is none. Decorative (alt=""). */
+/** Author photo, or their initials in Fraunces on lapis tint when there is none. Decorative (alt=""). */
 export function AuthorAvatar({ name, photoUrl, className }: { name: string; photoUrl?: string | null; className?: string }) {
   const [failed, setFailed] = useState(false);
   return (
