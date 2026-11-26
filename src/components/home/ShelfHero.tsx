@@ -406,7 +406,6 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
   const [shelfPaused, setShelfPaused] = useState(false);
   const pausedRef = useRef(false);
   /** The flat "View" chip over the open book's cover (placed each frame from the cover's on-screen box). */
-  const viewChip = useRef<HTMLAnchorElement>(null);
   useEffect(() => {
     pausedRef.current = shelfPaused;
   }, [shelfPaused]);
@@ -447,8 +446,6 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
     m.tx += ((reduce || !settled ? 0 : m.mx) - m.tx) * (1 - Math.exp(-7 * dt));
     m.ty += ((reduce || !settled ? 0 : m.my) - m.ty) * (1 - Math.exp(-7 * dt));
     const here = centreAt(m.s);
-    let openV = -1;
-    let openO = 0;
     for (let v = 0; v < g.total; v++) {
       const el = tapes.current[v];
       if (!el) continue;
@@ -464,34 +461,10 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
       const target = m.hover === v && Math.abs(r) > 0.5 ? 1 : 0;
       m.lift[v] += (target - m.lift[v]) * (1 - Math.exp(-12 * dt));
       const o = smooth(Math.max(0, 1 - Math.abs(r)));
-      if (o > openO) {
-        openO = o;
-        openV = v;
-      }
       const y = -o * 0.02 * H - m.lift[v] * 0.07 * H;
       el.style.transform = `translate3d(${x}px, ${y}px, ${o * 0.16 * H}px) rotateX(${m.ty * 6 * o}deg) rotateY(${-90 * o + m.tx * 9 * o}deg)`;
       el.style.zIndex = String(Math.round(100 - Math.abs(r) * 4));
       el.style.setProperty("--o", o.toFixed(3));
-    }
-    // "View" is a cream bookplate tab half over the open cover's bottom edge, right of centre (a flat link is clickable everywhere; links inside the
-    // 3D boxes are not hit reliably). It fades in as the cover turns to face you and follows its tilt.
-    const chip = viewChip.current;
-    const box = stage.current;
-    if (chip && box) {
-      const cover = openO > 0.8 ? tapes.current[openV]?.querySelector<HTMLElement>(".shelf-cover") : null;
-      if (cover) {
-        const c = cover.getBoundingClientRect();
-        const s0 = box.getBoundingClientRect();
-        const x = c.right - s0.left - chip.offsetWidth - c.width * 0.08;
-        const y = c.bottom - s0.top - chip.offsetHeight * 0.55;
-        chip.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
-        const fade = Math.max(0, Math.min(1, openO * 6 - 5));
-        chip.style.opacity = fade.toFixed(3);
-        chip.style.pointerEvents = fade > 0.6 ? "auto" : "none";
-      } else {
-        chip.style.opacity = "0";
-        chip.style.pointerEvents = "none";
-      }
     }
     const idx = ((Math.round(m.s) % g.n) + g.n) % g.n;
     if (idx !== shownIdx.current) {
@@ -798,18 +771,6 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
         <div className="shelf-post pointer-events-none absolute inset-y-0 left-0 z-[205]" style={{ width: CASE_POST }} aria-hidden="true" />
         <div className="shelf-post shelf-post-right pointer-events-none absolute inset-y-0 right-0 z-[205]" style={{ width: CASE_POST }} aria-hidden="true" />
         <div className="shelf-top pointer-events-none absolute inset-x-0 top-0 z-[210]" style={{ height: CASE_TOP }} aria-hidden="true" />
-        {book ? (
-          <Link
-            ref={viewChip}
-            to={href}
-            onPointerDown={(e) => e.stopPropagation()}
-            className="shelf-view group/view absolute left-0 top-0 z-[215]"
-            style={{ opacity: 0, pointerEvents: "none" }}
-            aria-label={`${h.viewBook}: ${shown0?.title ?? ""}`}
-          >
-            {h.viewShort}
-          </Link>
-        ) : null}
         {/* the board's front lip: always the nearest thing, so it is drawn flat on top at its projected place */}
         <div ref={lip} className="shelf-lip pointer-events-none absolute inset-x-0 z-[200]" style={{ top: lipTop, height: lipH }} aria-hidden="true" />
         <div ref={unit} className="absolute left-1/2 [transform-style:preserve-3d]" style={{ top: originY }} aria-hidden="true">
@@ -925,10 +886,7 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
             <ArrowLeft className="size-[18px]" aria-hidden="true" />
           </button>
           <div className="shelf-holder min-w-0 rounded-[9px] p-[5px]">
-            <div className="shelf-card flex min-h-20 min-w-0 flex-wrap items-center gap-x-3 gap-y-2 overflow-hidden rounded-[5px] px-3 py-2 lg:flex-nowrap">
-              {book?.cover_image_url ? (
-                <img key={`c-${shown0?.id}`} src={book.cover_image_url} alt="" aria-hidden="true" className="hidden h-15 w-10 shrink-0 rounded-[2px] object-cover shadow-[0_8px_14px_-8px_rgb(60_40_20/0.7)] sm:block" />
-              ) : null}
+            <div className="shelf-card flex min-h-20 min-w-0 flex-wrap items-center gap-x-4 gap-y-2 overflow-hidden rounded-[5px] px-4 py-2.5 sm:flex-nowrap">
               <div className="min-w-0 flex-1">
                 <div className="overflow-hidden">
                 <p key={`t-${shown0?.id}`} className={cn("shelf-roll line-clamp-2 font-display text-[clamp(1rem,1.4vw,1.25rem)] leading-snug text-[#1B1A2E]", dir < 0 && "shelf-roll-down")}>
@@ -941,7 +899,16 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
                 </p>
                 </div>
               </div>
-              {book ? <div className="w-full lg:w-auto"><StockNote key={`s-${shown0?.id}`} book={book} /></div> : null}
+              {book ? (
+                // Owner 2026-11-26: "View" lives on the label, next to the stock note, instead of over the cover art.
+                <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end sm:gap-4">
+                  <StockNote key={`s-${shown0?.id}`} book={book} />
+                  <Link to={href} className="shelf-view" aria-label={`${h.viewBook}: ${shown0?.title ?? ""}`}>
+                    {h.viewShort}
+                    <ArrowRight className="size-3.5" aria-hidden="true" />
+                  </Link>
+                </div>
+              ) : null}
             </div>
           </div>
           <button type="button" onClick={() => go(1)} aria-label={h.nextBook} className="shelf-knob lg:order-last">

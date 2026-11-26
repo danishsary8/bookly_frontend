@@ -1103,19 +1103,15 @@ html { scroll-padding-bottom: var(--bottom-bar, 0px); }
 /* "View" over the open book's cover: a small frosted pill at its top-right corner. ShelfHero places it each frame
    (transform) and fades it in as the cover faces you (opacity), so only colours animate here. */
 .shelf-view {
-  /* A cream bookplate tab (owner 2026-11-26): it hangs half off the cover's bottom edge, so the art stays clear, and
-     takes the shelf's paper, lapis and gold rather than a colour of its own. */
-  display: inline-flex; align-items: center; gap: .4rem; will-change: transform, opacity;
-  padding: .34rem .85rem .34rem .75rem; border-radius: 6px;
-  font-size: .76rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--primary); background: #FBF6EC;
-  border: 1px solid color-mix(in srgb, var(--gold) 70%, transparent);
-  box-shadow: inset 0 0 0 2px #FBF6EC, inset 0 0 0 3px color-mix(in srgb, var(--gold) 35%, transparent), 0 8px 18px -8px rgb(20 16 10 / 0.6);
-  transition: background-color .25s ease-out, color .25s ease-out, box-shadow .25s ease-out;
+  /* "View" on the paper label (owner 2026-11-26): a lapis outline pill in the label's own ink, filling on hover. */
+  display: inline-flex; flex-shrink: 0; align-items: center; gap: .35rem;
+  min-height: 2.25rem; padding: 0 .95rem; border-radius: 9999px;
+  font-size: .82rem; font-weight: 700; letter-spacing: .02em; white-space: nowrap;
+  color: var(--primary); background: transparent; border: 1.5px solid color-mix(in srgb, var(--primary) 55%, transparent);
+  transition: background-color .2s ease-out, color .2s ease-out, border-color .2s ease-out;
 }
-.shelf-view::before { content: ""; width: 5px; height: 5px; border-radius: 9999px; background: var(--gold); }
-.shelf-view:hover { background: var(--primary); color: #FBF6EC; box-shadow: inset 0 0 0 2px var(--primary), inset 0 0 0 3px color-mix(in srgb, var(--gold) 55%, transparent), 0 10px 22px -8px rgb(20 16 10 / 0.7); }
-.shelf-view:focus-visible { outline: 2px solid #fbf6ec; outline-offset: 2px; opacity: 1 !important; }
+.shelf-view:hover { background: var(--primary); color: #FBF6EC; border-color: var(--primary); }
+.shelf-view:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .dark .shelf-rail { background: repeating-linear-gradient(90deg, rgb(255 236 200 / 0.03) 0 1px, transparent 1px 7px, rgb(0 0 0 / 0.06) 7px 9px, transparent 9px 23px), linear-gradient(to bottom, #2c2017 0, #3f2e20 5px, #36281c 55%, #2a1e15 100%); }
 /* Home promises band: the bookplate's fine double gold frame, without corners (pages/home.md). */
 .promise-frame { border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent); outline: 1px solid color-mix(in srgb, var(--gold) 16%, transparent); outline-offset: -6px; }
