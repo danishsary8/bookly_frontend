@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { booksListSearch } from "@/features/admin/books/booksListMemory";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -68,7 +69,7 @@ function BackToBooks() {
   const toPortal = usePortalPath();
   return (
     <Link
-      to={toPortal("books")}
+      to={toPortal("books") + booksListSearch()}
       className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline"
     >
       <ArrowLeft className="size-4" aria-hidden="true" /> All books

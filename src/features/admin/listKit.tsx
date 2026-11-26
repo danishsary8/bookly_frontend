@@ -85,40 +85,22 @@ export function SearchBox({ label, value, onSearch, placeholder, className, busy
 /** A compact labelled dropdown for list filters; the label stays visible above the value. */
 type FilterOption = { value: string; label: string; indent?: boolean };
 
-/** Indented options belong to the plain option before them (a parent category and its sub-categories). */
-function groupOptions(options: FilterOption[]) {
-  const groups: Array<{ option: FilterOption; children: FilterOption[] }> = [];
-  for (const o of options) {
-    if (o.indent && groups.length) groups[groups.length - 1].children.push(o);
-    else groups.push({ option: o, children: [] });
-  }
-  return groups;
-}
-
-export function FilterSelect({ label, value, onChange, options, className }: { label: string; value: string; onChange: (v: string) => void; options: Array<{ value: string; label: string; indent?: boolean }>; className?: string }) {
+export function FilterSelect({ label, value, onChange, options, className }: { label: string; value: string; onChange: (v: string) => void; options: FilterOption[]; className?: string }) {
   const id = useId();
   const active = value !== "";
   return (
     <label htmlFor={id} className={cn("admin-filter relative grid min-w-0 cursor-pointer rounded-md border bg-card px-3 pb-1.5 pt-1 transition-colors", active ? "border-primary/60 bg-lapis-tint/40" : "border-input hover:border-primary/50", className)}>
       <span className="text-xs font-semibold text-muted-foreground">{label}</span>
       <select id={id} value={value} onChange={(event) => onChange(event.target.value)} className="min-w-0 cursor-pointer appearance-none truncate bg-transparent pr-6 text-[15px] font-semibold text-foreground outline-none">
-        {groupOptions(options).map((g) =>
-          g.children.length ? (
-            // A parent with sub-options: a bold group heading, then "All <parent>" (the parent itself) and its children.
-            <optgroup key={g.option.value} label={g.option.label}>
-              <option value={g.option.value}>All {g.option.label.toLowerCase()}</option>
-              {g.children.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </optgroup>
-          ) : (
-            <option key={g.option.value} value={g.option.value}>
-              {g.option.label}
+        {options.map((o, i) => {
+          // A parent category (followed by its sub-categories) is bold and can be picked itself; sub-categories are indented.
+          const parent = !o.indent && options[i + 1]?.indent === true;
+          return (
+            <option key={o.value} value={o.value} style={parent ? { fontWeight: 700 } : undefined}>
+              {o.indent ? `\u2003${o.label}` : o.label}
             </option>
-          ),
-        )}
+          );
+        })}
       </select>
       <ChevronDown className="pointer-events-none absolute bottom-2.5 right-2.5 size-4 text-muted-foreground" aria-hidden="true" />
     </label>

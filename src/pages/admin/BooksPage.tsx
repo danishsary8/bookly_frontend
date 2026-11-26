@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { BOOKS_LIST_KEY } from "@/features/admin/books/booksListMemory";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, BookCopy, BookPlus, Download, Eye, FileUp, Layers, Pencil, Sliders, X, BadgeDollarSign, Package } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, BookCopy, BookPlus, Download, Eye, FileUp, Layers, Pencil, X, BadgeDollarSign, Package } from "lucide-react";
 import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AdminFormDialogContent } from "@/features/admin/AdminFormDialog";
 import "@/features/admin/catalogue.css";
@@ -82,6 +83,14 @@ export default function BooksPage() {
   const isAdmin = staffSession?.user?.role === "admin";
 
   const [params, setParams] = useSearchParams();
+  // "← All books" on a book page comes back to this list as it was: same search, filters and page.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(BOOKS_LIST_KEY, params.toString());
+    } catch {
+      /* private mode */
+    }
+  }, [params]);
   const q = params.get("q") ?? "";
   const trashed = params.get("view") === "deleted";
   const statusParam = (params.get("status") as BookStatus | null) ?? undefined;
@@ -123,12 +132,18 @@ export default function BooksPage() {
   const list = books.data?.data ?? [];
 
   const go = (next: Record<string, string | undefined>) => {
-    const merged = new URLSearchParams(params);
-    for (const [k, v] of Object.entries(next)) {
-      if (v) merged.set(k, v);
-      else merged.delete(k);
-    }
-    setParams(merged, { replace: true });
+    // Built from the latest URL, so two quick filter changes never undo each other.
+    setParams(
+      () => {
+        const merged = new URLSearchParams(window.location.search);
+        for (const [k, v] of Object.entries(next)) {
+          if (v) merged.set(k, v);
+          else merged.delete(k);
+        }
+        return merged;
+      },
+      { replace: true },
+    );
     setSelectedIds([]);
     setAllMatching(false);
   };
@@ -331,11 +346,7 @@ export default function BooksPage() {
                 >
                   Status
                 </Button>
-                <Button type="button" size="sm" variant="outline" onClick={() => setBulkAction("variants")}>
-                  <Sliders className="mr-1.5 size-3.5" aria-hidden="true" />
-                  Stock & Formats
-                </Button>
-                {isAdmin ? (
+                    {isAdmin ? (
                   <Button type="button" size="sm" variant="outline" onClick={() => setBundleOpen(true)}>
                     <Package className="mr-1.5 size-3.5" aria-hidden="true" />
                     Add to bundle
