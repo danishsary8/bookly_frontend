@@ -1760,6 +1760,38 @@ export const en = {
     youSave: (amount: string) => `You save ${amount}`,
     getSet: "Add the full set",
     endsIn: (days: number) => (days <= 0 ? "Ends today" : days === 1 ? "Ends tomorrow" : `Ends in ${days} days`),
+    // Bundle offers (owner 2026-11-26): "any 5 for $20".
+    bundleBadge: (n: number, price: string) => `Any ${n} for ${price}`,
+    bundleBookLine: (n: number, price: string, label: string | null) =>
+      label
+        ? `Pick any ${n} books from ${label} for ${price}. Mix and match: they don't have to be the same book.`
+        : `Pick any ${n} books in this offer for ${price}. Mix and match: they don't have to be the same book.`,
+    bundleOfferLine: (n: number, price: string) => `Bundle: any ${n} for ${price}`,
+    bundleNudge: (add: number, n: number, price: string) => `Add ${add} more ${add === 1 ? "book" : "books"} from the bundle to get any ${n} for ${price}`,
+    bundleSeeBooks: "See all books in this bundle",
+    // "$ off" offers.
+    amountBadge: (n: number, amount: string) => (n <= 1 ? `Save ${amount}` : `Buy ${n}, save ${amount}`),
+    amountBookLine: (n: number, amount: string, label: string | null) =>
+      n <= 1
+        ? `Save ${amount} on this book.`
+        : label
+          ? `Buy any ${n} from ${label}, save ${amount}. Mix and match: they don't have to be the same book.`
+          : `Buy any ${n} or more books in this offer, save ${amount} on your order. Mix and match: they don't have to be the same book.`,
+    amountOfferLine: (n: number, amount: string) => (n <= 1 ? `Offer: save ${amount}` : `Offer: buy ${n}, save ${amount}`),
+    amountNudge: (add: number, amount: string, label: string | null) =>
+      `Add ${add} more ${add === 1 ? "book" : "books"}${label ? ` from ${label}` : " in this offer"} to save ${amount}`,
+    offerNamed: (name: string) => `Offer: ${name}`,
+    page: {
+      eyebrow: "Bundle offer",
+      title: (n: number, price: string) => `Any ${n} books for ${price}`,
+      lead: (n: number, price: string) =>
+        `Choose any ${n} of the books below and pay ${price} for all ${n}. Mix and match as you like: the price drops in your cart by itself.`,
+      steps: (n: number) => [`Add any ${n} books from this page`, "The bundle price shows in your cart", "More than one bundle? It repeats"],
+      leftover: "Books over a full bundle keep their normal price, and a bundle never makes a book cost more.",
+      what: "offer",
+      empty: "No books in this bundle right now",
+      emptyHint: "Please check back soon.",
+    },
   },
   rewards: {
     earns: (percent: string, cap: string | null) => `This order earns ${percent}% off your next order${cap ? ` (up to ${cap})` : ""}`,

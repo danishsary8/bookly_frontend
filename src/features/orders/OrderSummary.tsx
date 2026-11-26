@@ -64,7 +64,9 @@ export function OrderItemsCard({
           <div className="flex justify-between text-success">
             <dt>
               {order.offer?.min_quantity
-                ? dict.offers.offerLine(order.offer.min_quantity, percentLabel(order.offer.percent_off))
+                ? Number(order.offer.percent_off) > 0
+                  ? dict.offers.offerLine(order.offer.min_quantity, percentLabel(order.offer.percent_off))
+                  : dict.offers.offerNamed(order.offer.name ?? t.discount)
                 : `${t.discount}${order.coupon_code ? ` (${order.coupon_code})` : ""}`}
             </dt>
             <dd className="tabular-nums">−{formatUsd(order.discount_usd)}</dd>

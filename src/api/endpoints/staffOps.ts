@@ -101,7 +101,9 @@ export interface Offer {
   free_delivery?: boolean;
   id: number;
   name: string;
-  type: "buy_n_percent" | "buy_n_amount" | "gift";
+  type: "buy_n_percent" | "buy_n_amount" | "gift" | "bundle_price";
+  /** Bundle offers: the price of any `min_quantity` covered books together. */
+  bundle_price?: string | null;
   applies_to: "all" | "selected";
   min_quantity: number;
   percent_off: string;
@@ -115,7 +117,8 @@ export interface Offer {
   orders_count: number;
 }
 export type OfferInput = Partial<{
-  type: "buy_n_percent" | "buy_n_amount" | "gift";
+  type: "buy_n_percent" | "buy_n_amount" | "gift" | "bundle_price";
+  bundle_price: string | null;
   gift_id: number | null;
   gift_quantity: number;
   min_subtotal: string | null;

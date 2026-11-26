@@ -1,6 +1,6 @@
 import { useDeferredValue, useState, type FormEvent, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, DollarSign, Gift, Info, Percent, Search, Snail, Sparkles, Tag, TrendingDown, X } from "lucide-react";
+import { CheckCircle2, DollarSign, Gift, Layers, Info, Percent, Search, Snail, Sparkles, Tag, TrendingDown, X } from "lucide-react";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { staffApi } from "@/api/endpoints/staff";
 import { opsApi, type Offer, type OfferInput, type OfferTargetType } from "@/api/endpoints/staffOps";
@@ -51,7 +51,7 @@ const customerSentence = ({
   label,
   endsAt,
 }: {
-  type: "buy_n_percent" | "buy_n_amount" | "gift";
+  type: "buy_n_percent" | "buy_n_amount" | "gift" | "bundle_price";
   n: number;
   percent: string;
   amount: string;
@@ -59,6 +59,10 @@ const customerSentence = ({
   endsAt: string | null;
 }) => {
   const endsText = endsAt ? ` Ends ${orderDate(endsAt)}.` : "";
+  if (type === "bundle_price") {
+    const price = Number(amount) > 0 ? `$${Number(amount).toFixed(Number(amount) % 1 === 0 ? 0 : 2)}` : "$0";
+    return `${label ? `Pick any ${n} from ${label} for ${price}.` : `Pick any ${n} books in this offer for ${price}.`} Mix and match: they don't have to be the same book.${endsText}`;
+  }
   if (type === "buy_n_amount") {
     const formatted = Number(amount) > 0 ? `$${Number(amount).toFixed(2)}` : "$0.00";
     if (n === 1) {
@@ -313,11 +317,12 @@ function promoRows(
 }
 
 type Values = {
-  type: "buy_n_percent" | "buy_n_amount" | "gift";
+  type: "buy_n_percent" | "buy_n_amount" | "gift" | "bundle_price";
   gift_id: string;
   gift_quantity: string;
   min_subtotal: string;
   amount_off: string;
+  bundle_price: string;
   whole_series: boolean;
   free_delivery: boolean;
   name: string;
@@ -342,6 +347,7 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
     gift_quantity: String(offer?.gift_quantity ?? 1),
     min_subtotal: offer?.min_subtotal ?? "",
     amount_off: offer?.amount_off ? String(Number(offer.amount_off)) : "3.00",
+    bundle_price: offer?.bundle_price ? String(Number(offer.bundle_price)) : "20",
     whole_series: offer?.whole_series ?? false,
     free_delivery: offer?.free_delivery ?? false,
     name: offer?.name ?? "",
@@ -368,7 +374,7 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
     onError: (err) => {
       const apiError = ApiError.from(err);
       const next: Errors = {};
-      for (const f of ["name", "applies_to", "min_quantity", "percent_off", "amount_off", "starts_at", "ends_at", "max_orders", "targets", "gift_id", "gift_quantity", "min_subtotal", "type", "whole_series"] as const) {
+      for (const f of ["name", "applies_to", "min_quantity", "percent_off", "amount_off", "bundle_price", "starts_at", "ends_at", "max_orders", "targets", "gift_id", "gift_quantity", "min_subtotal", "type", "whole_series"] as const) {
         const m = apiError.field(f);
         if (m) next[f] = m;
       }
@@ -380,15 +386,21 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
   const n = Number(v.min_quantity);
   const percentOk = /^\d+(\.\d{1,2})?$/.test(v.percent_off.trim()) && Number(v.percent_off) > 0 && Number(v.percent_off) <= 50;
   const amountOk = /^\d+(\.\d{1,2})?$/.test(v.amount_off.trim()) && Number(v.amount_off) > 0 && Number(v.amount_off) <= 5000;
+  const bundleOk = /^\d+(\.\d{1,2})?$/.test(v.bundle_price.trim()) && Number(v.bundle_price) > 0 && Number(v.bundle_price) <= 5000;
+  const bundle = v.type === "bundle_price";
   const single = v.targets.length === 1 && v.targets[0].type !== "book" ? v.targets[0].label : null;
   const set_ = v.type === "buy_n_percent" && v.whole_series; // a set offer: every volume of the chosen series
   const previewOk =
     v.type === "gift"
       ? Boolean(v.gift_id)
-      : (set_ || (Number.isInteger(n) && n >= 1 && n <= 20)) &&
-        (v.type === "buy_n_amount" ? amountOk : percentOk);
+      : bundle
+        ? Number.isInteger(n) && n >= 2 && n <= 20 && bundleOk
+        : (set_ || (Number.isInteger(n) && n >= 1 && n <= 20)) &&
+          (v.type === "buy_n_amount" ? amountOk : percentOk);
 
+  const money = (x: string) => (Number(x) > 0 ? `$${Number(x).toFixed(Number(x) % 1 === 0 ? 0 : 2)}` : "$0");
   const badgeLabel = () => {
+    if (bundle) return `Any ${n} for ${money(v.bundle_price)}`;
     if (v.type === "buy_n_amount") {
       const amt = Number(v.amount_off) > 0 ? `$${Number(v.amount_off).toFixed(Number(v.amount_off) % 1 === 0 ? 0 : 2)}` : "$0";
       return n === 1 ? `Save ${amt}` : `Buy ${n}, save ${amt}`;
@@ -404,9 +416,12 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
     event.preventDefault();
     const e: Errors = {};
     if (!v.name.trim()) e.name = "Give the offer a name (only staff see it).";
-    if (!set_ && !(Number.isInteger(n) && n >= 1 && n <= 20)) {
+    if (bundle && !(Number.isInteger(n) && n >= 2 && n <= 20)) {
+      e.min_quantity = "A bundle has 2 to 20 books.";
+    } else if (!set_ && !(Number.isInteger(n) && n >= 1 && n <= 20)) {
       e.min_quantity = "Enter a whole number from 1 to 20.";
     }
+    if (bundle && !bundleOk) e.bundle_price = "Enter the bundle price above $0, like 20 or 19.90.";
     if (v.type === "buy_n_percent" && !percentOk) {
       e.percent_off = "Enter a percent above 0 and at most 50, like 10 or 15.";
     }
@@ -424,10 +439,11 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
       name: v.name.trim(),
       applies_to: v.applies_to,
       ...(set_ ? {} : { min_quantity: n }),
-      whole_series: v.whole_series,
+      whole_series: bundle ? false : v.whole_series,
       free_delivery: v.free_delivery,
       percent_off: v.type === "buy_n_percent" ? v.percent_off.trim() : "0.00",
       ...(v.type === "buy_n_amount" ? { type: "buy_n_amount" as const, amount_off: v.amount_off.trim() } : {}),
+      ...(bundle ? { type: "bundle_price" as const, bundle_price: v.bundle_price.trim() } : {}),
       ...(v.type === "gift" ? { type: "gift" as const, gift_id: Number(v.gift_id), gift_quantity: Number(v.gift_quantity), min_subtotal: v.min_subtotal || null } : {}),
       starts_at: v.starts_at ? new Date(v.starts_at).toISOString() : null,
       ends_at: v.ends_at ? new Date(v.ends_at).toISOString() : null,
@@ -482,6 +498,21 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
             <button
               type="button"
               onClick={() => set({
+                type: "bundle_price",
+                min_quantity: "5",
+                bundle_price: "20",
+                whole_series: false,
+                name: "Any 5 books for $20",
+                applies_to: "selected",
+              })}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:border-accent hover:text-accent-text transition-colors shadow-2xs"
+            >
+              <Layers className="size-3 text-primary" />
+              Book bundle (Any 5 for $20)
+            </button>
+            <button
+              type="button"
+              onClick={() => set({
                 type: "buy_n_percent",
                 min_quantity: "3",
                 percent_off: "20",
@@ -502,14 +533,15 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
             <SelectField
               label={t.offerType}
               value={v.type}
-              onChange={(e) => set({ type: e.target.value as "buy_n_percent" | "buy_n_amount" | "gift" })}
+              onChange={(e) => set({ type: e.target.value as "buy_n_percent" | "buy_n_amount" | "gift" | "bundle_price" })}
             >
               <option value="buy_n_percent">{t.percentType}</option>
               <option value="buy_n_amount">{t.amountType}</option>
+              <option value="bundle_price">Bundle price</option>
               <option value="gift">{t.giftType}</option>
             </SelectField>
 
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 2xl:grid-cols-4">
               <button
                 type="button"
                 onClick={() => set({ type: "buy_n_percent" })}
@@ -550,6 +582,25 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
 
               <button
                 type="button"
+                onClick={() => set({ type: "bundle_price", whole_series: false, ...(Number(v.min_quantity) < 2 ? { min_quantity: "5" } : {}) })}
+                className={cn(
+                  "flex items-start gap-3 rounded-xl border p-3 text-left transition-all",
+                  bundle
+                    ? "border-accent bg-accent/[0.08] ring-2 ring-accent/30 shadow-2xs"
+                    : "border-border bg-card hover:bg-surface-2/60"
+                )}
+              >
+                <div className={cn("grid size-8 shrink-0 place-items-center rounded-lg", bundle ? "bg-accent text-accent-foreground" : "bg-surface-2 text-muted-foreground")}>
+                  <Layers className="size-4" />
+                </div>
+                <div className="grid gap-0.5 min-w-0">
+                  <span className="text-sm font-semibold text-foreground">Bundle price</span>
+                  <span className="text-xs text-muted-foreground">Any 5 for $20</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => set({ type: "gift" })}
                 className={cn(
                   "flex items-start gap-3 rounded-xl border p-3 text-left transition-all",
@@ -574,12 +625,12 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {set_ ? null : (
               <TextField
-                label="Buy at least (books)"
+                label={bundle ? "Books in the bundle" : "Buy at least (books)"}
                 inputMode="numeric"
                 value={v.min_quantity}
                 onChange={(e) => set({ min_quantity: e.target.value })}
                 error={errors.min_quantity}
-                hint={v.min_quantity === "1" ? "1 book (Single-book clearance deal)" : "1 to 20 books (enter 1 to discount single books)"}
+                hint={bundle ? "2 to 20. Customers pick any of the chosen books." : v.min_quantity === "1" ? "1 book (Single-book clearance deal)" : "1 to 20 books (enter 1 to discount single books)"}
               />
             )}
             {v.type === "buy_n_percent" ? (
@@ -590,6 +641,15 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
                 onChange={(e) => set({ percent_off: e.target.value })}
                 error={errors.percent_off}
                 hint="Up to 50%"
+              />
+            ) : bundle ? (
+              <TextField
+                label="Bundle price ($)"
+                inputMode="decimal"
+                value={v.bundle_price}
+                onChange={(e) => set({ bundle_price: e.target.value })}
+                error={errors.bundle_price}
+                hint={`What ${Number.isInteger(n) && n >= 2 ? n : "the"} books cost together. A bundle never raises a price.`}
               />
             ) : v.type === "buy_n_amount" ? (
               <TextField
@@ -692,7 +752,7 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
                           type: v.type,
                           n,
                           percent: pct(v.percent_off),
-                          amount: v.amount_off,
+                          amount: bundle ? v.bundle_price : v.amount_off,
                           label: v.applies_to === "selected" ? single : null,
                           endsAt: v.ends_at ? new Date(v.ends_at).toISOString() : null,
                         })}
@@ -705,12 +765,16 @@ export function OfferForm({ offer, onClose }: { offer: Offer | null; onClose: ()
               <div className="rounded-xl border border-border/70 bg-surface-2/60 p-3 text-xs">
                 <div className="flex items-center justify-between text-muted-foreground pb-1 border-b border-border/40">
                   <span>Cart example</span>
-                  <span className="font-mono">{n === 1 ? "1 book ($15.00)" : `${n} books ($15.00 each)`}</span>
+                  <span className="font-mono">{n === 1 ? "1 book ($15.00)" : `${n} books ($${bundle ? "6.00" : "15.00"} each)`}</span>
                 </div>
                 <div className="flex items-center justify-between pt-1.5 font-medium">
                   <span className="text-muted-foreground">Discount applied:</span>
                   <span className="font-bold text-accent-text tabular-nums">
-                    {v.type === "buy_n_amount"
+                    {bundle
+                      ? Number(v.bundle_price) < 6 * n
+                        ? `$${(6 * n).toFixed(2)} → $${Number(v.bundle_price).toFixed(2)} (−$${(6 * n - Number(v.bundle_price)).toFixed(2)})`
+                        : "None: the books already cost less"
+                      : v.type === "buy_n_amount"
                       ? `−$${Number(v.amount_off || 0).toFixed(2)}`
                       : `−$${((15 * n * Number(v.percent_off || 0)) / 100).toFixed(2)} (${pct(v.percent_off)}%)`}
                   </span>

@@ -48,6 +48,8 @@ export interface BookFilters {
   page?: number;
   per_page?: number;
   ids?: string;
+  /** Books a live automatic offer covers (its shop page). */
+  offer_id?: number;
 }
 
 /** Drops empty values and turns booleans into 1, as the API expects. */

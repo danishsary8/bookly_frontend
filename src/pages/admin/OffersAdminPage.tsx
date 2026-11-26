@@ -152,6 +152,8 @@ export default function OffersAdminPage() {
                         <span className="mt-0.5 block text-sm font-normal text-muted-foreground">
                           {o.type === "gift"
                             ? dict.shopExtras.giftType
+                            : o.type === "bundle_price"
+                            ? `Any ${o.min_quantity} for $${Number(o.bundle_price || 0).toFixed(2)}`
                             : o.type === "buy_n_amount"
                               ? o.min_quantity === 1
                                 ? `Save $${Number(o.amount_off || 0).toFixed(2)}`
@@ -212,6 +214,8 @@ export default function OffersAdminPage() {
           turningOn
             ? turningOn.type === "gift"
               ? dict.shopExtras.giftType
+              : turningOn.type === "bundle_price"
+              ? `Customers can pick any ${turningOn.min_quantity} books from ${coverage(turningOn).toLowerCase() === "all books" ? "the whole shop" : coverage(turningOn)} for $${Number(turningOn.bundle_price || 0).toFixed(2)}, starting now${turningOn.starts_at && new Date(turningOn.starts_at) > new Date() ? ` (from ${orderDate(turningOn.starts_at)})` : ""}.`
               : turningOn.type === "buy_n_amount"
                 ? `Customers buying ${turningOn.min_quantity === 1 ? "1 book" : `${turningOn.min_quantity} or more books`} from ${coverage(turningOn).toLowerCase() === "all books" ? "any books" : coverage(turningOn)} get $${Number(turningOn.amount_off || 0).toFixed(2)} off, starting now${turningOn.starts_at && new Date(turningOn.starts_at) > new Date() ? ` (from ${orderDate(turningOn.starts_at)})` : ""}.`
                 : `Customers buying ${turningOn.min_quantity} or more books from ${coverage(turningOn).toLowerCase() === "all books" ? "any books" : coverage(turningOn)} get ${pct(turningOn.percent_off)}% off each, starting now${turningOn.starts_at && new Date(turningOn.starts_at) > new Date() ? ` (from ${orderDate(turningOn.starts_at)})` : ""}.`

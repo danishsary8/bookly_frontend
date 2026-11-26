@@ -1763,6 +1763,38 @@ export const km: Translations = {
     youSave: (amount: string) => `អ្នកសន្សំបាន ${amount}`,
     getSet: "បន្ថែមមួយឈុតពេញ",
     endsIn: (days: number) => (days <= 0 ? "ផុតកំណត់ថ្ងៃនេះ" : days === 1 ? "ផុតកំណត់ថ្ងៃស្អែក" : `ផុតកំណត់ក្នុង ${days} ថ្ងៃ`),
+    // Bundle offers (owner 2026-11-26): "any 5 for $20".
+    bundleBadge: (n: number, price: string) => `${n} ក្បាលណាក៏បាន ${price}`,
+    bundleBookLine: (n: number, price: string, label: string | null) =>
+      label
+        ? `ជ្រើសសៀវភៅ ${n} ក្បាលណាក៏បានពី ${label} ក្នុងតម្លៃ ${price}។ អាចលាយគ្នាបាន៖ មិនចាំបាច់ជាសៀវភៅដូចគ្នាទេ។`
+        : `ជ្រើសសៀវភៅ ${n} ក្បាលណាក៏បានក្នុងការផ្តល់ជូននេះ ក្នុងតម្លៃ ${price}។ អាចលាយគ្នាបាន៖ មិនចាំបាច់ជាសៀវភៅដូចគ្នាទេ។`,
+    bundleOfferLine: (n: number, price: string) => `កញ្ចប់៖ ${n} ក្បាល ${price}`,
+    bundleNudge: (add: number, n: number, price: string) => `បន្ថែម ${add} ក្បាលទៀតពីកញ្ចប់នេះ ដើម្បីបាន ${n} ក្បាលក្នុងតម្លៃ ${price}`,
+    bundleSeeBooks: "មើលសៀវភៅទាំងអស់ក្នុងកញ្ចប់នេះ",
+    // "$ off" offers.
+    amountBadge: (n: number, amount: string) => (n <= 1 ? `សន្សំ ${amount}` : `ទិញ ${n} សន្សំ ${amount}`),
+    amountBookLine: (n: number, amount: string, label: string | null) =>
+      n <= 1
+        ? `សន្សំ ${amount} លើសៀវភៅនេះ។`
+        : label
+          ? `ទិញ ${n} ក្បាលណាក៏បានពី ${label} សន្សំ ${amount}។ អាចលាយគ្នាបាន៖ មិនចាំបាច់ជាសៀវភៅដូចគ្នាទេ។`
+          : `ទិញចាប់ពី ${n} ក្បាលណាក៏បានក្នុងការផ្តល់ជូននេះ សន្សំ ${amount} លើការបញ្ជាទិញ។ អាចលាយគ្នាបាន៖ មិនចាំបាច់ជាសៀវភៅដូចគ្នាទេ។`,
+    amountOfferLine: (n: number, amount: string) => (n <= 1 ? `ការផ្តល់ជូន៖ សន្សំ ${amount}` : `ការផ្តល់ជូន៖ ទិញ ${n} សន្សំ ${amount}`),
+    amountNudge: (add: number, amount: string, label: string | null) =>
+      `បន្ថែម ${add} ក្បាលទៀត${label ? `ពី ${label}` : "ក្នុងការផ្តល់ជូននេះ"} ដើម្បីសន្សំ ${amount}`,
+    offerNamed: (name: string) => `ការផ្តល់ជូន៖ ${name}`,
+    page: {
+      eyebrow: "ការផ្តល់ជូនជាកញ្ចប់",
+      title: (n: number, price: string) => `សៀវភៅ ${n} ក្បាលណាក៏បាន ${price}`,
+      lead: (n: number, price: string) =>
+        `ជ្រើសសៀវភៅ ${n} ក្បាលណាក៏បានខាងក្រោម ហើយបង់ ${price} សម្រាប់ទាំង ${n} ក្បាល។ លាយគ្នាតាមចិត្ត៖ តម្លៃនឹងចុះដោយស្វ័យប្រវត្តិក្នុងរទេះ។`,
+      steps: (n: number) => [`បន្ថែមសៀវភៅ ${n} ក្បាលណាក៏បានពីទំព័រនេះ`, "តម្លៃកញ្ចប់បង្ហាញក្នុងរទេះ", "ច្រើនជាងមួយកញ្ចប់? វាគិតម្តងទៀត"],
+      leftover: "សៀវភៅលើសពីកញ្ចប់ពេញ នៅតម្លៃធម្មតា ហើយកញ្ចប់មិនដែលធ្វើឱ្យសៀវភៅថ្លៃជាងមុនទេ។",
+      what: "ការផ្តល់ជូន",
+      empty: "មិនទាន់មានសៀវភៅក្នុងកញ្ចប់នេះទេ",
+      emptyHint: "សូមពិនិត្យមើលម្តងទៀតឆាប់ៗនេះ។",
+    },
   },
   rewards: {
     earns: (percent: string, cap: string | null) => `ការបញ្ជាទិញនេះទទួលបានការបញ្ចុះ ${percent}% សម្រាប់ការបញ្ជាទិញលើកក្រោយ${cap ? ` (រហូតដល់ ${cap})` : ""}`,
