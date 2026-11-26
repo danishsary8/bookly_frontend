@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Popover } from "radix-ui";
-import { ArrowRight, ChevronDown, Layers, Library, Star } from "lucide-react";
+import { ArrowRight, ChevronDown, Layers, Library, PenLine, Star } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { catalogQueries } from "@/api/endpoints/catalog";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,11 @@ export function BrowseMenu({ className }: { className?: string }) {
   // If categories cannot load (or there are none), the panel shows just the quick links.
   const showCategories = !tree.isError && (tree.isLoading || top.length > 0);
   const newest = ["newest", "best_selling"].includes(new URLSearchParams(location.search).get("sort") ?? "");
-  const active = (location.pathname.startsWith("/books") && !newest) || location.pathname.startsWith("/categories") || location.pathname.startsWith("/series");
+  const isKhmerNav = location.pathname === "/categories/khmer-books" || location.pathname.startsWith("/categories/khmer-books/");
+  const active =
+    (location.pathname.startsWith("/books") && !newest) ||
+    (location.pathname.startsWith("/categories") && !isKhmerNav) ||
+    location.pathname.startsWith("/series");
 
   const hover = (next: boolean) => (event: React.PointerEvent) => {
     if (event.pointerType !== "mouse") return;
@@ -34,6 +38,7 @@ export function BrowseMenu({ className }: { className?: string }) {
     { to: "/books", label: dict.navLinks.allBooks, Icon: Library },
     { to: "/books?sort=rating", label: dict.navLinks.bestRated, Icon: Star },
     { to: "/series", label: dict.navLinks.series, Icon: Layers },
+    { to: "/authors", label: dict.navLinks.authors, Icon: PenLine },
   ];
 
   return (

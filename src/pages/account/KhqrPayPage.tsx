@@ -10,7 +10,7 @@ import { ApiError } from "@/api/errors";
 import { EmptyState } from "@/components/EmptyState";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { Seal } from "@/components/shopping/Seal";
 import { BuyAgainButton } from "@/features/orders/BuyAgainButton";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -144,10 +144,25 @@ export default function KhqrPayPage() {
   if (payment.isError) return <ErrorState error={payment.error} onRetry={() => void payment.refetch()} />;
   if (!data) {
     return (
-      <div className="mx-auto grid w-full max-w-sm gap-4" aria-busy="true">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="aspect-[3/4] w-full rounded-2xl" />
-      </div>
+      <SkeletonGroup label={dict.common.loading} className="account-pane-body">
+        <div className="mx-auto grid w-full max-w-3xl gap-6 rounded-3xl border border-border bg-card p-6 sm:grid-cols-2 sm:items-center sm:p-8">
+          <div className="mx-auto grid w-full max-w-[270px] gap-4 rounded-2xl border border-border p-4">
+            <Skeleton className="h-7 w-28 rounded-md" />
+            <Skeleton className="aspect-square w-full rounded-xl" />
+            <Skeleton className="h-4 w-3/4 mx-auto rounded-full" />
+          </div>
+          <div className="grid gap-4">
+            <Skeleton className="h-4 w-28 rounded-full" />
+            <Skeleton className="h-9 w-40 rounded-lg" />
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-24 rounded-full" />
+              <Skeleton className="h-10 w-24 rounded-full" />
+            </div>
+            <Skeleton className="h-16 w-full rounded-xl" />
+            <Skeleton className="h-11 w-full rounded-xl" />
+          </div>
+        </div>
+      </SkeletonGroup>
     );
   }
 
@@ -280,9 +295,12 @@ export default function KhqrPayPage() {
               </p>
             </div>
           </div>
-          <p role="status" className="flex items-center gap-2 border-t border-border pt-4 text-sm text-muted-foreground sm:col-span-2">
-            <Loader2 className="size-4 animate-spin text-primary motion-reduce:animate-none" aria-hidden="true" /> {t.waiting}
-          </p>
+          <div role="status" className="grid gap-1 border-t border-border pt-4 text-sm text-muted-foreground sm:col-span-2">
+            <p className="flex items-center gap-2">
+              <Loader2 className="size-4 shrink-0 animate-spin text-primary motion-reduce:animate-none" aria-hidden="true" /> {t.waiting}
+            </p>
+            <p className="text-xs leading-relaxed text-muted-foreground">{t.autoCancelNotice}</p>
+          </div>
         </div>
 
         <section aria-labelledby="how-to-pay" className="grid gap-3">

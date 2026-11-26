@@ -248,10 +248,29 @@ export function AssistantPanel({ staff = false, onHandoff }: { staff?: boolean; 
   const t = dict.assistant;
   const portal = usePortal();
   const inputId = useId();
+  const storageKey = `bookly.assistant.turns.${staff ? "staff" : "customer"}`;
   const [question, setQuestion] = useState("");
-  const [turns, setTurns] = useState<Turn[]>([]);
+  const [turns, setTurns] = useState<Turn[]>(() => {
+    try {
+      const raw = sessionStorage.getItem(storageKey);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? (parsed as Turn[]).slice(-20) : [];
+    } catch {
+      return [];
+    }
+  });
   const [pendingQuestion, setPendingQuestion] = useState("");
   const feedRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      if (turns.length === 0) sessionStorage.removeItem(storageKey);
+      else sessionStorage.setItem(storageKey, JSON.stringify(turns.slice(-20)));
+    } catch {
+      /* Storage can be unavailable in private browsing. */
+    }
+  }, [storageKey, turns]);
 
   const ask = useMutation({
     mutationFn: async (value: string) => {
@@ -267,12 +286,11 @@ export function AssistantPanel({ staff = false, onHandoff }: { staff?: boolean; 
     },
   });
 
-  const submit = (value: string, clearInput = false) => {
+  const submit = (value: string) => {
     const trimmed = value.trim();
     if (!trimmed || ask.isPending) return;
     setPendingQuestion(trimmed);
-    if (clearInput) setQuestion("");
-    else setQuestion(trimmed);
+    setQuestion("");
     ask.mutate(trimmed);
   };
 
@@ -299,7 +317,7 @@ export function AssistantPanel({ staff = false, onHandoff }: { staff?: boolean; 
       {/* Scrollable conversational chat feed */}
       <div
         ref={feedRef}
-        className="grid max-h-[345px] min-h-[225px] flex-1 content-start gap-3.5 overflow-y-auto rounded-xl border border-border/80 bg-surface-2/35 p-3.5"
+        className="grid min-h-0 flex-1 content-start gap-3.5 overflow-y-auto rounded-xl border border-border/80 bg-surface-2/35 p-3.5"
       >
         {/* Welcome Bot Card + Categorized Quick Topics */}
         <div className="flex items-start gap-2.5">
@@ -317,8 +335,8 @@ export function AssistantPanel({ staff = false, onHandoff }: { staff?: boolean; 
                       type="button"
                       key={chip}
                       disabled={ask.isPending}
-                      onClick={() => submit(chip, false)}
-                      className="inline-flex min-h-7 items-center gap-1.5 rounded-full border border-primary/25 bg-lapis-tint/45 px-2.5 py-1 text-left text-xs font-medium text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+                      onClick={() => submit(chip)}
+                      className="inline-flex min-h-7 cursor-pointer items-center gap-1.5 rounded-full border border-primary/25 bg-lapis-tint/45 px-2.5 py-1 text-left text-xs font-medium text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
                     >
                       <Sparkles className="size-3 shrink-0 opacity-75" aria-hidden="true" />
                       <span>{chip}</span>
@@ -329,8 +347,8 @@ export function AssistantPanel({ staff = false, onHandoff }: { staff?: boolean; 
                       type="button"
                       key={label}
                       disabled={ask.isPending}
-                      onClick={() => submit(label, false)}
-                      className="inline-flex min-h-7 items-center gap-1.5 rounded-full border border-primary/25 bg-lapis-tint/45 px-2.5 py-1 text-left text-xs font-medium text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+                      onClick={() => submit(label)}
+                      className="inline-flex min-h-7 cursor-pointer items-center gap-1.5 rounded-full border border-primary/25 bg-lapis-tint/45 px-2.5 py-1 text-left text-xs font-medium text-primary transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
                     >
                       <Icon className="size-3 shrink-0 opacity-80" aria-hidden="true" />
                       <span>{label}</span>
@@ -391,8 +409,8 @@ export function AssistantPanel({ staff = false, onHandoff }: { staff?: boolean; 
                             key={followUp}
                             type="button"
                             disabled={ask.isPending}
-                            onClick={() => submit(followUp, false)}
-                            className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-2/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-lapis-tint/40 hover:text-primary"
+                            onClick={() => submit(followUp)}
+                            className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border bg-surface-2/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-lapis-tint/40 hover:text-primary"
                           >
                             <HelpCircle className="size-3 shrink-0 opacity-70" aria-hidden="true" />
                             <span>{followUp}</span>
@@ -446,10 +464,10 @@ export function AssistantPanel({ staff = false, onHandoff }: { staff?: boolean; 
 
       {/* Compact pinned bottom composer */}
       <form
-        className="grid gap-1.5"
+        className="grid shrink-0 gap-1.5"
         onSubmit={(event) => {
           event.preventDefault();
-          submit(question, true);
+          submit(question);
         }}
       >
         <div className="flex items-center justify-between">
@@ -460,7 +478,7 @@ export function AssistantPanel({ staff = false, onHandoff }: { staff?: boolean; 
             <button
               type="button"
               onClick={() => setTurns([])}
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+              className="inline-flex cursor-pointer items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
             >
               <RotateCcw className="size-3" aria-hidden="true" />
               {t.clearChat}
@@ -477,7 +495,7 @@ export function AssistantPanel({ staff = false, onHandoff }: { staff?: boolean; 
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
-                if (question.trim()) submit(question, true);
+                if (question.trim()) submit(question);
               }
             }}
             maxLength={300}

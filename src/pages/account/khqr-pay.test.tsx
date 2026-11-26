@@ -79,8 +79,10 @@ afterEach(() => {
 
 describe("checkout payment choice", () => {
   it("keeps KHQR as coming soon when the API does not offer it", async () => {
+    const user = userEvent.setup();
     vi.spyOn(deliveryApi, "options").mockResolvedValue(options(false));
     app("/checkout");
+    await user.click((await screen.findAllByRole("button", { name: "Continue to payment" }))[0]);
     const khqr = await screen.findByRole("radio", { name: /Bakong KHQR/ });
     expect(khqr).toBeDisabled();
     expect(screen.getByRole("radio", { name: /Cash on delivery/ })).toBeChecked();
@@ -92,13 +94,28 @@ describe("checkout payment choice", () => {
     vi.spyOn(paymentsApi, "khqr").mockResolvedValue(waiting);
     const place = vi.spyOn(cartApi, "placeOrder").mockResolvedValue(order);
     app("/checkout");
+    await user.click((await screen.findAllByRole("button", { name: "Continue to payment" }))[0]);
     const khqr = await screen.findByRole("radio", { name: /Bakong KHQR.*15 minutes.*Test mode/ });
     await waitFor(() => expect(khqr).toBeEnabled());
     await user.click(khqr);
+    await user.click(screen.getAllByRole("button", { name: "Review order" })[0]);
     await user.click(screen.getAllByRole("button", { name: "Place order and pay" })[0]);
+    await screen.findByRole("alertdialog");
+    await user.click(screen.getByRole("button", { name: "Confirm" }));
     await waitFor(() => expect(place).toHaveBeenCalled());
     expect(place.mock.calls[0][0]).toMatchObject({ payment_method: "khqr", address_id: 11 });
     await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/account/orders/42/pay"));
+  });
+
+  it("reminds the customer on OrderDetailPage that unpaid KHQR orders auto-cancel in 15 minutes", async () => {
+    vi.spyOn(ordersApi, "order").mockResolvedValue({
+      ...order,
+      status_history: [{ status: "pending", note: "Order placed.", created_at: "2026-11-02T10:00:00Z" }],
+    });
+    app("/account/orders/42");
+    expect(await screen.findByText("Payment required within 15 minutes")).toBeInTheDocument();
+    expect(screen.getByText("Awaiting KHQR payment")).toBeInTheDocument();
+    expect(screen.queryByText("Pay the courier on delivery")).not.toBeInTheDocument();
   });
 });
 

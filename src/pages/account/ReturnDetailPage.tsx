@@ -58,9 +58,30 @@ export default function ReturnDetailPage() {
   if (request.isError) return <ErrorState error={request.error} onRetry={() => request.refetch()} headingLevel="h1" showHomeLink={false} />;
   if (!request.data) {
     return (
-      <SkeletonGroup label={t.loadingOne} className="grid gap-4">
-        <Skeleton className="h-12 w-1/2" />
-        <Skeleton className="h-48 rounded-xl" />
+      <SkeletonGroup label={t.loadingOne} className="account-pane-body">
+        <Skeleton className="h-4 w-28 rounded-full" />
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border/70 pb-5">
+          <div className="grid gap-2">
+            <Skeleton className="h-9 w-48 rounded-lg" />
+            <div className="flex items-center gap-2.5">
+              <Skeleton className="h-6 w-24 rounded-full" />
+              <Skeleton className="h-4 w-44 rounded-full" />
+            </div>
+          </div>
+          <Skeleton className="h-10 w-32 rounded-lg" />
+        </div>
+        <div className="grid gap-3 rounded-2xl border border-border bg-card p-5">
+          <Skeleton className="h-4 w-32 rounded-md" />
+          <Skeleton className="h-4 w-full rounded-full" />
+          <Skeleton className="h-4 w-2/3 rounded-full" />
+        </div>
+        <div className="grid gap-3 rounded-2xl border border-border bg-card p-5">
+          <Skeleton className="h-5 w-36 rounded-md" />
+          <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3">
+            <Skeleton className="h-4 w-1/2 rounded-md" />
+            <Skeleton className="h-4 w-16 rounded-md" />
+          </div>
+        </div>
       </SkeletonGroup>
     );
   }

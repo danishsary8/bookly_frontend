@@ -85,9 +85,16 @@ export default function AuthorsPage() {
         <ErrorState error={authors.error} onRetry={() => authors.refetch()} />
       ) : authors.isPending ? (
         showSkeleton ? (
-          <SkeletonGroup label={p.loadingAuthors} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <SkeletonGroup label={p.loadingAuthors} className="grid gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             {Array.from({ length: 6 }, (_, i) => (
-              <Skeleton key={i} className="h-32 rounded-2xl" />
+              <div key={i} className="flex items-center gap-3.5 rounded-2xl border border-border bg-card px-4 py-3 sm:items-start sm:gap-4 sm:p-5">
+                <Skeleton className="size-12 shrink-0 rounded-full sm:size-16" />
+                <div className="grid min-w-0 flex-1 gap-2">
+                  <Skeleton className="h-5 w-3/4 rounded-md" />
+                  <Skeleton className="h-3 w-20 rounded-full" />
+                  <Skeleton className="hidden h-3.5 w-full rounded-full sm:block" />
+                </div>
+              </div>
             ))}
           </SkeletonGroup>
         ) : null

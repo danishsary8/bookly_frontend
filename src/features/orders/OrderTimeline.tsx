@@ -57,11 +57,13 @@ export function OrderTimeline({
   history,
   status,
   paymentMethod,
+  paymentStatus,
   estimatedDelivery,
 }: {
   history: History;
   status?: OrderStatus;
   paymentMethod?: Order["payment_method"];
+  paymentStatus?: Order["payment_status"];
   estimatedDelivery?: Order["estimated_delivery"];
 }) {
   const { dict, lang, locale } = useT();
@@ -94,6 +96,9 @@ export function OrderTimeline({
   const activeIndex = currentStatus ? stepKeys.indexOf(currentStatus as StepKey) : -1;
   const progressPercent = activeIndex > 0 && stepKeys.length > 1 ? (activeIndex / (stepKeys.length - 1)) * 100 : 0;
   const headlineMeta = currentStatus ? HEADLINE_BY_STATUS[currentStatus] : undefined;
+  const awaitingKhqrPayment = currentStatus === "pending" && paymentMethod === "khqr" && paymentStatus !== "succeeded";
+  const headlineTitle = awaitingKhqrPayment ? t.headlinePendingKhqr : headlineMeta ? t[headlineMeta.title] : null;
+  const headlineSub = awaitingKhqrPayment ? t.subPendingKhqr : headlineMeta ? t[headlineMeta.sub] : null;
   const estimateText =
     estimatedDelivery?.formatted ??
     (lang === "km" ? estimatedDelivery?.delivery_time_km : estimatedDelivery?.delivery_time_en) ??
@@ -112,12 +117,12 @@ export function OrderTimeline({
           <h2 id="order-timeline" className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
             {t.timeline}
           </h2>
-          {headlineMeta ? (
+          {headlineMeta && headlineTitle ? (
             <>
               <p className={cn("font-display text-[1.65rem] leading-tight sm:text-[1.85rem]", headlineMeta.tone)}>
-                {t[headlineMeta.title]}
+                {headlineTitle}
               </p>
-              <p className="text-sm text-muted-foreground">{t[headlineMeta.sub]}</p>
+              <p className="text-sm text-muted-foreground">{headlineSub}</p>
             </>
           ) : null}
         </div>

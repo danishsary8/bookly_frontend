@@ -89,6 +89,67 @@ const hashOf = (id: string) => {
   return (h ^ (h >>> 16)) >>> 0;
 };
 
+/** True when a book belongs to the Khmer shelf or carries a Khmer-script title. */
+const KHMER_SCRIPT_RE = /[\u1780-\u17FF]/;
+const isKhmerSpine = (row: RowId | "loading", item: ShelfItem) =>
+  row === "khmer" || KHMER_SCRIPT_RE.test(item.title) || item.book?.language?.toLowerCase() === "khmer";
+
+/** Artisanal gold-tooled Khmer heritage spine ornament (replaces cramped vertical Khmer text). */
+function KhmerSpineArt({ binding }: { binding: Binding }) {
+  if (binding === "label") {
+    // Royal framed cartouche with a centered Romduol / lotus diamond rosette
+    return (
+      <span className="shelf-khmer-cartouche" aria-hidden="true">
+        <svg viewBox="0 0 28 112" fill="none" className="shelf-khmer-svg">
+          <path d="M5 10 L14 4 L23 10" stroke="currentColor" strokeWidth="1" opacity="0.7" />
+          <path d="M5 102 L14 108 L23 102" stroke="currentColor" strokeWidth="1" opacity="0.7" />
+          <line x1="14" y1="14" x2="14" y2="38" stroke="currentColor" strokeWidth="0.9" opacity="0.55" />
+          <line x1="14" y1="74" x2="14" y2="98" stroke="currentColor" strokeWidth="0.9" opacity="0.55" />
+          <circle cx="14" cy="24" r="1.4" fill="currentColor" opacity="0.75" />
+          <circle cx="14" cy="88" r="1.4" fill="currentColor" opacity="0.75" />
+          <path d="M14 40 L22 56 L14 72 L6 56 Z" stroke="currentColor" strokeWidth="1.2" opacity="0.95" />
+          <path d="M14 45.5 L18.8 56 L14 66.5 L9.2 56 Z" stroke="currentColor" strokeWidth="0.85" opacity="0.65" />
+          <path d="M14 51 L16.4 56 L14 61 L11.6 56 Z" fill="currentColor" opacity="0.9" />
+          <circle cx="14" cy="36" r="1.2" fill="currentColor" opacity="0.85" />
+          <circle cx="14" cy="76" r="1.2" fill="currentColor" opacity="0.85" />
+        </svg>
+      </span>
+    );
+  }
+  if (binding === "bands") {
+    // Classic compartmented heritage spine with a crisp 4-petal lotus emblem
+    return (
+      <span className="shelf-khmer-core" aria-hidden="true">
+        <svg viewBox="0 0 28 84" fill="none" className="shelf-khmer-svg">
+          <path d="M14 8 L17 13 L14 18 L11 13 Z" stroke="currentColor" strokeWidth="1" opacity="0.7" />
+          <line x1="14" y1="21" x2="14" y2="28" stroke="currentColor" strokeWidth="0.9" opacity="0.55" />
+          <path d="M14 30 C16.5 35 19 38.5 23 42 C19 45.5 16.5 49 14 54 C11.5 49 9 45.5 5 42 C9 38.5 11.5 35 14 30 Z" stroke="currentColor" strokeWidth="1.2" opacity="0.95" />
+          <circle cx="14" cy="42" r="2.6" fill="currentColor" opacity="0.9" />
+          <circle cx="14" cy="42" r="5.5" stroke="currentColor" strokeWidth="0.8" opacity="0.45" />
+          <line x1="14" y1="56" x2="14" y2="63" stroke="currentColor" strokeWidth="0.9" opacity="0.55" />
+          <path d="M14 66 L17 71 L14 76 L11 71 Z" stroke="currentColor" strokeWidth="1" opacity="0.7" />
+        </svg>
+      </span>
+    );
+  }
+  // Minimalist editorial gold-framed spine with slender lotus spire
+  return (
+    <span className="shelf-khmer-frame" aria-hidden="true">
+      <svg viewBox="0 0 28 116" fill="none" className="shelf-khmer-svg">
+        <rect x="4" y="4" width="20" height="108" rx="1.5" stroke="currentColor" strokeWidth="0.9" opacity="0.55" />
+        <line x1="8" y1="14" x2="20" y2="14" stroke="currentColor" strokeWidth="0.9" opacity="0.65" />
+        <line x1="8" y1="102" x2="20" y2="102" stroke="currentColor" strokeWidth="0.9" opacity="0.65" />
+        <line x1="14" y1="22" x2="14" y2="43" stroke="currentColor" strokeWidth="0.9" opacity="0.55" />
+        <line x1="14" y1="73" x2="14" y2="94" stroke="currentColor" strokeWidth="0.9" opacity="0.55" />
+        <path d="M14 45 L20.5 58 L14 71 L7.5 58 Z" stroke="currentColor" strokeWidth="1.2" opacity="0.95" />
+        <circle cx="14" cy="58" r="2.2" fill="currentColor" opacity="0.9" />
+        <circle cx="14" cy="20" r="1.3" fill="currentColor" opacity="0.75" />
+        <circle cx="14" cy="96" r="1.3" fill="currentColor" opacity="0.75" />
+      </svg>
+    </span>
+  );
+}
+
 const smooth = (x: number) => x * x * (3 - 2 * x);
 const bump = (r: number) => (Math.abs(r) < 1 ? (r + Math.sin(Math.PI * r) / Math.PI) / 2 : Math.sign(r) * 0.5);
 const luminance = (r: number, g: number, b: number) => {
@@ -242,7 +303,7 @@ export function ShelfHero() {
       </div>
 
       {/* Row tabs (a blue pill glides between them). The link to the whole list sits under the shelf (owner 2026-11-16). */}
-      <div className="relative z-10 mx-auto mt-4 flex max-w-[1440px] justify-center px-4">
+      <div className="relative z-10 mx-auto mt-3 flex max-w-[1440px] justify-center px-4 sm:mt-4">
         {available.length > 1 ? (
           <ShelfTabs
             label={h.browse}
@@ -718,17 +779,18 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
 
   return (
     <>
-      {/* Pause / play, like the hero slideshow's button: at the bookcase's top-right edge, level with the centred row
-          tabs on wider screens (lifted into their row), on its own line above the case on phones. */}
+      {/* Pause / play, like the hero slideshow's button: tucked inside the bookcase's top-right corner on mobile so the
+          row tabs sit close above the case; lifted level with the centred row tabs at the top-right edge on sm+ screens. */}
       {!reduce ? (
-        <div className="relative z-20 mx-auto mt-2 flex justify-end sm:mt-0 sm:h-0" style={{ width: "calc(100% - 2rem)", maxWidth: width }}>
+        <div className="pointer-events-none relative z-20 mx-auto h-0" style={{ width: "calc(100% - 2rem)", maxWidth: width }}>
           <button
             type="button"
             onClick={() => setShelfPaused((value) => !value)}
+            onPointerDown={(e) => e.stopPropagation()}
             aria-label={shelfPaused ? h.playShelf : h.pauseShelf}
             aria-pressed={shelfPaused}
             title={shelfPaused ? h.playShelf : h.pauseShelf}
-            className="shelf-knob shelf-pause sm:absolute sm:bottom-1.5 sm:right-0"
+            className="shelf-knob shelf-pause pointer-events-auto absolute top-[34px] right-[24px] sm:top-auto sm:bottom-1.5 sm:right-0"
           >
             {shelfPaused ? <Play className="size-3.5" aria-hidden="true" /> : <Pause className="size-3.5" aria-hidden="true" />}
           </button>
@@ -759,7 +821,7 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         onPointerLeave={onLeave}
-        className="shelf-stage relative mx-auto mt-3 cursor-grab select-none overflow-hidden rounded-t-lg peer outline-none [perspective:2200px] [touch-action:pan-y] active:cursor-grabbing"
+        className="shelf-stage relative z-0 mx-auto mt-2 cursor-grab select-none overflow-hidden rounded-t-lg peer outline-none [perspective:2200px] [touch-action:pan-y] active:cursor-grabbing sm:mt-3"
         style={{ height: caseH, width: "calc(100% - 2rem)", maxWidth: width, perspectiveOrigin: `50% ${viewY}px` } as CSSProperties}
       >
         {/* the case: back panel behind the books; top board and uprights (with the shade they cast) in front */}
@@ -792,6 +854,7 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
             const len = spineTitle.length;
             const fontScale = len > 20 ? 0.21 : len > 15 ? 0.24 : len > 11 ? 0.27 : 0.30;
             const binding = item.binding;
+            const khmerSpine = isKhmerSpine(shown.row, item);
             return (
               <div
                 key={`${shown.row}-${item.id}-${v}`}
@@ -817,36 +880,55 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
                   className="shelf-contact absolute"
                   style={{ width: bw * 2.2, height: bd * 1.15, left: -bw * 1.1, top: H / 2 - (bd * 1.15) / 2, transform: "rotateX(90deg)" }}
                 />
-                {/* spine (front of the box): rounded cloth with hinge grooves, headbands, the title, the surname and one of three bindings */}
+                {/* spine (front of the box): Khmer books wear clean gold-tooled heritage bindings without cramped rotated text; other books keep their titled cloth spine */}
                 <div
                   className={cn("shelf-face shelf-spine absolute flex flex-col items-center justify-between overflow-hidden rounded-[3px] py-3.5", item.tone.light ? "text-[#1B1A2E]" : "text-[#F6EFDF]")}
                   data-ink={item.tone.light ? "dark" : "gold"}
                   data-binding={binding}
+                  data-khmer={khmerSpine || undefined}
                   style={{ width: bw, height: bh, left: -bw / 2, top, backgroundColor: item.tone.bg, transform: `translateZ(${bd / 2}px)`, "--shade": "calc(var(--o, 0) * 0.55)" } as CSSProperties}
                 >
                   <span aria-hidden="true" className="shelf-headband shelf-headband-top" />
                   <span aria-hidden="true" className="shelf-headband shelf-headband-bottom" />
-                  <span aria-hidden="true" className="shelf-rules" />
-                  {binding === "bands" ? <span aria-hidden="true" className="shelf-band" /> : null}
-                  <span className={cn("shelf-label flex items-center justify-center overflow-hidden", binding === "label" && "shelf-label-panel")}>
-                    <span
-                      className="shelf-title max-h-full overflow-hidden text-ellipsis whitespace-nowrap text-center font-display leading-none tracking-[0.025em] [text-orientation:mixed] [writing-mode:vertical-rl]"
-                      style={{ fontSize: Math.max(9.5, Math.min(14.5, bw * fontScale)) }}
-                    >
-                      {spineTitle}
-                    </span>
-                  </span>
-                  {binding === "bands" ? <span aria-hidden="true" className="shelf-band" /> : null}
-                  <span className="grid w-full justify-items-center gap-1.5">
-                    <span aria-hidden="true" className="shelf-rule-thin" />
-                    <span
-                      className={cn("shelf-surname max-h-[5.5em] overflow-hidden whitespace-nowrap font-semibold uppercase tracking-[0.12em] [writing-mode:vertical-rl]", item.tone.light ? "text-[#1B1A2E]" : item.tone.gold ? "text-[#E8C766]" : "text-[#F6EFDF]")}
-                      style={{ fontSize: Math.max(8, Math.min(10, bw * 0.18)) }}
-                    >
-                      {item.surname}
-                    </span>
-                    <span aria-hidden="true" className="shelf-ornament" />
-                  </span>
+                  {khmerSpine ? (
+                    <>
+                      <span aria-hidden="true" className="shelf-khmer-cap">
+                        <span className="shelf-rules" />
+                      </span>
+                      {binding === "bands" ? <span aria-hidden="true" className="shelf-band" /> : null}
+                      <KhmerSpineArt binding={binding} />
+                      {binding === "bands" ? <span aria-hidden="true" className="shelf-band" /> : null}
+                      <span aria-hidden="true" className="shelf-khmer-foot">
+                        <span className="shelf-rule-thin" />
+                        <span className="shelf-khmer-jewel" />
+                        <span className="shelf-rules" />
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span aria-hidden="true" className="shelf-rules" />
+                      {binding === "bands" ? <span aria-hidden="true" className="shelf-band" /> : null}
+                      <span className={cn("shelf-label flex items-center justify-center overflow-hidden", binding === "label" && "shelf-label-panel")}>
+                        <span
+                          className="shelf-title max-h-full overflow-hidden text-ellipsis whitespace-nowrap text-center font-display leading-none tracking-[0.025em] [text-orientation:mixed] [writing-mode:vertical-rl]"
+                          style={{ fontSize: Math.max(9.5, Math.min(14.5, bw * fontScale)) }}
+                        >
+                          {spineTitle}
+                        </span>
+                      </span>
+                      {binding === "bands" ? <span aria-hidden="true" className="shelf-band" /> : null}
+                      <span className="grid w-full justify-items-center gap-1.5">
+                        <span aria-hidden="true" className="shelf-rule-thin" />
+                        <span
+                          className={cn("shelf-surname max-h-[5.5em] overflow-hidden whitespace-nowrap font-semibold uppercase tracking-[0.12em] [writing-mode:vertical-rl]", item.tone.light ? "text-[#1B1A2E]" : item.tone.gold ? "text-[#E8C766]" : "text-[#F6EFDF]")}
+                          style={{ fontSize: Math.max(8, Math.min(10, bw * 0.18)) }}
+                        >
+                          {item.surname}
+                        </span>
+                        <span aria-hidden="true" className="shelf-ornament" />
+                      </span>
+                    </>
+                  )}
                 </div>
                 {/* front cover (right side of the box) */}
                 <div

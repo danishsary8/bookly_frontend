@@ -15,7 +15,7 @@ import { TrustRow } from "@/components/shopping/TrustRow";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { ErrorState } from "@/components/ui/error-state";
-import { SkeletonGroup, SkeletonRow } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { CartGate } from "@/features/cart/CartGate";
 import { CartLineItem } from "@/features/cart/CartLineItem";
 import { CouponField } from "@/features/cart/CouponField";
@@ -118,7 +118,7 @@ function Summary({ check, setCheck, ctaRef }: { check: CouponCheck | null; setCh
               </span>
             ) : null}
           </div>
-          <p className="font-display text-[2.25rem] leading-none tabular-nums short:text-[1.85rem]" aria-live="polite">
+          <p className="font-display text-[1.85rem] leading-none tabular-nums sm:text-[2.25rem] short:text-[1.85rem]" aria-live="polite">
             {formatMoney(totals.totalBeforeShipping.usd, totals.totalBeforeShipping.khr, currency)}
           </p>
         </div>
@@ -134,7 +134,7 @@ function Summary({ check, setCheck, ctaRef }: { check: CouponCheck | null; setCh
             to="/checkout"
             aria-disabled={blocked || undefined}
             tabIndex={blocked ? -1 : undefined}
-            className={cn(buttonVariants({ variant: "cta", size: "lg" }), "h-12 w-full rounded-xl text-sm font-semibold", blocked && "pointer-events-none opacity-40")}
+            className={cn(buttonVariants({ variant: "default", size: "lg" }), "h-12 w-full rounded-xl text-sm font-semibold", blocked && "pointer-events-none opacity-40")}
           >
             {dict.cart.checkout} <ArrowRight aria-hidden="true" />
           </Link>
@@ -174,7 +174,7 @@ function StickyCheckoutBar({ totals, visible, barRef }: { totals: Totals; visibl
           to="/checkout"
           aria-disabled={blocked || undefined}
           tabIndex={blocked ? -1 : undefined}
-          className={cn(buttonVariants({ variant: "cta" }), "shrink-0", blocked && "pointer-events-none opacity-40")}
+          className={cn(buttonVariants({ variant: "default" }), "shrink-0", blocked && "pointer-events-none opacity-40")}
         >
           {dict.cart.checkout} <ArrowRight aria-hidden="true" />
         </Link>
@@ -237,10 +237,53 @@ function CartContents() {
 
   if (cart.isPending) {
     return (
-      <SkeletonGroup label={c.loading} className="grid gap-6">
-        <SkeletonRow />
-        <SkeletonRow />
-        <SkeletonRow />
+      <SkeletonGroup label={c.loading} className="grid grid-cols-[minmax(0,1fr)] items-start gap-8 lg:grid-cols-12 lg:gap-10">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card lg:col-span-7 xl:col-span-8">
+          <div className="flex items-center justify-between border-b border-border px-5 py-4 sm:px-7">
+            <Skeleton className="h-6 w-32 rounded-md" />
+            <Skeleton className="h-8 w-24 rounded-lg" />
+          </div>
+          <div className="divide-y divide-border px-5 sm:px-7">
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="flex items-start gap-4 py-5">
+                <Skeleton className="aspect-[2/3] w-16 shrink-0 rounded-md sm:w-[72px]" />
+                <div className="grid min-w-0 flex-1 gap-2">
+                  <Skeleton className="h-5 w-4/5 rounded-md" />
+                  <Skeleton className="h-3.5 w-1/3 rounded-full" />
+                  <div className="mt-2 flex items-center justify-between gap-3">
+                    <Skeleton className="h-9 w-28 rounded-lg" />
+                    <Skeleton className="h-5 w-16 rounded-md" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-between border-t border-border bg-surface-1 px-5 py-4 sm:px-7">
+            <Skeleton className="h-4 w-32 rounded-full" />
+            <Skeleton className="h-5 w-24 rounded-md" />
+          </div>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-border bg-card lg:col-span-5 xl:col-span-4">
+          <div className="flex items-center justify-between border-b border-border bg-lapis-tint/45 px-5 py-4 sm:px-6">
+            <div className="grid gap-1.5">
+              <Skeleton className="h-6 w-32 rounded-md" />
+              <Skeleton className="h-3 w-44 rounded-full" />
+            </div>
+            <Skeleton className="h-12 w-10 rounded-md" />
+          </div>
+          <div className="grid gap-4 p-5 sm:p-6">
+            <Skeleton className="h-11 w-full rounded-xl" />
+            <div className="grid gap-2.5 border-t border-border/70 pt-3">
+              <div className="flex justify-between"><Skeleton className="h-3.5 w-20 rounded-full" /><Skeleton className="h-3.5 w-14 rounded-full" /></div>
+              <div className="flex justify-between"><Skeleton className="h-3.5 w-24 rounded-full" /><Skeleton className="h-3.5 w-14 rounded-full" /></div>
+            </div>
+            <div className="flex items-end justify-between border-t border-dashed border-border/80 pt-3">
+              <Skeleton className="h-4 w-32 rounded-full" />
+              <Skeleton className="h-8 w-24 rounded-md" />
+            </div>
+            <Skeleton className="h-12 w-full rounded-xl" />
+          </div>
+        </div>
       </SkeletonGroup>
     );
   }

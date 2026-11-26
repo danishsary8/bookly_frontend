@@ -65,16 +65,34 @@ function displayLanguage(value: string | null | undefined, locale: string | stri
 function DetailSkeleton() {
   const { dict } = useT();
   return (
-    <SkeletonGroup label={dict.book.loading} className="grid gap-8 lg:grid-cols-12 lg:gap-12">
-      <div className="relative grid min-h-[27rem] place-items-center p-8 lg:col-span-5 lg:min-h-[37rem]">
-        <Skeleton className="absolute! right-2 top-2 size-12 rounded-full" />
-        <Skeleton className="mx-auto aspect-[2/3] w-full max-w-[300px] rounded-[3px] shadow-xl" />
+    <SkeletonGroup label={dict.book.loading} className="grid gap-5 sm:gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:items-start lg:grid-cols-12 lg:gap-12">
+      <div className="relative grid min-h-[20rem] place-items-center rounded-2xl border border-border/60 bg-card/50 p-6 sm:min-h-[26rem] lg:col-span-5 lg:min-h-[34rem]">
+        <Skeleton className="mx-auto aspect-[2/3] w-full max-w-[240px] rounded-[4px] shadow-xl sm:max-w-[280px]" />
       </div>
       <div className="grid content-start gap-4 lg:col-span-7">
-        <Skeleton className="h-3 w-1/5" />
-        <Skeleton className="h-12 w-4/5" />
-        <Skeleton className="h-5 w-1/3" />
-        <div className="mt-4 grid gap-5 border-t border-border pt-6"><Skeleton className="h-12 w-32" /><Skeleton className="h-3 w-52 rounded-full" /><div className="flex gap-3"><Skeleton className="h-20 w-full rounded-xl" /></div><Skeleton className="h-12 w-full rounded-xl" /><Skeleton className="h-16 w-full rounded-xl" /></div>
+        <div className="flex gap-2">
+          <Skeleton className="h-6 w-24 rounded-full" />
+          <Skeleton className="h-6 w-20 rounded-full" />
+        </div>
+        <Skeleton className="h-10 w-4/5 rounded-lg sm:h-12" />
+        <Skeleton className="h-4 w-1/3 rounded-full" />
+        <Skeleton className="h-5 w-32 rounded-full" />
+        <div className="mt-2 grid gap-4 rounded-2xl border border-border bg-card p-5">
+          <Skeleton className="h-10 w-28 rounded-md" />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <Skeleton className="h-16 rounded-xl" />
+            <Skeleton className="h-16 rounded-xl" />
+          </div>
+          <div className="flex gap-3">
+            <Skeleton className="h-12 w-28 shrink-0 rounded-xl" />
+            <Skeleton className="h-12 flex-1 rounded-xl" />
+          </div>
+          <div className="grid gap-3 border-t border-border/70 pt-4 sm:grid-cols-3">
+            <Skeleton className="h-10 rounded-lg" />
+            <Skeleton className="h-10 rounded-lg" />
+            <Skeleton className="h-10 rounded-lg" />
+          </div>
+        </div>
       </div>
     </SkeletonGroup>
   );
@@ -437,7 +455,7 @@ function Purchase({ book }: { book: BookDetail }) {
             <BookOpen className="size-5 text-primary shrink-0" aria-hidden="true" />
             <span className="text-sm font-semibold">{dict.ebook.readNow}</span>
           </div>
-          <Link to={`/read/${book.id}`} className={cn(buttonVariants({ variant: "cta", size: "sm" }), "gap-1.5")}>
+          <Link to={`/read/${book.id}`} state={{ from: location.pathname + location.search }} className={cn(buttonVariants({ variant: "cta", size: "sm" }), "gap-1.5")}>
             <BookOpen className="size-4" aria-hidden="true" /> {dict.ebook.readNow}
           </Link>
         </div>
@@ -445,6 +463,7 @@ function Purchase({ book }: { book: BookDetail }) {
         <div className="flex items-center gap-2">
           <Link
             to={`/read/${book.id}/preview`}
+            state={{ from: location.pathname + location.search }}
             className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5 text-xs font-semibold")}
           >
             <Eye className="size-3.5" aria-hidden="true" /> {dict.ebook.readPreview}

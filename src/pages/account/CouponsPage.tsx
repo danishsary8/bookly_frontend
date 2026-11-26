@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { rewardQueries, type RewardCoupon } from "@/api/endpoints/rewards";
 import { buttonVariants } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
-import { SkeletonGroup, SkeletonRow } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { setCoupon } from "@/features/cart/couponStore";
 import { AccountSection } from "@/features/account/AccountSection";
 import { percentLabel } from "@/features/offers/percent";
@@ -35,9 +35,18 @@ export default function CouponsPage() {
   return (
     <AccountSection title={r.pageTitle} lead={r.pageLead}>
       {coupons.isPending ? (
-        <SkeletonGroup label={r.loading} className="grid gap-4">
-          <SkeletonRow />
-          <SkeletonRow />
+        <SkeletonGroup label={r.loading} className="grid gap-4 sm:grid-cols-2">
+          {Array.from({ length: 2 }, (_, i) => (
+            <div key={i} className="grid gap-3 rounded-2xl border border-border bg-card p-5">
+              <div className="flex items-start justify-between gap-3">
+                <Skeleton className="h-6 w-36 rounded-md" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <Skeleton className="h-9 w-36 rounded-lg" />
+              <Skeleton className="h-3.5 w-4/5 rounded-full" />
+              <Skeleton className="h-9 w-32 rounded-lg" />
+            </div>
+          ))}
         </SkeletonGroup>
       ) : coupons.isError ? (
         <ErrorState error={coupons.error} onRetry={() => coupons.refetch()} headingLevel="h2" showHomeLink={false} />

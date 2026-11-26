@@ -73,10 +73,23 @@ export default function MyEbooksPage() {
       {/* 1. Ebooks Library */}
       <AccountSection title={e.libraryTitle} lead={e.libraryLead}>
         {libraryQuery.isPending ? (
-          <SkeletonGroup label={dict.common.loading} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Skeleton className="h-44 rounded-xl" />
-            <Skeleton className="h-44 rounded-xl" />
-            <Skeleton className="h-44 rounded-xl" />
+          <SkeletonGroup label={dict.common.loading} className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="flex flex-col justify-between rounded-2xl border border-border bg-card p-4">
+                <div className="flex gap-3">
+                  <Skeleton className="aspect-[2/3] w-14 shrink-0 rounded-md" />
+                  <div className="grid min-w-0 flex-1 content-start gap-2">
+                    <Skeleton className="h-4 w-4/5 rounded-md" />
+                    <Skeleton className="h-3 w-1/2 rounded-full" />
+                    <Skeleton className="mt-1 h-5 w-20 rounded-full" />
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-2.5 border-t border-border/50 pt-3">
+                  <Skeleton className="h-1.5 w-full rounded-full" />
+                  <Skeleton className="h-9 w-full rounded-lg" />
+                </div>
+              </div>
+            ))}
           </SkeletonGroup>
         ) : libraryQuery.isError ? (
           <ErrorState error={libraryQuery.error} onRetry={() => libraryQuery.refetch()} headingLevel="h3" showHomeLink={false} />
@@ -142,6 +155,7 @@ export default function MyEbooksPage() {
                     {ready ? (
                       <Link
                         to={`/read/${book.id}`}
+                        state={{ from: "/account/ebooks" }}
                         className={cn(buttonVariants({ variant: "outline", size: "sm" }), "w-full justify-center gap-1.5 text-xs font-semibold mt-1")}
                       >
                         <BookOpen className="size-3.5" aria-hidden="true" />
@@ -170,9 +184,22 @@ export default function MyEbooksPage() {
         </div>
 
         {devicesQuery.isPending ? (
-          <SkeletonGroup label={dict.common.loading} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <Skeleton className="h-28 rounded-xl" />
-            <Skeleton className="h-28 rounded-xl" />
+          <SkeletonGroup label={dict.common.loading} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 2 }, (_, i) => (
+              <div key={i} className="grid gap-3 rounded-2xl border border-border bg-card p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <Skeleton className="size-9 shrink-0 rounded-lg" />
+                    <div className="grid gap-1.5">
+                      <Skeleton className="h-4 w-28 rounded-md" />
+                      <Skeleton className="h-3 w-24 rounded-full" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+                <Skeleton className="h-8 w-full rounded-lg" />
+              </div>
+            ))}
           </SkeletonGroup>
         ) : devicesQuery.isError ? (
           <ErrorState error={devicesQuery.error} onRetry={() => devicesQuery.refetch()} headingLevel="h3" showHomeLink={false} />

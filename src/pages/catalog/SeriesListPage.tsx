@@ -42,7 +42,21 @@ export default function SeriesListPage() {
         showSkeleton ? (
           <SkeletonGroup label={p.loadingSeries} className="grid gap-5 md:grid-cols-2">
             {Array.from({ length: 4 }, (_, i) => (
-              <Skeleton key={i} className="h-44 rounded-2xl" />
+              <div key={i} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 rounded-2xl border border-border bg-card p-6">
+                <div className="flex h-32 items-end gap-[3px]" aria-hidden="true">
+                  <Skeleton className="h-[88%] w-[18px] rounded-[2px]" />
+                  <Skeleton className="h-[96%] w-[18px] rounded-[2px]" />
+                  <Skeleton className="h-[90%] w-[18px] rounded-[2px]" />
+                  <Skeleton className="h-[94%] w-[18px] rounded-[2px]" />
+                </div>
+                <div className="grid content-start gap-2.5">
+                  <Skeleton className="h-3 w-20 rounded-full" />
+                  <Skeleton className="h-6 w-4/5 rounded-md" />
+                  <Skeleton className="h-3.5 w-full rounded-full" />
+                  <Skeleton className="h-3.5 w-2/3 rounded-full" />
+                  <Skeleton className="mt-2 h-4 w-28 rounded-full" />
+                </div>
+              </div>
             ))}
           </SkeletonGroup>
         ) : null

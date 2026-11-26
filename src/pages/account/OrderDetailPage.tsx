@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Banknote, FileText, RotateCcw, Star, XCircle, QrCode } from "lucide-react";
+import { ArrowLeft, Banknote, Clock, FileText, RotateCcw, Star, XCircle, QrCode } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { orderQueries } from "@/api/endpoints/orders";
 import { ApiError } from "@/api/errors";
@@ -76,17 +76,81 @@ export default function OrderDetailPage() {
   if (order.isError) return <ErrorState error={order.error} onRetry={() => order.refetch()} headingLevel="h1" showHomeLink={false} />;
   if (!order.data) {
     return (
-      <SkeletonGroup label={t.loadingOne} className="grid gap-4">
-        <Skeleton className="h-12 w-2/3" />
-        <Skeleton className="h-56 rounded-xl" />
-        <Skeleton className="h-40 rounded-xl" />
+      <SkeletonGroup label={t.loadingOne} className="account-pane-body">
+        <Skeleton className="h-4 w-28 rounded-full" />
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border/70 pb-5">
+          <div className="grid gap-2.5">
+            <Skeleton className="h-9 w-60 max-w-full rounded-lg" />
+            <div className="flex items-center gap-2.5">
+              <Skeleton className="h-6 w-24 rounded-full" />
+              <Skeleton className="h-4 w-36 rounded-full" />
+            </div>
+          </div>
+          <div className="flex gap-2.5">
+            <Skeleton className="h-10 w-32 rounded-lg" />
+            <Skeleton className="h-10 w-28 rounded-lg" />
+          </div>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <Skeleton className="mb-4 h-4 w-24 rounded-full" />
+          <div className="grid gap-3 sm:grid-cols-4">
+            <Skeleton className="h-14 rounded-xl" />
+            <Skeleton className="h-14 rounded-xl" />
+            <Skeleton className="h-14 rounded-xl" />
+            <Skeleton className="h-14 rounded-xl" />
+          </div>
+        </div>
+        <div className="grid gap-5 lg:grid-cols-12">
+          <div className="grid gap-3 rounded-2xl border border-border bg-card p-5 lg:col-span-7">
+            <Skeleton className="h-5 w-32 rounded-md" />
+            <div className="flex items-center gap-3 border-t border-border/60 pt-3">
+              <Skeleton className="h-14 w-10 shrink-0 rounded-md" />
+              <div className="grid flex-1 gap-2">
+                <Skeleton className="h-4 w-3/4 rounded-md" />
+                <Skeleton className="h-3 w-1/3 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-14 rounded-md" />
+            </div>
+            <div className="flex items-center gap-3 border-t border-border/60 pt-3">
+              <Skeleton className="h-14 w-10 shrink-0 rounded-md" />
+              <div className="grid flex-1 gap-2">
+                <Skeleton className="h-4 w-2/3 rounded-md" />
+                <Skeleton className="h-3 w-1/4 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-14 rounded-md" />
+            </div>
+          </div>
+          <div className="grid gap-3 rounded-2xl border border-border bg-card p-5 lg:col-span-5">
+            <Skeleton className="h-5 w-36 rounded-md" />
+            <Skeleton className="h-4 w-44 rounded-full" />
+            <Skeleton className="h-3.5 w-full rounded-full" />
+            <Skeleton className="h-3.5 w-2/3 rounded-full" />
+          </div>
+        </div>
       </SkeletonGroup>
     );
   }
 
   const o = order.data;
   const delivered = o.status === "delivered";
+  const isKhqr = o.payment_method === "khqr";
+  const awaitingKhqr = isKhqr && o.payment_status === "pending" && o.status === "pending";
+  const payDueTime = o.payment_due_at
+    ? new Date(o.payment_due_at).toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" })
+    : undefined;
   const payKey = PAYMENT_STATUS[(o.payment_status ?? "pending") as keyof typeof PAYMENT_STATUS] as (typeof PAYMENT_STATUS)[keyof typeof PAYMENT_STATUS] | undefined;
+  const paymentStatusText =
+    awaitingKhqr
+      ? payDueTime
+        ? t.payPendingKhqrBy(payDueTime)
+        : t.payPendingKhqr
+      : o.payment_status === "pending" && o.status === "cancelled"
+        ? t.payUnpaidCancelled
+        : isKhqr && o.payment_status === "pending"
+          ? t.payPendingKhqr
+          : payKey
+            ? t[payKey]
+            : o.payment_status;
 
   return (
     <div className="grid gap-8">
@@ -124,6 +188,20 @@ export default function OrderDetailPage() {
             ) : null}
           </div>
         </div>
+        {awaitingKhqr ? (
+          <div
+            role="status"
+            className="flex items-start gap-3 rounded-2xl border border-warning/40 bg-warning-tint/60 px-5 py-4"
+          >
+            <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-xl bg-warning/20 text-warning-foreground">
+              <Clock className="size-4.5" aria-hidden="true" />
+            </span>
+            <div className="grid gap-0.5 text-sm">
+              <p className="font-semibold text-foreground">{t.khqrPendingBannerTitle}</p>
+              <p className="text-muted-foreground">{t.khqrPendingBannerBody(payDueTime)}</p>
+            </div>
+          </div>
+        ) : null}
         {delivered ? <ReturnEntry order={o} /> : null}
         {delivered ? <OrderRatingForm orderId={id} /> : null}
       </div>
@@ -135,6 +213,7 @@ export default function OrderDetailPage() {
             history={o.status_history ?? []}
             status={o.status}
             paymentMethod={o.payment_method}
+            paymentStatus={o.payment_status}
             estimatedDelivery={o.estimated_delivery}
           />
           <OrderItemsCard
@@ -162,10 +241,10 @@ export default function OrderDetailPage() {
           ) : null}
           <section aria-labelledby="order-payment" className="grid gap-2 shop-card rounded-2xl border border-border bg-card p-5 sm:p-6">
             <h2 id="order-payment" className="flex items-center gap-2 font-display text-[1.563rem] leading-tight">
-              <Banknote className="size-5 text-primary" aria-hidden="true" /> {t.payment}
+              {isKhqr ? <QrCode className="size-5 text-primary" aria-hidden="true" /> : <Banknote className="size-5 text-primary" aria-hidden="true" />} {t.payment}
             </h2>
-            <p className="font-semibold">{o.payment_method === "khqr" ? dict.checkoutPage.khqr : o.payment_method === "card" ? dict.checkoutPage.card : t.cashOnDelivery}</p>
-            <p className="text-muted-foreground">{payKey ? t[payKey] : o.payment_status}</p>
+            <p className="font-semibold">{isKhqr ? dict.checkoutPage.khqr : o.payment_method === "card" ? dict.checkoutPage.card : t.cashOnDelivery}</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{paymentStatusText}</p>
           </section>
         </div>
       </div>

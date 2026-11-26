@@ -31,6 +31,7 @@ export function CouponField({
   const saved = useCoupon();
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [inputOpen, setInputOpen] = useState(false);
   const [switching, setSwitching] = useState(false);
   const { dict } = useT();
@@ -47,6 +48,8 @@ export function CouponField({
       setDraft("");
       setError(null);
       setSwitching(false);
+      setPanelOpen(false);
+      setInputOpen(false);
       onChecked(result);
     },
     onError: (err, code) => {
@@ -59,6 +62,7 @@ export function CouponField({
         lastCheckedRef.current = null;
         setCoupon(null);
         setDraft(code);
+        setPanelOpen(true);
         setInputOpen(true);
         setSwitching(false);
         setError(getDict().cartPage.noLongerApplies(code, reason));
@@ -99,6 +103,7 @@ export function CouponField({
     setError(null);
     setDraft("");
     setSwitching(false);
+    setPanelOpen(false);
     setCoupon(code);
   };
 
@@ -107,6 +112,7 @@ export function CouponField({
     setDraft("");
     setError(null);
     setSwitching(false);
+    setPanelOpen(false);
     setInputOpen(false);
     onChecked(null);
   };
@@ -175,21 +181,30 @@ export function CouponField({
     );
   }
 
-  // No saved coupons and customer hasn't opened the coupon entry yet: compact dashed trigger.
-  if (!saved && !inputOpen && savedCoupons.length === 0) {
+  // Minimalist collapsed trigger by default (even when reward coupons exist) so the summary CTA stays above the fold.
+  if (!saved && !panelOpen && !switching && !error) {
+    const hasSaved = savedCoupons.length > 0;
     return (
       <button
         type="button"
         aria-expanded={false}
         aria-controls="cart-coupon"
-        onClick={() => setInputOpen(true)}
+        onClick={() => {
+          setPanelOpen(true);
+          if (!hasSaved) setInputOpen(true);
+        }}
         className="flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-dashed border-input/75 bg-surface-1/50 px-3.5 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/50 hover:bg-lapis-tint/40 hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:min-h-10"
       >
-        <span className="flex items-center gap-2">
-          <TicketPercent className="size-4 text-primary" aria-hidden="true" />
-          {c.haveCoupon}
+        <span className="flex min-w-0 items-center gap-2">
+          <TicketPercent className="size-4 shrink-0 text-primary" aria-hidden="true" />
+          <span className="truncate">{hasSaved ? c.couponSection : c.haveCoupon}</span>
+          {hasSaved ? (
+            <span className="shrink-0 rounded-full bg-success-tint px-2 py-0.5 text-[11px] font-bold text-success">
+              {c.availableCoupons(savedCoupons.length)}
+            </span>
+          ) : null}
         </span>
-        <ChevronDown className="size-4 text-muted-foreground" aria-hidden="true" />
+        <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform" aria-hidden="true" />
       </button>
     );
   }
@@ -197,7 +212,7 @@ export function CouponField({
   const showForm = inputOpen || switching || savedCoupons.length === 0 || Boolean(error);
 
   return (
-    <div id="cart-coupon" className="grid gap-3 rounded-xl border border-border bg-surface-1/55 p-3.5">
+    <div id="cart-coupon" className="grid gap-2.5 rounded-xl border border-border bg-surface-1/55 p-3">
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
           <TicketPercent className="size-3.5 text-primary" aria-hidden="true" />
@@ -208,6 +223,7 @@ export function CouponField({
             type="button"
             onClick={() => {
               setSwitching(false);
+              setPanelOpen(false);
               setError(null);
               setDraft("");
             }}
@@ -215,7 +231,22 @@ export function CouponField({
           >
             {dict.ui.cancel}
           </button>
-        ) : null}
+        ) : (
+          <button
+            type="button"
+            aria-expanded={true}
+            aria-controls="cart-coupon"
+            aria-label={dict.checkoutPage.hide}
+            onClick={() => {
+              setPanelOpen(false);
+              setInputOpen(false);
+              setError(null);
+            }}
+            className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-card hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
+            <ChevronDown className="size-4 rotate-180" aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {savedCoupons.length > 0 ? (

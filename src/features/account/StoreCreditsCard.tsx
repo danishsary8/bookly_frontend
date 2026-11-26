@@ -91,11 +91,17 @@ export function StoreCreditsCard() {
 
   if (credits.isPending) {
     return (
-      <SkeletonGroup
-        label={dict.account.loadingStoreCredits}
-        className="grid gap-2"
-      >
-        <Skeleton className="h-20 rounded-xl" />
+      <SkeletonGroup label={dict.account.loadingStoreCredits} className="overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="flex items-center gap-3 border-b border-border/70 px-5 py-4">
+          <Skeleton className="size-9 rounded-xl" />
+          <div className="grid gap-1.5">
+            <Skeleton className="h-4 w-32 rounded-md" />
+            <Skeleton className="h-3 w-48 rounded-full" />
+          </div>
+        </div>
+        <div className="p-5">
+          <Skeleton className="h-16 w-full rounded-xl" />
+        </div>
       </SkeletonGroup>
     );
   }
@@ -106,25 +112,25 @@ export function StoreCreditsCard() {
   return (
     <section
       aria-labelledby="store-credits-heading"
-      className="shop-card rounded-2xl border border-border bg-card p-5 sm:p-6"
+      className="overflow-hidden rounded-2xl border border-[#7C3AED]/25 border-t-[3.5px] border-t-[#7C3AED] bg-card shadow-[0_10px_28px_-18px_rgb(124_58_237/0.22)] dark:border-[#A78BFA]/30 dark:border-t-[#A78BFA]"
     >
-      <div className="flex items-start gap-3">
-        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-lapis-tint text-primary">
-          <TicketPercent className="size-5" aria-hidden="true" />
+      <div className="flex items-start gap-3 border-b border-[#7C3AED]/15 bg-gradient-to-r from-[#F5F3FF] via-card to-card px-5 py-4 dark:from-[#7C3AED]/15">
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#7C3AED] text-white shadow-[0_6px_14px_-6px_rgb(124_58_237/0.55)] dark:bg-[#A78BFA] dark:text-[#070B22]">
+          <TicketPercent className="size-[18px]" aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
           <h2
             id="store-credits-heading"
-            className="font-display text-[1.375rem] leading-tight"
+            className="text-[15.5px] font-bold tracking-tight text-foreground"
           >
             {dict.account.storeCredits}
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground sm:text-[13px]">
             {dict.account.storeCreditsLead}
           </p>
         </div>
       </div>
-      <ul className="mt-4 grid gap-3">
+      <ul className="grid gap-3 p-5">
         {items.map((credit: StoreCredit) => (
           <CreditItem key={credit.id} credit={credit} />
         ))}

@@ -24,12 +24,9 @@ describe("ReaderPage", () => {
     }
     vi.stubGlobal("Image", MockImage);
 
-    // Mock URL.createObjectURL and revokeObjectURL
-    vi.stubGlobal("URL", {
-      ...URL,
-      createObjectURL: vi.fn(() => "blob:mock-page-url"),
-      revokeObjectURL: vi.fn(),
-    });
+    // Mock URL.createObjectURL and revokeObjectURL without replacing the URL constructor
+    vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock-page-url");
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
 
     vi.spyOn(ebookApi, "fetchPageBlobUrl").mockResolvedValue("blob:mock-page-url");
     vi.spyOn(ebookApi, "fetchPreviewPageBlobUrl").mockResolvedValue("blob:mock-preview-url");
@@ -136,5 +133,32 @@ describe("ReaderPage", () => {
     renderReader("/read/10");
 
     expect(await screen.findByText(/Ebook is being prepared/i)).toBeInTheDocument();
+  });
+
+  it("returns to the previous page when clicking the back button", async () => {
+    const user = userEvent.setup();
+    const meta: EbookReaderMeta = {
+      book_id: 19,
+      title: "The Art of War",
+      status: "ready",
+      page_count: 20,
+      preview_pages: 5,
+      owned: true,
+      last_page: 2,
+    };
+    vi.spyOn(ebookApi, "meta").mockResolvedValue(meta);
+    vi.spyOn(ebookApi, "fetchPageBlobUrl").mockResolvedValue("blob:mock-page-2");
+
+    renderWithProviders(
+      <Routes>
+        <Route path="/account/ebooks" element={<div>My ebooks destination</div>} />
+        <Route path="/read/:bookId" element={<ReaderPage />} />
+      </Routes>,
+      { route: "/read/19" },
+    );
+
+    expect(await screen.findByText("The Art of War")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Close reader/i }));
+    expect(await screen.findByText("My ebooks destination")).toBeInTheDocument();
   });
 });

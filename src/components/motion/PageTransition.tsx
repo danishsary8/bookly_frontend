@@ -41,10 +41,8 @@ export function PageTransition({ children, mainId = "content" }: { children: Rea
     scrolledFor.current = location.pathname;
     if (location.hash || navigationType === "POP") return;
     if (sameFrame) {
-      // Inside the same frame: stay put, unless the reader is below the top of the content (then bring it into view).
-      const area = document.querySelector<HTMLElement>(".account-area");
-      const top = area ? area.getBoundingClientRect().top + window.scrollY : 0;
-      if (window.scrollY > top) window.scrollTo({ top, left: 0, behavior: "instant" as ScrollBehavior });
+      // Inside the account frame: bring the top bar and new page heading cleanly into view.
+      if (window.scrollY > 0) window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
       return;
     }
     window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });

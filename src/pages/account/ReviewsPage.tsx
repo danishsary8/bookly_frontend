@@ -10,7 +10,7 @@ import { StarRating } from "@/components/StarRating";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
 import { Pagination } from "@/components/ui/pagination";
-import { SkeletonGroup, SkeletonRow } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AccountSection } from "@/features/account/AccountSection";
 import { orderDate } from "@/features/orders/format";
 import { HiddenReviewNote } from "@/features/reviews/YourReview";
@@ -53,8 +53,24 @@ export default function ReviewsPage() {
       ) : reviews.isPending ? (
         showSkeleton ? (
           <SkeletonGroup label={a.loadingReviews} className="grid gap-3">
-            <SkeletonRow thumb="none" />
-            <SkeletonRow thumb="none" />
+            {Array.from({ length: 2 }, (_, i) => (
+              <div key={i} className="flex gap-4 rounded-2xl border border-border bg-card p-4 sm:gap-5 sm:p-5">
+                <Skeleton className="aspect-[2/3] w-14 shrink-0 rounded-[3px] sm:w-16" />
+                <div className="grid min-w-0 flex-1 content-start gap-2.5">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <Skeleton className="h-5 w-48 max-w-full rounded-md" />
+                    <Skeleton className="h-3.5 w-20 shrink-0 rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-24 rounded-full" />
+                  <Skeleton className="h-3.5 w-full rounded-full" />
+                  <Skeleton className="h-3.5 w-4/5 rounded-full" />
+                  <div className="flex gap-2 pt-1">
+                    <Skeleton className="h-9 w-20 rounded-lg" />
+                    <Skeleton className="h-9 w-20 rounded-lg" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </SkeletonGroup>
         ) : null
       ) : list.length === 0 ? (

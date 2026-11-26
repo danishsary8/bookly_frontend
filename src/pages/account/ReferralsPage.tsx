@@ -9,6 +9,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Users } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ui/error-state";
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AccountSection } from "@/features/account/AccountSection";
 import { referralDevice } from "@/features/account/referralAttribution";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -23,7 +24,24 @@ export default function ReferralsPage() {
   const [page, setPage] = useState(1);
   const [copyResult, setCopyResult] = useState("");
   const referral = useQuery({ queryKey: ["account", "referrals", session?.user.id, page], queryFn: () => creditApi.referrals(referralDevice(), page), enabled: flags.data?.referrals === true, retry: false });
-  if (flags.isPending) return <p role="status">{t.loading}</p>;
+  if (flags.isPending) {
+    return (
+      <AccountSection title={t.referrals}>
+        <SkeletonGroup label={t.loading} className="grid gap-4">
+          <div className="grid gap-3 rounded-2xl border border-border bg-card p-5">
+            <Skeleton className="h-4 w-3/4 rounded-full" />
+            <Skeleton className="h-7 w-32 rounded-md" />
+            <Skeleton className="h-11 w-full rounded-lg" />
+            <div className="flex gap-2.5">
+              <Skeleton className="h-10 w-28 rounded-lg" />
+              <Skeleton className="h-10 w-24 rounded-lg" />
+              <Skeleton className="h-10 w-24 rounded-lg" />
+            </div>
+          </div>
+        </SkeletonGroup>
+      </AccountSection>
+    );
+  }
   if (flags.isError) return <ErrorState error={flags.error} onRetry={() => flags.refetch()} headingLevel="h1" showHomeLink={false} />;
   if (!flags.data?.referrals) return <Navigate to="/account" replace />;
   const data = referral.data;
@@ -31,7 +49,20 @@ export default function ReferralsPage() {
   const copy = async () => { try { await navigator.clipboard.writeText(link); setCopyResult(t.copied); } catch { setCopyResult(t.copyFailed); } };
   return <AccountSection title={t.referrals}>
     {referral.isError ? <ErrorState error={referral.error} onRetry={() => referral.refetch()} /> : null}
-    {referral.isPending ? <p role="status">{t.loading}</p> : null}
+    {referral.isPending ? (
+      <SkeletonGroup label={t.loading} className="grid gap-4">
+        <div className="grid gap-3 rounded-2xl border border-border bg-card p-5">
+          <Skeleton className="h-4 w-3/4 rounded-full" />
+          <Skeleton className="h-7 w-32 rounded-md" />
+          <Skeleton className="h-11 w-full rounded-lg" />
+          <div className="flex gap-2.5">
+            <Skeleton className="h-10 w-28 rounded-lg" />
+            <Skeleton className="h-10 w-24 rounded-lg" />
+            <Skeleton className="h-10 w-24 rounded-lg" />
+          </div>
+        </div>
+      </SkeletonGroup>
+    ) : null}
     {data ? <><p>{t.referralLead(data.friend_discount_usd, data.reward_usd)}</p><p className="text-sm text-muted-foreground">{t.referralRules}</p>
       <p>{t.balance}: <strong className="font-display text-2xl">{formatUsd(data.balance_usd)}</strong></p>
       <TextField label={t.link} readOnly value={link} onFocus={(e) => e.target.select()} />

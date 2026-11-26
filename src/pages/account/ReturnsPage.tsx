@@ -7,7 +7,7 @@ import { ReturnGuide } from "@/features/returns/ReturnGuide";
 import { ReturnStatusBadge } from "@/components/orders/ReturnStatusBadge";
 import { ErrorState } from "@/components/ui/error-state";
 import { Pagination } from "@/components/ui/pagination";
-import { SkeletonGroup, SkeletonRow } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AccountSection } from "@/features/account/AccountSection";
 import { orderDate } from "@/features/orders/format";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -73,8 +73,24 @@ export default function ReturnsPage() {
       ) : returns.isPending ? (
         showSkeleton ? (
           <SkeletonGroup label={t.loading} className="grid gap-3">
-            <SkeletonRow thumb="none" />
-            <SkeletonRow thumb="none" />
+            {Array.from({ length: 2 }, (_, i) => (
+              <div key={i} className="grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5">
+                <div className="grid gap-2">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-5 w-28 rounded-md" />
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                  </div>
+                  <Skeleton className="h-3.5 w-60 max-w-full rounded-full" />
+                </div>
+                <div className="flex items-center justify-between gap-3 sm:justify-end">
+                  <div className="grid justify-items-end gap-1">
+                    <Skeleton className="h-5 w-16 rounded-md" />
+                    <Skeleton className="h-3 w-14 rounded-full" />
+                  </div>
+                  <Skeleton className="size-4 rounded-full" />
+                </div>
+              </div>
+            ))}
           </SkeletonGroup>
         ) : null
       ) : list.length === 0 ? (

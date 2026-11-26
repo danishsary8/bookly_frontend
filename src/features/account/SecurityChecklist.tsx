@@ -27,16 +27,18 @@ export function SecurityChecklist({ compact = false }: { compact?: boolean }) {
   const done = items.filter((i) => i.done).length;
   if (done === items.length) return null;
   return (
-    <section aria-labelledby="security-checklist" className="grid gap-3 rounded-2xl border border-warning/30 bg-warning-tint/60 p-4 sm:p-5">
+    <section aria-labelledby="security-checklist" className="grid gap-3.5 rounded-2xl border border-[#E85432]/28 border-t-[3.5px] border-t-[#E85432] bg-gradient-to-br from-[#FFF4F0] via-card to-card p-4 shadow-[0_10px_28px_-18px_rgb(232_84_50/0.22)] dark:from-[#E85432]/12 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <h2 id="security-checklist" className="flex items-center gap-2 font-sans text-base font-bold tracking-normal">
-          <ShieldAlert className="size-5 text-warning" aria-hidden="true" />
+        <h2 id="security-checklist" className="flex items-center gap-2.5 font-sans text-[15.5px] font-bold tracking-tight">
+          <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-[#E85432] text-white shadow-[0_6px_14px_-6px_rgb(232_84_50/0.55)]" aria-hidden="true">
+            <ShieldAlert className="size-4" />
+          </span>
           {t.title}
         </h2>
-        <span className="text-sm font-semibold tabular-nums text-muted-foreground">{t.done(done, items.length)}</span>
+        <span className="rounded-full bg-[#FFE4DC] px-2.5 py-0.5 text-xs font-bold tabular-nums text-[#B43214] dark:bg-[#E85432]/20 dark:text-[#FF9E87]">{t.done(done, items.length)}</span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-card" aria-hidden="true">
-        <span className="block h-full rounded-full bg-warning transition-[width] duration-500" style={{ width: `${(done / items.length) * 100}%` }} />
+      <div className="h-1.5 overflow-hidden rounded-full bg-[#E85432]/15" aria-hidden="true">
+        <span className="block h-full rounded-full bg-[#E85432] transition-[width] duration-500" style={{ width: `${(done / items.length) * 100}%` }} />
       </div>
       <ul className="grid gap-1">
         {items.map((i) => {

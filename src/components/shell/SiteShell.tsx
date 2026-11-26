@@ -89,6 +89,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
 
   // Every storefront page shares the home page's warm paper (pages/shopping.md; home paints its own).
   const shopPaper = pathname !== "/";
+  // Account pages render their own focused top bar (back to shop / account) without the storefront navbar.
+  const isAccount = pathname === "/account" || pathname.startsWith("/account/");
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
@@ -98,8 +100,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
       >
         {dict.nav.skipToContent}
       </a>
-      <AnnouncementBar />
-      <SiteHeader />
+      {!isAccount ? <AnnouncementBar /> : null}
+      {!isAccount ? <SiteHeader /> : null}
       <OfflineBanner />
       {/* At least a screen tall: the footer stays below the fold while a page or its data loads, so it never jumps (layout shift). */}
       <main id="content" tabIndex={-1} className={cn("relative min-h-dvh flex-1 outline-none", shopPaper && "home-paper")}>

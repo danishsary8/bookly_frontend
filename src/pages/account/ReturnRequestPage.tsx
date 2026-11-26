@@ -74,9 +74,30 @@ export default function ReturnRequestPage() {
   }
   if (!order.data || !returnable.data) {
     return (
-      <SkeletonGroup label={dict.orders.loadingOne} className="grid gap-4">
-        <Skeleton className="h-12 w-2/3" />
-        <Skeleton className="h-56 rounded-xl" />
+      <SkeletonGroup label={dict.orders.loadingOne} className="account-pane-body">
+        <Skeleton className="h-4 w-32 rounded-full" />
+        <div className="grid gap-2 border-b border-border/70 pb-4">
+          <Skeleton className="h-8 w-56 rounded-lg" />
+          <Skeleton className="h-4 w-72 max-w-full rounded-full" />
+        </div>
+        <div className="grid gap-3 rounded-2xl border border-border bg-card p-5">
+          <Skeleton className="h-4 w-36 rounded-md" />
+          {Array.from({ length: 2 }, (_, i) => (
+            <div key={i} className="flex items-center gap-3 rounded-xl border border-border/70 p-3.5">
+              <Skeleton className="size-5 shrink-0 rounded-sm" />
+              <div className="grid flex-1 gap-1.5">
+                <Skeleton className="h-4 w-2/3 rounded-md" />
+                <Skeleton className="h-3 w-1/3 rounded-full" />
+              </div>
+              <Skeleton className="h-9 w-20 shrink-0 rounded-lg" />
+            </div>
+          ))}
+        </div>
+        <div className="grid gap-3 rounded-2xl border border-border bg-card p-5">
+          <Skeleton className="h-4 w-28 rounded-md" />
+          <Skeleton className="h-24 w-full rounded-xl" />
+          <Skeleton className="h-10 w-36 rounded-lg" />
+        </div>
       </SkeletonGroup>
     );
   }

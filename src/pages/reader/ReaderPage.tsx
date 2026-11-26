@@ -17,7 +17,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { ebookApi, ebookKeys, ebookQueries, type EbookReaderMeta, type EbookPreviewMeta } from "@/api/endpoints/ebooks";
 import { ApiError } from "@/api/errors";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -43,6 +43,8 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
   const e = dict.ebook;
   const r = dict.readerUi;
   const queryClient = useQueryClient();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [theme, setTheme] = useState<SurroundTheme>(() => {
     try {
@@ -66,10 +68,12 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
   const activeBlobUrlRef = useRef<string | null>(null);
   const preloadedUrlsRef = useRef<Map<number, string>>(new Map());
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingProgressPageRef = useRef<number | null>(null);
 
   // The bars step aside after a few quiet seconds and come back on any pointer movement, tap or key (pages/account.md
-  // §4). They stay while the Go to page panel is open.
+  // §4). They stay visible while hovered or while the Go to page panel is open.
   const [chromeHidden, setChromeHidden] = useState(false);
+  const [chromeHovered, setChromeHovered] = useState(false);
   const [jumpOpen, setJumpOpen] = useState(false);
   const [jumpValue, setJumpValue] = useState("");
   const hideTimer = useRef<number | undefined>(undefined);
@@ -79,7 +83,7 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
     hideTimer.current = window.setTimeout(() => setChromeHidden(true), 3000);
   }, []);
   useEffect(() => {
-    const events = ["mousemove", "keydown", "focusin"] as const;
+    const events = ["pointermove", "keydown", "focusin"] as const;
     for (const name of events) window.addEventListener(name, wake, { passive: true });
     hideTimer.current = window.setTimeout(() => setChromeHidden(true), 3000);
     return () => {
@@ -259,13 +263,43 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
   const triggerProgressSave = useCallback(
     (page: number) => {
       if (isPreview) return;
+      pendingProgressPageRef.current = page;
       if (progressTimerRef.current) clearTimeout(progressTimerRef.current);
       progressTimerRef.current = setTimeout(() => {
+        pendingProgressPageRef.current = null;
         saveProgressMutation.mutate(page);
       }, 700);
     },
     [isPreview, saveProgressMutation]
   );
+
+  // Return to the caller page (Account, My Ebooks, Book Detail, or history) and flush any unsaved page progress.
+  const handleBack = useCallback(() => {
+    if (!isPreview && pendingProgressPageRef.current !== null) {
+      const pageToFlush = pendingProgressPageRef.current;
+      pendingProgressPageRef.current = null;
+      if (progressTimerRef.current) {
+        clearTimeout(progressTimerRef.current);
+        progressTimerRef.current = null;
+      }
+      saveProgressMutation.mutate(pageToFlush);
+    }
+
+    const from = (location.state as { from?: unknown } | null)?.from;
+    if (typeof from === "string" && from.startsWith("/") && !from.startsWith("//") && from !== location.pathname) {
+      navigate(from);
+      return;
+    }
+
+    const historyIdx = (window.history.state as { idx?: unknown } | null)?.idx;
+    if (typeof historyIdx === "number" && historyIdx > 0) {
+      navigate(-1);
+      return;
+    }
+
+    const fallback = isPreview && Number.isFinite(bookId) && bookId > 0 ? `/books/${bookId}` : "/account/ebooks";
+    navigate(fallback);
+  }, [bookId, isPreview, location.pathname, location.state, navigate, saveProgressMutation]);
 
   // Navigation handlers
   const goToPage = useCallback(
@@ -427,9 +461,9 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
           <h1 className="mt-4 font-display text-2xl font-bold">{e.deviceLimitTitle}</h1>
           <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{e.deviceLimitLead(3)}</p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Link to={`/books/${bookId}`} className={buttonVariants({ variant: "outline" })}>
+            <Button type="button" variant="outline" onClick={handleBack}>
               {dict.common.back}
-            </Link>
+            </Button>
             <Link to="/account/ebooks#devices" className={buttonVariants()}>
               {e.manageDevices}
             </Link>
@@ -447,9 +481,9 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
           <h1 className="mt-4 font-display text-2xl font-bold">{e.processingTitle}</h1>
           <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{e.processingLead}</p>
           <div className="mt-6 flex justify-center">
-            <Link to={`/books/${bookId}`} className={buttonVariants({ variant: "outline" })}>
+            <Button type="button" variant="outline" onClick={handleBack}>
               {dict.common.back}
-            </Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -468,9 +502,9 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
             <Button variant="outline" onClick={() => void queryClient.invalidateQueries({ queryKey: isPreview ? ebookKeys.previewMeta(bookId) : ebookKeys.meta(bookId) })}>
               {e.retry}
             </Button>
-            <Link to={`/books/${bookId}`} className={buttonVariants({ variant: "outline" })}>
+            <Button type="button" variant="outline" onClick={handleBack}>
               {dict.common.back}
-            </Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -478,7 +512,7 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
   }
 
   const isLastPreviewPage = isPreview && currentPage >= totalPages;
-  const hidden = chromeHidden && !jumpOpen && !isLastPreviewPage && !pageError;
+  const hidden = chromeHidden && !chromeHovered && !jumpOpen && !isLastPreviewPage && !pageError;
   const percent = totalPages > 0 ? Math.round((currentPage / totalPages) * 100) : 0;
   const jumpTo = (page: number) => {
     goToPage(page);
@@ -505,27 +539,34 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
       <style>{`@media print { body { display: none !important; } }`}</style>
 
       {/* Reading progress: a hairline along the top edge, there even while the bars are away. */}
-      <div className="absolute inset-x-0 top-0 z-30 h-[3px] bg-(--reader-line)" aria-hidden="true">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-[3px] bg-(--reader-line)" aria-hidden="true">
         <span className="block h-full origin-left bg-(--reader-ring) transition-transform duration-300 motion-reduce:transition-none" style={{ transform: `scaleX(${percent / 100})` }} />
       </div>
 
       {/* Top Controls Bar */}
       <header
         data-hidden={hidden}
+        onMouseEnter={() => setChromeHovered(true)}
+        onMouseLeave={() => {
+          setChromeHovered(false);
+          wake();
+        }}
         className={cn(
           "reader-chrome reader-chrome-top absolute inset-x-0 top-0 z-20 flex h-16 items-center justify-between gap-2 border-b px-3 backdrop-blur-md sm:px-4",
           barClasses
         )}
       >
-        <div className="flex items-center gap-3 truncate">
-          <Link
-            to={`/books/${bookId}`}
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+          <button
+            type="button"
+            onClick={handleBack}
             aria-label={e.closeReader}
-            className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-11 shrink-0 rounded-full", ghostTone)}
+            title={e.closeReader}
+            className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-11 shrink-0 cursor-pointer rounded-full", ghostTone)}
           >
-            <ArrowLeft className="size-5" />
-          </Link>
-          <div className="flex flex-col truncate">
+            <ArrowLeft className="size-5" aria-hidden="true" />
+          </button>
+          <div className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-semibold">{title}</span>
             {isPreview ? (
               <span className="text-xs font-semibold uppercase tracking-wide text-(--reader-ring)">
@@ -722,6 +763,11 @@ function ReaderView({ bookId, isPreview }: { bookId: number; isPreview: boolean 
       {/* Bottom Navigation & Slider Bar */}
       <footer
         data-hidden={hidden}
+        onMouseEnter={() => setChromeHovered(true)}
+        onMouseLeave={() => {
+          setChromeHovered(false);
+          wake();
+        }}
         className={cn(
           "reader-chrome reader-chrome-bottom absolute inset-x-0 bottom-0 z-20 flex h-16 items-center justify-between gap-3 border-t px-3 backdrop-blur-md sm:px-8",
           barClasses

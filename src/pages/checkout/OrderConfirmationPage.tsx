@@ -92,12 +92,60 @@ export default function OrderConfirmationPage() {
   if (order.isError) return <div className="container-shell py-16"><ErrorState error={order.error} onRetry={() => order.refetch()} headingLevel="h1" /></div>;
   if (!order.data) {
     return (
-      <div className="container-shell py-12">
-        <SkeletonGroup label={k.loadingOrder} className="grid gap-6">
-          <Skeleton className="h-64 rounded-3xl" />
+      <div className="container-shell py-8 sm:py-10">
+        <SkeletonGroup label={k.loadingOrder} className="grid gap-8">
+          <div className="flex justify-end gap-3">
+            {Array.from({ length: 5 }, (_, i) => (
+              <Skeleton key={i} className="size-7 rounded-full" />
+            ))}
+          </div>
+          <div className="grid gap-6 rounded-3xl border border-border bg-card p-6 sm:p-10 lg:grid-cols-[minmax(0,1fr)_auto]">
+            <div className="grid gap-4">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-12 rounded-full" />
+                <Skeleton className="h-6 w-24 rounded-full" />
+              </div>
+              <Skeleton className="h-10 w-72 max-w-full rounded-lg" />
+              <Skeleton className="h-4 w-96 max-w-full rounded-full" />
+              <div className="flex gap-3 pt-2">
+                <Skeleton className="h-11 w-36 rounded-xl" />
+                <Skeleton className="h-11 w-32 rounded-xl" />
+              </div>
+            </div>
+            <Skeleton className="hidden h-44 w-32 rounded-lg lg:block" />
+          </div>
           <div className="grid gap-6 lg:grid-cols-12">
-            <Skeleton className="h-72 rounded-2xl lg:col-span-7" />
-            <Skeleton className="h-72 rounded-2xl lg:col-span-5" />
+            <div className="grid gap-4 rounded-2xl border border-border bg-card p-5 sm:p-6 lg:col-span-7">
+              <Skeleton className="h-6 w-32 rounded-md" />
+              {Array.from({ length: 2 }, (_, i) => (
+                <div key={i} className="flex items-center justify-between gap-4 border-t border-border/60 pt-4">
+                  <div className="grid flex-1 gap-1.5">
+                    <Skeleton className="h-4 w-3/4 rounded-md" />
+                    <Skeleton className="h-3.5 w-1/3 rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-16 rounded-md" />
+                </div>
+              ))}
+              <div className="flex items-center justify-between border-t border-dashed border-border/80 pt-4">
+                <Skeleton className="h-5 w-32 rounded-md" />
+                <Skeleton className="h-7 w-24 rounded-md" />
+              </div>
+            </div>
+            <div className="grid content-start gap-5 lg:col-span-5">
+              <div className="grid gap-2.5 rounded-2xl border border-border bg-card p-5">
+                <Skeleton className="h-5 w-36 rounded-md" />
+                <Skeleton className="h-4 w-40 rounded-full" />
+                <Skeleton className="h-3.5 w-full rounded-full" />
+                <Skeleton className="h-3.5 w-2/3 rounded-full" />
+              </div>
+              <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-5">
+                <Skeleton className="size-10 shrink-0 rounded-xl" />
+                <div className="grid flex-1 gap-1.5">
+                  <Skeleton className="h-4 w-44 rounded-md" />
+                  <Skeleton className="h-3.5 w-full rounded-full" />
+                </div>
+              </div>
+            </div>
           </div>
         </SkeletonGroup>
       </div>
@@ -110,11 +158,11 @@ export default function OrderConfirmationPage() {
   return (
     <div className="overflow-x-clip pb-20">
       <div className="container-shell grid gap-10 pt-6 sm:pt-8">
-        <CheckoutProgress current="done" withPay={o.payment_method === "khqr"} className="justify-self-end" />
+        <CheckoutProgress current="done" withPay={o.payment_method === "khqr"} className="sm:justify-self-end" />
 
         {/* The thank-you panel: seal, title, order number and dates on the left; the books just bought on the right,
             over a soft wash of the first cover's colours. */}
-        <header className="shop-card group relative isolate grid items-center gap-8 overflow-hidden rounded-3xl border border-border bg-card p-6 sm:p-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-12 lg:p-12">
+        <header className="shop-card group relative isolate grid items-center gap-6 overflow-hidden rounded-3xl border border-border bg-card p-5 sm:gap-8 sm:p-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-12 lg:p-12">
           {lead ? <img src={lead} alt="" aria-hidden="true" className="hero-wash pointer-events-none absolute -right-20 top-1/2 -z-10 h-[160%] w-2/3 -translate-y-1/2 object-cover opacity-20 blur-3xl saturate-150" /> : null}
           <span className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(90deg,var(--card)_40%,transparent)]" aria-hidden="true" />
           <div className="grid gap-5">
@@ -123,8 +171,8 @@ export default function OrderConfirmationPage() {
               <OrderStatusBadge status={o.status} />
             </div>
             <div className="grid gap-3">
-              <h1 className="font-display text-[2.441rem] leading-[1.08] sm:text-[3.052rem]">{k.thankYou}</h1>
-              <p className="max-w-xl text-lg text-muted-foreground">
+              <h1 className="font-display text-[1.95rem] leading-[1.1] sm:text-[2.6rem] lg:text-[3.052rem]">{k.thankYou}</h1>
+              <p className="max-w-xl text-base text-muted-foreground sm:text-lg">
                 <Rich text={k.placedLead(o.order_number ?? "")} strong="font-semibold tabular-nums text-foreground" />
               </p>
             </div>
@@ -201,18 +249,32 @@ export default function OrderConfirmationPage() {
           </div>
           <div className="grid gap-6 lg:col-span-5">
             <DeliveryAddressCard address={o.shipping_address} className="shop-card rounded-2xl" />
-            <div className="grid gap-4 rounded-2xl border border-border bg-card p-5">
-              <div className="flex items-start gap-3">
-                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-lapis-tint text-primary">
-                  <Send className="size-[18px]" aria-hidden="true" />
+            <div className="relative isolate grid gap-4 overflow-hidden rounded-2xl border border-[#229ED9]/25 bg-gradient-to-br from-[#229ED9]/[0.08] via-card to-lapis-tint/35 p-5 shadow-[0_14px_34px_-26px_rgb(34_158_217/0.35)] sm:p-6">
+              <span
+                className="pointer-events-none absolute -right-10 -top-10 -z-10 size-36 rounded-full bg-[radial-gradient(closest-side,rgb(34_158_217/0.2),transparent)]"
+                aria-hidden="true"
+              />
+              <div className="flex items-start gap-3.5">
+                <span
+                  className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[#229ED9] text-white shadow-[0_10px_20px_-10px_rgb(34_158_217/0.85)]"
+                  aria-hidden="true"
+                >
+                  <Send className="size-5 -translate-x-0.5 translate-y-0.5" />
                 </span>
-                <div className="grid gap-0.5">
+                <div className="grid gap-1">
                   <span className="font-semibold text-foreground">{k.telegramUpdatesTitle}</span>
-                  <span className="text-sm text-muted-foreground">{k.telegramUpdatesDesc}</span>
+                  <span className="text-sm leading-relaxed text-muted-foreground">{k.telegramUpdatesDesc}</span>
                 </div>
               </div>
-              <Link to="/account/profile" className={buttonVariants({ variant: "outline", size: "sm", className: "justify-self-start" })}>
+              <Link
+                to="/account/profile"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "justify-self-start rounded-full border-[#229ED9]/30 bg-card/90 px-4 font-semibold text-primary hover:border-[#229ED9] hover:bg-[#229ED9]/10",
+                )}
+              >
                 {k.manage}
+                <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
             </div>
           </div>

@@ -28,12 +28,12 @@
   .cart-summary-footer > div:first-child > p { font-family: var(--font-sans); font-size: 1.75rem; font-weight: 600; letter-spacing: -.035em; }
   .cart-summary-footer a[href='/checkout'] { height: 2.75rem; font-size: .8rem; }
   .cart-summary-footer > p { font-size: .7rem; line-height: 1.5; }
-  .cart-progress { max-width: 100%; padding-block: .25rem; }
+  .cart-progress { max-width: 100%; padding-block: .25rem; overflow: visible; }
   .cart-progress ol, .cart-progress li { gap: .5rem; }
-  .cart-progress .checkout-step-marker { width: 1.5rem; height: 1.5rem; font-size: .7rem; }
+  .cart-progress .checkout-step-marker { width: 1.65rem; height: 1.65rem; font-size: .72rem; }
   .cart-progress li > span:first-child, .cart-progress li > a { gap: .45rem; min-height: 2.75rem; }
-  .cart-progress .text-sm { font-size: .75rem; line-height: 1.4; font-weight: 500; }
-  .cart-progress li[aria-current='step'] .text-sm { font-weight: 600; }
+  .cart-progress .checkout-step-label { font-size: .75rem; line-height: 1.4; font-weight: 500; }
+  .cart-progress li[aria-current='step'] .checkout-step-label { font-weight: 700; color: var(--primary); }
   .cart-progress li > span:last-child[aria-hidden] { width: 1.25rem; }
   .cart-products > li { column-gap: 1.25rem; padding-block: 1.5rem; }
   .cart-products > li > a { width: 72px; }

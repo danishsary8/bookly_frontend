@@ -107,7 +107,7 @@ export default function HomePage() {
       {sectionsEnabled ? <>
       {/* The 3D shelf sits on the same page colour as everything else (one calm background, no band). */}
       <ShelfHero />
-      <div className="container-shell grid gap-24 pb-10 pt-16">
+      <div className="container-shell grid gap-14 pb-10 pt-10 sm:gap-20 sm:pt-14 lg:gap-24 lg:pt-16">
         {/* Order (pages/home.md): hero → shelf → continue → categories → new arrivals → top rated → coming soon → staff picks / seasonal → promises. */}
         <ContinueStrip books={recent} />
         <AnimatedContent distance={32} duration={0.7} threshold={0.15}>

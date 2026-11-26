@@ -72,6 +72,7 @@ describe("Cart: reward nudge, KHQR hint and a saved reward coupon", () => {
     const user = userEvent.setup();
     app("/cart");
     const summary = await screen.findByRole("complementary", { name: "Order summary" });
+    await user.click(await within(summary).findByRole("button", { name: /Coupon & promo code/i }));
     await user.click(await within(summary).findByRole("button", { name: "Apply coupon THANKS-K7M2Q9" }));
     expect(getCoupon()).toBe("THANKS-K7M2Q9");
     expect(await within(summary).findByRole("button", { name: "Remove coupon THANKS-K7M2Q9" })).toBeInTheDocument();
@@ -83,6 +84,7 @@ describe("Cart: reward nudge, KHQR hint and a saved reward coupon", () => {
     const user = userEvent.setup();
     app("/cart");
     const summary = await screen.findByRole("complementary", { name: "Order summary" });
+    await user.click(await within(summary).findByRole("button", { name: /Coupon & promo code/i }));
     expect(await within(summary).findByRole("button", { name: "Apply coupon THANKS-K7M2Q9" })).toBeInTheDocument();
 
     // Open manual code input while saved coupon is visible and apply another code
@@ -102,6 +104,7 @@ describe("Checkout: KHQR saving and the cash on delivery limit", () => {
   it("tags KHQR with its saving and shows the KHQR discount once chosen", async () => {
     const user = userEvent.setup();
     app("/checkout");
+    await user.click((await screen.findAllByRole("button", { name: "Continue to payment" }))[0]);
     expect((await screen.findAllByText("Save $0.30")).length).toBeGreaterThan(0);
     await user.click(screen.getByRole("radio", { name: /Bakong KHQR/ }));
     expect(await screen.findByText("KHQR discount (3%)")).toBeInTheDocument();
@@ -110,8 +113,10 @@ describe("Checkout: KHQR saving and the cash on delivery limit", () => {
   });
 
   it("switches to KHQR when the order is over the cash on delivery limit", async () => {
+    const user = userEvent.setup();
     vi.spyOn(cartApi, "preview").mockImplementation(async (_c, _a, _area, _credit, method) => preview(method, false));
     app("/checkout");
+    await user.click((await screen.findAllByRole("button", { name: "Continue to payment" }))[0]);
     const cod = await screen.findByRole("radio", { name: /Cash on delivery/ });
     await waitFor(() => expect(cod).toBeDisabled());
     expect(screen.getByText("For orders up to $80.00. Please pay this order by KHQR.")).toBeInTheDocument();

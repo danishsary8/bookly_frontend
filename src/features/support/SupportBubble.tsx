@@ -17,7 +17,7 @@ export function SupportBubble() {
   const assistant = useT().dict.assistant;
   const [tab, setTab] = useState("assistant");
   const [handoff, setHandoff] = useState("");
-  const hidden = pathname.startsWith("/checkout") || /\/(pay|invoice|print)(\/|$)/.test(pathname) || pathname.startsWith("/account/support");
+  const hidden = pathname.startsWith("/checkout") || pathname.startsWith("/account") || /\/(pay|invoice|print)(\/|$)/.test(pathname);
   const conversations = useConversations(false, "?unread=1", !hidden);
   const unread = conversations.data?.value.meta?.total ?? 0;
   if (hidden) return null;
@@ -43,8 +43,8 @@ export function SupportBubble() {
           </Button>
         </DialogTrigger>
         <DialogContent
-          containerClassName="sm:items-end sm:justify-items-end sm:pb-[5.5rem] sm:pr-5 lg:pb-24 lg:pr-6"
-          className="flex max-h-[min(85dvh,640px)] w-[min(94vw,430px)] flex-col overflow-hidden rounded-2xl border-border/80 p-0 shadow-overlay [&>[aria-label]]:text-primary-foreground [&>[aria-label]]:hover:bg-white/15 [&>[aria-label]]:hover:text-white"
+          containerClassName="items-end pb-3 px-2.5 sm:items-end sm:justify-items-end sm:pb-[5.5rem] sm:pr-5 sm:pl-4 lg:pb-24 lg:pr-6"
+          className="flex h-[min(85dvh,640px)] max-h-[85dvh] w-[min(95vw,430px)] flex-col overflow-hidden rounded-2xl border-border/80 p-0 shadow-overlay [&>[aria-label]]:text-primary-foreground [&>[aria-label]]:hover:bg-white/15 [&>[aria-label]]:hover:text-white"
           onClickCapture={(event) => {
             if (event.target instanceof Element && event.target.closest("a[href]")) setOpen(false);
           }}
@@ -94,7 +94,7 @@ export function SupportBubble() {
                   />
                 </Suspense>
               </TabsContent>
-              <TabsContent value="human" className="mt-0 min-h-0 flex-1 overflow-y-auto p-4">
+              <TabsContent value="human" className="mt-0 flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
                 <SupportPanel initialMessage={handoff} />
               </TabsContent>
             </Tabs>

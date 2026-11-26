@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { ErrorState } from "@/components/ui/error-state";
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { AccountSection } from "@/features/account/AccountSection";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useT } from "@/i18n";
@@ -55,7 +56,16 @@ export default function ReadingListsPage() {
         <TextField label={t.listTitle} required maxLength={100} value={title} onChange={(event) => setTitle(event.target.value)} />
         <Button type="submit" loading={create.isPending} disabled={lists.isPending || lists.isError || !title.trim() || (lists.data?.length ?? 0) >= 20}>{t.create}</Button>
       </form>
-      {lists.isPending ? <p role="status">{dict.common.loading}</p> : null}
+      {lists.isPending ? (
+        <SkeletonGroup label={dict.common.loading} className="grid gap-3">
+          {Array.from({ length: 3 }, (_, i) => (
+            <div key={i} className="flex min-h-16 items-center justify-between gap-4 rounded-2xl border border-border bg-card px-5 py-3">
+              <Skeleton className="h-5 w-44 rounded-md" />
+              <Skeleton className="h-4 w-16 rounded-full" />
+            </div>
+          ))}
+        </SkeletonGroup>
+      ) : null}
       {lists.isError ? <ErrorState error={lists.error} onRetry={() => lists.refetch()} /> : null}
       {lists.data?.length === 0 ? (
         <EmptyState icon={BookHeart} title={a.listsTitle} description={a.listsLead} action={<Link to="/books" className={buttonVariants({ variant: "outline" })}>{a.findBooks}</Link>} />

@@ -62,7 +62,7 @@ function useHeaderScroll(routeKey: string, panelOpen: boolean) {
       const active = document.activeElement;
       const interacting = header?.contains(active) && (active?.matches(":focus-visible, input, textarea") ?? false);
       const menuOpen = header?.querySelector('[data-state="open"], [aria-expanded="true"]');
-      if (panelOpen || interacting || menuOpen || y < (header?.offsetHeight ?? 80) + 32) {
+      if (panelOpen || interacting || menuOpen || y <= 4) {
         setHidden(false);
         distance = 0;
         return;
@@ -72,8 +72,8 @@ function useHeaderScroll(routeKey: string, panelOpen: boolean) {
       if (direction !== nextDirection) distance = 0;
       direction = nextDirection;
       distance += Math.abs(delta);
-      if (direction > 0 && distance >= 24) setHidden(true);
-      if (direction < 0 && distance >= 6) setHidden(false);
+      if (direction > 0 && distance >= 4) setHidden(true);
+      if (direction < 0 && distance >= 4) setHidden(false);
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update);
@@ -104,7 +104,7 @@ function useHeaderScroll(routeKey: string, panelOpen: boolean) {
 const links = [
   { label: "newArrivals", to: "/books?sort=newest", sort: "newest" },
   { label: "bestSellers", to: "/books?sort=best_selling", sort: "best_selling" },
-  { label: "authors", to: "/authors", sort: null },
+  { label: "khmerBooks", to: "/categories/khmer-books", sort: null },
 ] as const;
 
 export function SiteHeader() {
@@ -124,8 +124,8 @@ export function SiteHeader() {
       onFocusCapture={reveal}
       data-scroll-hidden={hidden || undefined}
       className={cn(
-        "site-header sticky top-0 z-(--z-header) h-(--header-h) border-b bg-card/90 backdrop-blur-md transition-[transform,box-shadow,border-color] duration-300 ease-out supports-[backdrop-filter]:bg-card/80 dark:bg-background/85",
-        hidden ? "-translate-y-full pointer-events-none" : "translate-y-0",
+        "site-header sticky top-0 z-(--z-header) h-(--header-h) border-b bg-card/90 backdrop-blur-md transition-[transform,opacity,box-shadow,border-color] duration-200 ease-out supports-[backdrop-filter]:bg-card/80 dark:bg-background/85",
+        hidden ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100",
         scrolled ? "border-transparent shadow-[0_8px_24px_-16px_rgb(20_32_122/0.35)]" : "border-border",
       )}
     >

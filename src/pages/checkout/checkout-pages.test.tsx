@@ -129,9 +129,13 @@ describe("CheckoutPage", () => {
     const place = vi.spyOn(cartApi, "placeOrder").mockResolvedValue({ ...order, credit_used_usd: "5.00", payment_due_usd: "22.48" });
     vi.spyOn(ordersApi, "order").mockResolvedValue(order);
     const user = userEvent.setup(); app("/checkout");
+    await user.click((await screen.findAllByRole("button", { name: "Continue to payment" }))[0]);
     await user.click(await screen.findByRole("checkbox", { name: /Use credit balance/ }));
     await screen.findByText("$22.48");
-    await user.click(screen.getAllByRole("button", { name: "Place order" })[0]);
+    await user.click(screen.getAllByRole("button", { name: "Review order" })[0]);
+    await user.click(screen.getAllByRole("button", { name: "Confirm & place order" })[0]);
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Confirm" }));
     await waitFor(() => expect(place).toHaveBeenCalledWith(expect.objectContaining({ use_credit: true, expected_payment_due_usd: "22.48" }), expect.any(String)));
   });
   it("lets the courier phone be edited separately and blocks an invalid number", async () => {
@@ -142,14 +146,18 @@ describe("CheckoutPage", () => {
     expect(phone).toHaveValue(home.phone);
     await user.clear(phone);
     await user.type(phone, "abc");
-    expect(screen.getAllByRole("button", { name: "Place order" })[0]).toBeDisabled();
+    expect(screen.getAllByRole("button", { name: "Continue to payment" })[0]).toBeDisabled();
     await user.clear(phone);
     await user.type(phone, "+855 87 123 456");
-    await user.click(screen.getAllByRole("button", { name: "Place order" })[0]);
+    await user.click(screen.getAllByRole("button", { name: "Continue to payment" })[0]);
+    await user.click(screen.getAllByRole("button", { name: "Review order" })[0]);
+    await user.click(screen.getAllByRole("button", { name: "Confirm & place order" })[0]);
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Confirm" }));
     expect(place).toHaveBeenCalledWith(expect.objectContaining({ delivery_phone: "+855 87 123 456" }), expect.any(String));
   });
 
-  it("preselects the default address and places a cash-on-delivery order", async () => {
+  it("preselects the default address, walks through delivery -> payment -> review receipt, and places a COD order", async () => {
     const user = userEvent.setup();
     setCoupon("WELCOME10");
     const place = vi.spyOn(cartApi, "placeOrder").mockResolvedValue(order);
@@ -158,10 +166,22 @@ describe("CheckoutPage", () => {
     const summary = await screen.findByRole("complementary", { name: "Order total" });
     expect(await within(summary).findByText("−$2.59")).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: /Home/ })).toBeChecked();
+    await user.click(screen.getAllByRole("button", { name: "Continue to payment" })[0]);
     expect(screen.getByRole("radio", { name: /Cash on delivery/ })).toBeChecked();
-    // Card payments are not offered (no "coming soon" row in the minimal payment list).
-    expect(screen.queryByRole("radio", { name: /Card/ })).not.toBeInTheDocument();
-    await user.click(screen.getAllByRole("button", { name: "Place order" })[0]);
+    // Card payments are shown as a disabled "Coming soon" row so customers cannot select them.
+    expect(screen.getByRole("radio", { name: /Card/ })).toBeDisabled();
+    await user.click(screen.getAllByRole("button", { name: "Review order" })[0]);
+    expect(screen.getByRole("heading", { level: 2, name: "Review your order" })).toBeInTheDocument();
+    await user.click(screen.getAllByRole("button", { name: "Confirm & place order" })[0]);
+    // Cancelling the confirmation popup keeps the customer on Review without placing the order.
+    const firstDialog = await screen.findByRole("alertdialog");
+    await user.click(within(firstDialog).getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+    expect(place).not.toHaveBeenCalled();
+
+    await user.click(screen.getAllByRole("button", { name: "Confirm & place order" })[0]);
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Confirm" }));
     expect(place).toHaveBeenCalledWith({ address_id: 11, payment_method: "cod", delivery_phone: "012345678", coupon_code: "WELCOME10" }, expect.any(String));
     expect(await screen.findByRole("heading", { level: 1, name: /Thank you/ })).toBeInTheDocument();
     expect(screen.getByText(/BK-000042/)).toBeInTheDocument();
@@ -177,7 +197,11 @@ describe("CheckoutPage", () => {
     expect(screen.getByText("0/300")).toBeInTheDocument();
     await user.type(noteField, "Call before delivery");
     expect(screen.getByText("20/300")).toBeInTheDocument();
-    await user.click(screen.getAllByRole("button", { name: "Place order" })[0]);
+    await user.click(screen.getAllByRole("button", { name: "Continue to payment" })[0]);
+    await user.click(screen.getAllByRole("button", { name: "Review order" })[0]);
+    await user.click(screen.getAllByRole("button", { name: "Confirm & place order" })[0]);
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Confirm" }));
     expect(place).toHaveBeenCalledWith(
       expect.objectContaining({ delivery_note: "Call before delivery" }),
       expect.any(String),
@@ -206,18 +230,23 @@ describe("CheckoutPage", () => {
       .mockResolvedValueOnce(order);
     vi.spyOn(ordersApi, "order").mockResolvedValue(order);
     app("/checkout");
-    const button = (await screen.findAllByRole("button", { name: "Place order" }))[0];
+    await user.click((await screen.findAllByRole("button", { name: "Continue to payment" }))[0]);
+    await user.click(screen.getAllByRole("button", { name: "Review order" })[0]);
+    const button = screen.getAllByRole("button", { name: "Confirm & place order" })[0];
     await waitFor(() => expect(button).toBeEnabled());
 
     await user.click(button);
+    await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Confirm" }));
     expect(await screen.findByText("Only 1 left in stock.")).toBeInTheDocument();
-    await waitFor(() => expect(screen.getAllByRole("button", { name: "Place order" })[0]).toBeEnabled());
+    await waitFor(() => expect(screen.getAllByRole("button", { name: "Confirm & place order" })[0]).toBeEnabled());
 
     // The order went through but the response was lost; the cart is empty on the server now.
     vi.mocked(cartApi.cart).mockResolvedValue({ ...cart, items: [], item_count: 0, can_checkout: false });
-    await user.click(screen.getAllByRole("button", { name: "Place order" })[0]);
+    await user.click(screen.getAllByRole("button", { name: "Confirm & place order" })[0]);
+    await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Confirm" }));
     expect(await screen.findByText("We couldn't confirm your order")).toBeInTheDocument();
-    await user.click(screen.getAllByRole("button", { name: "Place order" })[0]);
+    await user.click(screen.getAllByRole("button", { name: "Confirm & place order" })[0]);
+    await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Confirm" }));
 
     expect(await screen.findByRole("heading", { level: 1, name: /Thank you/ })).toBeInTheDocument();
     const [first, second, third] = place.mock.calls.map((call) => call[1]);

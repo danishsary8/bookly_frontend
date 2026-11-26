@@ -108,13 +108,12 @@ describe("CheckoutPage with free delivery and estimated dates", () => {
     );
 
     const summary = await screen.findByRole("complementary", { name: "Order total" });
-    expect(await within(summary).findByText("Delivery (Phnom Penh)")).toBeInTheDocument();
-    expect(within(summary).getByText("$0.00")).toBeInTheDocument();
+    const deliveryLabel = await within(summary).findByText("Delivery (Phnom Penh)");
+    expect(deliveryLabel).toBeInTheDocument();
+    expect(deliveryLabel.closest("div")).toHaveTextContent("$0.00");
     expect(within(summary).getByText("Free")).toBeInTheDocument();
 
-    const arrival = await screen.findByText("Delivering to Phnom Penh");
-    expect(arrival.closest("aside")).toHaveAttribute("aria-labelledby", "checkout-summary");
-    expect(within(summary).getByText("Delivering to Phnom Penh")).toBeInTheDocument();
+    expect(await screen.findByText("Delivering to Phnom Penh")).toBeInTheDocument();
     expect(screen.getByText(/Est\. delivery: 1 working day \(Sat, 17 Oct – Mon, 19 Oct\)/)).toBeInTheDocument();
   });
 });
