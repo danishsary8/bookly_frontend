@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, BookCopy, BookPlus, Download, Eye, FileUp, Layers, Pencil, Sliders, X, BadgeDollarSign } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, BookCopy, BookPlus, Download, Eye, FileUp, Layers, Pencil, Sliders, X, BadgeDollarSign, Package } from "lucide-react";
 import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AdminFormDialogContent } from "@/features/admin/AdminFormDialog";
 import "@/features/admin/catalogue.css";
@@ -21,6 +21,7 @@ import { BookImportDialog } from "@/features/admin/books/BookImportDialog";
 import { BookState } from "@/features/admin/books/BookState";
 import { BulkActionsDialog, type BulkActionType } from "@/features/admin/books/BulkActionsDialog";
 import { PriceChangeDialog } from "@/features/admin/books/PriceChangeDialog";
+import { AddToBundleDialog } from "@/features/admin/books/AddToBundleDialog";
 import { useStaff } from "@/features/admin/staffSession";
 import { usePortalPath } from "@/features/admin/portal";
 import { orderDate } from "@/features/orders/format";
@@ -76,6 +77,7 @@ export default function BooksPage() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkAction, setBulkAction] = useState<BulkActionType>(null);
   const [pricesOpen, setPricesOpen] = useState(false);
+  const [bundleOpen, setBundleOpen] = useState(false);
   /** "Select all N books in this filter": every page, for Change prices (owner 2026-11-26). */
   const [allMatching, setAllMatching] = useState(false);
   const [priceBooks, setPriceBooks] = useState<StaffBook[] | null>(null);
@@ -312,6 +314,12 @@ export default function BooksPage() {
                   <Sliders className="mr-1.5 size-3.5" aria-hidden="true" />
                   Stock & Formats
                 </Button>
+                {isAdmin ? (
+                  <Button type="button" size="sm" variant="outline" onClick={() => setBundleOpen(true)}>
+                    <Package className="mr-1.5 size-3.5" aria-hidden="true" />
+                    Add to bundle
+                  </Button>
+                ) : null}
               </>
             )}
             {isAdmin ? (
@@ -424,6 +432,10 @@ export default function BooksPage() {
             void queryClient.invalidateQueries({ queryKey: ["staff", "books"] });
           }}
         />
+      ) : null}
+
+      {bundleOpen ? (
+        <AddToBundleDialog books={selectedBooks} onClose={() => setBundleOpen(false)} onSuccess={clearSelection} />
       ) : null}
 
       {pricesOpen ? (

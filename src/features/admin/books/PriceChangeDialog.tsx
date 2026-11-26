@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { AlertTriangle, ArrowRight, CheckCircle2, Info, Undo2 } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, History, Info, Undo2 } from "lucide-react";
 import { staffApi, type PriceChangeInput, type PriceChangeRow, type StaffBook } from "@/api/endpoints/staff";
 import { ApiError } from "@/api/errors";
 import { AdminFormDialogContent as DialogContent } from "@/features/admin/AdminFormDialog";
@@ -48,6 +48,29 @@ const noteText = (r: PriceChangeRow) =>
 
 const money = (v: string | null) => (v === null ? "—" : `$${v}`);
 
+/** The last rule applied in this browser, offered again in one click (owner 2026-11-26). */
+type SavedRule = { format: string; sellMode: SellMode; sellValue: string; rounding: PriceChangeInput["rounding"]; costMode: CostMode; costValue: string; floorAtCost: boolean };
+const LAST_RULE_KEY = "bookly.admin.lastPriceRule";
+const readLastRule = (): SavedRule | null => {
+  try {
+    const raw = localStorage.getItem(LAST_RULE_KEY);
+    return raw ? (JSON.parse(raw) as SavedRule) : null;
+  } catch {
+    return null;
+  }
+};
+const ROUND_LABEL: Record<string, string> = { "90": "round .90", "50": "round .50", whole: "whole $", none: "" };
+/** "Cost: set $3 · Sell: cost × 1.6, round .90 · Paperback" */
+function describeRule(r: SavedRule): string {
+  const val = (mode: string, v: string) =>
+    mode === "set" ? `set $${v}` : mode === "percent" ? `${Number(v) > 0 ? "+" : ""}${v}%` : mode === "amount" ? `${Number(v) > 0 ? "+" : ""}$${v}` : mode === "markup" ? `cost × ${v}` : "";
+  const parts: string[] = [];
+  if (r.costMode !== "keep") parts.push(`Cost: ${val(r.costMode, r.costValue)}`);
+  if (r.sellMode !== "keep") parts.push(`Sell: ${[val(r.sellMode, r.sellValue), ROUND_LABEL[r.rounding]].filter(Boolean).join(", ")}`);
+  if (r.format !== "all") parts.push(FORMAT_LABEL[r.format] ?? r.format);
+  return parts.join(" · ");
+}
+
 function RuleCard({ title, hint, children }: { title: string; hint: string; children: React.ReactNode }) {
   return (
     <fieldset className="grid gap-3 rounded-xl border border-border bg-surface-1 p-4">
@@ -69,6 +92,16 @@ export function PriceChangeDialog({ books, scope, onClose, onSuccess }: { books:
   const [costMode, setCostMode] = useState<CostMode>("keep");
   const [costValue, setCostValue] = useState("");
   const [floorAtCost, setFloorAtCost] = useState(true);
+  const [lastRule] = useState(readLastRule);
+  const applyLastRule = (r: SavedRule) => {
+    setFormat(r.format);
+    setSellMode(r.sellMode);
+    setSellValue(r.sellValue);
+    setRounding(r.rounding);
+    setCostMode(r.costMode);
+    setCostValue(r.costValue);
+    setFloorAtCost(r.floorAtCost);
+  };
   const [rows, setRows] = useState<PriceChangeRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   /** Only the rows that did not change because of a problem (no cost / under cost). */
@@ -97,6 +130,12 @@ export function PriceChangeDialog({ books, scope, onClose, onSuccess }: { books:
     onSuccess: (d) => {
       setError(null);
       setApplied(d.items.filter((r) => r.changed));
+      try {
+        const saved: SavedRule = { format, sellMode, sellValue, rounding, costMode, costValue, floorAtCost };
+        localStorage.setItem(LAST_RULE_KEY, JSON.stringify(saved));
+      } catch {
+        /* private mode: nothing to remember */
+      }
       onSuccess();
     },
     onError: fail,
@@ -142,6 +181,20 @@ export function PriceChangeDialog({ books, scope, onClose, onSuccess }: { books:
           </div>
         ) : rows === null ? (
           <div className="mt-4 grid gap-4">
+            {lastRule && describeRule(lastRule) ? (
+              <button
+                type="button"
+                onClick={() => applyLastRule(lastRule)}
+                className="flex items-center gap-3 rounded-xl border border-primary/25 bg-lapis-tint/50 px-3.5 py-2.5 text-left text-sm transition-colors hover:border-primary/50 hover:bg-lapis-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <History className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                <span className="min-w-0 flex-1">
+                  <span className="block font-semibold text-foreground">Use last rule</span>
+                  <span className="block truncate text-muted-foreground">{describeRule(lastRule)}</span>
+                </span>
+                <ArrowRight className="size-4 shrink-0 text-primary" aria-hidden="true" />
+              </button>
+            ) : null}
             <div role="radiogroup" aria-label="Formats" className="flex flex-wrap gap-1.5">
               {FORMATS.map((f) => (
                 <button
