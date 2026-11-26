@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useReducedMotion } from "motion/react";
 import { ArrowLeft, ArrowRight, Pause, Play, ShoppingBag } from "lucide-react";
@@ -31,12 +31,13 @@ import { useT } from "@/i18n";
  * between them, so a book turning out of the row never cuts into its neighbours.
  */
 
-type RowId = "best_sellers" | "new_arrivals" | "coming_soon" | "education" | "ebook_deals";
-const ROWS: RowId[] = ["best_sellers", "new_arrivals", "coming_soon", "education", "ebook_deals"];
+// Owner 2026-11-26: New arrivals left the shelf (it has its own section below); Khmer books come last, after Ebooks.
+type RowId = "best_sellers" | "coming_soon" | "education" | "ebook_deals" | "khmer";
+const ROWS: RowId[] = ["best_sellers", "coming_soon", "education", "ebook_deals", "khmer"];
 const ROW_LINK: Record<RowId, string> = {
   best_sellers: "/books?sort=best_selling",
-  new_arrivals: "/books?sort=newest",
   education: "/categories/education",
+  khmer: "/categories/khmer-books",
   coming_soon: "/books?coming_soon=1&sort=release_soon",
   ebook_deals: "/books?has_ebook=1&format=ebook",
 };
@@ -50,8 +51,8 @@ const VISIBLE_SPINES = 24;
 const SHELF_BOOKS = 30;
 const ROW_FILTERS: Record<RowId, BookFilters> = {
   best_sellers: { sort: "best_selling" },
-  new_arrivals: { sort: "newest" },
   education: { sort: "newest" },
+  khmer: { sort: "best_selling" },
   coming_soon: { coming_soon: true, sort: "release_soon" },
   ebook_deals: { has_ebook: true, format: "ebook" },
 };
@@ -172,26 +173,31 @@ export function ShelfHero() {
   const [row, setRow] = useState<RowId>("best_sellers");
   const tree = useQuery(catalogQueries.categoryTree());
   const education = tree.data?.find((category) => category.slug === "education");
-  const filtersOf = useCallback(
-    (id: RowId): BookFilters => ({ ...ROW_FILTERS[id], ...(id === "education" ? { category_id: education?.id } : {}), per_page: SHELF_BOOKS }),
-    [education?.id],
-  );
+  // Khmer books: the "Khmer books" category with its sub-categories, shown once it has at least 3 books.
+  const khmer = tree.data?.find((category) => category.slug === "khmer-books");
+  const categoryRow = (id: RowId) => (id === "education" ? education : id === "khmer" ? khmer : undefined);
+  const educationId = education?.id;
+  const khmerId = khmer?.id;
+  const filtersOf = (id: RowId): BookFilters => ({
+    ...ROW_FILTERS[id],
+    ...(id === "education" ? { category_id: educationId } : id === "khmer" ? { category_id: khmerId } : {}),
+    per_page: SHELF_BOOKS,
+  });
   const selectedBooks = useQuery({
     ...catalogQueries.books(filtersOf(row)),
-    enabled: row !== "education" || Boolean(education?.id),
+    enabled: (row !== "education" && row !== "khmer") || Boolean(categoryRow(row)?.id),
     placeholderData: undefined,
   });
   /** Fetch a row before it is chosen (hover, focus, and once the shelf is idle), so the lift never waits. */
-  const prefetch = useCallback(
-    (id: RowId) => {
-      if (id === "education" && !education?.id) return;
-      void queryClient.prefetchQuery({ ...catalogQueries.books(filtersOf(id)), staleTime: 15 * 60 * 1000 });
-    },
-    [queryClient, filtersOf, education?.id],
-  );
+  const prefetch = (id: RowId) => {
+    if ((id === "education" && !educationId) || (id === "khmer" && !khmerId)) return;
+    void queryClient.prefetchQuery({ ...catalogQueries.books(filtersOf(id)), staleTime: 15 * 60 * 1000 });
+  };
 
   const previewOf = (id: RowId) => rows.data?.find((r) => r.id === id)?.books ?? [];
-  const available = ROWS.filter((id) => (id === "education" ? Boolean(education?.id) : previewOf(id).length >= 3));
+  const available = ROWS.filter((id) =>
+    id === "education" ? Boolean(education?.id) : id === "khmer" ? (khmer?.total_books ?? 0) >= 3 : previewOf(id).length >= 3,
+  );
   const current = available.includes(row) || rows.isPending ? row : (available[0] ?? "best_sellers");
   const loaded = selectedBooks.data?.data;
   const books = loaded ?? [];
@@ -467,7 +473,7 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
       el.style.zIndex = String(Math.round(100 - Math.abs(r) * 4));
       el.style.setProperty("--o", o.toFixed(3));
     }
-    // "View" sits flat over the open cover's bottom-right corner (a flat link is clickable everywhere; links inside the
+    // "View" is a cream bookplate tab half over the open cover's bottom edge, right of centre (a flat link is clickable everywhere; links inside the
     // 3D boxes are not hit reliably). It fades in as the cover turns to face you and follows its tilt.
     const chip = viewChip.current;
     const box = stage.current;
@@ -476,8 +482,8 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
       if (cover) {
         const c = cover.getBoundingClientRect();
         const s0 = box.getBoundingClientRect();
-        const x = c.right - s0.left - chip.offsetWidth - c.width * 0.07;
-        const y = c.bottom - s0.top - chip.offsetHeight - c.height * 0.05;
+        const x = c.right - s0.left - chip.offsetWidth - c.width * 0.08;
+        const y = c.bottom - s0.top - chip.offsetHeight * 0.55;
         chip.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
         const fade = Math.max(0, Math.min(1, openO * 6 - 5));
         chip.style.opacity = fade.toFixed(3);

@@ -62,7 +62,7 @@ export const en = {
     edit: "Edit",
     lowGift: "Low gift stock",
     quantityRange: "Enter a whole number from 1 to 20.",
-    rows: { education: "Education", mixed: "Every genre", best_sellers: "Best sellers", new_arrivals: "New arrivals", coming_soon: "Coming soon", ebook_deals: "Ebooks" },
+    rows: { education: "Education", mixed: "Every genre", best_sellers: "Best sellers", new_arrivals: "New arrivals", coming_soon: "Coming soon", ebook_deals: "Ebooks", khmer: "Khmer books" },
     viewAll: "View all",
     categoryBest: (name: string) => `Best sellers in ${name}`,
     sold: (n: number) => `${n} sold in the last 90 days`,
