@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BOOKS_LIST_KEY } from "@/features/admin/books/booksListMemory";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, BookCopy, BookPlus, Download, Eye, FileUp, Layers, Pencil, X, BadgeDollarSign, Package } from "lucide-react";
@@ -83,8 +83,10 @@ export default function BooksPage() {
   const isAdmin = staffSession?.user?.role === "admin";
 
   const [params, setParams] = useSearchParams();
+  const latestParams = useRef(params.toString());
   // "← All books" on a book page comes back to this list as it was: same search, filters and page.
   useEffect(() => {
+    latestParams.current = params.toString();
     try {
       sessionStorage.setItem(BOOKS_LIST_KEY, params.toString());
     } catch {
@@ -132,18 +134,14 @@ export default function BooksPage() {
   const list = books.data?.data ?? [];
 
   const go = (next: Record<string, string | undefined>) => {
-    // Built from the latest URL, so two quick filter changes never undo each other.
-    setParams(
-      () => {
-        const merged = new URLSearchParams(window.location.search);
-        for (const [k, v] of Object.entries(next)) {
-          if (v) merged.set(k, v);
-          else merged.delete(k);
-        }
-        return merged;
-      },
-      { replace: true },
-    );
+    // Built from the latest filters (not this render's copy), so two quick changes never undo each other.
+    const merged = new URLSearchParams(latestParams.current);
+    for (const [k, v] of Object.entries(next)) {
+      if (v) merged.set(k, v);
+      else merged.delete(k);
+    }
+    latestParams.current = merged.toString();
+    setParams(merged, { replace: true });
     setSelectedIds([]);
     setAllMatching(false);
   };
