@@ -467,7 +467,7 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
       el.style.zIndex = String(Math.round(100 - Math.abs(r) * 4));
       el.style.setProperty("--o", o.toFixed(3));
     }
-    // "View" sits flat over the open cover's top-right corner (a flat link is clickable everywhere; links inside the
+    // "View" sits flat over the open cover's bottom-right corner (a flat link is clickable everywhere; links inside the
     // 3D boxes are not hit reliably). It fades in as the cover turns to face you and follows its tilt.
     const chip = viewChip.current;
     const box = stage.current;
@@ -477,7 +477,7 @@ function Shelf({ items, row: current, order, placeholder }: { items: ShelfItem[]
         const c = cover.getBoundingClientRect();
         const s0 = box.getBoundingClientRect();
         const x = c.right - s0.left - chip.offsetWidth - c.width * 0.07;
-        const y = c.top - s0.top + c.height * 0.05;
+        const y = c.bottom - s0.top - chip.offsetHeight - c.height * 0.05;
         chip.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
         const fade = Math.max(0, Math.min(1, openO * 6 - 5));
         chip.style.opacity = fade.toFixed(3);

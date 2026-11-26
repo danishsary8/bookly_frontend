@@ -70,9 +70,9 @@ function BackToBooks() {
   return (
     <Link
       to={toPortal("books") + booksListSearch()}
-      className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+      className="inline-flex min-h-9 w-fit items-center gap-1.5 rounded-full border border-primary/25 bg-lapis-tint/60 px-3.5 text-sm font-semibold text-primary transition-colors duration-200 hover:border-primary/50 hover:bg-lapis-tint"
     >
-      <ArrowLeft className="size-4" aria-hidden="true" /> All books
+      <ArrowLeft className="size-4" aria-hidden="true" /> Books
     </Link>
   );
 }

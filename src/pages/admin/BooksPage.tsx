@@ -101,7 +101,6 @@ export default function BooksPage() {
   const categoryId = Number(params.get("category")) || undefined;
   const formatParam = (params.get("format") as BookFormat | null) || undefined;
   const stockParam = (["in", "low", "out"] as const).find((v) => v === params.get("stock"));
-  const marginParam = (["loss", "low", "no_cost"] as const).find((v) => v === params.get("margin"));
   const languageParam = LANGUAGES.find((v) => v === params.get("language"));
   const categories = useQuery(catalogQueries.categoryTree());
 
@@ -121,9 +120,9 @@ export default function BooksPage() {
   const sortParam = params.get("sort");
   const sort: BookListSort = sortParam === "most_sold" || sortParam === "least_sold" || sortParam === "title" ? sortParam : "newest";
   const nextSort: BookListSort = sort === "most_sold" ? "least_sold" : sort === "least_sold" ? "newest" : "most_sold";
-  const listFilters = { q: q || undefined, status: statusParam, trashed, sort: sort === "newest" ? undefined : sort, category_id: categoryId, format: formatParam, stock: stockParam, margin: marginParam, language: languageParam };
+  const listFilters = { q: q || undefined, status: statusParam, trashed, sort: sort === "newest" ? undefined : sort, category_id: categoryId, format: formatParam, stock: stockParam, language: languageParam };
   const books = useQuery(staffQueries.books({ ...listFilters, page, per_page: PER_PAGE }));
-  const filtered = Boolean(q || categoryId || formatParam || stockParam || marginParam || languageParam);
+  const filtered = Boolean(q || categoryId || formatParam || stockParam || languageParam);
   const categoryOptions = [
     { value: "", label: "All categories" },
     ...(categories.data ?? []).flatMap((c) => [
@@ -299,12 +298,9 @@ export default function BooksPage() {
         <FilterSelect className="sm:w-40" label="Format" value={formatParam ?? ""} onChange={(v) => go({ format: v || undefined, page: undefined })} options={[{ value: "", label: "Any format" }, { value: "paperback", label: "Paperback" }, { value: "hardcover", label: "Hardcover" }, { value: "ebook", label: "Ebook" }, { value: "audiobook", label: "Audiobook" }]} />
         <FilterSelect className="sm:w-44" label="Stock" value={stockParam ?? ""} onChange={(v) => go({ stock: v || undefined, page: undefined })} options={[{ value: "", label: "Any stock" }, { value: "in", label: "In stock" }, { value: "low", label: "Running low" }, { value: "out", label: "Out of stock" }]} />
         <FilterSelect className="sm:w-40" label="Language" value={languageParam ?? ""} onChange={(v) => go({ language: v || undefined, page: undefined })} options={[{ value: "", label: "Any language" }, ...LANGUAGES.map((l) => ({ value: l, label: l }))]} />
-        {isAdmin ? (
-          <FilterSelect className="sm:w-48" label="Margin" value={marginParam ?? ""} onChange={(v) => go({ margin: v || undefined, page: undefined })} options={[{ value: "", label: "Any margin" }, { value: "low", label: "Under 20% margin" }, { value: "loss", label: "Selling at a loss" }, { value: "no_cost", label: "No cost price yet" }]} />
-        ) : null}
         <FilterSelect className="col-span-2 sm:w-44" label="Sort" value={sort === "newest" ? "" : sort} onChange={(v) => go({ sort: v || undefined, page: undefined })} options={[{ value: "", label: "Newest first" }, { value: "title", label: "Title A–Z" }, { value: "most_sold", label: "Most sold (90 days)" }, { value: "least_sold", label: "Least sold (90 days)" }]} />
         {filtered ? (
-          <button type="button" onClick={() => go({ q: undefined, category: undefined, format: undefined, stock: undefined, margin: undefined, language: undefined, page: undefined })} className="col-span-2 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-semibold text-primary outline-none hover:bg-lapis-tint focus-visible:ring-2 focus-visible:ring-ring sm:ml-auto">
+          <button type="button" onClick={() => go({ q: undefined, category: undefined, format: undefined, stock: undefined, language: undefined, page: undefined })} className="col-span-2 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-semibold text-primary outline-none hover:bg-lapis-tint focus-visible:ring-2 focus-visible:ring-ring sm:ml-auto">
             <X className="size-4" aria-hidden="true" /> Clear filters
           </button>
         ) : null}
