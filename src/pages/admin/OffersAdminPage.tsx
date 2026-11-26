@@ -20,6 +20,15 @@ import { orderDate } from "@/features/orders/format";
 import { rangeSummary } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
 import { toast } from "@/stores/toast";
+import { api } from "@/api/client";
+import type { Resource } from "@/api/types";
+
+/** GET /staff/reports/offers (admin): per-offer results over a date range. */
+type OfferResult = { offer_id: number; orders: number; units: number; revenue_usd: string; discount_usd: string; books_per_order: string };
+type OfferReport = { offers: OfferResult[] };
+const RESULT_DAYS = 30;
+const isoDay = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const usd0 = (v: string | number) => `$${Number(v).toLocaleString("en-US", { maximumFractionDigits: Number(v) % 1 === 0 ? 0 : 2, minimumFractionDigits: Number(v) % 1 === 0 ? 0 : 2 })}`;
 
 /*
  * /admin/offers: automatic offers ("Buy 2, save 15%"), backend spec docs/superpowers/specs/2026-10-31-offers-design.md.
@@ -83,6 +92,17 @@ export default function OffersAdminPage() {
   });
 
   const meta = offers.data?.meta;
+  // Results of each offer over the last 30 days (owner 2026-11-26: is "5 for $20" worth it?).
+  const today = new Date();
+  const from = new Date(today.getTime() - (RESULT_DAYS - 1) * 86_400_000);
+  const results = useQuery({
+    queryKey: ["staff", "reports", "offers", isoDay(from), isoDay(today)],
+    queryFn: () => api.get<Resource<OfferReport>>("/staff/reports/offers", { params: { from: isoDay(from), to: isoDay(today) } }).then((r) => r.data),
+    enabled: Boolean(isAdmin),
+    staleTime: 60_000,
+  });
+  const resultFor = new Map((results.data?.offers ?? []).map((r) => [r.offer_id, r]));
+  const discountTotal = (results.data?.offers ?? []).reduce((sum, r) => sum + Number(r.discount_usd), 0);
   const list = offers.data?.data ?? [];
   // Before the backend with offers is deployed, /staff/offers is a 404: say so instead of an error page.
   const notYet = offers.isError && ApiError.from(offers.error).status === 404;
@@ -114,6 +134,7 @@ export default function OffersAdminPage() {
             { label: "Offers", value: list.length },
             { label: "Live offers", value: list.filter((offer) => offer.status === "live").length },
             { label: "Orders with offers", value: list.reduce((total, offer) => total + offer.used_count, 0) },
+            ...(results.data ? [{ label: `Discount given · ${RESULT_DAYS} days`, value: usd0(discountTotal) }] : []),
           ]} /> : null}
           <div className="work-toolbar">
             <SearchBox label="Search offers" value={q} placeholder="Name" onSearch={(val) => set({ q: val || undefined })} />
@@ -135,6 +156,7 @@ export default function OffersAdminPage() {
                   <th scope="col" className={th}>Books</th>
                   <th scope="col" className={th}>Status</th>
                   <th scope="col" className={`${th} text-right`}>Orders</th>
+                  {isAdmin ? <th scope="col" className={`${th} text-right`}>Last {RESULT_DAYS} days</th> : null}
                   <th scope="col" className={th}>Ends</th>
                   <th scope="col" className={th}>On</th>
                   <th scope="col" className={th}>
@@ -176,6 +198,23 @@ export default function OffersAdminPage() {
                         {o.used_count}
                         {o.max_orders ? ` / ${o.max_orders}` : ""}
                       </td>
+                      {isAdmin ? (
+                        <td className={`${td} whitespace-nowrap text-right text-sm tabular-nums`}>
+                          {(() => {
+                            const r = resultFor.get(o.id);
+                            if (!results.data) return <span className="text-muted-foreground">…</span>;
+                            if (!r || r.orders === 0) return <span className="text-muted-foreground">No orders yet</span>;
+                            return (
+                              <>
+                                <span className="block font-semibold text-foreground">{usd0(r.revenue_usd)} sales</span>
+                                <span className="block text-muted-foreground">
+                                  {r.orders} {r.orders === 1 ? "order" : "orders"} · <span className="text-destructive">−{usd0(r.discount_usd)}</span> · {Number(r.books_per_order)} books/order
+                                </span>
+                              </>
+                            );
+                          })()}
+                        </td>
+                      ) : null}
                       <td className={`${td} whitespace-nowrap text-sm text-muted-foreground`}>{o.ends_at ? orderDate(o.ends_at) : "No end"}</td>
                       <td className={td}>
                         <Switch
