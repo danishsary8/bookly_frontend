@@ -461,6 +461,8 @@ export const staffApi = {
     api.post<Resource<{ changed_count: number; items: PriceChangeRow[] }>>("/staff/variants/prices/preview", input).then((r) => r.data),
   applyPriceChange: (input: PriceChangeInput) =>
     api.post<Resource<{ updated_count: number; items: PriceChangeRow[] }>>("/staff/variants/prices", input).then((r) => r.data),
+  restorePrices: (items: Array<{ variant_id: number; price_usd: string; cost_price_usd: string | null }>) =>
+    api.post<Resource<{ restored_count: number }>>("/staff/variants/prices/restore", { items }).then((r) => r.data),
   exportBooksCsv: () => api.get<Blob>("/staff/books/export", { responseType: "blob" }),
   exportTemplateCsv: () => api.get<Blob>("/staff/books/export-template", { responseType: "blob" }),
   previewImportBooksCsv: (file: File) => {
@@ -562,5 +564,5 @@ export type PriceChangeRow = {
   new_cost_usd: string | null;
   margin_percent: number | null;
   changed: boolean;
-  note: "below_cost" | "no_cost" | null;
+  note: "below_cost" | "no_cost" | "digital" | null;
 };

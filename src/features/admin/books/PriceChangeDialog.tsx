@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { ArrowRight, Info } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, Info, Undo2 } from "lucide-react";
 import { staffApi, type PriceChangeInput, type PriceChangeRow, type StaffBook } from "@/api/endpoints/staff";
 import { ApiError } from "@/api/errors";
 import { AdminFormDialogContent as DialogContent } from "@/features/admin/AdminFormDialog";
@@ -38,7 +38,13 @@ const FORMATS = [
 ];
 
 const FORMAT_LABEL: Record<string, string> = { paperback: "Paperback", hardcover: "Hardcover", ebook: "Ebook", audiobook: "Audiobook" };
-const NOTE: Record<string, string> = { below_cost: "Kept: would sell under cost", no_cost: "Skipped: no cost price" };
+const DIGITAL = new Set(["ebook", "audiobook"]);
+/** Why a row did not change. Ebooks never have a cost, so they get their own wording. */
+const noteText = (r: PriceChangeRow) =>
+  r.note === "below_cost" ? "Kept: under cost"
+  : r.note === "no_cost" ? (DIGITAL.has(r.format) ? "Needs “Set” or “%”" : "No cost price yet")
+  : r.note === "digital" ? "No cost (digital)"
+  : null;
 
 const money = (v: string | null) => (v === null ? "—" : `$${v}`);
 
@@ -55,7 +61,7 @@ function RuleCard({ title, hint, children }: { title: string; hint: string; chil
   );
 }
 
-export function PriceChangeDialog({ books, onClose, onSuccess }: { books: StaffBook[]; onClose: () => void; onSuccess: () => void }) {
+export function PriceChangeDialog({ books, scope, onClose, onSuccess }: { books: StaffBook[]; scope?: string; onClose: () => void; onSuccess: () => void }) {
   const [format, setFormat] = useState("all");
   const [sellMode, setSellMode] = useState<SellMode>("set");
   const [sellValue, setSellValue] = useState("");
@@ -65,6 +71,10 @@ export function PriceChangeDialog({ books, onClose, onSuccess }: { books: StaffB
   const [floorAtCost, setFloorAtCost] = useState(true);
   const [rows, setRows] = useState<PriceChangeRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** Only the rows that did not change because of a problem (no cost / under cost). */
+  const [onlyIssues, setOnlyIssues] = useState(false);
+  /** After Apply: the rows saved, so they can be undone. */
+  const [applied, setApplied] = useState<PriceChangeRow[] | null>(null);
 
   const variantIds = books.flatMap((b) => b.variants.filter((v) => format === "all" || v.format === format).map((v) => v.id));
   const sell = SELL_MODES.find((m) => m.value === sellMode)!;
@@ -85,31 +95,52 @@ export function PriceChangeDialog({ books, onClose, onSuccess }: { books: StaffB
   const apply = useMutation({
     mutationFn: () => staffApi.applyPriceChange(input()),
     onSuccess: (d) => {
-      toast.success(d.updated_count === 1 ? "Changed the price of 1 format." : `Changed the prices of ${d.updated_count} formats.`);
+      setError(null);
+      setApplied(d.items.filter((r) => r.changed));
+      onSuccess();
+    },
+    onError: fail,
+  });
+  const undo = useMutation({
+    mutationFn: () => staffApi.restorePrices((applied ?? []).map((r) => ({ variant_id: r.variant_id, price_usd: r.old_price_usd, cost_price_usd: r.old_cost_usd }))),
+    onSuccess: (d) => {
+      toast.success(d.restored_count === 1 ? "Undone: 1 format has its old price back." : `Undone: ${d.restored_count} formats have their old prices back.`);
       onSuccess();
       onClose();
     },
     onError: fail,
   });
+  const busy = apply.isPending || undo.isPending;
 
   const invalid = (mode: string, value: string) => mode !== "keep" && (value.trim() === "" || Number.isNaN(Number(value)));
   const canPreview = variantIds.length > 0 && !(sellMode === "keep" && costMode === "keep") && !invalid(sellMode, sellValue) && !invalid(costMode, costValue);
   const changed = rows?.filter((r) => r.changed) ?? [];
   const kept = (rows?.length ?? 0) - changed.length;
+  const noCost = rows?.filter((r) => r.note === "no_cost" && !DIGITAL.has(r.format)).length ?? 0;
+  const digitalSkipped = rows?.filter((r) => r.note === "no_cost" && DIGITAL.has(r.format)).length ?? 0;
+  const underCost = rows?.filter((r) => r.note === "below_cost").length ?? 0;
+  const issues = noCost + underCost + digitalSkipped;
+  const shown = rows && onlyIssues ? rows.filter((r) => r.note === "no_cost" || r.note === "below_cost") : rows;
 
   return (
-    <Dialog open onOpenChange={(open) => !open && !apply.isPending && onClose()}>
+    <Dialog open onOpenChange={(open) => !open && !busy && onClose()}>
       <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle>Change prices</DialogTitle>
           <DialogDescription>
-            {books.length === 1 ? "1 book" : `${books.length} books`} · {variantIds.length === 1 ? "1 format" : `${variantIds.length} formats`}. Past orders keep the price they were bought at.
+            {scope ?? (books.length === 1 ? "1 book" : `${books.length} books`)} · {variantIds.length === 1 ? "1 format" : `${variantIds.length} formats`}. Past orders keep the price they were bought at.
           </DialogDescription>
         </DialogHeader>
 
         {error ? <FormAlert>{error}</FormAlert> : null}
 
-        {rows === null ? (
+        {applied ? (
+          <div className="mt-5 grid justify-items-center gap-3 rounded-xl border border-success/30 bg-success-tint px-5 py-7 text-center">
+            <CheckCircle2 className="size-10 text-success" aria-hidden="true" />
+            <p className="font-display text-2xl text-foreground">{applied.length === 1 ? "1 format changed" : `${applied.length} formats changed`}</p>
+            <p className="max-w-sm text-sm text-muted-foreground">New orders use the new prices now. Changed your mind? Undo puts every old price and cost back.</p>
+          </div>
+        ) : rows === null ? (
           <div className="mt-4 grid gap-4">
             <div role="radiogroup" aria-label="Formats" className="flex flex-wrap gap-1.5">
               {FORMATS.map((f) => (
@@ -129,7 +160,7 @@ export function PriceChangeDialog({ books, onClose, onSuccess }: { books: StaffB
               ))}
             </div>
 
-            <RuleCard title="Cost price" hint="What you pay the supplier. Changed first, so a markup uses the new cost.">
+            <RuleCard title="Cost price" hint="What you pay the supplier. Changed first, so a markup uses the new cost. Ebooks and audiobooks are left out.">
               <div className="grid gap-3 sm:grid-cols-2">
                 <SelectField label="Change" value={costMode} onChange={(e) => setCostMode(e.target.value as CostMode)}>
                   {COST_MODES.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
@@ -174,33 +205,54 @@ export function PriceChangeDialog({ books, onClose, onSuccess }: { books: StaffB
                 {kept ? <> · {kept} unchanged</> : null}. Nothing is saved until you apply.
               </span>
             </p>
+            {issues ? (
+              <div className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-warning/40 bg-warning-tint px-3 py-2.5 text-sm">
+                <p className="flex items-start gap-2">
+                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
+                  <span className="grid gap-1">
+                    {noCost ? <span><strong>{noCost}</strong> {noCost === 1 ? "book has" : "books have"} no cost price yet, so the markup skipped {noCost === 1 ? "it" : "them"}. Set a cost first: Cost price → Set to a price.</span> : null}
+                    {digitalSkipped ? <span><strong>{digitalSkipped}</strong> {digitalSkipped === 1 ? "ebook was" : "ebooks were"} skipped: ebooks have no cost, so use “Set to a price” or “Change by %” for them (pick the Ebook chip).</span> : null}
+                    {underCost ? <span><strong>{underCost}</strong> would sell under cost, so {underCost === 1 ? "it keeps its" : "they keep their"} price.</span> : null}
+                  </span>
+                </p>
+                <button type="button" onClick={() => setOnlyIssues((v) => !v)} className="shrink-0 rounded-md px-2 py-1 font-semibold text-primary underline-offset-4 hover:underline">
+                  {onlyIssues ? "Show all" : "Show only these"}
+                </button>
+              </div>
+            ) : null}
             <div className="max-h-[46vh] overflow-auto rounded-xl border border-border">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-surface-2 text-left text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2 font-semibold">Book</th>
-                    <th className="px-3 py-2 font-semibold">Sell price</th>
-                    <th className="px-3 py-2 font-semibold">Cost</th>
-                    <th className="px-3 py-2 text-right font-semibold">Margin</th>
+                    <th className="max-sm:hidden px-3 py-2 font-semibold">Sell price</th>
+                    <th className="max-sm:hidden px-3 py-2 font-semibold">Cost</th>
+                    <th className="max-sm:hidden px-3 py-2 text-right font-semibold">Margin</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {rows.map((r) => (
+                  {(shown ?? []).map((r) => (
                     <tr key={r.variant_id} className={cn(!r.changed && "text-muted-foreground")}>
                       <td className="px-3 py-2.5">
                         <p className="line-clamp-1 font-medium text-foreground">{r.title}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
                           {FORMAT_LABEL[r.format] ?? r.format}
-                          {r.note ? <span className="ml-1.5 rounded bg-warning-tint px-1.5 py-0.5 font-medium text-foreground">{NOTE[r.note]}</span> : null}
+                          {noteText(r) ? <span className="whitespace-nowrap rounded bg-warning-tint px-1.5 py-0.5 font-medium text-foreground">{noteText(r)}</span> : null}
                         </p>
+                        {/* Phones: the numbers sit under the title instead of in columns. */}
+                        <div className="mt-1.5 grid gap-0.5 text-xs tabular-nums sm:hidden">
+                          <span className="flex items-center gap-1.5"><span className="w-10 text-muted-foreground">Price</span><Change from={r.old_price_usd} to={r.new_price_usd} /></span>
+                          <span className="flex items-center gap-1.5"><span className="w-10 text-muted-foreground">Cost</span><Change from={r.old_cost_usd} to={r.new_cost_usd} /></span>
+                          {r.margin_percent !== null ? <span className={cn("flex items-center gap-1.5", r.margin_percent < 20 && "font-semibold text-destructive")}><span className="w-10 text-muted-foreground">Margin</span>{r.margin_percent}%</span> : null}
+                        </div>
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2.5 tabular-nums">
+                      <td className="whitespace-nowrap px-3 py-2.5 tabular-nums max-sm:hidden">
                         <Change from={r.old_price_usd} to={r.new_price_usd} />
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2.5 tabular-nums">
+                      <td className="whitespace-nowrap px-3 py-2.5 tabular-nums max-sm:hidden">
                         <Change from={r.old_cost_usd} to={r.new_cost_usd} />
                       </td>
-                      <td className={cn("px-3 py-2.5 text-right tabular-nums", r.margin_percent !== null && r.margin_percent < 20 && "font-semibold text-destructive")}>
+                      <td className={cn("px-3 py-2.5 text-right tabular-nums max-sm:hidden", r.margin_percent !== null && r.margin_percent < 20 && "font-semibold text-destructive")}>
                         {r.margin_percent === null ? "—" : `${r.margin_percent}%`}
                       </td>
                     </tr>
@@ -212,7 +264,14 @@ export function PriceChangeDialog({ books, onClose, onSuccess }: { books: StaffB
         )}
 
         <DialogFooter className="mt-5">
-          {rows === null ? (
+          {applied ? (
+            <>
+              <Button variant="outline" loading={undo.isPending} onClick={() => undo.mutate()}>
+                <Undo2 aria-hidden="true" /> Undo
+              </Button>
+              <Button disabled={undo.isPending} onClick={onClose}>Done</Button>
+            </>
+          ) : rows === null ? (
             <>
               <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
               <Button disabled={!canPreview} loading={preview.isPending} onClick={() => preview.mutate()}>
@@ -221,7 +280,7 @@ export function PriceChangeDialog({ books, onClose, onSuccess }: { books: StaffB
             </>
           ) : (
             <>
-              <Button variant="outline" disabled={apply.isPending} onClick={() => setRows(null)}>Back</Button>
+              <Button variant="outline" disabled={apply.isPending} onClick={() => { setRows(null); setOnlyIssues(false); }}>Back</Button>
               <Button disabled={changed.length === 0} loading={apply.isPending} onClick={() => apply.mutate()}>
                 {changed.length === 1 ? "Apply 1 change" : `Apply ${changed.length} changes`}
               </Button>

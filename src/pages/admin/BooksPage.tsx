@@ -80,6 +80,7 @@ export default function BooksPage() {
   const [allMatching, setAllMatching] = useState(false);
   const [priceBooks, setPriceBooks] = useState<StaffBook[] | null>(null);
   const [loadingAll, setLoadingAll] = useState(false);
+  const [priceScope, setPriceScope] = useState<string | undefined>(undefined);
   const [importOpen, setImportOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
 
@@ -167,8 +168,9 @@ export default function BooksPage() {
   };
 
   /** Change prices: the selected books, or every book in the filter (all pages, 100 at a time). */
-  const openPrices = async () => {
-    if (!allMatching) {
+  const openPrices = async (all = allMatching) => {
+    setPriceScope(all ? (filtered ? `All ${total} books in this filter` : `All ${total} books`) : undefined);
+    if (!all) {
       setPriceBooks(selectedBooks);
       setPricesOpen(true);
       return;
@@ -198,6 +200,10 @@ export default function BooksPage() {
         <div className="flex flex-wrap items-center gap-2">
           {isAdmin ? (
             <>
+              <Button type="button" variant="outline" loading={loadingAll && !allMatching} disabled={!total} title="Change sell and cost prices for every book in the current filter" onClick={() => void openPrices(true)}>
+                <BadgeDollarSign className="mr-1.5 size-4" aria-hidden="true" />
+                Change prices
+              </Button>
               <Button type="button" variant="outline" loading={exporting} onClick={() => void handleExport()}>
                 <Download className="mr-1.5 size-4" aria-hidden="true" />
                 Export CSV
@@ -423,6 +429,7 @@ export default function BooksPage() {
       {pricesOpen ? (
         <PriceChangeDialog
           books={priceBooks ?? []}
+          scope={priceScope}
           onClose={() => setPricesOpen(false)}
           onSuccess={() => {
             clearSelection();
