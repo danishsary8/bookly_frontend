@@ -144,7 +144,7 @@ export type BookStatus = "draft" | "scheduled" | "live";
 /** Order of the staff Books list: newest first, or by copies sold in the last 90 days. */
 export type BookListSort = "newest" | "title" | "most_sold" | "least_sold";
 /** Filters for the staff Books list (owner 2026-11-14). `stock` counts printed editions only. */
-export type BookListFilters = { category_id?: number; format?: BookFormat; stock?: "in" | "low" | "out"; author_id?: number; publisher_id?: number };
+export type BookListFilters = { category_id?: number; format?: BookFormat; stock?: "in" | "low" | "out"; margin?: "loss" | "low" | "no_cost"; author_id?: number; publisher_id?: number };
 
 export interface StaffBook {
   id: number;

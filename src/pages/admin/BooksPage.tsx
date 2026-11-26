@@ -34,6 +34,22 @@ import { ApiError } from "@/api/errors";
 
 const PER_PAGE = 20;
 
+/** A printed edition's margin next to its price: red at a loss, amber under 20%, a quiet hint with no cost yet. */
+function MarginTag({ price, cost, digital }: { price: string; cost?: string | null; digital: boolean }) {
+  if (digital) return null;
+  if (cost === null || cost === undefined || cost === "") return <span className="text-xs text-muted-foreground">· no cost</span>;
+  const p = Number(price);
+  const margin = p > 0 ? Math.round(((p - Number(cost)) / p) * 100) : 0;
+  return (
+    <span
+      title={`Cost ${formatUsd(cost)}`}
+      className={cn("rounded px-1.5 text-xs font-semibold tabular-nums", margin < 0 ? "bg-destructive-tint text-destructive" : margin < 20 ? "bg-warning-tint text-foreground" : "text-success")}
+    >
+      {margin < 0 ? `loss ${margin}%` : `${margin}%`}
+    </span>
+  );
+}
+
 function FormatsCell({ book }: { book: StaffBook }) {
   if (!book.variants.length) return <span className="text-muted-foreground">No formats yet</span>;
   return (
@@ -41,6 +57,7 @@ function FormatsCell({ book }: { book: StaffBook }) {
       {book.variants.map((v) => (
         <li key={v.id} className={cn("flex items-center gap-1.5 whitespace-nowrap", !v.is_active && "text-muted-foreground line-through")}>
           {formatLabel(v.format)} · {formatUsd(v.price_usd)}
+          <MarginTag price={v.price_usd} cost={v.cost_price_usd} digital={v.format === "ebook" || v.format === "audiobook"} />
           {v.format === "ebook" || v.format === "audiobook" ? null : (
             <span className={cn("tabular-nums", v.is_low_stock ? "font-semibold text-warning" : "text-muted-foreground")}>
               {v.is_low_stock ? <AlertTriangle className="mr-0.5 inline size-3.5 align-[-2px]" aria-hidden="true" /> : null}
@@ -72,6 +89,7 @@ export default function BooksPage() {
   const categoryId = Number(params.get("category")) || undefined;
   const formatParam = (params.get("format") as BookFormat | null) || undefined;
   const stockParam = (["in", "low", "out"] as const).find((v) => v === params.get("stock"));
+  const marginParam = (["loss", "low", "no_cost"] as const).find((v) => v === params.get("margin"));
   const categories = useQuery(catalogQueries.categoryTree());
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -90,9 +108,9 @@ export default function BooksPage() {
   const sortParam = params.get("sort");
   const sort: BookListSort = sortParam === "most_sold" || sortParam === "least_sold" || sortParam === "title" ? sortParam : "newest";
   const nextSort: BookListSort = sort === "most_sold" ? "least_sold" : sort === "least_sold" ? "newest" : "most_sold";
-  const listFilters = { q: q || undefined, status: statusParam, trashed, sort: sort === "newest" ? undefined : sort, category_id: categoryId, format: formatParam, stock: stockParam };
+  const listFilters = { q: q || undefined, status: statusParam, trashed, sort: sort === "newest" ? undefined : sort, category_id: categoryId, format: formatParam, stock: stockParam, margin: marginParam };
   const books = useQuery(staffQueries.books({ ...listFilters, page, per_page: PER_PAGE }));
-  const filtered = Boolean(q || categoryId || formatParam || stockParam);
+  const filtered = Boolean(q || categoryId || formatParam || stockParam || marginParam);
   const categoryOptions = [
     { value: "", label: "All categories" },
     ...(categories.data ?? []).flatMap((c) => [
@@ -265,9 +283,12 @@ export default function BooksPage() {
         <FilterSelect className="col-span-2 sm:w-60" label="Category" value={categoryId ? String(categoryId) : ""} onChange={(v) => go({ category: v || undefined, page: undefined })} options={categoryOptions} />
         <FilterSelect className="sm:w-40" label="Format" value={formatParam ?? ""} onChange={(v) => go({ format: v || undefined, page: undefined })} options={[{ value: "", label: "Any format" }, { value: "paperback", label: "Paperback" }, { value: "hardcover", label: "Hardcover" }, { value: "ebook", label: "Ebook" }, { value: "audiobook", label: "Audiobook" }]} />
         <FilterSelect className="sm:w-44" label="Stock" value={stockParam ?? ""} onChange={(v) => go({ stock: v || undefined, page: undefined })} options={[{ value: "", label: "Any stock" }, { value: "in", label: "In stock" }, { value: "low", label: "Running low" }, { value: "out", label: "Out of stock" }]} />
+        {isAdmin ? (
+          <FilterSelect className="sm:w-48" label="Margin" value={marginParam ?? ""} onChange={(v) => go({ margin: v || undefined, page: undefined })} options={[{ value: "", label: "Any margin" }, { value: "low", label: "Under 20% margin" }, { value: "loss", label: "Selling at a loss" }, { value: "no_cost", label: "No cost price yet" }]} />
+        ) : null}
         <FilterSelect className="col-span-2 sm:w-44" label="Sort" value={sort === "newest" ? "" : sort} onChange={(v) => go({ sort: v || undefined, page: undefined })} options={[{ value: "", label: "Newest first" }, { value: "title", label: "Title A–Z" }, { value: "most_sold", label: "Most sold (90 days)" }, { value: "least_sold", label: "Least sold (90 days)" }]} />
         {filtered ? (
-          <button type="button" onClick={() => go({ q: undefined, category: undefined, format: undefined, stock: undefined, page: undefined })} className="col-span-2 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-semibold text-primary outline-none hover:bg-lapis-tint focus-visible:ring-2 focus-visible:ring-ring sm:ml-auto">
+          <button type="button" onClick={() => go({ q: undefined, category: undefined, format: undefined, stock: undefined, margin: undefined, page: undefined })} className="col-span-2 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-semibold text-primary outline-none hover:bg-lapis-tint focus-visible:ring-2 focus-visible:ring-ring sm:ml-auto">
             <X className="size-4" aria-hidden="true" /> Clear filters
           </button>
         ) : null}
