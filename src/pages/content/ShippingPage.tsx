@@ -13,13 +13,13 @@ export default function ShippingPage() {
   const title = isKm ? "ការដឹកជញ្ជូន និងការប្រគល់ទំនិញ" : "Shipping & delivery";
   const eyebrow = isKm ? "ជំនួយ" : "Help";
   const lead = isKm
-    ? "សៀវភៅបោះពុម្ពនឹងត្រូវបានដឹកជញ្ជូនដល់មាត់ទ្វាររបស់អ្នក ហើយអ្នកអាចទូទាត់ប្រាក់ជូនអ្នកដឹកជញ្ជូនពេលទំនិញមកដល់។ សៀវភៅអេឡិចត្រូនិច (Ebooks) និងសៀវភៅសំឡេង (Audiobooks) មិនគិតថ្លៃសេវាដឹកជញ្ជូនទេ។"
+    ? "សៀវភៅបោះពុម្ពនឹងត្រូវបានដឹកជញ្ជូនដល់មាត់ទ្វាររបស់អ្នក ហើយអ្នកអាចទូទាត់ប្រាក់ជូនអ្នកដឹកជញ្ជូនពេលទំនិញមកដល់។ សៀវភៅអេឡិចត្រូនិក (Ebooks) និងសៀវភៅសំឡេង (Audiobooks) មិនគិតថ្លៃសេវាដឹកជញ្ជូនទេ។"
     : "Printed books come to your door and you pay the courier when they arrive. Ebooks and audiobooks need no delivery at all.";
 
   const facts = isKm
     ? [
         { value: `$${policy.shippingFeesUsd.phnomPenh}`, label: `សេវាដឹកក្នុងរាជធានីភ្នំពេញ ($${policy.shippingFeesUsd.provinces} ទៅកាន់បណ្តាខេត្ត)` },
-        { value: `លើស $${policy.freeShippingThresholdUsd}`, label: "ដឹកជញ្ជូនឥតគិតថ្លៃសម្រាប់ការបញ្ជាទិញចាប់ពី $50 ឡើងទៅ" },
+        { value: `លើស $${policy.freeShippingThresholdUsd}`, label: `ដឹកជញ្ជូនឥតគិតថ្លៃសម្រាប់ការបញ្ជាទិញចាប់ពី $${policy.freeShippingThresholdUsd} ឡើងទៅ` },
         { value: "សាច់ប្រាក់", label: "ទូទាត់ពេលទទួលទំនិញ (COD) ជាប្រាក់ដុល្លារ ឬរៀល" },
       ]
     : [
@@ -53,7 +53,7 @@ export default function ShippingPage() {
           body: (
             <>
               <p>
-                យើងដឹកជញ្ជូនទូទាំង ២៥ រាជធានី-ខេត្តក្នុងប្រទេសកម្ពុជា។ រយៈពេលដឹកជញ្ជូនត្រូវបានរាប់ចាប់ពីពេលការបញ្ជាទិញត្រូវបានបញ្ជាក់ ក្នុងថ្ងៃធ្វើការ (ថ្ងៃច័ន្ទ ដល់ ថ្ងៃសៅរ៍)៖
+                យើងដឹកជញ្ជូនទូទាំង ២៥ រាជធានី-ខេត្តក្នុងប្រទេសកម្ពុជា។ រយៈពេលដឹកជញ្ជូនត្រូវបានរាប់ចាប់ពីពេលការបញ្ជាទិញត្រូវបានបញ្ជាក់ ក្នុងថ្ងៃធ្វើការ (ថ្ងៃចន្ទ ដល់ ថ្ងៃសៅរ៍)៖
               </p>
               <ul>
                 {delivery.areas.map((a) => (
@@ -84,7 +84,7 @@ export default function ShippingPage() {
           body: (
             <>
               <p>
-                រាល់ការបញ្ជាទិញមានកាលវិភាគតាមដានក្នុង <Link to="/account/orders">ការបញ្ជាទិញរបស់អ្នក</Link>។ ស្ថានភាពផ្លាស់ប្តូរតាមដំណាក់កាលដូចខាងក្រោម៖
+                រាល់ការបញ្ជាទិញមានប្រវត្តិតាមដានក្នុង <Link to="/account/orders">ការបញ្ជាទិញរបស់អ្នក</Link>។ ស្ថានភាពផ្លាស់ប្តូរតាមដំណាក់កាលដូចខាងក្រោម៖
               </p>
               <ul>
                 <li>

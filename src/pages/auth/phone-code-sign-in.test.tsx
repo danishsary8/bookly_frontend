@@ -115,9 +115,9 @@ describe("Sign in with a code from Telegram", () => {
     setLanguage("km");
     try {
       app();
-      const toggle = await screen.findByRole("button", { name: "បន្តដោយប្រើលេខទូរសព្ទ" });
+      const toggle = await screen.findByRole("button", { name: "បន្តដោយប្រើលេខទូរស័ព្ទ" });
       await userEvent.setup({ advanceTimers: vi.advanceTimersByTime }).click(toggle);
-      expect(screen.getByLabelText("លេខទូរសព្ទ")).toHaveAccessibleDescription(/^លេខកូដផ្ញើទៅតែលេខដែលបានបញ្ជាក់ប៉ុណ្ណោះ។/);
+      expect(screen.getByLabelText("លេខទូរស័ព្ទ")).toHaveAccessibleDescription(/^លេខកូដផ្ញើទៅតែលេខដែលបានបញ្ជាក់ប៉ុណ្ណោះ។/);
     } finally {
       setLanguage("en");
     }

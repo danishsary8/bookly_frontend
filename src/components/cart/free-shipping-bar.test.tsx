@@ -18,7 +18,7 @@ describe("FreeShippingBar", () => {
   it("speaks Khmer", () => {
     setLanguage("km");
     renderWithProviders(<FreeShippingBar subtotalUsd="47.00" thresholdUsd="50.00" />);
-    expect(screen.getByRole("region", { name: "ការរីកចម្រើនឆ្ពោះទៅការដឹកជញ្ជូនឥតគិតថ្លៃ" })).toHaveTextContent(/បន្ថែម \$3\.00 ទៀត/);
+    expect(screen.getByRole("region", { name: "វឌ្ឍនភាពសម្រាប់ការដឹកជញ្ជូនឥតគិតថ្លៃ" })).toHaveTextContent(/បន្ថែម \$3\.00 ទៀត/);
   });
 
   it("is free at any amount when an offer gives free delivery", () => {
