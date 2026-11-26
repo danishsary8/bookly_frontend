@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, BookCopy, BookPlus, Download, Eye, FileUp, Layers, Pencil, Sliders, X } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, BookCopy, BookPlus, Download, Eye, FileUp, Layers, Pencil, Sliders, X, BadgeDollarSign } from "lucide-react";
 import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AdminFormDialogContent } from "@/features/admin/AdminFormDialog";
 import "@/features/admin/catalogue.css";
@@ -20,6 +20,7 @@ import { FilterSelect, Highlight, SearchBox } from "@/features/admin/listKit";
 import { BookImportDialog } from "@/features/admin/books/BookImportDialog";
 import { BookState } from "@/features/admin/books/BookState";
 import { BulkActionsDialog, type BulkActionType } from "@/features/admin/books/BulkActionsDialog";
+import { PriceChangeDialog } from "@/features/admin/books/PriceChangeDialog";
 import { useStaff } from "@/features/admin/staffSession";
 import { usePortalPath } from "@/features/admin/portal";
 import { orderDate } from "@/features/orders/format";
@@ -73,6 +74,7 @@ export default function BooksPage() {
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkAction, setBulkAction] = useState<BulkActionType>(null);
+  const [pricesOpen, setPricesOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
 
@@ -259,6 +261,12 @@ export default function BooksPage() {
               <Sliders className="mr-1.5 size-3.5" aria-hidden="true" />
               Stock & Formats
             </Button>
+            {isAdmin ? (
+              <Button type="button" size="sm" variant="outline" onClick={() => setPricesOpen(true)}>
+                <BadgeDollarSign className="mr-1.5 size-3.5" aria-hidden="true" />
+                Change prices
+              </Button>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -358,6 +366,17 @@ export default function BooksPage() {
           action={bulkAction}
           isAdmin={Boolean(isAdmin)}
           onClose={() => setBulkAction(null)}
+          onSuccess={() => {
+            setSelectedIds([]);
+            void queryClient.invalidateQueries({ queryKey: ["staff", "books"] });
+          }}
+        />
+      ) : null}
+
+      {pricesOpen ? (
+        <PriceChangeDialog
+          books={selectedBooks}
+          onClose={() => setPricesOpen(false)}
           onSuccess={() => {
             setSelectedIds([]);
             void queryClient.invalidateQueries({ queryKey: ["staff", "books"] });

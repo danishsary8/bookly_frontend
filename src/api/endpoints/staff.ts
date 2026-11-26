@@ -457,6 +457,10 @@ export const staffApi = {
     api.post<Resource<{ updated_count: number; items: Array<{ id: number; title: string; status: BookStatus; success: boolean }> }>>("/staff/books/bulk", input).then((r) => r.data),
   bulkUpdateVariants: (input: BulkVariantsInput) =>
     api.post<Resource<{ updated_count: number; items: Array<{ id: number; sku: string; stock_quantity: number; price_usd: string; is_active: boolean; success: boolean }> }>>("/staff/variants/bulk", input).then((r) => r.data),
+  previewPriceChange: (input: PriceChangeInput) =>
+    api.post<Resource<{ changed_count: number; items: PriceChangeRow[] }>>("/staff/variants/prices/preview", input).then((r) => r.data),
+  applyPriceChange: (input: PriceChangeInput) =>
+    api.post<Resource<{ updated_count: number; items: PriceChangeRow[] }>>("/staff/variants/prices", input).then((r) => r.data),
   exportBooksCsv: () => api.get<Blob>("/staff/books/export", { responseType: "blob" }),
   exportTemplateCsv: () => api.get<Blob>("/staff/books/export-template", { responseType: "blob" }),
   previewImportBooksCsv: (file: File) => {
@@ -533,4 +537,30 @@ export const staffQueries = {
     queryOptions({ queryKey: staffKeys.loginHistory(params), queryFn: () => staffApi.loginHistory(params), placeholderData: keepPreviousData }),
   seriesDetail: (id: number) =>
     queryOptions({ queryKey: ["staff", "series", id] as const, queryFn: () => staffApi.seriesDetail(id), enabled: id > 0 }),
+};
+
+/** Bulk "Change prices" (admin): the cost rule runs first, so markup uses the new cost. */
+export type PriceChangeInput = {
+  variant_ids: number[];
+  sell_mode: "keep" | "set" | "percent" | "amount" | "markup";
+  sell_value: number | null;
+  cost_mode: "keep" | "set" | "percent" | "amount";
+  cost_value: number | null;
+  rounding: "none" | "90" | "50" | "whole";
+  floor_at_cost: boolean;
+};
+
+export type PriceChangeRow = {
+  variant_id: number;
+  book_id: number;
+  title: string;
+  format: string;
+  sku: string;
+  old_price_usd: string;
+  new_price_usd: string;
+  old_cost_usd: string | null;
+  new_cost_usd: string | null;
+  margin_percent: number | null;
+  changed: boolean;
+  note: "below_cost" | "no_cost" | null;
 };

@@ -45,7 +45,7 @@ const VERBS: Record<string, string> = {
   hidden: "hid",
   shown: "showed",
   restocked: "restocked", sale: "allocated stock for", restock: "received stock for", return: "returned stock for", adjustment: "adjusted stock for",
-  send: "queued delivery of", test_send: "sent a test for", resend_requested: "requested another delivery of", bulk_updated: "updated", imported_new: "imported", imported_update: "updated",
+  send: "queued delivery of", test_send: "sent a test for", resend_requested: "requested another delivery of", bulk_updated: "updated", prices_changed: "changed the prices of", imported_new: "imported", imported_update: "updated",
 };
 const actionLabel = (code: string) => code === "inventory.sale" ? "Sale / stock allocation" : code === "inventory.restock" ? "Stock received" : code === "inventory.return" ? "Stock returned" : code === "inventory.adjustment" ? "Stock adjustment" : code.replaceAll("_", " ").replaceAll(".", " · ");
 const verb = (action: string) => {
