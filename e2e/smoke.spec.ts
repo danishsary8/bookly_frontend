@@ -112,6 +112,9 @@ test("staff: process order to delivery and verify receipt document", async ({ pa
 
   await page.goto(`/admin/orders?q=${orderNumber}`);
   await page.getByRole("link", { name: orderNumber }).click();
+  // The list has its own "Start processing" row action: wait for the order page before clicking.
+  await page.waitForURL(/\/admin\/orders\/\d+$/);
+  await expect(page.getByRole("heading", { level: 1, name: new RegExp(orderNumber) })).toBeVisible();
 
   // 1. Move to processing
   await page.getByRole("button", { name: "Start processing" }).click();
