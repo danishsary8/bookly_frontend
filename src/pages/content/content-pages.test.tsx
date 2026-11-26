@@ -136,6 +136,9 @@ describe("legal pages", () => {
 
       app("/privacy");
       expect(screen.getByRole("heading", { level: 1, name: "គោលការណ៍ភាពឯកជន" })).toBeInTheDocument();
+
+      app("/faq");
+      expect(screen.getByRole("heading", { level: 1, name: "សំណួរ និងចម្លើយ" })).toBeInTheDocument();
     } finally {
       act(() => setLanguage("en"));
     }
