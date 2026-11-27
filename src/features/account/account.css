@@ -203,8 +203,17 @@
   gap: 12px 16px;
   padding: 6px 2px 16px;
 }
+/* Phones show the hub instead of this header, but its <h1> stays for screen readers (visually hidden, not display:none),
+   so every account page keeps a main heading. */
 .account-pane-header-desktop-only {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 .account-pane-title {
   font-family: var(--font-sans);
@@ -1031,6 +1040,15 @@
     padding: 18px 32px;
     background: var(--card);
     border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  }
+  .account-pane-header-desktop-only {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
   }
   .account-pane-title {
     font-size: 22px;

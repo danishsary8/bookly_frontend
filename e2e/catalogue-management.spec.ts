@@ -59,8 +59,9 @@ test("catalogue actions and hierarchy fit every width without sideways scrolling
           await page.keyboard.press("Escape");
         }
         await page.getByRole("checkbox", { name: `Select ${book.title}`, exact: true }).click();
-        await page.getByRole("button", { name: "Stock & Formats", exact: true }).click();
-        await expect(page.getByRole("dialog")).toContainText("Bulk Update Variants");
+        // The Stock & Formats bulk action was removed (64972eb); Categories opens the same bulk dialog.
+        await page.getByRole("button", { name: "Categories", exact: true }).click();
+        await expect(page.getByRole("dialog")).toContainText("Manage Categories");
         expect(await page.getByRole("dialog").evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
         await page.keyboard.press("Escape");
       }
