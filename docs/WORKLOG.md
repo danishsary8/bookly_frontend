@@ -1289,3 +1289,11 @@ component's own dependencies). Values still glide between periods. Rules: design
 - Added unit tests in `src/components/catalog/book-grid.test.tsx` verifying heading visibility, separation of keyword and topic results, and proper localization in EN and KM.
 - Checks: npm run lint (0 errors), npm run typecheck (0 errors), npm test (133 test files passed, 714 passed / 3 skipped), npm run build (built cleanly in 19.53s).
 - 2026-11-18 — Sign-in page: Facebook button removed (Meta needs business verification first; it stays on the sign-up page), Google now full width with "Continue with Google"; the sign-up block is now "New to Bookly?" centred above a full-width "Create a free account" button, matching the Google button. Hint text EN + KM updated. Checked: lint, typecheck, tests, build; browser at 1366×650, 1440×900 and 390 (fits one laptop screen).
+
+### 2026-11-27 — README refresh (branch `claude/modest-johnson-ewne5i`)
+- README brought up to date for a portfolio: at-a-glance table (95 page components, 39 admin pages, 746 unit tests, 14 browser test suites), features added since the last version (ebook reader, pre-orders, bundles and free gifts, profit report, bulk price change with undo, support chat and helper bot, reading lists, store settings), gift notes removed, demo accounts, monitoring and security headers. Docs only; no code changed, so no build or browser pass was needed.
+
+### 2026-11-27 — Browser tests match the current shop (branch `claude/modest-johnson-ewne5i`)
+- The E2E job was red on main since the checkout and admin redesigns. `smoke.spec.ts` now goes through the three-step checkout (Continue to payment → cash on delivery checked → Review order → Confirm & place order → Confirm). `catalogue-management.spec.ts` uses the Categories bulk action (Stock & Formats was removed in 64972eb).
+- Accessibility fix: on phones the account overview hid its header with display:none, so the page had no h1 for screen readers (and the a11y test timed out waiting for it). It is now visually hidden but still read out; phone and desktop screenshots are pixel-identical before and after.
+- Checks: lint, typecheck, 746 unit tests, build OK. Locally against a seeded API: smoke 3/3, catalogue-management 2/2, a11y signed-in phone passed.

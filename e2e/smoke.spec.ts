@@ -65,8 +65,8 @@ test("customer: book → cart → cash on delivery → order page", async ({ pag
 
   await page.goto("/checkout");
   await expect(page.getByRole("heading", { level: 1, name: "Checkout" })).toBeVisible();
-  await expect(page.getByRole("radio", { name: /Cash on delivery/ })).toBeChecked();
   await noAxeViolations(page);
+  // Checkout is a three-step wizard: delivery → payment → review, then a confirm dialog.
   if (await page.getByRole("button", { name: "Add a new address" }).isVisible() && !(await page.getByRole("radio", { name: /Phnom Penh|St |Street|House/ }).count())) {
     await page.getByRole("button", { name: "Add a new address" }).click();
     const dialog = page.getByRole("dialog", { name: "New address" });
@@ -74,7 +74,12 @@ test("customer: book → cart → cash on delivery → order page", async ({ pag
     await dialog.getByLabel("City").fill("Phnom Penh");
     await dialog.getByRole("button", { name: "Use this address" }).click();
   }
-  await page.getByRole("button", { name: "Place order" }).click();
+  await page.getByRole("button", { name: "Continue to payment" }).click();
+  await expect(page.getByRole("radio", { name: /Cash on delivery/ })).toBeChecked();
+  await noAxeViolations(page);
+  await page.getByRole("button", { name: "Review order" }).click();
+  await page.getByRole("button", { name: "Confirm & place order" }).click();
+  await page.getByRole("alertdialog", { name: "Confirm your order?" }).getByRole("button", { name: "Confirm", exact: true }).click();
   await page.waitForURL(/\/checkout\/success\/\d+/);
   await expect(page.getByRole("heading", { level: 1, name: "Thank you for your order" })).toBeVisible();
   orderNumber = (await page.locator("strong.tabular-nums").first().innerText()).trim();
