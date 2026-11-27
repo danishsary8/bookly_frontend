@@ -1297,3 +1297,6 @@ component's own dependencies). Values still glide between periods. Rules: design
 - The E2E job was red on main since the checkout and admin redesigns. `smoke.spec.ts` now goes through the three-step checkout (Continue to payment → cash on delivery checked → Review order → Confirm & place order → Confirm). `catalogue-management.spec.ts` uses the Categories bulk action (Stock & Formats was removed in 64972eb).
 - Accessibility fix: on phones the account overview hid its header with display:none, so the page had no h1 for screen readers (and the a11y test timed out waiting for it). It is now visually hidden but still read out; phone and desktop screenshots are pixel-identical before and after.
 - Checks: lint, typecheck, 746 unit tests, build OK. Locally against a seeded API: smoke 3/3, catalogue-management 2/2, a11y signed-in phone passed.
+
+### 2026-11-27 — README redesign (main, at the owner's request)
+- README restyled for the portfolio: centred header with badges and link buttons, a six-card highlights grid, a screenshot gallery (shopping, checkout and KHQR, account, admin, five phone screens), the full feature list folded into a details block. New screenshots from the running app against the local API: catalogue, cart, checkout (payment step), account, admin reports, admin books, phone catalogue, phone account. Docs only.

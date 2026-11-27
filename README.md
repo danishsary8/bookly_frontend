@@ -1,47 +1,120 @@
 <div align="center">
 
-# 📚 Bookly: the shop website
+<img src="public/favicon.svg" alt="" width="72" height="72" />
 
-**An online bookshop for Cambodia, in English and Khmer.**
-Customers browse, buy printed books and ebooks, and pay with cash on delivery or a Bakong KHQR code.
-Staff run the whole shop from an admin area.
+# Bookly
+
+### An online bookshop for Cambodia — in English and ខ្មែរ, in dollars and riel
+
+Browse, buy printed books and ebooks, pay with **cash on delivery** or **Bakong KHQR**,
+and run the whole shop from a real back office.
 
 [![CI](https://github.com/danishsary8/bookly_frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/danishsary8/bookly_frontend/actions/workflows/ci.yml)
+[![E2E](https://github.com/danishsary8/bookly_frontend/actions/workflows/e2e.yml/badge.svg)](https://github.com/danishsary8/bookly_frontend/actions/workflows/e2e.yml)
 ![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)
 ![Vite 7](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
 ![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
-![Tests](https://img.shields.io/badge/unit_tests-746-2E7D32)
+![Unit tests](https://img.shields.io/badge/unit_tests-746-2E7D32)
+![WCAG 2.1 AA](https://img.shields.io/badge/WCAG_2.1-AA-6A1B9A)
 
-### [🛒 Open the live shop](https://bookly-frontend-five.vercel.app) · [▶ Live API docs](https://bookly-api-zasc.onrender.com/docs) · [💻 API code](https://github.com/danishsary8/bookly_backend_v2)
+[**🛒 Live shop**](https://bookly-frontend-five.vercel.app) &nbsp;·&nbsp;
+[**📖 API docs**](https://bookly-api-zasc.onrender.com/docs) &nbsp;·&nbsp;
+[**💻 API code**](https://github.com/danishsary8/bookly_backend_v2) &nbsp;·&nbsp;
+[**🎨 Design system**](design-system/bookly/MASTER.md)
+
+<br />
+
+<img src="docs/screenshots/home.jpg" alt="Bookly home page" width="100%" />
+
+<sub>The first visit can take up to a minute: the free API server sleeps when nobody uses it.</sub>
 
 </div>
 
-![Home page](docs/screenshots/home.jpg)
+<br />
 
-| Book page | Seasonal collection |
-| --- | --- |
-| ![Book page](docs/screenshots/book.jpg) | ![A seasonal collection](docs/screenshots/collection.jpg) |
-| **Pay with Bakong KHQR** | **Admin dashboard (dark)** |
-| ![KHQR payment page](docs/screenshots/khqr-pay.jpg) | ![Admin dashboard](docs/screenshots/admin-dashboard.jpg) |
+## ✨ Highlights
 
-| Phone, Khmer, dark | Phone, Khmer, light | Admin on a phone |
-| --- | --- | --- |
-| ![Home in Khmer on a phone](docs/screenshots/phone-home-km.jpg) | ![Book page in Khmer on a phone](docs/screenshots/phone-book-km.jpg) | ![Admin orders on a phone](docs/screenshots/phone-admin.jpg) |
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <h4>🌏 Made for Cambodia</h4>
+      English and Khmer everywhere (Khmer fonts and Khmer search), prices in US dollars or riel, delivery to Phnom Penh and every province.
+    </td>
+    <td width="33%" valign="top">
+      <h4>💳 Real payments</h4>
+      Cash on delivery or a real <b>Bakong KHQR</b> code with a 15-minute timer; the page notices the payment by itself.
+    </td>
+    <td width="33%" valign="top">
+      <h4>📖 Ebooks in the browser</h4>
+      A built-in reader with saved progress, up to 3 devices and a free preview, with no file ever downloaded.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h4>🔎 Search that forgives</h4>
+      Typo-tolerant search (<code>holms</code> finds Holmes), filters for age, school grade and English level.
+    </td>
+    <td valign="top">
+      <h4>🛠️ A full back office</h4>
+      39 admin pages: live dashboard, profit report, orders, stock, bulk pricing with undo, offers, support inbox.
+    </td>
+    <td valign="top">
+      <h4>♿ Accessible by default</h4>
+      Checked with axe against WCAG 2.1 AA in both languages, light and dark, from a 320&nbsp;px phone up.
+    </td>
+  </tr>
+</table>
 
-> The first visit can take up to a minute: the free API server sleeps when nobody uses it.
+## 🖼️ A look around
 
-## At a glance
+### Shopping
+
+| Catalogue | Book page |
+| :---: | :---: |
+| <img src="docs/screenshots/catalogue.jpg" alt="Catalogue with filters" /> | <img src="docs/screenshots/book.jpg" alt="Book page" /> |
+| **Seasonal collection** | **Cart** |
+| <img src="docs/screenshots/collection.jpg" alt="Seasonal collection" /> | <img src="docs/screenshots/cart.jpg" alt="Cart" /> |
+
+### Checkout and payment
+
+| Three-step checkout | Pay with Bakong KHQR |
+| :---: | :---: |
+| <img src="docs/screenshots/checkout.jpg" alt="Checkout payment step" /> | <img src="docs/screenshots/khqr-pay.jpg" alt="KHQR payment page" /> |
+
+### Customer account
+
+<img src="docs/screenshots/account.jpg" alt="Customer account overview" width="100%" />
+
+### Admin
+
+| Dashboard | Reports |
+| :---: | :---: |
+| <img src="docs/screenshots/admin-dashboard.jpg" alt="Admin dashboard" /> | <img src="docs/screenshots/admin-reports.jpg" alt="Admin reports" /> |
+
+<img src="docs/screenshots/admin-books.jpg" alt="Admin books list" width="100%" />
+
+### On a phone
+
+<p align="center">
+  <img src="docs/screenshots/phone-home-km.jpg" alt="Home in Khmer" width="19%" />
+  <img src="docs/screenshots/phone-catalogue.jpg" alt="Catalogue on a phone" width="19%" />
+  <img src="docs/screenshots/phone-book-km.jpg" alt="Book page in Khmer" width="19%" />
+  <img src="docs/screenshots/phone-account.jpg" alt="Account on a phone" width="19%" />
+  <img src="docs/screenshots/phone-admin.jpg" alt="Admin on a phone" width="19%" />
+</p>
+
+## 📊 At a glance
 
 | | |
 | --- | --- |
 | **What** | A complete bookshop: catalogue, cart, checkout, payments, accounts, ebooks, support and a full back office |
-| **Who it's for** | Readers in Cambodia (English and Khmer, US dollars and riel) and the staff who run the shop |
-| **Size** | 95 page components (39 of them admin pages), 746 unit tests, 14 browser test suites |
+| **Who it's for** | Readers in Cambodia and the staff who run the shop |
+| **Size** | 95 page components (39 admin pages), 746 unit tests, 14 browser test suites |
 | **Backend** | [Bookly API](https://github.com/danishsary8/bookly_backend_v2): Laravel 13 + PostgreSQL, 316 endpoints |
 | **Hosting** | Vercel (site), Render + Neon (API and database), Cloudflare R2 (covers and ebook files) |
 
-## Try it yourself (2 minutes)
+## 🚀 Try it yourself (2 minutes)
 
 1. Open the **[live shop](https://bookly-frontend-five.vercel.app)**. Switch **English / ខ្មែរ** and **USD / KHR** at the top.
 2. Search for `holms` (with a typo): you still find Sherlock Holmes.
@@ -50,9 +123,11 @@ Staff run the whole shop from an admin area.
 4. Open your order: its timeline shows every step. Staff changes appear **by themselves**, without reloading.
 5. Open the **help bubble** and ask "where is my order?" or "books for a 10 year old".
 
-## What it does
+<details>
+<summary><h2>📋 Everything it does</h2></summary>
 
-### For customers
+
+### 🛍️ For customers
 
 **Finding books**
 - **English and Khmer** everywhere (Khmer fonts, Khmer search), prices in **US dollars or riel**, light and dark mode, works on any phone.
@@ -81,7 +156,7 @@ Staff run the whole shop from an admin area.
 - **Helper bot**: answers common questions, finds books and (when signed in) tells you about your own orders. It runs entirely
   inside the API, with no outside AI service.
 
-### For staff (`/admin`, two-step sign-in with an authenticator app)
+### 🧑‍💼 For staff (`/admin`, two-step sign-in with an authenticator app)
 
 - **Dashboard**: income, orders, average order and new customers compared with the period before, a monthly sales goal,
   charts, stock value, dead stock, repeat customers, best and slow sellers, orders by province. A printable version too.
@@ -99,7 +174,9 @@ Staff run the whole shop from an admin area.
 - Admins only: staff members and their permissions, store settings (delivery fees, free delivery threshold, sales goal),
   payment settings, exchange rate, audit log and system health.
 
-## Quality
+</details>
+
+## ✅ Quality
 
 - **746 unit tests** (Vitest + Testing Library) and **14 browser test suites** (Playwright) run on every push in GitHub Actions.
 - **Accessibility:** pages are checked with axe against WCAG 2.1 A and AA, in English and Khmer, light and dark, from a 320 px phone
@@ -110,7 +187,7 @@ Staff run the whole shop from an admin area.
 - **Monitoring:** errors go to Sentry with source maps; Vercel Analytics for page views.
 - **Security headers** (Content-Security-Policy and friends) are set in `vercel.json` and covered by a test.
 
-## Tech stack
+## 🧱 Tech stack
 
 | Area | Choice | Why |
 | --- | --- | --- |
@@ -137,7 +214,7 @@ flowchart LR
 The design rules (colours, type, spacing, components) live in [`design-system/bookly/MASTER.md`](design-system/bookly/MASTER.md),
 with page-specific notes in `design-system/bookly/pages/`.
 
-## Run it on your computer
+## 💻 Run it on your computer
 
 You need Node 22 and the [Bookly API](https://github.com/danishsary8/bookly_backend_v2) running locally (with its demo data),
 or the live API.
@@ -166,7 +243,7 @@ The local API only accepts the website from `http://localhost:5173` (its `CORS_A
 **Troubleshooting:** after pulling changes, run `npm install` again if dependencies changed. If Vite reports
 `Failed to resolve import "@hugeicons/react"` on `/admin`, the local packages are out of date: run `npm install` and restart `npm run dev`.
 
-## Scripts
+## 📜 Scripts
 
 | Command | Does |
 | --- | --- |
@@ -178,7 +255,7 @@ The local API only accepts the website from `http://localhost:5173` (its `CORS_A
 | `npm run e2e` | Browser tests (Playwright), see below |
 | `npm run api:types` | Regenerate API types from the API's OpenAPI file |
 
-## Browser tests
+## 🧪 Browser tests
 
 `npm run e2e` drives a real browser against a running site and API (local API with demo data, site on :5173). Highlights:
 
@@ -197,7 +274,7 @@ The local API only accepts the website from `http://localhost:5173` (its `CORS_A
 | `E2E_STAFF_EMAIL` / `E2E_STAFF_PASSWORD` / `E2E_STAFF_TOTP_SECRET` | the staff test is skipped without them |
 | `PW_CHROMIUM` | path to an existing Chromium (otherwise run `npx playwright install chromium`) |
 
-## Project structure
+## 🗂️ Project structure
 
 ```
 src/
@@ -216,13 +293,13 @@ docs/           Plan, roadmap, worklog, screenshots
 design-system/  Design rules (MASTER.md and page notes)
 ```
 
-## Deploying
+## ☁️ Deploying
 
 Any static host works. It is a single-page app, so every path must serve `index.html` (`vercel.json` does this on Vercel,
 and also sets the security headers). Set `VITE_API_BASE_URL` and `VITE_SITE_URL` in the host's build settings, and add the
 site's address to the API's `CORS_ALLOWED_ORIGINS`.
 
-## More docs
+## 📚 More docs
 
 - [docs/V2_PLAN.md](docs/V2_PLAN.md): decisions and which page uses which API endpoint
 - [docs/MANUAL_TESTING_GUIDE.md](docs/MANUAL_TESTING_GUIDE.md): how to test by hand
@@ -230,4 +307,8 @@ site's address to the API's `CORS_ALLOWED_ORIGINS`.
 
 ---
 
-Built by [@danishsary8](https://github.com/danishsary8) as a school and portfolio project.
+<div align="center">
+
+Built with ❤️ in Phnom Penh by [@danishsary8](https://github.com/danishsary8) · a school and portfolio project
+
+</div>
