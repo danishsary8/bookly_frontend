@@ -1933,6 +1933,7 @@ export const en = {
     qrAlt: (amount: string, order: string) => `KHQR code to pay ${amount} for order ${order}`,
     timeLeftLabel: (minutes: number) => `About ${minutes} ${minutes === 1 ? "minute" : "minutes"} left to pay`,
     waiting: "Waiting for your payment…",
+    confirmDelay: "Already paid? Please wait about 10–20 seconds on this page while we confirm with Bakong.",
     autoCancelNotice: "Complete payment before the 15-minute timer ends, or this order will be automatically cancelled.",
     step1: "Open your bank app (ABA, ACLEDA, Wing or any KHQR app).",
     step2: "Scan this code, or save it with “Download QR” and open it in the app.",
