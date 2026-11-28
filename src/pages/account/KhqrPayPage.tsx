@@ -299,6 +299,7 @@ export default function KhqrPayPage() {
             <p className="flex items-center gap-2">
               <Loader2 className="size-4 shrink-0 animate-spin text-primary motion-reduce:animate-none" aria-hidden="true" /> {t.waiting}
             </p>
+            <p className="text-sm font-medium leading-relaxed text-foreground">{t.confirmDelay}</p>
             <p className="text-xs leading-relaxed text-muted-foreground">{t.autoCancelNotice}</p>
           </div>
         </div>
