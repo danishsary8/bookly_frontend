@@ -7,6 +7,7 @@ import { CountBadge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { openShellPanel, useShellPanel } from "@/stores/shell";
 import { AccountMenu } from "./AccountMenu";
+import { AppBackButton } from "./AppBackButton";
 import { BrowseMenu } from "./BrowseMenu";
 import { PreferencesMenu } from "./PreferencesMenu";
 import { useSession } from "@/api/session";
@@ -130,6 +131,7 @@ export function SiteHeader() {
       )}
     >
       <div className="container-shell flex h-full flex-wrap items-center gap-x-3 gap-y-2 py-3 md:flex-nowrap md:gap-4 md:py-0 lg:gap-6">
+        <AppBackButton />
         <Wordmark />
 
         <nav aria-label={dict.navLinks.main} className="hidden lg:block">

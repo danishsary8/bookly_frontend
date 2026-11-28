@@ -1300,3 +1300,8 @@ component's own dependencies). Values still glide between periods. Rules: design
 
 ### 2026-11-27 — README redesign (main, at the owner's request)
 - README restyled for the portfolio: centred header with badges and link buttons, a six-card highlights grid, a screenshot gallery (shopping, checkout and KHQR, account, admin, five phone screens), the full feature list folded into a details block. New screenshots from the running app against the local API: catalogue, cart, checkout (payment step), account, admin reports, admin books, phone catalogue, phone account. Docs only.
+
+### 2026-11-28 — Phone app polish (branch `claude/modest-johnson-ewne5i`)
+- Home-screen app (iPhone Add to Home Screen / installed): a back arrow beside the logo on every page but home (`AppBackButton`), going to the previous page or home when there is none. Only in standalone mode and below lg, so normal browser tabs and the laptop layout are unchanged.
+- Guests on phones get a dismissible "Sign in or create an account" card after 4 s (`GuestReminder`): not on sign-in, sign-up, checkout, account, admin or reader pages; hidden for 7 days once dismissed; sign-in links return to the same page. English + Khmer.
+- Checks: lint, typecheck, 746 unit tests, build. Browser (local API): iPhone 13 standalone shows the arrow on a book page and it returns to /books; normal iPhone browser and 1440 px show no arrow; reminder shows for guests on phones only, stays away after Not now, never on /login; no page errors.
