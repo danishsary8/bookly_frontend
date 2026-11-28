@@ -20,6 +20,7 @@ import { useT } from "@/i18n";
 // The cart drawer and mobile menu (and the dialog code they need) aren't part of the first paint:
 // they load when first opened, or earlier when the browser is idle.
 const loadCartDrawer = () => import("./CartDrawer");
+const GuestReminder = lazy(() => import("./GuestReminder").then((mod) => ({ default: mod.GuestReminder })));
 const PromoPopup = lazy(() => import("@/features/promotions/PromoPopup").then((mod) => ({ default: mod.PromoPopup })));
 const SupportBubble = lazy(() => import("@/features/support/SupportBubble").then((mod) => ({ default: mod.SupportBubble })));
 const loadMobileMenu = () => import("./MobileMenu");
@@ -120,6 +121,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
         <SupportBubble />
         {/* Promotion pop-up (owner 2026-11-12): loads on its own, shows only when a promotion is live. */}
         <PromoPopup />
+        {/* Phones only: a dismissible nudge for guests to sign in or create an account. */}
+        <GuestReminder />
       </Suspense>
     </div>
   );

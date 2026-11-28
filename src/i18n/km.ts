@@ -1061,6 +1061,7 @@ export const km: Translations = {
     help: "ជំនួយ",
   },
   shell: {
+    back: "ត្រឡប់ក្រោយ", guestTitle: "ចូលគណនី ឬបង្កើតគណនី", guestLead: "តាមដានការបញ្ជាទិញ រក្សាបញ្ជីប្រាថ្នា និងទូទាត់បានលឿនជាងមុន។", guestCreate: "បង្កើតគណនី", guestSignIn: "ចូលគណនី", guestDismiss: "មិនមែនពេលនេះ",
     preferences: "ភាសា រូបិយប័ណ្ណ និងរចនាប័ទ្ម",
     accountMenuFor: (name: string) => `ម៉ឺនុយគណនីសម្រាប់ ${name}`,
     you: "អ្នក",

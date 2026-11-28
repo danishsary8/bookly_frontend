@@ -1055,6 +1055,7 @@ export const en = {
     help: "Help",
   },
   shell: {
+    back: "Go back", guestTitle: "Sign in or create an account", guestLead: "Track your orders, keep a wishlist and check out faster.", guestCreate: "Create account", guestSignIn: "Sign in", guestDismiss: "Not now",
     preferences: "Language, currency and theme",
     accountMenuFor: (name: string) => `Account menu for ${name}`,
     you: "you",
